@@ -1,8 +1,8 @@
-# Chatboks
+# ChatBoks
 
-Chatboks is a human-supervised multi-agent relay for coding projects. Claude,
-Codex, and Antigravity collaborate through a shared `chatboks.md` stream while
-the orchestrator maintains `.chatboks/state.json` for machine-readable state.
+Local multi-agent coding orchestration for Claude, Codex, and other AI agents via a shared relay, CodeGraph context, and human approval.
+
+ChatBoks is a human-supervised multi-agent relay for coding projects. Claude, Codex, and eventually Antigravity collaborate through a shared `chatboks.md` stream while the orchestrator maintains `.chatboks/state.json` for machine-readable state.
 
 ## Files
 
@@ -10,7 +10,7 @@ the orchestrator maintains `.chatboks/state.json` for machine-readable state.
 - `config.yaml`: projects, agent roles, token limits, and CodeGraph settings
 - `router.py`: chooses the primary agent and wrapper instances
 - `agents/`: CLI wrappers for Claude, Codex, and Antigravity
-- `context/builder.py`: packages CodeGraph, recent Chatboks history, and active task
+- `context/builder.py`: packages CodeGraph, recent ChatBoks history, and active task
 - `context/summarizer.py`: deterministic fallback summary for token resets
 - `ui/stream.py`: Rich terminal UI
 - `hooks/post-commit`: optional async handoff hook
@@ -40,17 +40,16 @@ The orchestrator only acts automatically on control lines:
 ## Run
 
 ```bash
-pip install -r ~/.chatboks/requirements.txt
-python ~/.chatboks/orchestrator.py taskfish
+pip install -r requirements.txt
+python orchestrator.py taskfish
 ```
 
-Use `--watch` to watch `chatboks.md` for handoffs, or `--trigger=commit` from
-the post-commit hook.
+Use `--watch` to watch `chatboks.md` for handoffs, or `--trigger=commit` from the post-commit hook.
 
 Run diagnostics with:
 
 ```bash
-python ~/.chatboks/doctor.py taskfish
+python doctor.py taskfish
 ```
 
 ## CodeGraph
@@ -61,5 +60,4 @@ The context builder expects CodeGraph as SQLite, not JSON. It looks for:
 - `.codegraph/codegraph.db`
 - `.codegraph/index.db`
 
-It queries `files`, `nodes`, `edges`, and optional `project_metadata` tables
-when present.
+It queries `files`, `nodes`, `edges`, and optional `project_metadata` tables when present.

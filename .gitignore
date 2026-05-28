@@ -1,23 +1,65 @@
 # Python
 __pycache__/
-*.py[cod]
+*.py[codz]
 *.pyo
 *.pyd
+*$py.class
+*.so
 .Python
+*.egg-info/
+*.egg
+.installed.cfg
+MANIFEST
+
+# Virtual environments / package managers
 .venv/
 venv/
 env/
-pip-wheel-metadata/
-*.egg-info/
+ENV/
+env.bak/
+venv.bak/
+__pypackages__/
+.pdm-python
+.pdm-build/
+.pixi/
+
+# Build / distribution
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.manifest
+*.spec
 
 # Test / tooling caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.tox/
+.nox/
 .coverage
+.coverage.*
+.cache/
 htmlcov/
+cover/
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pyre/
+.pytype/
+cython_debug/
 
-# Chatboks local runtime state
+# ChatBoks local runtime state
 .chatboks/
 chatboks.md
 state.json
@@ -32,8 +74,17 @@ codegraph.db
 # Local config / secrets
 .env
 .env.*
+.envrc
 config.local.yaml
 secrets.yaml
+local_settings.py
+.streamlit/secrets.toml
+.pypirc
+
+# Documentation / notebooks
+docs/_build/
+/site
+.ipynb_checkpoints/
 
 # OS / editor noise
 .DS_Store
@@ -41,7 +92,5 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
-
-# Build artifacts
-dist/
-build/
+*.swp
+tempCodeRunnerFile.py
