@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+*.egg-info/
+
+# Test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Chatboks local runtime state
+.chatboks/
+chatboks.md
+state.json
+*.log
+
+# CodeGraph local indexes
+.codegraph/
+codegraph.db
+*.db-wal
+*.db-shm
+
+# Local config / secrets
+.env
+.env.*
+config.local.yaml
+secrets.yaml
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/

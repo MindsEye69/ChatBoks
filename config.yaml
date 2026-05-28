@@ -1,0 +1,57 @@
+projects:
+  taskfish:
+    path: C:\Users\MindsEye\Desktop\Tasker\tasker-poc
+    agents: [claude, codex]
+    primary: codex
+    codegraph: true
+  circuit9:
+    path: C:\Users\MindsEye\Desktop\CircuitNine
+    agents: [claude, codex]
+    primary: codex
+    codegraph: true
+  tinyguardian:
+    path: C:\Users\MindsEye\Desktop\TinyGuardian Backup\Last Good
+    agents: [claude, codex]
+    primary: claude
+    codegraph: true
+  io-website:
+    path: C:\Users\MindsEye\Desktop\Information Ontology
+    agents: [claude, codex]
+    primary: claude
+    codegraph: true
+
+agents:
+  claude:
+    cli: C:\Users\MindsEye\AppData\Roaming\npm\claude.cmd
+    token_limit: 180000
+    token_warning: 150000
+    color: cyan
+    role_file: CLAUDE.md
+  codex:
+    cli: C:\Users\MindsEye\AppData\Roaming\npm\codex.cmd
+    token_limit: 120000
+    token_warning: 100000
+    color: green
+    role_file: AGENTS.md
+  antigravity:
+    cli: agy
+    token_limit: 120000
+    token_warning: 100000
+    color: yellow
+    role_file: ANTIGRAVITY.md
+
+rounds:
+  max_before_escalate: 3
+  approval_required: true
+
+context:
+  recent_chatboks_lines: 50
+  codegraph:
+    enabled: true
+    db_candidates:
+      - codegraph.db
+      - .codegraph/codegraph.db
+      - .codegraph/index.db
+    max_files: 200
+    max_symbols: 250
+    max_edges: 150
