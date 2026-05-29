@@ -52,7 +52,13 @@ Run diagnostics with:
 python doctor.py taskfish
 ```
 
-## CodeGraph
+## CodeGraph (third-party integration)
+
+ChatBoks integrates with [CodeGraph](https://github.com/colbymchenry/codegraph)
+by colbymchenry — a separate open-source tool that builds a semantic code
+knowledge graph from your project. Install it independently via:
+
+    npx @colbymchenry/codegraph
 
 The context builder expects CodeGraph as SQLite, not JSON. It looks for:
 
