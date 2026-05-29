@@ -502,9 +502,27 @@ class Chatboks:
         upper = stripped.upper()
         if upper in {"APPROVE", "REJECT", "MODIFY", "EXIT", "QUIT", "BYE"}:
             return True
+        if upper in {
+            "YES",
+            "Y",
+            "NO",
+            "N",
+            "OK",
+            "GO",
+            "START",
+            "PROCEED",
+            "CONTINUE",
+            "RUN",
+            "RUN IT",
+            "DO IT",
+            "GO AHEAD",
+        }:
+            return True
         if upper.startswith("MODIFY "):
             return True
         if stripped.startswith("@") and len(stripped.split()) <= 3:
+            return True
+        if len(stripped.split()) <= 2:
             return True
         return stripped.endswith((".", "?", "!", ":", ";", ")", "]", "}", '"', "'"))
 

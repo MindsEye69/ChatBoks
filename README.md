@@ -46,24 +46,42 @@ python orchestrator.py taskfish
 
 Use `--watch` to watch `chatboks.md` for handoffs, or `--trigger=commit` from the post-commit hook.
 
+## Setup
+
+Run the setup helper to check Node/npm, CodeGraph, and project indexes:
+
+```bash
+python install.py taskfish
+```
+
+The installer asks before installing anything. If Node.js is missing on Windows, it can offer to install Node.js LTS with `winget`. If CodeGraph is missing, it can offer to install `@colbymchenry/codegraph` globally with npm.
+
 Run diagnostics with:
 
 ```bash
 python doctor.py taskfish
 ```
 
+By default, `doctor.py` avoids model-consuming calls. To test actual stdin piping through Claude/Codex, use:
+
+```bash
+python doctor.py taskfish --smoke-agents
+```
+
 ## CodeGraph (third-party integration)
 
-ChatBoks integrates with [CodeGraph](https://github.com/colbymchenry/codegraph)
-by colbymchenry — a separate open-source tool that builds a semantic code
-knowledge graph from your project. Install it independently via:
+ChatBoks integrates with [CodeGraph](https://github.com/colbymchenry/codegraph) by colbymchenry, a separate open-source tool that builds a semantic code knowledge graph from your project. Install it independently via:
 
     npx @colbymchenry/codegraph
 
-The context builder expects CodeGraph as SQLite, not JSON. It looks for:
+The context builder integrates with [CodeGraph by colbymchenry](https://github.com/colbymchenry/codegraph), a separate MIT-licensed project. ChatBoks expects CodeGraph as SQLite, not JSON. It looks for:
 
 - `codegraph.db`
 - `.codegraph/codegraph.db`
 - `.codegraph/index.db`
 
 It queries `files`, `nodes`, `edges`, and optional `project_metadata` tables when present.
+
+## License
+
+ChatBoks is licensed under AGPL-3.0. CodeGraph is a separate MIT-licensed dependency.

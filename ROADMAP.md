@@ -1,6 +1,6 @@
-# Chatboks Roadmap
+# ChatBoks Roadmap
 
-Version: v2.2 handover baseline, updated with SKIP/routing/input-buffer fixes.
+Version: v3 handover baseline, updated May 29, 2026.
 
 Chatboks is a local multi-agent coding orchestration system for Claude, Codex, and eventually Antigravity, with the human user as overseer. Agents collaborate through `chatboks.md`, machine state persists in `.chatboks/state.json`, and CodeGraph provides SQLite-backed codebase context.
 
@@ -12,6 +12,8 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Core signals are supported: `PROPOSAL`, `QUESTION`, `HANDOFF`, `TASK_COMPLETE`, `BLOCKED`, `SKIP`.
 - Windows subprocess handling uses `.cmd`-compatible `shell=True`, stdin prompts, timeouts, `CHATBOKS=1`, `STARTUPINFO`, and `CREATE_NO_WINDOW`.
 - Antigravity remains pending until the `agy` CLI is available on Windows.
+- `install.py` exists as the first-run setup helper.
+- `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -37,7 +39,8 @@ Completed:
 - `>>> SKIP` signal.
 - `@agent` exclusive routing.
 - Input buffering for incomplete user messages.
-- Basic `chatboks doctor`.
+- `chatboks doctor`.
+- `install.py` setup helper.
 
 Remaining:
 
@@ -47,7 +50,8 @@ Remaining:
 - Role-based router.
 - Antigravity support when `agy` ships on Windows.
 - Git hook for async handoffs.
-- More complete doctor checks, including stdin behavior and adapter smoke tests.
+- Versioned adapter system for CLI flag drift.
+- Token-exhaustion detection and readable recovery message.
 
 ## Phase 2 - Token Intelligence
 
@@ -158,6 +162,11 @@ Routing:
 - `@antigravity` / `@agy`: call only Antigravity when available.
 - No other agent is expected or called during an exclusive route.
 
+Setup and diagnostics:
+
+- `install.py` checks Node/npm, offers Node.js install via `winget`, checks global CodeGraph, offers npm install, and initializes project CodeGraph indexes when available.
+- `doctor.py` validates Python dependencies, Node/npm, CodeGraph, project paths, role files, agent CLIs, CLI help, CodeGraph SQLite DBs, and optional stdin smoke tests.
+
 Signals:
 
 - `>>> PROPOSAL`: plan ready, needs user approval.
@@ -198,10 +207,12 @@ IO Website:
 
 ## Immediate Next Steps
 
-1. Verify the new exclusive routing and input-buffer behavior in TaskFish.
-2. Run `chatboks doctor` from the real Python environment with dependencies installed.
-3. Implement dynamic timeout.
-4. Implement automatic timeout recovery.
-5. Implement loop detection.
-6. Expand `chatboks doctor` into adapter smoke tests.
-7. Test Agent Zero latency with Ollama and Qwen2.5 Coder 3B.
+1. Install CodeGraph globally or add the existing CodeGraph CLI to PATH.
+2. Initialize CodeGraph for the ChatBoks repo itself.
+3. Run `python doctor.py taskfish` from the real Python environment with dependencies installed.
+4. Test `python doctor.py taskfish --smoke-agents` when token usage is acceptable.
+5. Implement dynamic timeout.
+6. Implement automatic timeout recovery.
+7. Implement loop detection.
+8. Add session token usage bars in `ui/stream.py`.
+9. Test Agent Zero latency with Ollama and Qwen2.5 Coder 3B.

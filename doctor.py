@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""Chatboks doctor: lightweight local diagnostics."""
+"""ChatBoks doctor: local diagnostics and adapter health checks."""
 
 from __future__ import annotations
 
 import argparse
+import importlib.util
+import json
+import os
 import shutil
 import sqlite3
+import subprocess
 from pathlib import Path
+from typing import Any
 
 try:
     import yaml
@@ -15,14 +20,17 @@ except ImportError:  # pragma: no cover - diagnostic path
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a Chatboks install")
+    parser = argparse.ArgumentParser(description="Validate a ChatBoks install")
     parser.add_argument("project", nargs="?", help="Optional project name from config.yaml")
-    parser.add_argument("--config", type=Path, default=Path("~/.chatboks/config.yaml").expanduser())
+    parser.add_argument("--config", type=Path, default=default_config_path())
+    parser.add_argument("--smoke-agents", action="store_true", help="Run minimal model calls; may consume tokens")
     args = parser.parse_args()
 
     ok = True
-    print("Chatboks doctor")
+    print("ChatBoks doctor")
     print("================")
+
+    ok = check_python_deps() and ok
 
     if yaml is None:
         print("FAIL pyyaml is not installed")
@@ -34,6 +42,7 @@ def main() -> int:
 
     config = yaml.safe_load(args.config.read_text(encoding="utf-8")) or {}
     print(f"OK   config: {args.config}")
+    ok = check_node_and_codegraph() and ok
 
     projects = config.get("projects", {})
     selected = [args.project] if args.project else sorted(projects)
@@ -42,12 +51,38 @@ def main() -> int:
             print(f"FAIL unknown project: {project}")
             ok = False
             continue
-        ok = check_project(project, projects[project], config) and ok
+        ok = check_project(project, projects[project], config, args.smoke_agents) and ok
 
     return 0 if ok else 1
 
 
-def check_project(project: str, project_config: dict, config: dict) -> bool:
+def check_python_deps() -> bool:
+    ok = True
+    for module in ("rich", "watchdog", "yaml"):
+        present = importlib.util.find_spec(module) is not None
+        print(("OK  " if present else "FAIL") + f" python module: {module}")
+        ok = ok and present
+    return ok
+
+
+def check_node_and_codegraph() -> bool:
+    ok = True
+    node = shutil.which("node")
+    npm = shutil.which("npm.cmd") or shutil.which("npm")
+    print(("OK  " if node else "WARN") + f" node: {node or 'not found'}")
+    print(("OK  " if npm else "WARN") + f" npm: {npm or 'not found'}")
+    codegraph = find_command("codegraph")
+    print(("OK  " if codegraph else "WARN") + f" codegraph command: {codegraph or 'not found'}")
+    if npm:
+        installed = npm_package_installed("@colbymchenry/codegraph")
+        print(("OK  " if installed else "WARN") + " npm global @colbymchenry/codegraph")
+        ok = ok and installed
+    else:
+        ok = False
+    return ok
+
+
+def check_project(project: str, project_config: dict[str, Any], config: dict[str, Any], smoke_agents: bool) -> bool:
     ok = True
     project_path = Path(project_config["path"]).expanduser()
     print(f"\n[{project}]")
@@ -59,15 +94,7 @@ def check_project(project: str, project_config: dict, config: dict) -> bool:
 
     for agent_name in project_config.get("agents", []):
         agent_config = config.get("agents", {}).get(agent_name, {})
-        cli = agent_config.get("cli", agent_name)
-        role_file = agent_config.get("role_file")
-        cli_ok = Path(cli).exists() or shutil.which(cli) is not None
-        print(("OK  " if cli_ok else "WARN") + f" {agent_name} cli: {cli}")
-        if role_file:
-            role_path = project_path / role_file
-            role_ok = role_path.exists()
-            print(("OK  " if role_ok else "WARN") + f" {agent_name} role file: {role_path}")
-        ok = ok and cli_ok
+        ok = check_agent(project_path, agent_name, agent_config, smoke_agents) and ok
 
     db_path = find_codegraph_db(project_path, config)
     if db_path:
@@ -86,7 +113,86 @@ def check_project(project: str, project_config: dict, config: dict) -> bool:
     return ok
 
 
-def find_codegraph_db(project_path: Path, config: dict) -> Path | None:
+def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any], smoke_agents: bool) -> bool:
+    ok = True
+    cli = agent_config.get("cli", agent_name)
+    role_file = agent_config.get("role_file")
+    cli_path = Path(cli)
+    cli_ok = cli_path.exists() or shutil.which(cli) is not None
+    print(("OK  " if cli_ok else "FAIL") + f" {agent_name} cli: {cli}")
+    ok = ok and cli_ok
+
+    if role_file:
+        role_path = project_path / role_file
+        role_ok = role_path.exists()
+        print(("OK  " if role_ok else "WARN") + f" {agent_name} role file: {role_path}")
+
+    if cli_ok:
+        ok = check_cli_help(cli, agent_name) and ok
+        if smoke_agents:
+            ok = smoke_agent_stdin(cli, agent_name, project_path) and ok
+        else:
+            print(f"SKIP {agent_name} stdin smoke test (use --smoke-agents; may consume tokens)")
+    return ok
+
+
+def check_cli_help(cli: str, agent_name: str) -> bool:
+    result = run_capture([cli, "--help"], timeout=30)
+    ok = result.returncode == 0 and bool(result.stdout or result.stderr)
+    print(("OK  " if ok else "WARN") + f" {agent_name} --help")
+    return ok
+
+
+def smoke_agent_stdin(cli: str, agent_name: str, project_path: Path) -> bool:
+    env = os.environ.copy()
+    env["CHATBOKS"] = "1"
+    if agent_name == "claude":
+        command = [cli, "--print", "--dangerously-skip-permissions", "-"]
+    elif agent_name == "codex":
+        command = [cli, "exec", "-C", str(project_path), "--dangerously-bypass-approvals-and-sandbox", "-s", "danger-full-access", "-"]
+    else:
+        print(f"SKIP {agent_name} stdin smoke test: no adapter yet")
+        return True
+    result = run_capture(command, input_text="Reply with exactly: CHATBOKS_OK", cwd=project_path, env=env, timeout=60)
+    ok = result.returncode == 0 and "CHATBOKS_OK" in (result.stdout or "")
+    print(("OK  " if ok else "FAIL") + f" {agent_name} stdin smoke")
+    return ok
+
+
+def run_capture(
+    command: list[str],
+    input_text: str | None = None,
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+    timeout: int = 30,
+) -> subprocess.CompletedProcess[str]:
+    use_shell = os.name == "nt"
+    run_command: str | list[str] = subprocess.list2cmdline(command) if use_shell else command
+    extra: dict[str, Any] = {}
+    if os.name == "nt":
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = 0
+        extra["startupinfo"] = si
+        extra["creationflags"] = subprocess.CREATE_NO_WINDOW
+    try:
+        return subprocess.run(
+            run_command,
+            input=input_text,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            env=env,
+            timeout=timeout,
+            shell=use_shell,
+            encoding="utf-8",
+            **extra,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return subprocess.CompletedProcess(command, 1, "", str(exc))
+
+
+def find_codegraph_db(project_path: Path, config: dict[str, Any]) -> Path | None:
     candidates = (
         config.get("context", {})
         .get("codegraph", {})
@@ -97,6 +203,38 @@ def find_codegraph_db(project_path: Path, config: dict) -> Path | None:
         if path.exists():
             return path
     return None
+
+
+def find_command(name: str) -> str | None:
+    found = shutil.which(name) or shutil.which(f"{name}.cmd")
+    if found:
+        return found
+    npm_root = Path(os.environ.get("APPDATA", "")) / "npm"
+    for candidate in (npm_root / f"{name}.cmd", npm_root / name):
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def npm_package_installed(package: str) -> bool:
+    npm = shutil.which("npm.cmd") or shutil.which("npm")
+    if not npm:
+        return False
+    result = run_capture([npm, "list", "-g", package, "--depth=0", "--json"], timeout=30)
+    if result.returncode != 0:
+        return False
+    try:
+        data = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        return False
+    return package in (data.get("dependencies") or {})
+
+
+def default_config_path() -> Path:
+    local = Path(__file__).resolve().parent / "config.yaml"
+    if local.exists():
+        return local
+    return Path("~/.chatboks/config.yaml").expanduser()
 
 
 if __name__ == "__main__":
