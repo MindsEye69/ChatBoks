@@ -13,6 +13,8 @@ import json
 import os
 import shutil
 import subprocess
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -23,8 +25,6 @@ except ImportError:  # pragma: no cover - bootstrap path
 
 
 CODEGRAPH_PACKAGE = "@colbymchenry/codegraph"
-FORGE_PACKAGE = "@forge-agents/forge"
-QWEN_CODE_PACKAGE = "@qwen-code/qwen-code"
 NODE_PACKAGE = "OpenJS.NodeJS.LTS"
 
 
@@ -52,9 +52,7 @@ def main() -> int:
         ok = False
     if not ensure_codegraph(args.yes):
         ok = False
-    if args.agent_zero and not ensure_forge(args.yes):
-        ok = False
-    if args.agent_zero and not ensure_qwen_code(args.yes):
+    if args.agent_zero and not ensure_agent_zero_ollama(config, args.yes):
         ok = False
 
     changed_config = False
@@ -101,38 +99,49 @@ def ensure_codegraph(assume_yes: bool) -> bool:
     return False
 
 
-def ensure_forge(assume_yes: bool) -> bool:
-    if find_forge_command():
-        print("OK   forge command available")
+def ensure_agent_zero_ollama(config: dict[str, Any], assume_yes: bool) -> bool:
+    agent_config = config.get("agents", {}).get("agent_zero", {})
+    model = str(agent_config.get("model", "qwen2.5-coder:3b"))
+    endpoint = str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
+    tags_endpoint = endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
+
+    models = fetch_ollama_models(tags_endpoint)
+    if models is not None and model in models:
+        print(f"OK   Agent Zero Ollama endpoint: {tags_endpoint}")
+        print(f"OK   Agent Zero model available: {model}")
         return True
 
-    if npm_package_installed(FORGE_PACKAGE):
-        print("WARN Forge package appears installed, but forge command is not on PATH")
+    ollama = shutil.which("ollama")
+    print(("OK  " if ollama else "WARN") + f" ollama command: {ollama or 'not found'}")
+    if not ollama:
+        print(f"WARN Ollama endpoint/model unavailable: {tags_endpoint} / {model}")
         return False
 
-    print("WARN Forge is not installed. Agent Zero will be unavailable.")
-    if ask("Install Forge globally with npm now?", assume_yes):
-        npm = shutil.which("npm.cmd") or shutil.which("npm") or "npm"
-        return run([npm, "install", "-g", FORGE_PACKAGE])
+    result = subprocess.run(
+        [ollama, "list"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    has_model = result.returncode == 0 and model in result.stdout
+    if has_model:
+        print(f"OK   Agent Zero model available: {model}")
+        return True
+
+    print(f"WARN Agent Zero model missing: {model}")
+    print(f"INFO Expected Ollama endpoint: {tags_endpoint}")
+    if ask(f"Pull {model} with Ollama now?", assume_yes):
+        return run([ollama, "pull", model])
     return False
 
 
-def ensure_qwen_code(assume_yes: bool) -> bool:
-    forge = find_forge_command()
-    if forge and run([str(forge), "qwen", "check"]):
-        print("OK   Forge Qwen Code agent available")
-        return True
-
-    print("WARN Qwen Code is not installed. Agent Zero cannot run through Forge Qwen yet.")
-    if ask("Install Qwen Code globally with npm now?", assume_yes):
-        npm = shutil.which("npm.cmd") or shutil.which("npm") or "npm"
-        if not run([npm, "install", "-g", QWEN_CODE_PACKAGE]):
-            return False
-        forge = find_forge_command()
-        if forge:
-            return run([str(forge), "qwen", "check"])
-        return True
-    return False
+def fetch_ollama_models(tags_endpoint: str) -> set[str] | None:
+    try:
+        with urllib.request.urlopen(tags_endpoint, timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError):
+        return None
+    return {str(model.get("name")) for model in data.get("models", []) if model.get("name")}
 
 
 def ensure_project_codegraph(project: str, project_config: dict[str, Any], config: dict[str, Any]) -> bool:
@@ -159,17 +168,6 @@ def find_codegraph_command() -> Path | None:
         return Path(found)
     npm_root = Path(os.environ.get("APPDATA", "")) / "npm"
     for candidate in (npm_root / "codegraph.cmd", npm_root / "codegraph"):
-        if candidate.exists():
-            return candidate
-    return None
-
-
-def find_forge_command() -> Path | None:
-    found = shutil.which("forge") or shutil.which("forge.cmd")
-    if found:
-        return Path(found)
-    npm_root = Path(os.environ.get("APPDATA", "")) / "npm"
-    for candidate in (npm_root / "forge.cmd", npm_root / "forge"):
         if candidate.exists():
             return candidate
     return None

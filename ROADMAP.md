@@ -14,7 +14,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Antigravity remains pending until the `agy` CLI is available on Windows.
 - `install.py` exists as the first-run setup helper.
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
-- Agent Zero has an initial optional Forge adapter, direct `@zero` routing, and installer support.
+- Agent Zero has an initial optional Ollama adapter, direct `@zero` routing, and installer support.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -52,7 +52,7 @@ Remaining:
 - Antigravity support when `agy` ships on Windows.
 - Git hook for async handoffs.
 - Versioned adapter system for CLI flag drift.
-- Verify Forge Agent Zero adapter flags against installed Forge and selected local/free agent.
+- Expand Agent Zero routing intelligence beyond direct local diagnostics.
 
 ## Phase 2 - Token Intelligence
 
@@ -112,12 +112,11 @@ Responsibilities:
 - Usage dashboard automation.
 - Simple direct responses that do not need a cloud model.
 
-Recommended stack from the handover:
+Recommended stack:
 
-- Framework: Forge (`github.com/forge-agents/forge`)
 - Base model: Qwen2.5 Coder 3B, quantized
-- Runtime: Ollama REST API
-- Upgrade path: Forge + Llama 3.1 8B Q4 for users with 16GB+ RAM
+- Runtime: direct Ollama REST API
+- Upgrade path: Llama 3.1 8B Q4 or another local model for users with 16GB+ RAM
 
 Routing lanes:
 
@@ -129,7 +128,7 @@ Routing lanes:
 Open question:
 
 - Measure Windows CPU latency for `qwen2.5-coder:3b`; target routing decisions under 10 seconds.
-- Current blocker: Forge can detect Qwen Code, but Qwen/Forge still needs first-run local model/provider setup before headless `@zero` calls return successfully.
+- Current blocker: measure Windows CPU latency for the direct Ollama adapter and keep routing decisions under 10 seconds.
 
 ## Execution Model Improvements
 

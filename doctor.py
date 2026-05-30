@@ -10,6 +10,8 @@ import os
 import shutil
 import sqlite3
 import subprocess
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -114,6 +116,9 @@ def check_project(project: str, project_config: dict[str, Any], config: dict[str
 
 
 def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any], smoke_agents: bool) -> bool:
+    if agent_name == "agent_zero":
+        return check_agent_zero(agent_config, smoke_agents)
+
     ok = True
     cli = agent_config.get("cli", agent_name)
     role_file = agent_config.get("role_file")
@@ -133,6 +138,32 @@ def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any
             ok = smoke_agent_stdin(cli, agent_name, project_path, agent_config) and ok
         else:
             print(f"SKIP {agent_name} stdin smoke test (use --smoke-agents; may consume tokens)")
+    return ok
+
+
+def check_agent_zero(agent_config: dict[str, Any], smoke_agents: bool) -> bool:
+    ok = True
+    cli = agent_config.get("cli", "ollama")
+    cli_ok = shutil.which(cli) is not None
+    print(("OK  " if cli_ok else "WARN") + f" agent_zero ollama cli: {cli}")
+
+    endpoint = str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
+    tags_endpoint = endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
+    model = str(agent_config.get("model", "qwen2.5-coder:3b"))
+    models = fetch_ollama_models(tags_endpoint)
+    if models is None:
+        print(f"FAIL agent_zero ollama endpoint: {tags_endpoint}")
+        return False
+
+    print(f"OK   agent_zero ollama endpoint: {tags_endpoint}")
+    has_model = model in models
+    print(("OK  " if has_model else "FAIL") + f" agent_zero model: {model}")
+    ok = ok and has_model
+
+    if smoke_agents and has_model:
+        ok = smoke_agent_zero(endpoint, model) and ok
+    elif not smoke_agents:
+        print("SKIP agent_zero smoke test (use --smoke-agents)")
     return ok
 
 
@@ -156,20 +187,10 @@ def smoke_agent_stdin(
     elif agent_name == "codex":
         command = [cli, "exec", "-C", str(project_path), "--dangerously-bypass-approvals-and-sandbox", "-s", "danger-full-access", "-"]
     elif agent_name == "agent_zero":
-        env["CHATBOKS_AGENT_ZERO"] = "1"
-        command = [
-            cli,
-            str(agent_config.get("forge_agent", "qwen")),
-            "--project",
-            str(project_path),
-            "-p",
-        ]
-        if agent_config.get("model"):
-            command.extend(["--model", str(agent_config["model"])])
-        if agent_config.get("mode"):
-            command.extend(["--mode", str(agent_config["mode"])])
-        # TODO: Verify Forge headless flags against the installed Forge CLI.
-        command.append("Reply with exactly: CHATBOKS_OK")
+        return smoke_agent_zero(
+            str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat")),
+            str(agent_config.get("model", "qwen2.5-coder:3b")),
+        )
     else:
         print(f"SKIP {agent_name} stdin smoke test: no adapter yet")
         return True
@@ -177,6 +198,43 @@ def smoke_agent_stdin(
     result = run_capture(command, input_text=input_text, cwd=project_path, env=env, timeout=60)
     ok = result.returncode == 0 and "CHATBOKS_OK" in (result.stdout or "")
     print(("OK  " if ok else "FAIL") + f" {agent_name} stdin smoke")
+    return ok
+
+
+def fetch_ollama_models(tags_endpoint: str) -> set[str] | None:
+    try:
+        with urllib.request.urlopen(tags_endpoint, timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError):
+        return None
+    return {str(model.get("name")) for model in data.get("models", []) if model.get("name")}
+
+
+def smoke_agent_zero(endpoint: str, model: str) -> bool:
+    payload = {
+        "model": model,
+        "stream": False,
+        "messages": [
+            {"role": "system", "content": "Plain text only."},
+            {"role": "user", "content": "Reply with exactly: CHATBOKS_OK"},
+        ],
+        "options": {"temperature": 0, "num_predict": 32},
+    }
+    request = urllib.request.Request(
+        endpoint,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+        print(f"FAIL agent_zero ollama smoke ({exc})")
+        return False
+    output = (data.get("message") or {}).get("content") or data.get("response") or ""
+    ok = "CHATBOKS_OK" in output
+    print(("OK  " if ok else "FAIL") + " agent_zero ollama smoke")
     return ok
 
 

@@ -22,16 +22,17 @@ projects:
 
 agents:
   agent_zero:
-    cli: C:\Users\MindsEye\AppData\Roaming\npm\forge.cmd
-    forge_agent: qwen
+    cli: ollama
+    runtime: ollama
+    endpoint: http://127.0.0.1:11434/api/chat
+    model: qwen2.5-coder:3b
     token_limit: 32000
     token_warning: 24000
     max_prompt_chars: 8000
+    temperature: 0.1
+    num_predict: 512
     color: magenta
     role_file: AGENT_ZERO.md
-    env:
-      OPENAI_API_KEY: ollama
-      OPENAI_BASE_URL: http://127.0.0.1:11434/v1
   claude:
     cli: C:\Users\MindsEye\AppData\Roaming\npm\claude.cmd
     token_limit: 180000
