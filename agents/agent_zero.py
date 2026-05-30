@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import socket
 import urllib.error
 import urllib.request
@@ -26,10 +27,12 @@ class AgentZeroAgent(BaseAgent):
             "You are Agent Zero for ChatBoks: a local, cheap coordinator for setup, "
             "diagnostics, routing, summaries, and small status checks. You do not have tools. "
             "Do not emit JSON, markdown fences, fake tool calls, or END_OF_MESSAGE. "
-            "Reply in concise plain text. If deep implementation, architecture, security review, "
-            "vision, browser testing, or git work is needed, recommend the right agent instead of "
-            "pretending to do it. End with exactly one ChatBoks signal: >>> TASK_COMPLETE, "
-            ">>> QUESTION, or >>> BLOCKED."
+            "Reply in concise plain text. For setup checks, give one concrete next diagnostic "
+            "command when possible. Use >>> QUESTION only when you include a specific question "
+            "for the human in the response body. If deep implementation, architecture, security "
+            "review, vision, browser testing, or git work is needed, recommend the right agent "
+            "instead of pretending to do it. End with exactly one ChatBoks signal: "
+            ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
         )
         return f"{self.role}\n\n{context}\n\n{instruction}\n"
 
@@ -47,7 +50,9 @@ class AgentZeroAgent(BaseAgent):
                     "role": "system",
                     "content": (
                         "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
-                        "No markdown fences. No tool calls. End with exactly one of "
+                        "No markdown fences. No tool calls. For setup checks, provide one "
+                        "concrete next diagnostic command when possible. Use >>> QUESTION only "
+                        "with a specific question in the body. End with exactly one of "
                         ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
                     ),
                 },
@@ -79,9 +84,9 @@ class AgentZeroAgent(BaseAgent):
             return f"Ollama returned invalid JSON for {self.name}: {raw[:500]}\n>>> BLOCKED"
 
         content = (data.get("message") or {}).get("content") or data.get("response") or ""
-        return self.normalize_output(str(content))
+        return self.normalize_output(str(content), prompt)
 
-    def normalize_output(self, text: str) -> str:
+    def normalize_output(self, text: str, prompt: str = "") -> str:
         cleaned = text.strip().replace("END_OF_MESSAGE", "").strip()
         if not cleaned:
             return f"{self.name} returned no output.\n>>> BLOCKED"
@@ -102,6 +107,8 @@ class AgentZeroAgent(BaseAgent):
                 if line.strip() and line.strip() not in self.signals
             ]
             body = "\n".join(body_lines).strip()
+            if not body and signal in {"QUESTION", "TASK_COMPLETE"}:
+                return self.fallback_for_bare_signal(prompt)
             return f"{body}\n>>> {signal}" if body else f">>> {signal}"
         body_lines = [
             line.strip()
@@ -120,6 +127,23 @@ class AgentZeroAgent(BaseAgent):
         ) or (
             lowered.startswith("{")
             and ("read_file" in lowered or "tool" in lowered)
+        )
+
+    @staticmethod
+    def fallback_for_bare_signal(prompt: str) -> str:
+        lowered = prompt.lower()
+        if "diagnostic command" in lowered or "check this project setup" in lowered:
+            project_match = re.search(r"\bProject:\s*([A-Za-z0-9_-]+)", prompt)
+            project = project_match.group(1) if project_match else "<project>"
+            command = f"python doctor.py {project}"
+            return (
+                f"Next diagnostic command: {command}\n"
+                "Run it from the ChatBoks folder. Add --smoke-agents only when you intentionally "
+                "want live model calls.\n>>> TASK_COMPLETE"
+            )
+        return (
+            "Agent Zero returned a bare control signal without an actionable response. "
+            "Retry the request or route it to Codex.\n>>> BLOCKED"
         )
 
     def write_prompt_file(self, prompt: str) -> Path:

@@ -85,6 +85,9 @@ class Router:
             path = self.project_path / role_file
             if path.exists():
                 return path.read_text(encoding="utf-8")
+            fallback = Path(__file__).parent / role_file
+            if fallback.exists():
+                return fallback.read_text(encoding="utf-8")
         return (
             f"You are {agent_name} in Chatboks, a human-supervised coding relay. "
             "Collaborate with the other agents, push back when useful, and end with "
