@@ -14,6 +14,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Antigravity remains pending until the `agy` CLI is available on Windows.
 - `install.py` exists as the first-run setup helper.
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
+- Agent Zero has an initial optional Forge adapter, direct `@zero` routing, and installer support.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -51,7 +52,7 @@ Remaining:
 - Antigravity support when `agy` ships on Windows.
 - Git hook for async handoffs.
 - Versioned adapter system for CLI flag drift.
-- Token-exhaustion detection and readable recovery message.
+- Verify Forge Agent Zero adapter flags against installed Forge and selected local/free agent.
 
 ## Phase 2 - Token Intelligence
 
@@ -113,7 +114,7 @@ Responsibilities:
 
 Recommended stack from the handover:
 
-- Framework: Forge (`github.com/antoinezambelli/forge`)
+- Framework: Forge (`github.com/forge-agents/forge`)
 - Base model: Qwen2.5 Coder 3B, quantized
 - Runtime: Ollama REST API
 - Upgrade path: Forge + Llama 3.1 8B Q4 for users with 16GB+ RAM

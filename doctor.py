@@ -130,7 +130,7 @@ def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any
     if cli_ok:
         ok = check_cli_help(cli, agent_name) and ok
         if smoke_agents:
-            ok = smoke_agent_stdin(cli, agent_name, project_path) and ok
+            ok = smoke_agent_stdin(cli, agent_name, project_path, agent_config) and ok
         else:
             print(f"SKIP {agent_name} stdin smoke test (use --smoke-agents; may consume tokens)")
     return ok
@@ -143,17 +143,38 @@ def check_cli_help(cli: str, agent_name: str) -> bool:
     return ok
 
 
-def smoke_agent_stdin(cli: str, agent_name: str, project_path: Path) -> bool:
+def smoke_agent_stdin(
+    cli: str,
+    agent_name: str,
+    project_path: Path,
+    agent_config: dict[str, Any],
+) -> bool:
     env = os.environ.copy()
     env["CHATBOKS"] = "1"
     if agent_name == "claude":
         command = [cli, "--print", "--dangerously-skip-permissions", "-"]
     elif agent_name == "codex":
         command = [cli, "exec", "-C", str(project_path), "--dangerously-bypass-approvals-and-sandbox", "-s", "danger-full-access", "-"]
+    elif agent_name == "agent_zero":
+        env["CHATBOKS_AGENT_ZERO"] = "1"
+        command = [
+            cli,
+            str(agent_config.get("forge_agent", "qwen")),
+            "--project",
+            str(project_path),
+            "-p",
+        ]
+        if agent_config.get("model"):
+            command.extend(["--model", str(agent_config["model"])])
+        if agent_config.get("mode"):
+            command.extend(["--mode", str(agent_config["mode"])])
+        # TODO: Verify Forge headless flags against the installed Forge CLI.
+        command.append("Reply with exactly: CHATBOKS_OK")
     else:
         print(f"SKIP {agent_name} stdin smoke test: no adapter yet")
         return True
-    result = run_capture(command, input_text="Reply with exactly: CHATBOKS_OK", cwd=project_path, env=env, timeout=60)
+    input_text = None if agent_name == "agent_zero" else "Reply with exactly: CHATBOKS_OK"
+    result = run_capture(command, input_text=input_text, cwd=project_path, env=env, timeout=60)
     ok = result.returncode == 0 and "CHATBOKS_OK" in (result.stdout or "")
     print(("OK  " if ok else "FAIL") + f" {agent_name} stdin smoke")
     return ok

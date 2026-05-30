@@ -3,12 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from agents.agent_zero import AgentZeroAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
 from agents.codex import CodexAgent
 
 
 AGENT_CLASSES = {
+    "agent_zero": AgentZeroAgent,
     "claude": ClaudeAgent,
     "codex": CodexAgent,
     "antigravity": AntigravityAgent,
@@ -51,11 +53,15 @@ class Router:
         first, _, remainder = stripped.partition(" ")
         requested = first[1:].lower()
         aliases = {
+            "0": "agent_zero",
+            "az": "agent_zero",
+            "forge": "agent_zero",
+            "zero": "agent_zero",
             "antigrav": "antigravity",
             "agy": "antigravity",
         }
         agent_name = aliases.get(requested, requested)
-        if agent_name not in self.agent_names:
+        if agent_name not in self.config.get("agents", {}) or agent_name not in AGENT_CLASSES:
             return list(self.agent_names), text, None
 
         cleaned = remainder.strip() or text
@@ -64,8 +70,8 @@ class Router:
     def get_agent(self, agent_name: str):
         if agent_name not in AGENT_CLASSES:
             raise ValueError(f"Unsupported agent: {agent_name}")
-        if agent_name not in self.agent_names:
-            raise ValueError(f"Agent '{agent_name}' is not enabled for project '{self.project}'")
+        if agent_name not in self.config.get("agents", {}):
+            raise ValueError(f"Agent '{agent_name}' is not configured")
         if agent_name not in self._agents:
             agent_config = self.config["agents"][agent_name]
             role = self.load_role(agent_name, agent_config)

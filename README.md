@@ -68,6 +68,20 @@ By default, `doctor.py` avoids model-consuming calls. To test actual stdin pipin
 python doctor.py taskfish --smoke-agents
 ```
 
+Agent Zero is an optional local/bootstrap agent backed by Forge and Qwen Code. It is configured but not added to project teams by default. To install/check Forge and Qwen Code, then ask whether Agent Zero should join a project, run:
+
+```bash
+python install.py tinyguardian --agent-zero
+```
+
+You can also route to it directly without adding it to normal rounds:
+
+```text
+@zero check this project setup and recommend the next diagnostic command.
+```
+
+If Qwen Code requires first-run login or model setup, complete that outside ChatBoks first; ChatBoks will time out and report `BLOCKED` rather than hanging indefinitely.
+
 ## CodeGraph (third-party integration)
 
 ChatBoks integrates with [CodeGraph](https://github.com/colbymchenry/codegraph) by colbymchenry, a separate open-source tool that builds a semantic code knowledge graph from your project. Install it independently via:
