@@ -52,6 +52,11 @@ class AgentZeroAgent(BaseAgent):
         env = os.environ.copy()
         env["CHATBOKS"] = "1"
         env["CHATBOKS_AGENT_ZERO"] = "1"
+        npm_bin = str(Path.home() / "AppData" / "Roaming" / "npm")
+        if os.name == "nt" and npm_bin not in env.get("PATH", ""):
+            env["PATH"] = npm_bin + os.pathsep + env.get("PATH", "")
+        for key, value in self.config.get("env", {}).items():
+            env[str(key)] = str(value)
         extra: dict[str, Any] = {}
         if os.name == "nt":
             si = subprocess.STARTUPINFO()

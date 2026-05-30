@@ -129,6 +129,7 @@ Routing lanes:
 Open question:
 
 - Measure Windows CPU latency for `qwen2.5-coder:3b`; target routing decisions under 10 seconds.
+- Current blocker: Forge can detect Qwen Code, but Qwen/Forge still needs first-run local model/provider setup before headless `@zero` calls return successfully.
 
 ## Execution Model Improvements
 
