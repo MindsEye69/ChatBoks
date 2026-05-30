@@ -15,6 +15,10 @@ class AgentZeroAgent(BaseAgent):
     name = "agent_zero"
     signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
 
+    @property
+    def project_name(self) -> str:
+        return str(self.config.get("project_name") or "").strip()
+
     def build_prompt(self, context: str, mode: str) -> str:
         max_chars = int(self.config.get("max_prompt_chars", 8000))
         if len(context) > max_chars:
@@ -129,13 +133,12 @@ class AgentZeroAgent(BaseAgent):
             and ("read_file" in lowered or "tool" in lowered)
         )
 
-    @staticmethod
-    def fallback_for_bare_signal(prompt: str) -> str:
+    def fallback_for_bare_signal(self, prompt: str) -> str:
         lowered = prompt.lower()
         if "diagnostic command" in lowered or "check this project setup" in lowered:
             project_match = re.search(r"\bProject:\s*([A-Za-z0-9_-]+)", prompt)
-            project = project_match.group(1) if project_match else "<project>"
-            command = f"python doctor.py {project}"
+            project = project_match.group(1) if project_match else self.project_name
+            command = f"python doctor.py {project}" if project else "python doctor.py"
             return (
                 f"Next diagnostic command: {command}\n"
                 "Run it from the ChatBoks folder. Add --smoke-agents only when you intentionally "

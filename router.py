@@ -73,7 +73,8 @@ class Router:
         if agent_name not in self.config.get("agents", {}):
             raise ValueError(f"Agent '{agent_name}' is not configured")
         if agent_name not in self._agents:
-            agent_config = self.config["agents"][agent_name]
+            agent_config = dict(self.config["agents"][agent_name])
+            agent_config["project_name"] = self.project
             role = self.load_role(agent_name, agent_config)
             cls = AGENT_CLASSES[agent_name]
             self._agents[agent_name] = cls(self.project_path, agent_config, role)
