@@ -40,7 +40,13 @@ class AgentZeroAgent(BaseAgent):
         return command
 
     def run_cli(self, prompt: str, timeout: int = 120) -> str:
-        command = [*self.command(), prompt]
+        prompt_path = self.write_prompt_file(prompt)
+        prompt_arg = (
+            "You are Agent Zero for ChatBoks. Read the full request from "
+            f"{prompt_path.name} in the .chatboks folder of this project, then answer it. "
+            "End with exactly one ChatBoks control signal."
+        )
+        command = [*self.command(), prompt_arg]
         use_shell = os.name == "nt"
         run_command = subprocess.list2cmdline(command) if use_shell else command
         env = os.environ.copy()
@@ -71,3 +77,10 @@ class AgentZeroAgent(BaseAgent):
             stderr = result.stderr.strip() or "No stderr captured."
             return f"CLI call failed for {self.name}: {stderr}\n>>> BLOCKED"
         return result.stdout.strip() or f"{self.name} returned no output.\n>>> BLOCKED"
+
+    def write_prompt_file(self, prompt: str) -> Path:
+        state_dir = self.project_path / ".chatboks"
+        state_dir.mkdir(parents=True, exist_ok=True)
+        prompt_path = state_dir / "agent_zero_prompt.md"
+        prompt_path.write_text(prompt, encoding="utf-8")
+        return prompt_path
