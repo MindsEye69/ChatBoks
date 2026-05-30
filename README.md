@@ -82,6 +82,8 @@ The context builder integrates with [CodeGraph by colbymchenry](https://github.c
 
 It queries `files`, `nodes`, `edges`, and optional `project_metadata` tables when present.
 
+CodeGraph is an external dependency. For CodeGraph installation, indexing, parser, or database issues, use the CodeGraph project's support channels. ChatBoks support covers how ChatBoks consumes an existing CodeGraph SQLite database.
+
 ## License
 
 ChatBoks is licensed under AGPL-3.0. CodeGraph is a separate MIT-licensed dependency.

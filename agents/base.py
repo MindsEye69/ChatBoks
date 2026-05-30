@@ -7,9 +7,30 @@ from pathlib import Path
 from typing import Any
 
 
+class TokenExhaustionError(RuntimeError):
+    """Raised when an agent CLI rejects a prompt because the context is too large."""
+
+
 class BaseAgent:
     name = "base"
     default_args: list[str] = []
+    token_exhaustion_markers = (
+        "context length exceeded",
+        "context_length_exceeded",
+        "context window",
+        "exceed context",
+        "exceeds context",
+        "exceeded maximum context",
+        "maximum context length",
+        "maximum context",
+        "too many tokens",
+        "token limit",
+        "tokens exceed",
+        "input is too long",
+        "prompt is too long",
+        "reduce the length",
+        "model maximum",
+    )
 
     def __init__(self, project_path: Path, config: dict[str, Any], role: str) -> None:
         self.project_path = project_path
@@ -91,9 +112,19 @@ class BaseAgent:
         except subprocess.TimeoutExpired:
             return f"CLI call timed out for {self.name} after {timeout} seconds.\n>>> BLOCKED"
         if result.returncode != 0:
+            combined_output = "\n".join(
+                part.strip() for part in (result.stderr, result.stdout) if part.strip()
+            )
+            if self.is_token_exhaustion(combined_output):
+                raise TokenExhaustionError(
+                    combined_output or f"{self.name} exhausted its token context."
+                )
             stderr = result.stderr.strip() or "No stderr captured."
             return f"CLI call failed for {self.name}: {stderr}\n>>> BLOCKED"
-        return result.stdout.strip() or f"{self.name} returned no output.\n>>> BLOCKED"
+        output = result.stdout.strip()
+        if self.is_token_exhaustion(output):
+            raise TokenExhaustionError(output)
+        return output or f"{self.name} returned no output.\n>>> BLOCKED"
 
     @staticmethod
     def short_codegraph_status(codegraph: str) -> str:
@@ -101,3 +132,8 @@ class BaseAgent:
             if line.startswith("Files ") or line.startswith("[CODEGRAPH] Not available"):
                 return line
         return "Codegraph summary included."
+
+    @classmethod
+    def is_token_exhaustion(cls, text: str) -> bool:
+        normalized = text.lower()
+        return any(marker in normalized for marker in cls.token_exhaustion_markers)

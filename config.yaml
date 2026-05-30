@@ -10,7 +10,7 @@ projects:
     primary: codex
     codegraph: true
   tinyguardian:
-    path: C:\Users\MindsEye\Desktop\TinyGuardian Backup\Last Good
+    path: C:\Users\MindsEye\source\repos\TinyGuardian
     agents: [claude, codex]
     primary: claude
     codegraph: true

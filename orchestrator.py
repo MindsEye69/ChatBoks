@@ -18,6 +18,7 @@ import yaml
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from agents.base import TokenExhaustionError
 from context.builder import ContextBuilder
 from router import Router
 from ui.stream import Stream
@@ -198,14 +199,10 @@ class Chatboks:
             self.state["completed_agents"] = []
             self.save_state()
 
-            pending_proposal: tuple[str, str] | None = None
             for index, agent_name in enumerate(active_agents):
                 is_last_agent = index == len(active_agents) - 1
                 next_agent = "you" if is_last_agent else active_agents[index + 1]
-                self.check_token_limit(agent_name)
-                context_pkg = self.context.build(self.state, self.chatboks_md)
-                agent = self.router.get_agent(agent_name)
-                response = agent.call(context_pkg)
+                response = self.call_agent_with_token_recovery(agent_name, mode="respond")
                 signal = self.parse_signal(response)
 
                 if signal == "SKIP":
@@ -224,9 +221,6 @@ class Chatboks:
                 self.update_state({"last_agent": agent_name, "next_agent": next_agent})
 
                 if signal == "PROPOSAL":
-                    if not is_last_agent:
-                        pending_proposal = (response, agent_name)
-                        continue
                     self.handle_proposal(response, agent_name)
                     return
                 if signal == "QUESTION":
@@ -248,10 +242,6 @@ class Chatboks:
                 if signal in {"TASK_COMPLETE", "TASK COMPLETE"}:
                     if not is_last_agent:
                         continue
-                    if pending_proposal:
-                        response, agent_name = pending_proposal
-                        self.handle_proposal(response, agent_name)
-                        return
                     self.stream.system("Task complete. Awaiting next instruction.")
                     self.update_state({"status": "idle"})
                     return
@@ -262,11 +252,6 @@ class Chatboks:
                     self.stream.system("Agent blocked. Your input needed.")
                     self.update_state({"status": "blocked", "next_agent": "you"})
                     return
-
-            if pending_proposal:
-                response, agent_name = pending_proposal
-                self.handle_proposal(response, agent_name)
-                return
 
             if self.all_expected_agents_completed():
                 self.stream.system("Round complete. Awaiting next instruction.")
@@ -343,12 +328,34 @@ class Chatboks:
 
     def execute_proposal(self) -> None:
         lead = self.router.primary()
-        agent = self.router.get_agent(lead)
-        context_pkg = self.context.build(self.state, self.chatboks_md)
-        response = agent.execute(context_pkg)
+        response = self.call_agent_with_token_recovery(lead, mode="execute")
         self.append_message(lead, response)
         signal = self.parse_signal(response)
         self.update_state({"status": "idle" if signal != "BLOCKED" else "blocked"})
+
+    def call_agent_with_token_recovery(self, agent_name: str, mode: str) -> str:
+        retries = int(self.config.get("context", {}).get("max_token_recovery_retries", 2))
+        agent = self.router.get_agent(agent_name)
+
+        for attempt in range(retries + 1):
+            self.check_token_limit(agent_name)
+            context_pkg = self.context.build(self.state, self.chatboks_md)
+            try:
+                if mode == "execute":
+                    return agent.execute(context_pkg)
+                return agent.call(context_pkg)
+            except TokenExhaustionError as exc:
+                if attempt >= retries:
+                    return self.token_recovery_blocked(agent_name, str(exc), retries)
+                if not self.recover_token_exhaustion(
+                    agent_name,
+                    str(exc),
+                    attempt + 1,
+                    retries,
+                ):
+                    return self.token_recovery_blocked(agent_name, str(exc), attempt + 1)
+
+        return self.token_recovery_blocked(agent_name, "Retry budget exhausted.", retries)
 
     def check_token_limit(self, agent_name: str) -> None:
         agent_config = self.config["agents"][agent_name]
@@ -356,17 +363,80 @@ class Chatboks:
         warning = int(agent_config["token_warning"])
 
         if current >= warning:
-            self.stream.system(f"{agent_name} approaching token limit. Summarizing.")
-            summary = self.context.summarize(self.chatboks_md)
-            agent = self.router.get_agent(agent_name)
-            codegraph = self.context.load_codegraph()
-            agent.reinitialize(codegraph, summary, self.state)
-            self.append_message(
-                "system",
-                f"{agent_name} reinitialized. Context compressed and reloaded.",
+            self.recover_token_exhaustion(
+                agent_name,
+                f"Estimated token count {current} reached warning threshold {warning}.",
+                attempt=0,
+                max_retries=0,
             )
-            self.state["context"]["token_counts"][agent_name] = 0
-            self.save_state()
+
+    def recover_token_exhaustion(
+        self,
+        agent_name: str,
+        reason: str,
+        attempt: int,
+        max_retries: int,
+    ) -> bool:
+        retry_text = (
+            f" Recovery retry {attempt}/{max_retries}."
+            if max_retries
+            else " Proactive context reset."
+        )
+        self.stream.system(
+            f"{agent_name} token context exhausted. Compressing transcript.{retry_text}"
+        )
+        summary = self.context.summarize(self.chatboks_md)
+        self.append_message(
+            "system",
+            "\n".join(
+                [
+                    ">>> SUMMARY_CHECKPOINT",
+                    f"Agent: {agent_name}",
+                    f"Reason: {self.truncate_for_state(reason)}",
+                    summary,
+                ]
+            ),
+        )
+        agent = self.router.get_agent(agent_name)
+        codegraph = self.context.load_codegraph()
+        try:
+            resume_response = agent.reinitialize(codegraph, summary, self.state)
+        except TokenExhaustionError as exc:
+            self.stream.system(
+                f"{agent_name} could not reload compressed context: "
+                f"{self.truncate_for_state(str(exc))}"
+            )
+            return False
+
+        if agent.is_token_exhaustion(resume_response):
+            self.stream.system(f"{agent_name} still reports token exhaustion after compression.")
+            return False
+
+        self.append_message(
+            "system",
+            f"{agent_name} reinitialized after context compression. Retrying with compact context.",
+        )
+        self.state["context"]["token_counts"][agent_name] = 0
+        self.save_state()
+        return True
+
+    def token_recovery_blocked(self, agent_name: str, reason: str, retries: int) -> str:
+        return "\n".join(
+            [
+                f"{agent_name} hit token exhaustion and automatic recovery did not complete.",
+                f"Recovery attempts: {retries}.",
+                f"Last error: {self.truncate_for_state(reason)}",
+                "The transcript has been summarized where possible; user input is needed before continuing.",
+                ">>> BLOCKED",
+            ]
+        )
+
+    @staticmethod
+    def truncate_for_state(text: str, limit: int = 500) -> str:
+        cleaned = " ".join(text.split())
+        if len(cleaned) <= limit:
+            return cleaned
+        return cleaned[: limit - 3] + "..."
 
     def update_token_count(self, agent_name: str, response: str) -> None:
         tokens = max(1, len(response) // 4)
