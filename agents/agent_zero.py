@@ -99,25 +99,29 @@ class AgentZeroAgent(BaseAgent):
                 "Agent Zero attempted to emit a tool call instead of plain text. "
                 "Retry with a smaller diagnostic request or route to Codex.\n>>> BLOCKED"
             )
-        signal = next(
-            (candidate for candidate in self.signals if f">>> {candidate}" in cleaned),
-            None,
-        )
+        signal_positions = [
+            (cleaned.rfind(f">>> {candidate}"), candidate)
+            for candidate in self.signals
+            if f">>> {candidate}" in cleaned
+        ]
+        signal = max(signal_positions)[1] if signal_positions else None
         if signal:
-            before_signal, _, _ = cleaned.partition(f">>> {signal}")
+            before_signal, _, _ = cleaned.rpartition(f">>> {signal}")
+            signal_lines = {f">>> {candidate}" for candidate in self.signals}
             body_lines = [
                 line.strip()
                 for line in before_signal.splitlines()
-                if line.strip() and line.strip() not in self.signals
+                if line.strip() and line.strip() not in signal_lines
             ]
             body = "\n".join(body_lines).strip()
             if not body and signal in {"QUESTION", "TASK_COMPLETE"}:
                 return self.fallback_for_bare_signal(prompt)
             return f"{body}\n>>> {signal}" if body else f">>> {signal}"
+        signal_lines = {f">>> {candidate}" for candidate in self.signals}
         body_lines = [
             line.strip()
             for line in cleaned.splitlines()
-            if line.strip() and line.strip() not in self.signals
+            if line.strip() and line.strip() not in self.signals and line.strip() not in signal_lines
         ]
         body = "\n".join(body_lines).strip()
         return f"{body}\n>>> TASK_COMPLETE" if body else ">>> TASK_COMPLETE"

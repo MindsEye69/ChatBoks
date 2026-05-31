@@ -17,6 +17,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Agent Zero has an initial optional Ollama adapter, direct `@zero` routing, and installer support.
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
+- Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -47,6 +48,8 @@ Completed:
 - Proposal buffering until all expected agents have had a chance to respond.
 - Manual `/win`, `/fail`, `/outcome`, `/wins`, `/failures`, and `/outcomes` commands.
 - Manual `/mode` command for collaboration framing.
+- Manual `/agent` command for exhausted/blocked/available model status.
+- Fallback routing for normal rounds when a configured agent is unavailable.
 
 Remaining:
 
@@ -60,6 +63,7 @@ Remaining:
 - Expand Agent Zero routing intelligence beyond direct local diagnostics.
 - Automated outcome scoring suggestions from Agent Zero.
 - Mode-aware routing strategies after the dispatcher is stable.
+- Provider/model fallback within the same agent wrapper, such as Gemini Pro to Flash when supported by the user's CLI.
 
 ## Phase 2 - Token Intelligence
 

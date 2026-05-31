@@ -25,7 +25,7 @@ from router import Router
 from ui.stream import Stream
 
 
-SIGNALS = {
+SIGNALS = [
     "PROPOSAL",
     "QUESTION",
     "HANDOFF",
@@ -33,7 +33,7 @@ SIGNALS = {
     "TASK COMPLETE",
     "BLOCKED",
     "SKIP",
-}
+]
 
 
 COLLABORATION_MODES = {
@@ -58,6 +58,15 @@ COLLABORATION_MODES = {
         "Diagnose mode. Establish the root cause with the smallest useful probes. Recommend concrete commands "
         "or narrow fixes before broad implementation."
     ),
+}
+
+AGENT_STATUSES = {"available", "low", "exhausted", "blocked"}
+
+DEFAULT_AGENT_FALLBACKS = {
+    "claude": ["codex", "agent_zero"],
+    "codex": ["claude", "agent_zero"],
+    "gemini": ["claude", "codex", "agent_zero"],
+    "antigravity": ["codex", "claude", "agent_zero"],
 }
 
 
@@ -179,12 +188,18 @@ class Chatboks:
             return
 
         agents, routed_text, exclusive_agent = self.router.route_user_prompt(text)
+        agents = self.resolve_available_agents(agents, exclusive_agent)
+        if not agents:
+            return
         next_agent = exclusive_agent or self.router.primary()
+        if next_agent not in agents:
+            next_agent = agents[0]
         self.update_state(
             {
                 "status": "active",
                 "next_agent": next_agent,
                 "active_task": routed_text,
+                "agent_status": self.load_agent_statuses(),
             }
         )
         self.run_agent_round(initiator=routed_text, agents=agents)
@@ -208,11 +223,190 @@ class Chatboks:
         if command in {"/mode", "/modes"}:
             self.handle_mode_command(stripped)
             return True
+        if command in {"/agent", "/agents"}:
+            self.handle_agent_command(stripped)
+            return True
 
         self.stream.system(
-            "Unknown local command. Try /mode, /win, /fail, /outcome, /wins, /failures, or /outcomes."
+            "Unknown local command. Try /agent, /mode, /win, /fail, /outcome, /wins, /failures, or /outcomes."
         )
         return True
+
+    def handle_agent_command(self, text: str) -> None:
+        parts = text.split(maxsplit=3)
+        if len(parts) == 1:
+            self.show_agent_statuses()
+            return
+
+        agent = parts[1].lower()
+        if agent not in self.config.get("agents", {}):
+            known = ", ".join(sorted(self.config.get("agents", {})))
+            self.stream.system(f"Unknown agent '{agent}'. Known agents: {known}")
+            return
+
+        if len(parts) == 2:
+            self.show_agent_statuses(agent)
+            return
+
+        status = parts[2].lower()
+        if status in {"awake", "wake", "ready"}:
+            status = "available"
+        if status not in AGENT_STATUSES:
+            statuses = ", ".join(sorted(AGENT_STATUSES))
+            self.stream.system(f"Unknown status '{status}'. Use one of: {statuses}")
+            return
+
+        detail = parts[3] if len(parts) > 3 else ""
+        until = self.parse_status_until(detail)
+        reason = detail if not until else ""
+        statuses = self.load_agent_statuses()
+        statuses[agent] = {
+            "status": status,
+            "updated_at": self.timestamp(),
+            "until": until,
+            "reason": reason,
+        }
+        if status == "available":
+            statuses[agent].pop("until", None)
+            statuses[agent].pop("reason", None)
+        self.save_agent_statuses(statuses)
+        self.update_state({"agent_status": statuses})
+        self.append_message("system", f"Agent status: {agent} is {status}.")
+
+    def show_agent_statuses(self, agent: str | None = None) -> None:
+        statuses = self.load_agent_statuses()
+        names = [agent] if agent else sorted(self.config.get("agents", {}))
+        lines = ["Agent availability:"]
+        for name in names:
+            record = statuses.get(name, {"status": "available"})
+            until = f" until {self.format_status_until(record['until'])}" if record.get("until") else ""
+            reason = f" ({record['reason']})" if record.get("reason") else ""
+            lines.append(f"- {name}: {record.get('status', 'available')}{until}{reason}")
+        self.stream.system("\n".join(lines))
+
+    @staticmethod
+    def parse_status_until(detail: str) -> str | None:
+        if not detail:
+            return None
+        value = detail.strip().lower()
+        if value.endswith("m") and value[:-1].isdigit():
+            return str(int(time.time() + int(value[:-1]) * 60))
+        if value.endswith("h") and value[:-1].isdigit():
+            return str(int(time.time() + int(value[:-1]) * 3600))
+        return None
+
+    def resolve_available_agents(self, agents: list[str], exclusive_agent: str | None) -> list[str]:
+        statuses = self.load_agent_statuses()
+        self.update_state({"agent_status": statuses})
+        if exclusive_agent:
+            if self.agent_is_available(exclusive_agent, statuses):
+                return agents
+            self.stream.system(
+                f"{exclusive_agent} is exhausted or unavailable. "
+                f"Use /agent {exclusive_agent} available to retry, or address another agent."
+            )
+            return []
+
+        resolved: list[str] = []
+        substitutions: list[str] = []
+        for agent in agents:
+            if self.agent_is_available(agent, statuses):
+                if agent not in resolved:
+                    resolved.append(agent)
+                continue
+            fallback = self.find_agent_fallback(agent, statuses, resolved)
+            if fallback:
+                if fallback not in resolved:
+                    resolved.append(fallback)
+                substitutions.append(f"{agent} -> {fallback}")
+            else:
+                substitutions.append(f"{agent} skipped")
+
+        if substitutions:
+            self.stream.system("Agent availability: " + "; ".join(substitutions))
+        if not resolved:
+            self.stream.system("No available agents for this round. Update /agent status or route explicitly.")
+        return resolved
+
+    def find_agent_fallback(
+        self,
+        agent: str,
+        statuses: dict[str, dict[str, Any]],
+        already_selected: list[str],
+    ) -> str | None:
+        configured = self.config.get("agent_fallbacks", {})
+        candidates = configured.get(agent, DEFAULT_AGENT_FALLBACKS.get(agent, []))
+        configured_agents = self.config.get("agents", {})
+        for candidate in candidates:
+            if candidate in already_selected:
+                continue
+            if candidate not in configured_agents:
+                continue
+            if self.agent_is_available(candidate, statuses):
+                return candidate
+        return None
+
+    @staticmethod
+    def agent_is_available(agent: str, statuses: dict[str, dict[str, Any]]) -> bool:
+        record = statuses.get(agent) or {}
+        status = str(record.get("status", "available")).lower()
+        until = record.get("until")
+        if until:
+            try:
+                if time.time() >= float(until):
+                    return True
+            except (TypeError, ValueError):
+                pass
+        return status in {"available", "low"}
+
+    def load_agent_statuses(self) -> dict[str, dict[str, Any]]:
+        path = self.agent_status_path()
+        if not path.exists():
+            return {}
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        if not isinstance(data, dict):
+            return {}
+        now = time.time()
+        changed = False
+        for agent, record in list(data.items()):
+            if not isinstance(record, dict):
+                data.pop(agent, None)
+                changed = True
+                continue
+            until = record.get("until")
+            if until:
+                try:
+                    if now >= float(until):
+                        data[agent] = {
+                            "status": "available",
+                            "updated_at": self.timestamp(),
+                        }
+                        changed = True
+                except (TypeError, ValueError):
+                    pass
+        if changed:
+            self.save_agent_statuses(data)
+        return data
+
+    def save_agent_statuses(self, statuses: dict[str, dict[str, Any]]) -> None:
+        self.ensure_project_files()
+        self.agent_status_path().write_text(
+            json.dumps(statuses, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+    def agent_status_path(self) -> Path:
+        return self.state_file.parent / "agent_status.json"
+
+    @staticmethod
+    def format_status_until(until: Any) -> str:
+        try:
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(until)))
+        except (TypeError, ValueError):
+            return str(until)
 
     def handle_mode_command(self, text: str) -> None:
         parts = text.split(maxsplit=1)
@@ -509,7 +703,7 @@ class Chatboks:
     def handle_approval(self, text: str) -> None:
         verdict = text.strip().upper()
 
-        if verdict == "APPROVE":
+        if verdict in {"APPROVE", "YES", "Y", "OK", "GO"}:
             self.stream.system("Approved. Executing...")
             self.update_state({"status": "executing", "next_agent": self.router.primary()})
             self.execute_proposal()
@@ -532,10 +726,20 @@ class Chatboks:
 
     def execute_proposal(self) -> None:
         lead = self.router.primary()
+        agents = self.resolve_available_agents([lead], exclusive_agent=None)
+        if not agents:
+            self.update_state({"status": "blocked", "next_agent": "you"})
+            return
+        lead = agents[0]
         response = self.call_agent_with_token_recovery(lead, mode="execute")
         self.append_message(lead, response)
         signal = self.parse_signal(response)
-        self.update_state({"status": "idle" if signal != "BLOCKED" else "blocked"})
+        self.update_state(
+            {
+                "status": "idle" if signal != "BLOCKED" else "blocked",
+                "proposal": None,
+            }
+        )
 
     def call_agent_with_token_recovery(self, agent_name: str, mode: str) -> str:
         retries = int(self.config.get("context", {}).get("max_token_recovery_retries", 2))
@@ -564,7 +768,7 @@ class Chatboks:
     def check_token_limit(self, agent_name: str) -> None:
         agent_config = self.config["agents"][agent_name]
         current = self.state["context"]["token_counts"].get(agent_name, 0)
-        warning = int(agent_config["token_warning"])
+        warning = int(agent_config.get("token_warning", 100_000))
 
         if current >= warning:
             self.recover_token_exhaustion(

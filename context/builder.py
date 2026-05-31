@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
@@ -215,11 +216,30 @@ class ContextBuilder:
                 f"Intent: {state.get('round_intent', 'respond')}",
                 f"Collaboration mode: {state.get('collaboration_mode', 'default')}",
                 f"Mode instruction: {state.get('collaboration_mode_instruction', 'Standard relay.')}",
+                f"Agent status: {self.format_agent_status(state.get('agent_status') or {})}",
                 f"Expected agents: {', '.join(state.get('expected_agents') or []) or 'unknown'}",
                 f"Completed agents: {', '.join(state.get('completed_agents') or []) or 'none'}",
                 f"Next agent: {state.get('next_agent') or 'unknown'}",
             ]
         )
+
+    @staticmethod
+    def format_agent_status(statuses: dict[str, dict[str, str]]) -> str:
+        if not statuses:
+            return "all available"
+        parts = []
+        for agent, record in sorted(statuses.items()):
+            status = record.get("status", "available")
+            until = f" until {ContextBuilder.format_status_until(record['until'])}" if record.get("until") else ""
+            parts.append(f"{agent}={status}{until}")
+        return ", ".join(parts)
+
+    @staticmethod
+    def format_status_until(until: Any) -> str:
+        try:
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(until)))
+        except (TypeError, ValueError):
+            return str(until)
 
     def summarize(self, chatboks_md: Path) -> str:
         return self.summarizer.summarize(chatboks_md)

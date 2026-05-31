@@ -74,6 +74,23 @@ Modes are project-local prompt frames that tell agents how to collaborate. They 
 - `diagnose`: root cause and smallest useful probes.
 - `default`: normal relay behavior.
 
+## Agent Availability
+
+When a model hits a provider limit or should be kept out of the next few rounds, mark it locally with `/agent`.
+These commands do not call any agents or consume model tokens.
+
+```text
+/agent
+/agent claude exhausted 50m
+/agent claude available
+/agent codex low
+/agent agent_zero blocked "Ollama is offline"
+```
+
+Availability is stored per project in `.chatboks/agent_status.json` and included in round context. Normal multi-agent
+rounds skip exhausted or blocked agents and use configured fallbacks when possible. Explicit routes such as `@claude`
+do not silently substitute another model; ChatBoks tells you the target is unavailable so you can decide what to do.
+
 ## Run
 
 ```bash
