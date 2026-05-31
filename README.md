@@ -37,6 +37,22 @@ The orchestrator only acts automatically on control lines:
 
 `state.json` is written under each project at `.chatboks/state.json`.
 
+## Outcome Tracking
+
+ChatBoks can track collaboration wins and failures as project-local JSONL telemetry in `.chatboks/outcomes.jsonl`.
+These local slash commands do not call any agents or consume model tokens:
+
+```text
+/win codex missed_defect high "Caught the IPC pipe fallback issue."
+/fail agent_zero bad_signal medium "Returned a bare QUESTION."
+/outcome win claude better_architecture medium "Found the simpler protocol flow."
+/wins
+/failures
+/outcomes
+```
+
+Use this to compare collaboration modes, agent combinations, and unique model contributions over time.
+
 ## Run
 
 ```bash

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import time
 from pathlib import Path
 from typing import Any
@@ -142,6 +143,9 @@ class Chatboks:
             observer.join()
 
     def handle_user_input(self, text: str) -> None:
+        if self.handle_local_command(text):
+            return
+
         prior_status = self.state.get("status")
         self.append_message("you", text)
 
@@ -159,6 +163,148 @@ class Chatboks:
             }
         )
         self.run_agent_round(initiator=routed_text, agents=agents)
+
+    def handle_local_command(self, text: str) -> bool:
+        stripped = text.strip()
+        if not stripped.startswith("/"):
+            return False
+
+        command = stripped.split(maxsplit=1)[0].lower()
+        if command in {"/win", "/fail", "/outcome"}:
+            self.handle_outcome_command(stripped)
+            return True
+        if command in {"/wins", "/failures", "/outcomes"}:
+            outcome_type = {
+                "/wins": "win",
+                "/failures": "failure",
+            }.get(command)
+            self.show_outcomes(outcome_type=outcome_type)
+            return True
+
+        self.stream.system(
+            "Unknown local command. Try /win, /fail, /outcome, /wins, /failures, or /outcomes."
+        )
+        return True
+
+    def handle_outcome_command(self, text: str) -> None:
+        try:
+            parts = shlex.split(text)
+        except ValueError as exc:
+            self.stream.system(f"Could not parse outcome command: {exc}")
+            return
+
+        if not parts:
+            return
+
+        command = parts[0].lower()
+        if command == "/outcome":
+            if len(parts) < 6:
+                self.stream.system(
+                    'Usage: /outcome <win|failure> <agent> <category> <impact> "note"'
+                )
+                return
+            outcome_type, agent, category, impact = parts[1:5]
+            note = " ".join(parts[5:])
+        else:
+            if len(parts) < 5:
+                self.stream.system(
+                    f'Usage: {command} <agent> <category> <impact> "note"'
+                )
+                return
+            outcome_type = "win" if command == "/win" else "failure"
+            agent, category, impact = parts[1:4]
+            note = " ".join(parts[4:])
+
+        outcome_type = outcome_type.lower()
+        if outcome_type not in {"win", "failure"}:
+            self.stream.system("Outcome type must be 'win' or 'failure'.")
+            return
+        if not note.strip():
+            self.stream.system("Outcome note cannot be empty.")
+            return
+
+        record = {
+            "timestamp": self.timestamp(),
+            "project": self.project,
+            "round": int(self.state.get("round", 0)),
+            "type": outcome_type,
+            "agent": agent.lower(),
+            "category": category.lower(),
+            "impact": impact.lower(),
+            "mode": "manual",
+            "note": note.strip(),
+        }
+        self.append_outcome(record)
+        self.append_message(
+            "system",
+            (
+                f"Outcome recorded: {record['type']} / {record['agent']} / "
+                f"{record['category']} / {record['impact']}."
+            ),
+        )
+
+    def append_outcome(self, record: dict[str, Any]) -> None:
+        self.ensure_project_files()
+        path = self.outcomes_path()
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    def show_outcomes(self, outcome_type: str | None = None, limit: int = 8) -> None:
+        records = self.load_outcomes()
+        if outcome_type:
+            records = [record for record in records if record.get("type") == outcome_type]
+        if not records:
+            label = outcome_type + "s" if outcome_type else "outcomes"
+            self.stream.system(f"No {label} recorded yet.")
+            return
+
+        total = len(records)
+        by_agent: dict[str, int] = {}
+        by_category: dict[str, int] = {}
+        for record in records:
+            by_agent[str(record.get("agent", "?"))] = by_agent.get(str(record.get("agent", "?")), 0) + 1
+            by_category[str(record.get("category", "?"))] = by_category.get(str(record.get("category", "?")), 0) + 1
+
+        recent = records[-limit:]
+        lines = [
+            f"Outcomes: {total}",
+            "By agent: " + self.format_counts(by_agent),
+            "By category: " + self.format_counts(by_category),
+            "Recent:",
+        ]
+        lines.extend(
+            (
+                f"- {record.get('type')} {record.get('agent')} "
+                f"{record.get('category')} {record.get('impact')}: {record.get('note')}"
+            )
+            for record in recent
+        )
+        self.stream.system("\n".join(lines))
+
+    def load_outcomes(self) -> list[dict[str, Any]]:
+        path = self.outcomes_path()
+        if not path.exists():
+            return []
+        records: list[dict[str, Any]] = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(data, dict):
+                records.append(data)
+        return records
+
+    def outcomes_path(self) -> Path:
+        return self.state_file.parent / "outcomes.jsonl"
+
+    @staticmethod
+    def format_counts(counts: dict[str, int]) -> str:
+        return ", ".join(
+            f"{key}={value}" for key, value in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        )
 
     def handle_external_update(self) -> None:
         if self._internal_write:
