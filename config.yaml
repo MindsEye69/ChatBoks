@@ -1,4 +1,9 @@
 projects:
+  chatboks:
+    path: C:\Users\MindsEye\Desktop\chatboks
+    agents: [claude, codex]
+    primary: codex
+    codegraph: true
   taskfish:
     path: C:\Users\MindsEye\Desktop\Tasker\tasker-poc
     agents: [claude, codex]
