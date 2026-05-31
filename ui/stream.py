@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import time
 import math
+import textwrap
 from typing import Any
 
 from rich.console import Console
@@ -68,6 +69,26 @@ class Stream:
 
     def system(self, text: str) -> None:
         self.console.print(f"[dim white][SYSTEM] {text}[/dim white]")
+
+    def help_box(self, commands: list[tuple[str, str]]) -> None:
+        width = max(64, min(96, self.console.width - 4))
+        title = " CHATBOKS COMMAND DECK "
+        top = "+" + title.center(width - 2, "-") + "+"
+        rule = "+" + "-" * (width - 2) + "+"
+        lines = [top]
+        for command, description in commands:
+            prefix = f"{command:<24} "
+            wrapped = textwrap.wrap(
+                description,
+                width=max(20, width - len(prefix) - 4),
+                break_long_words=False,
+            ) or [""]
+            for index, chunk in enumerate(wrapped):
+                left = prefix if index == 0 else " " * len(prefix)
+                body = f"  {left}{chunk}"
+                lines.append("|" + body.ljust(width - 2) + "|")
+        lines.append(rule)
+        self.console.print("\n".join(lines), style="green")
 
     def proposal(self, text: str) -> None:
         self.console.print(Rule(style="yellow"))

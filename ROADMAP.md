@@ -18,6 +18,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
+- `/help` shows a terminal command deck in a BBS-style box.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -50,6 +51,7 @@ Completed:
 - Manual `/mode` command for collaboration framing.
 - Manual `/agent` command for exhausted/blocked/available model status.
 - Fallback routing for normal rounds when a configured agent is unavailable.
+- Terminal `/help` command deck.
 
 Remaining:
 

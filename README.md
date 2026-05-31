@@ -91,6 +91,10 @@ Availability is stored per project in `.chatboks/agent_status.json` and included
 rounds skip exhausted or blocked agents and use configured fallbacks when possible. Explicit routes such as `@claude`
 do not silently substitute another model; ChatBoks tells you the target is unavailable so you can decide what to do.
 
+## Help
+
+Use `/help` in the terminal to show the local command deck in an old-school BBS-style box.
+
 ## Run
 
 ```bash

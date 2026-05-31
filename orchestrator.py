@@ -69,6 +69,21 @@ DEFAULT_AGENT_FALLBACKS = {
     "antigravity": ["codex", "claude", "agent_zero"],
 }
 
+HELP_COMMANDS = [
+    ("/help", "Show this command deck."),
+    ("/agent", "List agent availability for this project."),
+    ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
+    ("/agent <name> available", "Mark a model available again."),
+    ("/mode", "Show the current collaboration mode and available modes."),
+    ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, diagnose."),
+    ("/win ...", "Record a collaboration win without calling agents."),
+    ("/fail ...", "Record a collaboration failure without calling agents."),
+    ("/outcomes", "Show recent wins and failures."),
+    ("@claude / @codex / @zero", "Route the next prompt exclusively to one agent."),
+    ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
+    ("exit / quit / bye", "End the ChatBoks terminal session."),
+]
+
 
 class ChatboksFileHandler(FileSystemEventHandler):
     """Watch chatboks.md for external handoff changes."""
@@ -210,6 +225,9 @@ class Chatboks:
             return False
 
         command = stripped.split(maxsplit=1)[0].lower()
+        if command in {"/help", "/h", "/?"}:
+            self.handle_help_command()
+            return True
         if command in {"/win", "/fail", "/outcome"}:
             self.handle_outcome_command(stripped)
             return True
@@ -228,9 +246,17 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /agent, /mode, /win, /fail, /outcome, /wins, /failures, or /outcomes."
+            "Unknown local command. Try /help, /agent, /mode, /win, /fail, /outcome, /wins, /failures, or /outcomes."
         )
         return True
+
+    def handle_help_command(self) -> None:
+        if hasattr(self.stream, "help_box"):
+            self.stream.help_box(HELP_COMMANDS)
+            return
+        lines = ["ChatBoks commands:"]
+        lines.extend(f"- {command}: {description}" for command, description in HELP_COMMANDS)
+        self.stream.system("\n".join(lines))
 
     def handle_agent_command(self, text: str) -> None:
         parts = text.split(maxsplit=3)
