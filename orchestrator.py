@@ -193,6 +193,7 @@ class Chatboks:
         max_rounds = int(self.config.get("rounds", {}).get("max_before_escalate", 3))
 
         for _ in range(max_rounds):
+            pending_proposal: tuple[str, str] | None = None
             self.state["round"] = int(self.state.get("round", 0)) + 1
             self.state["round_intent"] = intent
             self.state["expected_agents"] = active_agents
@@ -221,8 +222,9 @@ class Chatboks:
                 self.update_state({"last_agent": agent_name, "next_agent": next_agent})
 
                 if signal == "PROPOSAL":
-                    self.handle_proposal(response, agent_name)
-                    return
+                    if pending_proposal is None:
+                        pending_proposal = (response, agent_name)
+                    continue
                 if signal == "QUESTION":
                     self.handle_question(response)
                     return
@@ -252,6 +254,10 @@ class Chatboks:
                     self.stream.system("Agent blocked. Your input needed.")
                     self.update_state({"status": "blocked", "next_agent": "you"})
                     return
+
+            if pending_proposal:
+                self.handle_proposal(*pending_proposal)
+                return
 
             if self.all_expected_agents_completed():
                 self.stream.system("Round complete. Awaiting next instruction.")
