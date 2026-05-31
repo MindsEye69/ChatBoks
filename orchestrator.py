@@ -36,6 +36,31 @@ SIGNALS = {
 }
 
 
+COLLABORATION_MODES = {
+    "default": "Standard relay. Follow each agent role, respond naturally, and avoid duplicate work.",
+    "brainstorm": (
+        "Brainstorm mode. Contribute distinct ideas, options, tradeoffs, and risks. "
+        "Avoid premature convergence; build on prior agents only when it adds new value."
+    ),
+    "bugsearch": (
+        "Bugsearch mode. Hunt for concrete defects, missed edge cases, regressions, and test gaps. "
+        "Prioritize unique findings with severity, evidence, and likely files."
+    ),
+    "implement": (
+        "Implement mode. Prefer scoped, buildable changes. Codex should focus on patches/tests/git mechanics; "
+        "Claude should focus on architecture, risk, and acceptance criteria."
+    ),
+    "review": (
+        "Review mode. Use code-review posture: findings first, ordered by severity, with file/line references "
+        "and residual test risk. Avoid broad redesign unless necessary."
+    ),
+    "diagnose": (
+        "Diagnose mode. Establish the root cause with the smallest useful probes. Recommend concrete commands "
+        "or narrow fixes before broad implementation."
+    ),
+}
+
+
 class ChatboksFileHandler(FileSystemEventHandler):
     """Watch chatboks.md for external handoff changes."""
 
@@ -180,11 +205,38 @@ class Chatboks:
             }.get(command)
             self.show_outcomes(outcome_type=outcome_type)
             return True
+        if command in {"/mode", "/modes"}:
+            self.handle_mode_command(stripped)
+            return True
 
         self.stream.system(
-            "Unknown local command. Try /win, /fail, /outcome, /wins, /failures, or /outcomes."
+            "Unknown local command. Try /mode, /win, /fail, /outcome, /wins, /failures, or /outcomes."
         )
         return True
+
+    def handle_mode_command(self, text: str) -> None:
+        parts = text.split(maxsplit=1)
+        if len(parts) == 1 or parts[1].strip().lower() in {"list", "show", "status"}:
+            current = self.state.get("collaboration_mode", "default")
+            modes = ", ".join(sorted(COLLABORATION_MODES))
+            self.stream.system(f"Current mode: {current}\nAvailable modes: {modes}")
+            return
+
+        mode = parts[1].strip().lower()
+        if mode in {"reset", "standard"}:
+            mode = "default"
+        if mode not in COLLABORATION_MODES:
+            modes = ", ".join(sorted(COLLABORATION_MODES))
+            self.stream.system(f"Unknown mode '{mode}'. Available modes: {modes}")
+            return
+
+        self.update_state(
+            {
+                "collaboration_mode": mode,
+                "collaboration_mode_instruction": COLLABORATION_MODES[mode],
+            }
+        )
+        self.append_message("system", f"Collaboration mode set to {mode}.")
 
     def handle_outcome_command(self, text: str) -> None:
         try:
@@ -706,6 +758,11 @@ class Chatboks:
 
     def normalize_state(self, state: dict[str, Any]) -> dict[str, Any]:
         state.setdefault("round_intent", "respond")
+        state.setdefault("collaboration_mode", "default")
+        state.setdefault(
+            "collaboration_mode_instruction",
+            COLLABORATION_MODES["default"],
+        )
         state.setdefault("expected_agents", [])
         state.setdefault("completed_agents", [])
         state.setdefault("handoff_to", None)

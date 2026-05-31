@@ -53,6 +53,27 @@ These local slash commands do not call any agents or consume model tokens:
 
 Use this to compare collaboration modes, agent combinations, and unique model contributions over time.
 
+## Collaboration Modes
+
+Modes are project-local prompt frames that tell agents how to collaborate. They do not route extra agents by themselves.
+
+```text
+/mode
+/mode brainstorm
+/mode bugsearch
+/mode implement
+/mode review
+/mode diagnose
+/mode default
+```
+
+- `brainstorm`: distinct ideas, options, tradeoffs, and risks.
+- `bugsearch`: concrete defects, edge cases, regressions, and test gaps.
+- `implement`: scoped patches, tests, and buildable changes.
+- `review`: findings-first code review posture.
+- `diagnose`: root cause and smallest useful probes.
+- `default`: normal relay behavior.
+
 ## Run
 
 ```bash

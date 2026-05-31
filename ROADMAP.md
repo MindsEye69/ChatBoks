@@ -16,6 +16,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
 - Agent Zero has an initial optional Ollama adapter, direct `@zero` routing, and installer support.
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
+- Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -45,6 +46,7 @@ Completed:
 - `install.py` setup helper.
 - Proposal buffering until all expected agents have had a chance to respond.
 - Manual `/win`, `/fail`, `/outcome`, `/wins`, `/failures`, and `/outcomes` commands.
+- Manual `/mode` command for collaboration framing.
 
 Remaining:
 
@@ -57,6 +59,7 @@ Remaining:
 - Versioned adapter system for CLI flag drift.
 - Expand Agent Zero routing intelligence beyond direct local diagnostics.
 - Automated outcome scoring suggestions from Agent Zero.
+- Mode-aware routing strategies after the dispatcher is stable.
 
 ## Phase 2 - Token Intelligence
 

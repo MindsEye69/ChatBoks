@@ -213,6 +213,8 @@ class ContextBuilder:
             [
                 "[ROUND CONTEXT]",
                 f"Intent: {state.get('round_intent', 'respond')}",
+                f"Collaboration mode: {state.get('collaboration_mode', 'default')}",
+                f"Mode instruction: {state.get('collaboration_mode_instruction', 'Standard relay.')}",
                 f"Expected agents: {', '.join(state.get('expected_agents') or []) or 'unknown'}",
                 f"Completed agents: {', '.join(state.get('completed_agents') or []) or 'none'}",
                 f"Next agent: {state.get('next_agent') or 'unknown'}",
