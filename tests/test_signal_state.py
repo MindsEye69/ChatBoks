@@ -86,6 +86,19 @@ def test_handle_approval_accepts_common_affirmatives():
         app.run_agent_round.assert_not_called()
 
 
+def test_dismiss_command_clears_active_proposal_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("/DISMISS")
+
+        assert app.state["proposal"] is None
+        assert app.state["status"] == "idle"
+        assert app.state["next_agent"] == "you"
+        app.run_agent_round.assert_not_called()
+
+
 def test_agent_zero_strips_prefixed_signal_lines_from_body():
     agent = AgentZeroAgent.__new__(AgentZeroAgent)
     agent.name = "agent_zero"
@@ -101,5 +114,6 @@ if __name__ == "__main__":
     test_execute_proposal_clears_active_proposal()
     test_check_token_limit_uses_default_warning_threshold()
     test_handle_approval_accepts_common_affirmatives()
+    test_dismiss_command_clears_active_proposal_without_agent_round()
     test_agent_zero_strips_prefixed_signal_lines_from_body()
     print("All signal/state smoke tests passed.")
