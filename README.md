@@ -141,6 +141,16 @@ You can also route to it directly without adding it to normal rounds:
 
 Make sure Ollama is running and the selected model exists locally, for example with `ollama pull qwen2.5-coder:3b`.
 
+## Ollama and Local Models (third-party integration)
+
+Agent Zero uses [Ollama](https://ollama.com/) as an optional local model runtime. The default configuration points at
+`qwen2.5-coder:3b`, but ChatBoks does not own, bundle, or license Ollama or the model weights. Ollama and any models
+you install are third-party projects with their own licenses, terms, update cadence, storage needs, and support channels.
+
+ChatBoks core orchestration works without Ollama. If Ollama or the selected local model is unavailable, Agent Zero can
+be left out of normal rounds or marked unavailable with `/agent agent_zero blocked "Ollama is offline"`. Claude/Codex
+relay features, CodeGraph context, slash commands, and approval flow remain usable.
+
 ## CodeGraph (third-party integration)
 
 ChatBoks integrates with [CodeGraph](https://github.com/colbymchenry/codegraph) by colbymchenry, a separate open-source tool that builds a semantic code knowledge graph from your project. Install it independently via:
@@ -159,4 +169,5 @@ CodeGraph is an external dependency. For CodeGraph installation, indexing, parse
 
 ## License
 
-ChatBoks is licensed under AGPL-3.0. CodeGraph is a separate MIT-licensed dependency.
+ChatBoks is licensed under AGPL-3.0. CodeGraph, Ollama, and local model weights are separate third-party dependencies or
+integrations governed by their own upstream licenses and terms.
