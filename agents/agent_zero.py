@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import ipaddress
 import json
 import re
 import socket
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -43,8 +45,24 @@ class AgentZeroAgent(BaseAgent):
     def command(self) -> list[str]:
         return [str(self.config.get("cli", "ollama"))]
 
+    @staticmethod
+    def _is_loopback_endpoint(endpoint: str) -> bool:
+        try:
+            host = urllib.parse.urlparse(endpoint).hostname or ""
+            try:
+                return ipaddress.ip_address(host).is_loopback
+            except ValueError:
+                return ipaddress.ip_address(socket.gethostbyname(host)).is_loopback
+        except Exception:
+            return False
+
     def run_cli(self, prompt: str, timeout: int = 120) -> str:
         endpoint = str(self.config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
+        if not self._is_loopback_endpoint(endpoint):
+            return (
+                f"Agent Zero endpoint '{endpoint}' is not a loopback address. "
+                "Only localhost, 127.x.x.x, or ::1 endpoints are permitted.\n>>> BLOCKED"
+            )
         model = str(self.config.get("model", "qwen2.5-coder:3b"))
         payload = {
             "model": model,

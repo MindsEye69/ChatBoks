@@ -700,10 +700,14 @@ class Chatboks:
 
     def parse_signal(self, response: str) -> str | None:
         upper = response.upper()
+        last_pos = -1
+        last_signal = None
         for signal in SIGNALS:
-            if f">>> {signal}" in upper:
-                return signal
-        return None
+            pos = upper.rfind(f">>> {signal}")
+            if pos > last_pos:
+                last_pos = pos
+                last_signal = signal
+        return last_signal
 
     def handle_proposal(self, response: str, proposed_by: str) -> None:
         proposal = {
@@ -1004,16 +1008,27 @@ class Chatboks:
 
     def normalize_state(self, state: dict[str, Any]) -> dict[str, Any]:
         state.setdefault("round_intent", "respond")
-        state.setdefault("collaboration_mode", "default")
-        state.setdefault(
-            "collaboration_mode_instruction",
-            COLLABORATION_MODES["default"],
-        )
+
+        # Validate collaboration_mode and always recompute instruction from canonical table -
+        # never trust what state.json says the instruction text should be.
+        mode = state.get("collaboration_mode", "default")
+        if mode not in COLLABORATION_MODES:
+            mode = "default"
+        state["collaboration_mode"] = mode
+        state["collaboration_mode_instruction"] = COLLABORATION_MODES[mode]
+
         state.setdefault("expected_agents", [])
         state.setdefault("completed_agents", [])
         state.setdefault("handoff_to", None)
-        state.setdefault("handoff_reason", None)
-        state.setdefault("handoff_context", None)
+
+        # Sanitize untrusted free-text fields that come from agent output or state.json.
+        for field in ("handoff_reason", "handoff_context", "active_task"):
+            val = state.get(field)
+            if val is not None:
+                state[field] = self.truncate_for_state(str(val), 2000)
+            else:
+                state.setdefault(field, None)
+
         state.setdefault("context", {})
         state["context"].setdefault("codegraph_snapshot", "codegraph.db")
         state["context"].setdefault("token_counts", {})
