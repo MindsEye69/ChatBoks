@@ -81,6 +81,7 @@ HELP_COMMANDS = [
     ("/outcomes", "Show recent wins and failures."),
     ("@claude / @codex / @zero", "Route the next prompt exclusively to one agent."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
+    ("/dismiss", "Discard the active proposal without executing it."),
     ("exit / quit / bye", "End the ChatBoks terminal session."),
 ]
 
@@ -244,9 +245,12 @@ class Chatboks:
         if command in {"/agent", "/agents"}:
             self.handle_agent_command(stripped)
             return True
+        if command == "/dismiss":
+            self.handle_dismiss_command()
+            return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /agent, /mode, /win, /fail, /outcome, /wins, /failures, or /outcomes."
+            "Unknown local command. Try /help, /agent, /mode, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -257,6 +261,15 @@ class Chatboks:
         lines = ["ChatBoks commands:"]
         lines.extend(f"- {command}: {description}" for command, description in HELP_COMMANDS)
         self.stream.system("\n".join(lines))
+
+    def handle_dismiss_command(self) -> None:
+        proposal = self.state.get("proposal")
+        if not proposal:
+            self.stream.system("No active proposal to dismiss.")
+            return
+        proposal_id = proposal.get("id", "unknown")
+        self.update_state({"proposal": None, "status": "idle", "next_agent": "you"})
+        self.append_message("system", f"Proposal {proposal_id} dismissed.")
 
     def handle_agent_command(self, text: str) -> None:
         parts = text.split(maxsplit=3)
@@ -905,6 +918,9 @@ class Chatboks:
 
     def buffer_or_complete_input(self, text: str) -> str | None:
         stripped = text.strip()
+        if stripped.startswith("/"):
+            return stripped
+
         if self.input_buffer and not stripped:
             completed = " ".join(self.input_buffer).strip()
             self.input_buffer = []
