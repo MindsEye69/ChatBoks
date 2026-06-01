@@ -24,7 +24,6 @@ class Router:
         self.project_path = project_path
         self.project_config = config["projects"][project]
         self.agent_names = list(self.project_config["agents"])
-        self._agents: dict[str, Any] = {}
 
     def primary(self) -> str:
         configured = self.project_config.get("primary")
@@ -72,13 +71,11 @@ class Router:
             raise ValueError(f"Unsupported agent: {agent_name}")
         if agent_name not in self.config.get("agents", {}):
             raise ValueError(f"Agent '{agent_name}' is not configured")
-        if agent_name not in self._agents:
-            agent_config = dict(self.config["agents"][agent_name])
-            agent_config["project_name"] = self.project
-            role = self.load_role(agent_name, agent_config)
-            cls = AGENT_CLASSES[agent_name]
-            self._agents[agent_name] = cls(self.project_path, agent_config, role)
-        return self._agents[agent_name]
+        agent_config = dict(self.config["agents"][agent_name])
+        agent_config["project_name"] = self.project
+        role = self.load_role(agent_name, agent_config)
+        cls = AGENT_CLASSES[agent_name]
+        return cls(self.project_path, agent_config, role)
 
     def load_role(self, agent_name: str, agent_config: dict[str, Any]) -> str:
         role_file = agent_config.get("role_file")

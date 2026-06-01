@@ -1,6 +1,6 @@
 # ChatBoks Roadmap
 
-Version: v3 handover baseline, updated May 29, 2026.
+Version: v3 handover baseline, updated June 1, 2026.
 
 Chatboks is a local multi-agent coding orchestration system for Claude, Codex, and eventually Antigravity, with the human user as overseer. Agents collaborate through `chatboks.md`, machine state persists in `.chatboks/state.json`, and CodeGraph provides SQLite-backed codebase context.
 
@@ -14,7 +14,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Antigravity remains pending until the `agy` CLI is available on Windows.
 - `install.py` exists as the first-run setup helper.
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
-- Agent Zero has an initial optional Ollama adapter, direct `@zero` routing, and installer support.
+- Agent Zero has an initial optional Ollama adapter, direct `@zero` routing, and installer support. Added to chatboks project team with `qwen2.5-coder:3b`.
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
