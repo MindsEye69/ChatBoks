@@ -1,7 +1,8 @@
 projects:
   chatboks:
     path: C:\Users\MindsEye\Desktop\chatboks
-    agents: [claude, codex, agent_zero]
+    agents: [claude, codex]
+    direct_agents: [agent_zero]
     primary: codex
     codegraph: true
   taskfish:

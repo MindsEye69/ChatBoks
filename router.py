@@ -24,6 +24,7 @@ class Router:
         self.project_path = project_path
         self.project_config = config["projects"][project]
         self.agent_names = list(self.project_config["agents"])
+        self.direct_agent_names = list(self.project_config.get("direct_agents", []))
 
     def primary(self) -> str:
         configured = self.project_config.get("primary")
@@ -53,6 +54,7 @@ class Router:
         requested = first[1:].lower()
         aliases = {
             "0": "agent_zero",
+            "agent0": "agent_zero",
             "az": "agent_zero",
             "forge": "agent_zero",
             "zero": "agent_zero",
@@ -61,6 +63,8 @@ class Router:
         }
         agent_name = aliases.get(requested, requested)
         if agent_name not in self.config.get("agents", {}) or agent_name not in AGENT_CLASSES:
+            return list(self.agent_names), text, None
+        if agent_name not in self.agent_names and agent_name not in self.direct_agent_names:
             return list(self.agent_names), text, None
 
         cleaned = remainder.strip() or text

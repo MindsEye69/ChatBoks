@@ -136,6 +136,7 @@ You can also route to it directly without adding it to normal rounds:
 
 ```text
 @zero check this project setup and recommend the next diagnostic command.
+@agent0 check this project setup and recommend the next diagnostic command.
 ```
 
 Make sure Ollama is running and the selected model exists locally, for example with `ollama pull qwen2.5-coder:3b`.

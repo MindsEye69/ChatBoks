@@ -14,7 +14,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Antigravity remains pending until the `agy` CLI is available on Windows.
 - `install.py` exists as the first-run setup helper.
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
-- Agent Zero has an initial optional Ollama adapter, direct `@zero` routing, and installer support. Added to chatboks project team with `qwen2.5-coder:3b`.
+- Agent Zero has an initial optional Ollama adapter, direct-only `@zero` / `@agent0` routing, and installer support. It is configured for ChatBoks but stays out of normal rounds until explicitly tagged.
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
