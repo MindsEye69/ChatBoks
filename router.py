@@ -7,6 +7,7 @@ from agents.agent_zero import AgentZeroAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
 from agents.codex import CodexAgent
+from trust import load_role_with_approval
 
 
 AGENT_CLASSES = {
@@ -84,10 +85,13 @@ class Router:
     def load_role(self, agent_name: str, agent_config: dict[str, Any]) -> str:
         role_file = agent_config.get("role_file")
         if role_file:
-            path = self.project_path / role_file
-            if path.exists():
-                return path.read_text(encoding="utf-8")
-            fallback = Path(__file__).parent / role_file
+            # Project-local role file: requires trust approval before loading.
+            approved = load_role_with_approval(self.project_path, role_file)
+            if approved is not None:
+                return approved
+            # Fall back to the installed role file in the chatboks source directory.
+            # Installed files are under ChatBoks control, so no approval needed.
+            fallback = Path(__file__).parent / Path(role_file).name
             if fallback.exists():
                 return fallback.read_text(encoding="utf-8")
         return (
