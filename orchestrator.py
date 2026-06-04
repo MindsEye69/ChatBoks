@@ -71,6 +71,8 @@ DEFAULT_AGENT_FALLBACKS = {
 
 HELP_COMMANDS = [
     ("/help", "Show this command deck."),
+    ("/skills", "List native ChatBoks workflow skills."),
+    ("/skills <name>", "Preview a workflow skill without calling agents."),
     ("/agent", "List agent availability for this project."),
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
     ("/agent <name> available", "Mark a model available again."),
@@ -84,6 +86,8 @@ HELP_COMMANDS = [
     ("/dismiss", "Discard the active proposal without executing it."),
     ("exit / quit / bye", "End the ChatBoks terminal session."),
 ]
+
+SKILLS_DIR = Path(__file__).resolve().parent / "skills"
 
 
 class ChatboksFileHandler(FileSystemEventHandler):
@@ -229,6 +233,9 @@ class Chatboks:
         if command in {"/help", "/h", "/?"}:
             self.handle_help_command()
             return True
+        if command in {"/skill", "/skills"}:
+            self.handle_skills_command(stripped)
+            return True
         if command in {"/win", "/fail", "/outcome"}:
             self.handle_outcome_command(stripped)
             return True
@@ -250,7 +257,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /agent, /mode, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /agent, /mode, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -261,6 +268,59 @@ class Chatboks:
         lines = ["ChatBoks commands:"]
         lines.extend(f"- {command}: {description}" for command, description in HELP_COMMANDS)
         self.stream.system("\n".join(lines))
+
+    def handle_skills_command(self, text: str) -> None:
+        parts = text.split(maxsplit=1)
+        if len(parts) == 1:
+            skills = self.available_skills()
+            if not skills:
+                self.stream.system("No native ChatBoks skills found.")
+                return
+            lines = ["Native ChatBoks skills:"]
+            lines.extend(f"- {name}: {summary}" for name, summary in skills)
+            lines.append("Use /skills <name> to preview a skill.")
+            self.stream.system("\n".join(lines))
+            return
+
+        requested = parts[1].strip().lower().removesuffix(".md")
+        path = SKILLS_DIR / f"{requested}.md"
+        try:
+            resolved = path.resolve()
+            skills_root = SKILLS_DIR.resolve()
+        except OSError:
+            self.stream.system(f"Skill not found: {requested}")
+            return
+        if skills_root not in resolved.parents or not resolved.is_file():
+            self.stream.system(f"Skill not found: {requested}")
+            return
+        content = resolved.read_text(encoding="utf-8")
+        preview = "\n".join(content.splitlines()[:80]).strip()
+        self.stream.system(preview or f"Skill is empty: {requested}")
+
+    @staticmethod
+    def available_skills() -> list[tuple[str, str]]:
+        if not SKILLS_DIR.exists():
+            return []
+        skills: list[tuple[str, str]] = []
+        for path in sorted(SKILLS_DIR.glob("*.md")):
+            if path.name.lower() == "readme.md":
+                continue
+            content = path.read_text(encoding="utf-8")
+            summary = Chatboks.skill_summary(content)
+            skills.append((path.stem, summary))
+        return skills
+
+    @staticmethod
+    def skill_summary(content: str) -> str:
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped.lower().startswith("summary:"):
+                return stripped.split(":", 1)[1].strip()
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#"):
+                return stripped[:96]
+        return "No summary provided."
 
     def handle_dismiss_command(self) -> None:
         proposal = self.state.get("proposal")

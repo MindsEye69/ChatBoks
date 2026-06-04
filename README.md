@@ -74,6 +74,21 @@ Modes are project-local prompt frames that tell agents how to collaborate. They 
 - `diagnose`: root cause and smallest useful probes.
 - `default`: normal relay behavior.
 
+## Native Skills
+
+Native skills are markdown workflow cards in `skills/`. They document repeatable ChatBoks workflows without changing
+agent routing. Modes still decide prompt framing, project config still decides which agents run, and skills remain
+human/auditable guidance until explicitly wired into a mode.
+
+```text
+/skills
+/skills implement
+/skills bugsearch
+```
+
+Each skill uses the same schema: context priming, workflow steps, quality gate, and escalation triggers. See
+`skills/README.md` for the schema and `skills/implement.md` / `skills/bugsearch.md` for reference skills.
+
 ## Agent Availability
 
 When a model hits a provider limit or should be kept out of the next few rounds, mark it locally with `/agent`.
