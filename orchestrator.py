@@ -12,6 +12,7 @@ import argparse
 import json
 import shlex
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -356,17 +357,18 @@ class Chatboks:
             return
 
         detail = parts[3] if len(parts) > 3 else ""
-        until = self.parse_status_until(detail)
-        reason = detail if not until else ""
+        exhausted_until = self.parse_status_until(detail) if status == "exhausted" else None
+        reason = detail if not exhausted_until else ""
         statuses = self.load_agent_statuses()
         statuses[agent] = {
             "status": status,
             "updated_at": self.timestamp(),
-            "until": until,
             "reason": reason,
         }
+        if exhausted_until:
+            statuses[agent]["exhausted_until"] = exhausted_until
         if status == "available":
-            statuses[agent].pop("until", None)
+            statuses[agent].pop("exhausted_until", None)
             statuses[agent].pop("reason", None)
         self.save_agent_statuses(statuses)
         self.update_state({"agent_status": statuses})
@@ -374,24 +376,42 @@ class Chatboks:
 
     def show_agent_statuses(self, agent: str | None = None) -> None:
         statuses = self.load_agent_statuses()
+        self.update_state({"agent_status": statuses})
         names = [agent] if agent else sorted(self.config.get("agents", {}))
         lines = ["Agent availability:"]
         for name in names:
             record = statuses.get(name, {"status": "available"})
-            until = f" until {self.format_status_until(record['until'])}" if record.get("until") else ""
+            until_value = self.status_until_value(record)
+            until = f" until {self.format_status_until(until_value)}" if until_value else ""
+            remaining = f" ({self.format_remaining_until(until_value)} remaining)" if until_value else ""
             reason = f" ({record['reason']})" if record.get("reason") else ""
-            lines.append(f"- {name}: {record.get('status', 'available')}{until}{reason}")
+            lines.append(f"- {name}: {record.get('status', 'available')}{until}{remaining}{reason}")
         self.stream.system("\n".join(lines))
 
     @staticmethod
     def parse_status_until(detail: str) -> str | None:
+        return Chatboks.parse_status_until_at(detail, datetime.now().astimezone())
+
+    @staticmethod
+    def parse_status_until_at(detail: str, now: datetime) -> str | None:
         if not detail:
             return None
         value = detail.strip().lower()
+        if value.startswith("until "):
+            value = value.removeprefix("until ").strip()
         if value.endswith("m") and value[:-1].isdigit():
-            return str(int(time.time() + int(value[:-1]) * 60))
+            return (now + timedelta(minutes=int(value[:-1]))).isoformat(timespec="seconds")
         if value.endswith("h") and value[:-1].isdigit():
-            return str(int(time.time() + int(value[:-1]) * 3600))
+            return (now + timedelta(hours=int(value[:-1]))).isoformat(timespec="seconds")
+        hour_text, sep, minute_text = value.partition(":")
+        if sep and hour_text.isdigit() and minute_text.isdigit():
+            hour = int(hour_text)
+            minute = int(minute_text)
+            if 0 <= hour <= 23 and 0 <= minute <= 59:
+                target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if target <= now:
+                    target += timedelta(days=1)
+                return target.isoformat(timespec="seconds")
         return None
 
     def resolve_available_agents(self, agents: list[str], exclusive_agent: str | None) -> list[str]:
@@ -417,6 +437,8 @@ class Chatboks:
             if fallback:
                 if fallback not in resolved:
                     resolved.append(fallback)
+                message = f"Agent availability: substituting {fallback} for exhausted {agent}."
+                self.append_message("system", message)
                 substitutions.append(f"{agent} -> {fallback}")
             else:
                 substitutions.append(f"{agent} skipped")
@@ -436,26 +458,48 @@ class Chatboks:
         configured = self.config.get("agent_fallbacks", {})
         candidates = configured.get(agent, DEFAULT_AGENT_FALLBACKS.get(agent, []))
         configured_agents = self.config.get("agents", {})
-        for candidate in candidates:
+        record = statuses.get(agent) or {}
+        if str(record.get("status", "available")).lower() != "exhausted":
+            return None
+        for candidate, can_fill_main_seat in self.normalize_fallback_candidates(candidates):
             if candidate in already_selected:
                 continue
             if candidate not in configured_agents:
+                continue
+            if not can_fill_main_seat and not self.fallback_can_fill_main_seat(candidate):
                 continue
             if self.agent_is_available(candidate, statuses):
                 return candidate
         return None
 
+    def normalize_fallback_candidates(self, candidates: Any) -> list[tuple[str, bool]]:
+        if isinstance(candidates, dict):
+            candidates = candidates.get("candidates", [])
+        if not isinstance(candidates, list):
+            return []
+        normalized: list[tuple[str, bool]] = []
+        for item in candidates:
+            if isinstance(item, str):
+                normalized.append((item, False))
+            elif isinstance(item, dict):
+                name = str(item.get("name") or item.get("agent") or "").strip()
+                if name:
+                    normalized.append((name, bool(item.get("can_fill_main_seat"))))
+        return normalized
+
+    def fallback_can_fill_main_seat(self, agent: str) -> bool:
+        agent_config = self.config.get("agents", {}).get(agent, {})
+        if "can_fill_main_seat" in agent_config:
+            return bool(agent_config.get("can_fill_main_seat"))
+        return agent in self.proj_config.get("agents", [])
+
     @staticmethod
     def agent_is_available(agent: str, statuses: dict[str, dict[str, Any]]) -> bool:
         record = statuses.get(agent) or {}
         status = str(record.get("status", "available")).lower()
-        until = record.get("until")
-        if until:
-            try:
-                if time.time() >= float(until):
-                    return True
-            except (TypeError, ValueError):
-                pass
+        expiry = Chatboks.parse_status_datetime(Chatboks.status_until_value(record))
+        if expiry and datetime.now().astimezone() >= expiry:
+            return True
         return status in {"available", "low"}
 
     def load_agent_statuses(self) -> dict[str, dict[str, Any]]:
@@ -468,24 +512,20 @@ class Chatboks:
             return {}
         if not isinstance(data, dict):
             return {}
-        now = time.time()
+        now = datetime.now().astimezone()
         changed = False
         for agent, record in list(data.items()):
             if not isinstance(record, dict):
                 data.pop(agent, None)
                 changed = True
                 continue
-            until = record.get("until")
-            if until:
-                try:
-                    if now >= float(until):
-                        data[agent] = {
-                            "status": "available",
-                            "updated_at": self.timestamp(),
-                        }
-                        changed = True
-                except (TypeError, ValueError):
-                    pass
+            expiry = self.parse_status_datetime(self.status_until_value(record))
+            if expiry and now >= expiry:
+                data[agent] = {
+                    "status": "available",
+                    "updated_at": self.timestamp(),
+                }
+                changed = True
         if changed:
             self.save_agent_statuses(data)
         return data
@@ -502,10 +542,45 @@ class Chatboks:
 
     @staticmethod
     def format_status_until(until: Any) -> str:
+        expiry = Chatboks.parse_status_datetime(until)
+        if expiry:
+            return expiry.strftime("%Y-%m-%d %H:%M:%S")
+        return str(until)
+
+    @staticmethod
+    def format_remaining_until(until: Any) -> str:
+        expiry = Chatboks.parse_status_datetime(until)
+        if not expiry:
+            return "unknown"
+        seconds = max(0, int((expiry - datetime.now().astimezone()).total_seconds()))
+        hours, remainder = divmod(seconds, 3600)
+        minutes = (remainder + 59) // 60
+        if hours and minutes:
+            return f"{hours}h {minutes}m"
+        if hours:
+            return f"{hours}h"
+        return f"{max(1, minutes)}m"
+
+    @staticmethod
+    def status_until_value(record: dict[str, Any]) -> Any:
+        return record.get("exhausted_until") or record.get("until")
+
+    @staticmethod
+    def parse_status_datetime(value: Any) -> datetime | None:
+        if value is None:
+            return None
         try:
-            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(until)))
-        except (TypeError, ValueError):
-            return str(until)
+            if isinstance(value, (int, float)) or str(value).strip().replace(".", "", 1).isdigit():
+                return datetime.fromtimestamp(float(value)).astimezone()
+        except (TypeError, ValueError, OSError):
+            return None
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if parsed.tzinfo is None:
+            parsed = parsed.astimezone()
+        return parsed.astimezone()
 
     def handle_mode_command(self, text: str) -> None:
         parts = text.split(maxsplit=1)

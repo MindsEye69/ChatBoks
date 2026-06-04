@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -66,9 +67,43 @@ def test_agent_command_marks_exhausted_without_agent_round():
 
         statuses = app.load_agent_statuses()
         assert statuses["claude"]["status"] == "exhausted"
-        assert statuses["claude"].get("until")
+        assert statuses["claude"].get("exhausted_until")
+        assert "until" not in statuses["claude"]
+        datetime.fromisoformat(statuses["claude"]["exhausted_until"])
         app.run_agent_round.assert_not_called()
         print("PASS: /agent marks exhausted without routing to agents")
+
+
+def test_exhausted_command_accepts_duration_and_clock_time():
+    now = datetime(2026, 6, 4, 14, 30).astimezone()
+
+    in_60m = Chatboks.parse_status_until_at("60m", now)
+    in_2h = Chatboks.parse_status_until_at("2h", now)
+    clock = Chatboks.parse_status_until_at("3:17", now)
+    padded_clock = Chatboks.parse_status_until_at("03:17", now)
+    until_clock = Chatboks.parse_status_until_at("until 3:17", now)
+
+    assert datetime.fromisoformat(in_60m) == now + timedelta(minutes=60)
+    assert datetime.fromisoformat(in_2h) == now + timedelta(hours=2)
+    assert datetime.fromisoformat(clock) == now.replace(hour=3, minute=17, second=0, microsecond=0) + timedelta(days=1)
+    assert padded_clock == clock
+    assert until_clock == clock
+    print("PASS: exhausted command accepts duration and local clock times")
+
+
+def test_expired_exhaustion_auto_clears_on_display():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        expired = (datetime.now().astimezone() - timedelta(minutes=1)).isoformat(timespec="seconds")
+        app.save_agent_statuses({"claude": {"status": "exhausted", "updated_at": app.timestamp(), "exhausted_until": expired}})
+
+        app.show_agent_statuses("claude")
+
+        statuses = app.load_agent_statuses()
+        assert statuses["claude"]["status"] == "available"
+        message = app.stream.system.call_args.args[0]
+        assert "- claude: available" in message
+        print("PASS: expired exhaustion auto-clears on display")
 
 
 def test_normal_round_substitutes_exhausted_agent():
@@ -83,7 +118,24 @@ def test_normal_round_substitutes_exhausted_agent():
         _, kwargs = app.run_agent_round.call_args
         assert kwargs["agents"] == ["codex"]
         assert app.state["next_agent"] == "codex"
+        transcript = app.chatboks_md.read_text(encoding="utf-8")
+        assert "[SYSTEM] Agent availability: substituting codex for exhausted claude." in transcript
         print("PASS: normal route substitutes exhausted agent")
+
+
+def test_direct_fallback_must_be_allowed_to_fill_main_seat():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["projects"]["test"]["agents"] = ["claude"]
+        app.proj_config = app.config["projects"]["test"]
+        app.config["agent_fallbacks"] = {"claude": ["agent_zero"]}
+        app.save_agent_statuses({"claude": {"status": "exhausted", "updated_at": app.timestamp()}})
+
+        assert app.resolve_available_agents(["claude"], None) == []
+
+        app.config["agents"]["agent_zero"]["can_fill_main_seat"] = True
+        assert app.resolve_available_agents(["claude"], None) == ["agent_zero"]
+        print("PASS: direct fallback must be allowed to fill a main seat")
 
 
 def test_explicit_route_to_exhausted_agent_does_not_substitute():
@@ -102,6 +154,9 @@ def test_explicit_route_to_exhausted_agent_does_not_substitute():
 
 if __name__ == "__main__":
     test_agent_command_marks_exhausted_without_agent_round()
+    test_exhausted_command_accepts_duration_and_clock_time()
+    test_expired_exhaustion_auto_clears_on_display()
     test_normal_round_substitutes_exhausted_agent()
+    test_direct_fallback_must_be_allowed_to_fill_main_seat()
     test_explicit_route_to_exhausted_agent_does_not_substitute()
     print("\nAll agent status smoke tests passed.")
