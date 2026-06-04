@@ -94,3 +94,6 @@ desktop.ini
 .idea/
 *.swp
 tempCodeRunnerFile.py
+
+# Local Serena MCP workspace
+.serena/
