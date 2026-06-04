@@ -1,0 +1,134 @@
+from __future__ import annotations
+
+import sys
+import tempfile
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from agents.base import BaseAgent, TokenExhaustionError
+
+
+class ScriptAgent(BaseAgent):
+    name = "script"
+
+    def __init__(self, script_path: Path, project_path: Path) -> None:
+        super().__init__(
+            project_path=project_path,
+            config={"cli": sys.executable},
+            role="test role",
+        )
+        self.script_path = script_path
+
+    def command(self) -> list[str]:
+        return [self.cli, str(self.script_path)]
+
+
+def run_script(script: str, prompt: str = "hello", **kwargs: float) -> str:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        script_path = root / "child.py"
+        script_path.write_text(script, encoding="utf-8")
+        return ScriptAgent(script_path, root).run_cli(prompt, **kwargs)
+
+
+def test_streaming_run_cli_returns_successful_stdout() -> None:
+    script = (
+        "import sys\n"
+        "prompt = sys.stdin.read().strip()\n"
+        "print('first line')\n"
+        "print(prompt)\n"
+        "print('>>> TASK_COMPLETE')\n"
+    )
+
+    result = run_script(script, prompt="hello from stdin", timeout=5)
+
+    assert result == "first line\nhello from stdin\n>>> TASK_COMPLETE"
+
+
+def test_streaming_run_cli_idle_timeout_resets_on_output() -> None:
+    script = (
+        "import sys, time\n"
+        "sys.stdin.read()\n"
+        "print('started', flush=True)\n"
+        "time.sleep(1)\n"
+        "print('finished', flush=True)\n"
+    )
+
+    result = run_script(script, idle_timeout=0.2, max_timeout=5)
+
+    assert result == "CLI call idle timed out for script after 0.2 seconds.\n>>> BLOCKED"
+
+
+def test_streaming_run_cli_enforces_absolute_max_timeout() -> None:
+    script = (
+        "import sys, time\n"
+        "sys.stdin.read()\n"
+        "end = time.monotonic() + 2\n"
+        "while time.monotonic() < end:\n"
+        "    print('tick', flush=True)\n"
+        "    time.sleep(0.05)\n"
+    )
+
+    result = run_script(script, idle_timeout=1, max_timeout=0.25)
+
+    assert result == "CLI call timed out for script after 0.25 seconds.\n>>> BLOCKED"
+
+
+def test_streaming_run_cli_reports_nonzero_stderr() -> None:
+    script = (
+        "import sys\n"
+        "sys.stdin.read()\n"
+        "print('bad stderr', file=sys.stderr)\n"
+        "raise SystemExit(7)\n"
+    )
+
+    result = run_script(script, timeout=5)
+
+    assert result == "CLI call failed for script: bad stderr\n>>> BLOCKED"
+
+
+def test_streaming_run_cli_detects_token_exhaustion_on_failure() -> None:
+    script = (
+        "import sys\n"
+        "sys.stdin.read()\n"
+        "print('context length exceeded', file=sys.stderr)\n"
+        "raise SystemExit(1)\n"
+    )
+
+    with pytest.raises(TokenExhaustionError, match="context length exceeded"):
+        run_script(script, timeout=5)
+
+
+def test_call_uses_extended_max_timeout_for_streaming_heartbeat() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        script_path = root / "child.py"
+        script_path.write_text(
+            "import sys\n"
+            "sys.stdin.read()\n"
+            "print('ok')\n"
+            "print('>>> TASK_COMPLETE')\n",
+            encoding="utf-8",
+        )
+        agent = ScriptAgent(script_path, root)
+
+        result = agent.call("context")
+
+        assert result == "ok\n>>> TASK_COMPLETE"
+
+
+if __name__ == "__main__":
+    tests = [
+        test_streaming_run_cli_returns_successful_stdout,
+        test_streaming_run_cli_idle_timeout_resets_on_output,
+        test_streaming_run_cli_enforces_absolute_max_timeout,
+        test_streaming_run_cli_reports_nonzero_stderr,
+        test_streaming_run_cli_detects_token_exhaustion_on_failure,
+        test_call_uses_extended_max_timeout_for_streaming_heartbeat,
+    ]
+    for test in tests:
+        test()
+        print(f"PASS: {test.__name__}")
