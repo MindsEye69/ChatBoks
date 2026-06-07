@@ -138,6 +138,28 @@ def test_direct_fallback_must_be_allowed_to_fill_main_seat():
         print("PASS: direct fallback must be allowed to fill a main seat")
 
 
+def test_agent_zero_can_substitute_after_main_agents_exhausted_when_allowed():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["agents"]["agent_zero"]["can_fill_main_seat"] = True
+        app.save_agent_statuses(
+            {
+                "claude": {"status": "exhausted", "updated_at": app.timestamp()},
+                "codex": {"status": "exhausted", "updated_at": app.timestamp()},
+            }
+        )
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("please inspect this")
+
+        app.run_agent_round.assert_called_once()
+        _, kwargs = app.run_agent_round.call_args
+        assert kwargs["agents"] == ["agent_zero"]
+        transcript = app.chatboks_md.read_text(encoding="utf-8")
+        assert "substituting agent_zero" in transcript
+        print("PASS: Agent Zero can substitute after main agents are exhausted when allowed")
+
+
 def test_explicit_route_to_exhausted_agent_does_not_substitute():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -158,5 +180,6 @@ if __name__ == "__main__":
     test_expired_exhaustion_auto_clears_on_display()
     test_normal_round_substitutes_exhausted_agent()
     test_direct_fallback_must_be_allowed_to_fill_main_seat()
+    test_agent_zero_can_substitute_after_main_agents_exhausted_when_allowed()
     test_explicit_route_to_exhausted_agent_does_not_substitute()
     print("\nAll agent status smoke tests passed.")

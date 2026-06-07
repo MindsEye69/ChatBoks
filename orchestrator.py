@@ -74,6 +74,8 @@ HELP_COMMANDS = [
     ("/help", "Show this command deck."),
     ("/skills", "List native ChatBoks workflow skills."),
     ("/skills <name>", "Preview a workflow skill without calling agents."),
+    ("/context", "Show current context mode: lean, normal, or full."),
+    ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
     ("/agent", "List agent availability for this project."),
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
     ("/agent <name> available", "Mark a model available again."),
@@ -83,6 +85,7 @@ HELP_COMMANDS = [
     ("/fail ...", "Record a collaboration failure without calling agents."),
     ("/outcomes", "Show recent wins and failures."),
     ("@claude / @codex / @zero", "Route the next prompt exclusively to one agent."),
+    ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
     ("/dismiss", "Discard the active proposal without executing it."),
     ("exit / quit / bye", "End the ChatBoks terminal session."),
@@ -250,6 +253,9 @@ class Chatboks:
         if command in {"/mode", "/modes"}:
             self.handle_mode_command(stripped)
             return True
+        if command in {"/context", "/ctx"}:
+            self.handle_context_command(stripped)
+            return True
         if command in {"/agent", "/agents"}:
             self.handle_agent_command(stripped)
             return True
@@ -258,7 +264,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /agent, /mode, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /context, /agent, /mode, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -605,6 +611,20 @@ class Chatboks:
             }
         )
         self.append_message("system", f"Collaboration mode set to {mode}.")
+
+    def handle_context_command(self, text: str) -> None:
+        parts = text.split(maxsplit=1)
+        if len(parts) == 1 or parts[1].strip().lower() in {"show", "status"}:
+            current = self.state.get("context_mode", "lean")
+            self.stream.system("Current context mode: " + current + "\nAvailable modes: lean, normal, full")
+            return
+
+        mode = parts[1].strip().lower()
+        if mode not in {"lean", "normal", "full"}:
+            self.stream.system("Unknown context mode. Use one of: lean, normal, full")
+            return
+        self.update_state({"context_mode": mode})
+        self.append_message("system", f"Context mode set to {mode}.")
 
     def handle_outcome_command(self, text: str) -> None:
         try:
@@ -1123,6 +1143,7 @@ class Chatboks:
             "next_agent": None,
             "round": 0,
             "round_intent": "respond",
+            "context_mode": "lean",
             "expected_agents": [],
             "completed_agents": [],
             "proposal": None,
@@ -1143,6 +1164,8 @@ class Chatboks:
 
     def normalize_state(self, state: dict[str, Any]) -> dict[str, Any]:
         state.setdefault("round_intent", "respond")
+        mode = str(state.get("context_mode", "lean")).lower()
+        state["context_mode"] = mode if mode in {"lean", "normal", "full"} else "lean"
 
         # Validate collaboration_mode and always recompute instruction from canonical table -
         # never trust what state.json says the instruction text should be.

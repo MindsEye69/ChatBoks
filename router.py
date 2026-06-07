@@ -26,6 +26,9 @@ class Router:
         self.project_config = config["projects"][project]
         self.agent_names = list(self.project_config["agents"])
         self.direct_agent_names = list(self.project_config.get("direct_agents", []))
+        self.default_round_agents = self.normalize_round_agents(
+            self.project_config.get("round_agents") or self.project_config.get("default_agents")
+        )
 
     def primary(self) -> str:
         configured = self.project_config.get("primary")
@@ -49,10 +52,14 @@ class Router:
         """
         stripped = text.lstrip()
         if not stripped.startswith("@"):
-            return list(self.agent_names), text, None
+            return self.normal_round_agents(), text, None
 
         first, _, remainder = stripped.partition(" ")
         requested = first[1:].lower()
+        if requested in {"all", "team", "everyone"}:
+            cleaned = remainder.strip() or text
+            return list(self.agent_names), cleaned, None
+
         aliases = {
             "0": "agent_zero",
             "agent0": "agent_zero",
@@ -64,12 +71,26 @@ class Router:
         }
         agent_name = aliases.get(requested, requested)
         if agent_name not in self.config.get("agents", {}) or agent_name not in AGENT_CLASSES:
-            return list(self.agent_names), text, None
+            return self.normal_round_agents(), text, None
         if agent_name not in self.agent_names and agent_name not in self.direct_agent_names:
-            return list(self.agent_names), text, None
+            return self.normal_round_agents(), text, None
 
         cleaned = remainder.strip() or text
         return [agent_name], cleaned, agent_name
+
+    def normal_round_agents(self) -> list[str]:
+        return self.default_round_agents or list(self.agent_names)
+
+    def normalize_round_agents(self, value: Any) -> list[str]:
+        if not isinstance(value, list):
+            return []
+        allowed = set(self.agent_names)
+        normalized: list[str] = []
+        for item in value:
+            name = str(item).strip()
+            if name in allowed and name not in normalized:
+                normalized.append(name)
+        return normalized
 
     def get_agent(self, agent_name: str):
         if agent_name not in AGENT_CLASSES:

@@ -37,6 +37,7 @@ agents:
     max_prompt_chars: 8000
     temperature: 0.1
     num_predict: 512
+    can_fill_main_seat: true
     color: magenta
     role_file: AGENT_ZERO.md
   claude:

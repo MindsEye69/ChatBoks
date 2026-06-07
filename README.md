@@ -74,6 +74,23 @@ Modes are project-local prompt frames that tell agents how to collaborate. They 
 - `diagnose`: root cause and smallest useful probes.
 - `default`: normal relay behavior.
 
+## Context Modes
+
+Context modes control how much project context each agent receives. New sessions default to `lean` to reduce token burn.
+
+```text
+/context
+/context lean
+/context normal
+/context full
+```
+
+- `lean`: active task, round state, agent status, last three transcript turns, compact outcomes, and CodeGraph status only.
+- `normal`: current broad context behavior.
+- `full`: maximum broad CodeGraph/file/symbol context for intentionally deep analysis.
+
+Lean mode avoids broad CodeGraph dumps unless the user explicitly asks for code context.
+
 ## Native Skills
 
 Native skills are markdown workflow cards in `skills/`. They document repeatable ChatBoks workflows without changing
@@ -105,6 +122,11 @@ These commands do not call any agents or consume model tokens.
 Availability is stored per project in `.chatboks/agent_status.json` and included in round context. Normal multi-agent
 rounds skip exhausted or blocked agents and use configured fallbacks when possible. Explicit routes such as `@claude`
 do not silently substitute another model; ChatBoks tells you the target is unavailable so you can decide what to do.
+
+Normal rounds use the configured default project team and exclude `direct_agents` such as Agent Zero. Use direct tags
+like `@zero` when you want the local/bootstrap model specifically. Use `@all ...` to opt into the full configured
+non-direct project team for one prompt. Local/direct agents can fill a main seat only when explicitly marked with
+`can_fill_main_seat: true` and selected as a fallback for an exhausted agent.
 
 ## Help
 
