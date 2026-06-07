@@ -164,9 +164,10 @@ class AgentZeroAgent(BaseAgent):
         )
 
     def fallback_for_bare_signal(self, prompt: str) -> str:
-        lowered = prompt.lower()
+        current_request = self.extract_current_request(prompt)
+        lowered = current_request.lower()
         if "diagnostic command" in lowered or "check this project setup" in lowered:
-            project_match = re.search(r"\bProject:\s*([A-Za-z0-9_-]+)", prompt)
+            project_match = re.search(r"\bProject:\s*([A-Za-z0-9_-]+)", current_request)
             project = project_match.group(1) if project_match else self.project_name
             command = f"python doctor.py {project}" if project else "python doctor.py"
             return (
@@ -178,6 +179,18 @@ class AgentZeroAgent(BaseAgent):
             "Agent Zero returned a bare control signal without an actionable response. "
             "Retry the request or route it to Codex.\n>>> BLOCKED"
         )
+
+    @staticmethod
+    def extract_current_request(prompt: str) -> str:
+        marker = "[ACTIVE TASK]"
+        index = prompt.rfind(marker)
+        if index == -1:
+            return prompt
+        section = prompt[index + len(marker):].lstrip("\r\n")
+        next_section = re.search(r"\n\[[A-Z][A-Z0-9 _-]*\]", section)
+        if next_section:
+            section = section[: next_section.start()]
+        return section.strip()
 
     def write_prompt_file(self, prompt: str) -> Path:
         state_dir = self.project_path / ".chatboks"

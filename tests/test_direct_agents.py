@@ -159,6 +159,51 @@ def test_agent_zero_call_accepts_base_timeout_keywords():
         print("PASS: Agent Zero call accepts BaseAgent timeout keywords")
 
 
+def test_agent_zero_diagnostic_fallback_uses_active_task_only():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Agent Zero role",
+        )
+        prompt = (
+            "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
+            "Old turn: check this project setup and recommend the next diagnostic command.\n\n"
+            "[ACTIVE TASK]\n"
+            "summarize the current ChatBoks routing policy in 5 bullets.\n\n"
+            "[HANDOFF] None."
+        )
+
+        result = agent.fallback_for_bare_signal(prompt)
+
+        assert "doctor.py" not in result
+        assert "bare control signal" in result
+        assert ">>> BLOCKED" in result
+        print("PASS: Agent Zero fallback ignores stale diagnostic history")
+
+
+def test_agent_zero_diagnostic_fallback_allows_current_setup_task():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Agent Zero role",
+        )
+        prompt = (
+            "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
+            "Old turn: summarize routing policy.\n\n"
+            "[ACTIVE TASK]\n"
+            "check this project setup and recommend the next diagnostic command. Project: chatboks\n\n"
+            "[HANDOFF] None."
+        )
+
+        result = agent.fallback_for_bare_signal(prompt)
+
+        assert "python doctor.py chatboks" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero fallback still handles current diagnostic tasks")
+
+
 if __name__ == "__main__":
     test_normal_route_excludes_direct_agent()
     test_normal_route_uses_default_round_agents_when_configured()
@@ -166,4 +211,6 @@ if __name__ == "__main__":
     test_agent_zero_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
     test_agent_zero_call_accepts_base_timeout_keywords()
+    test_agent_zero_diagnostic_fallback_uses_active_task_only()
+    test_agent_zero_diagnostic_fallback_allows_current_setup_task()
     print("\nAll direct-agent smoke tests passed.")
