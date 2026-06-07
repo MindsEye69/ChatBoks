@@ -4,9 +4,11 @@ from __future__ import annotations
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from agents.agent_zero import AgentZeroAgent
 from router import Router
 
 
@@ -125,10 +127,43 @@ def test_unlisted_agent_direct_route_falls_back_to_normal_round():
         print("PASS: unlisted direct route falls back to normal round")
 
 
+def test_agent_zero_call_accepts_base_timeout_keywords():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {
+                "cli": "ollama",
+                "endpoint": "http://127.0.0.1:11434/api/chat",
+                "model": "test",
+                "project_name": "chatboks",
+            },
+            "Agent Zero role",
+        )
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            def read(self):
+                return b'{"message":{"content":"Ready.\\n>>> TASK_COMPLETE"}}'
+
+        with patch("agents.agent_zero.urllib.request.urlopen", return_value=FakeResponse()) as urlopen:
+            result = agent.call("compact context")
+
+        assert "Ready." in result
+        assert ">>> TASK_COMPLETE" in result
+        assert urlopen.call_args.kwargs["timeout"] == 900
+        print("PASS: Agent Zero call accepts BaseAgent timeout keywords")
+
+
 if __name__ == "__main__":
     test_normal_route_excludes_direct_agent()
     test_normal_route_uses_default_round_agents_when_configured()
     test_all_route_opts_into_full_project_team_not_direct_agents()
     test_agent_zero_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
+    test_agent_zero_call_accepts_base_timeout_keywords()
     print("\nAll direct-agent smoke tests passed.")

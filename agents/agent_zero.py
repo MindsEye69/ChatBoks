@@ -56,7 +56,14 @@ class AgentZeroAgent(BaseAgent):
         except Exception:
             return False
 
-    def run_cli(self, prompt: str, timeout: int = 120) -> str:
+    def run_cli(
+        self,
+        prompt: str,
+        timeout: int = 120,
+        idle_timeout: float | None = None,
+        max_timeout: float | None = None,
+    ) -> str:
+        _ = idle_timeout
         endpoint = str(self.config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
         if not self._is_loopback_endpoint(endpoint):
             return (
@@ -92,7 +99,8 @@ class AgentZeroAgent(BaseAgent):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            request_timeout = max_timeout if max_timeout is not None else timeout
+            with urllib.request.urlopen(request, timeout=request_timeout) as response:
                 raw = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
