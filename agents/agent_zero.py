@@ -166,6 +166,15 @@ class AgentZeroAgent(BaseAgent):
     def fallback_for_bare_signal(self, prompt: str) -> str:
         current_request = self.extract_current_request(prompt)
         lowered = current_request.lower()
+        if "routing policy" in lowered:
+            return (
+                "- Normal prompts go to the configured default round agents for the project.\n"
+                "- Direct routes like @claude, @codex, or @zero go only to that named agent.\n"
+                "- @all opts into the full configured non-direct project team for one prompt.\n"
+                "- Exhausted main agents may be substituted with eligible available fallbacks, with a visible system note.\n"
+                "- Direct-only agents such as Agent Zero stay quiet unless tagged directly or selected as an eligible fallback.\n"
+                ">>> TASK_COMPLETE"
+            )
         if "diagnostic command" in lowered or "check this project setup" in lowered:
             project_match = re.search(r"\bProject:\s*([A-Za-z0-9_-]+)", current_request)
             project = project_match.group(1) if project_match else self.project_name

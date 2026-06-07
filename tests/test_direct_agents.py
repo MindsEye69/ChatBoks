@@ -170,7 +170,7 @@ def test_agent_zero_diagnostic_fallback_uses_active_task_only():
             "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
             "Old turn: check this project setup and recommend the next diagnostic command.\n\n"
             "[ACTIVE TASK]\n"
-            "summarize the current ChatBoks routing policy in 5 bullets.\n\n"
+            "summarize today's agenda in 5 bullets.\n\n"
             "[HANDOFF] None."
         )
 
@@ -204,6 +204,30 @@ def test_agent_zero_diagnostic_fallback_allows_current_setup_task():
         print("PASS: Agent Zero fallback still handles current diagnostic tasks")
 
 
+def test_agent_zero_routing_policy_fallback_uses_active_task():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Agent Zero role",
+        )
+        prompt = (
+            "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
+            "Old turn: check this project setup and recommend the next diagnostic command.\n\n"
+            "[ACTIVE TASK]\n"
+            "summarize the current ChatBoks routing policy in 5 bullets.\n\n"
+            "[HANDOFF] None."
+        )
+
+        result = agent.fallback_for_bare_signal(prompt)
+
+        assert "doctor.py" not in result
+        assert "@all opts into" in result
+        assert "Direct routes" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero fallback can summarize routing policy")
+
+
 if __name__ == "__main__":
     test_normal_route_excludes_direct_agent()
     test_normal_route_uses_default_round_agents_when_configured()
@@ -213,4 +237,5 @@ if __name__ == "__main__":
     test_agent_zero_call_accepts_base_timeout_keywords()
     test_agent_zero_diagnostic_fallback_uses_active_task_only()
     test_agent_zero_diagnostic_fallback_allows_current_setup_task()
+    test_agent_zero_routing_policy_fallback_uses_active_task()
     print("\nAll direct-agent smoke tests passed.")
