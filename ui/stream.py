@@ -37,8 +37,12 @@ class Stream:
     def ready(self) -> None:
         self.console.print(Rule(style="green"))
 
-    def token_usage(self, token_counts: dict[str, int]) -> None:
-        self.console.print(f"[dim]{self.build_token_usage_line(token_counts)}[/dim]")
+    def token_usage(
+        self,
+        token_counts: dict[str, int],
+        session_budget: dict[str, int] | None = None,
+    ) -> None:
+        self.console.print(f"[dim]{self.build_token_usage_line(token_counts, session_budget)}[/dim]")
 
     def intro(self, project: str) -> None:
         if not self.console.is_terminal:
@@ -109,7 +113,11 @@ class Stream:
         self.console.print(f"[white bold]{label}[/white bold]", end="")
         return sys.stdin.readline().rstrip("\r\n")
 
-    def build_token_usage_line(self, token_counts: dict[str, int]) -> str:
+    def build_token_usage_line(
+        self,
+        token_counts: dict[str, int],
+        session_budget: dict[str, int] | None = None,
+    ) -> str:
         segments = ["session tokens:"]
         for agent_name in self.token_usage_agents(token_counts):
             config = self.agent_config.get(agent_name, {})
@@ -121,6 +129,14 @@ class Stream:
                 continue
             segments.append(
                 f"{agent_name.upper()} {self.render_token_bar(used, limit, warning)} "
+                f"{self.format_token_count(used)}/{self.format_token_count(limit)}"
+            )
+        if session_budget and int(session_budget.get("limit", 0) or 0) > 0:
+            used = int(session_budget.get("used", 0) or 0)
+            warning = int(session_budget.get("warning", 0) or 0)
+            limit = int(session_budget.get("limit", 0) or 0)
+            segments.append(
+                f"TOTAL {self.render_token_bar(used, limit, warning)} "
                 f"{self.format_token_count(used)}/{self.format_token_count(limit)}"
             )
         return "  ".join(segments)

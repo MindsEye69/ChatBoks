@@ -206,6 +206,8 @@ class Chatboks:
     def handle_user_input(self, text: str) -> None:
         if self.handle_local_command(text):
             return
+        if not self.ensure_session_token_budget():
+            return
 
         prior_status = self.state.get("status")
         self.append_message("you", text)
@@ -1046,6 +1048,9 @@ class Chatboks:
             self.run_agent_round(initiator=modification, intent="revise")
 
     def execute_proposal(self) -> None:
+        if not self.ensure_session_token_budget():
+            self.update_state({"status": "blocked", "next_agent": "you"})
+            return
         lead = self.router.primary()
         agents = self.resolve_available_agents([lead], exclusive_agent=None)
         if not agents:
@@ -1118,6 +1123,57 @@ class Chatboks:
                 attempt=0,
                 max_retries=0,
             )
+
+    def session_token_budget(self) -> dict[str, int]:
+        context_config = self.config.get("context", {})
+        counts = self.state.get("context", {}).setdefault("token_counts", {})
+        return {
+            "used": self.total_session_tokens(),
+            "warning": int(context_config.get("session_token_budget_warning", 0) or 0),
+            "limit": int(context_config.get("session_token_budget_limit", 0) or 0),
+            "agent_count": len(counts),
+        }
+
+    def total_session_tokens(self) -> int:
+        counts = self.state.get("context", {}).setdefault("token_counts", {})
+        return sum(int(value or 0) for value in counts.values())
+
+    def ensure_session_token_budget(self) -> bool:
+        budget = self.session_token_budget()
+        used = budget["used"]
+        warning = budget["warning"]
+        limit = budget["limit"]
+        context_state = self.state.get("context", {})
+
+        if warning > 0 and used < warning:
+            context_state["session_budget_warning_emitted"] = False
+        if limit > 0 and used < limit:
+            context_state["session_budget_limit_emitted"] = False
+
+        if warning > 0 and used >= warning and not context_state.get("session_budget_warning_emitted"):
+            message = (
+                f"Session token warning: estimated usage is {used} / {warning} warning "
+                f"({limit} hard cap)." if limit > 0 else
+                f"Session token warning: estimated usage is {used} / {warning} warning."
+            )
+            self.stream.system(message)
+            self.append_message("system", message)
+            context_state["session_budget_warning_emitted"] = True
+            self.save_state()
+
+        if limit > 0 and used >= limit:
+            if not context_state.get("session_budget_limit_emitted"):
+                message = (
+                    f"Session token cap reached: estimated usage is {used} / {limit}. "
+                    "New work is blocked until context is reduced."
+                )
+                self.stream.system(message)
+                self.append_message("system", message)
+                context_state["session_budget_limit_emitted"] = True
+                self.save_state()
+            self.update_state({"status": "blocked", "next_agent": "you"})
+            return False
+        return True
 
     def recover_token_exhaustion(
         self,
@@ -1318,11 +1374,12 @@ class Chatboks:
         counts = self.state["context"].setdefault("token_counts", {})
         counts[agent_name] = counts.get(agent_name, 0) + tokens
         self.save_state()
+        self.ensure_session_token_budget()
         self.refresh_token_usage_display()
 
     def refresh_token_usage_display(self) -> None:
         counts = self.state.get("context", {}).setdefault("token_counts", {})
-        self.stream.token_usage(counts)
+        self.stream.token_usage(counts, self.session_token_budget())
 
     def mark_agent_completed(self, agent_name: str) -> None:
         completed = self.state.setdefault("completed_agents", [])
@@ -1427,6 +1484,8 @@ class Chatboks:
             "context": {
                 "codegraph_snapshot": "codegraph.db",
                 "token_counts": {},
+                "session_budget_warning_emitted": False,
+                "session_budget_limit_emitted": False,
             },
         }
 
@@ -1464,6 +1523,8 @@ class Chatboks:
         state.setdefault("context", {})
         state["context"].setdefault("codegraph_snapshot", "codegraph.db")
         state["context"].setdefault("token_counts", {})
+        state["context"].setdefault("session_budget_warning_emitted", False)
+        state["context"].setdefault("session_budget_limit_emitted", False)
         return state
 
     @staticmethod

@@ -82,6 +82,8 @@ rounds:
 
 context:
   recent_chatboks_lines: 50
+  session_token_budget_warning: 220000
+  session_token_budget_limit: 280000
   codegraph:
     enabled: true
     db_candidates:

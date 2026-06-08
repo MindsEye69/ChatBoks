@@ -76,7 +76,6 @@ Remaining:
   - `platform.openai.com/usage`
   - `aistudio.google.com`
 - Cost estimation before execution.
-- Token budget per session, with configurable caps and warnings.
 - Transcript compaction using `>>> SUMMARY_CHECKPOINT`.
 
 ## Phase 3 - Remote Control

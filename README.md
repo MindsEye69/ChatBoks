@@ -188,6 +188,17 @@ ChatBoks shows a compact session token bar in the terminal after startup and aft
 estimated from response length and tracks each configured agent against its token limit so you can spot growing context
 pressure before a retry or compaction path is needed.
 
+You can also set a session-wide warning threshold and hard cap in `config.yaml`:
+
+```yaml
+context:
+  session_token_budget_warning: 220000
+  session_token_budget_limit: 280000
+```
+
+When the warning threshold is crossed, ChatBoks emits a one-time system warning for the current session state. When the
+hard cap is reached, new work is blocked until context is reduced.
+
 ## Run
 
 ```bash

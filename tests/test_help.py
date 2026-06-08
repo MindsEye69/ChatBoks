@@ -79,12 +79,16 @@ def test_stream_token_usage_renders_session_bars():
         ["claude", "codex"],
     )
 
-    line = stream.build_token_usage_line({"claude": 90_000, "codex": 12_000, "agent_zero": 4_000})
+    line = stream.build_token_usage_line(
+        {"claude": 90_000, "codex": 12_000, "agent_zero": 4_000},
+        {"used": 106_000, "warning": 220_000, "limit": 280_000},
+    )
 
     assert "session tokens:" in line
     assert "CLAUDE" in line
     assert "CODEX" in line
     assert "AGENT_ZERO" in line
+    assert "TOTAL" in line
     assert "[green][#####-----][/green]" in line
     print("PASS: token usage bar renders configured and extra-count agents")
 

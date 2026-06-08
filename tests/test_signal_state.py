@@ -76,12 +76,44 @@ def test_check_token_limit_uses_default_warning_threshold():
 def test_update_token_count_refreshes_session_token_display():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
-        app.config = {"agents": {"codex": {"token_limit": 120_000, "token_warning": 100_000}}}
+        app.config = {
+            "agents": {"codex": {"token_limit": 120_000, "token_warning": 100_000}},
+            "context": {"session_token_budget_warning": 220_000, "session_token_budget_limit": 280_000},
+        }
 
         app.update_token_count("codex", "x" * 40)
 
         assert app.state["context"]["token_counts"]["codex"] == 100_010
-        app.stream.token_usage.assert_called_once_with(app.state["context"]["token_counts"])
+        app.stream.token_usage.assert_called_once_with(
+            app.state["context"]["token_counts"],
+            {"used": 100_010, "warning": 220_000, "limit": 280_000, "agent_count": 1},
+        )
+
+
+def test_session_token_budget_emits_warning_once():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"context": {"session_token_budget_warning": 90_000, "session_token_budget_limit": 150_000}}
+        app.state["context"]["session_budget_warning_emitted"] = False
+
+        allowed = app.ensure_session_token_budget()
+
+        assert allowed
+        assert app.state["context"]["session_budget_warning_emitted"] is True
+        app.stream.system.assert_called_once()
+
+
+def test_session_token_budget_blocks_new_work_at_hard_cap():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"context": {"session_token_budget_warning": 90_000, "session_token_budget_limit": 100_000}}
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("proceed")
+
+        assert app.state["status"] == "blocked"
+        assert app.stream.system.call_count >= 1
+        app.run_agent_round.assert_not_called()
 
 
 def test_handle_approval_accepts_common_affirmatives():
