@@ -84,6 +84,7 @@ HELP_COMMANDS = [
     ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, diagnose."),
     ("/win ...", "Record a collaboration win without calling agents."),
     ("/fail ...", "Record a collaboration failure without calling agents."),
+    ("/suggest-outcome [agent]", "Ask Agent Zero for candidate /win or /fail lines from recent work."),
     ("/outcomes", "Show recent wins and failures."),
     ("@claude / @codex / @zero", "Route the next prompt exclusively to one agent."),
     ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
@@ -249,6 +250,9 @@ class Chatboks:
             return True
         if command in {"/win", "/fail", "/outcome"}:
             self.handle_outcome_command(stripped)
+            return True
+        if command in {"/suggest-outcome", "/suggest-outcomes"}:
+            self.handle_outcome_suggestion_command(stripped)
             return True
         if command in {"/wins", "/failures", "/outcomes"}:
             outcome_type = {
@@ -690,6 +694,74 @@ class Chatboks:
             ),
         )
 
+    def handle_outcome_suggestion_command(self, text: str) -> None:
+        try:
+            parts = shlex.split(text)
+        except ValueError as exc:
+            self.stream.system(f"Could not parse outcome suggestion command: {exc}")
+            return
+
+        if not parts:
+            return
+
+        agent_filter = parts[1].lower() if len(parts) > 1 else None
+        if agent_filter and agent_filter not in self.config.get("agents", {}):
+            known = ", ".join(sorted(self.config.get("agents", {})))
+            self.stream.system(
+                f"Unknown agent '{agent_filter}'. Known agents: {known}"
+            )
+            return
+
+        prompt = self.build_outcome_suggestion_prompt(agent_filter)
+        self.stream.system("Asking Agent Zero for outcome suggestions...")
+        response = self.call_agent_zero_direct(prompt)
+        if response is None:
+            return
+        body = self.strip_signal_suffix(response)
+        if not body:
+            body = "Agent Zero returned no outcome suggestions."
+        self.stream.system(body)
+
+    def build_outcome_suggestion_prompt(self, agent_filter: str | None = None) -> str:
+        recent_chat = self.load_recent_transcript_lines(limit=18)
+        if agent_filter:
+            filtered_chat = [
+                line for line in recent_chat
+                if f"[{agent_filter.upper()}]" in line.upper() or line.startswith("[YOU]") or line.startswith("[SYSTEM]")
+            ]
+            if filtered_chat:
+                recent_chat = filtered_chat
+
+        recent_outcomes = self.load_outcomes()[-6:]
+        outcome_lines = [
+            (
+                f"- {record.get('type')} {record.get('agent')} "
+                f"{record.get('category')} {record.get('impact')}: {record.get('note')}"
+            )
+            for record in recent_outcomes
+        ] or ["- No prior outcomes recorded."]
+
+        target = agent_filter or "any agent"
+        return "\n".join(
+            [
+                "Suggest collaboration outcome scoring commands for ChatBoks.",
+                "Return up to 3 candidate commands, one per line, each starting with /win or /fail.",
+                "After each command, add one short plain-text explanation line.",
+                "Do not record anything automatically. Do not use markdown fences.",
+                "If there is not enough signal, say so briefly and end with >>> TASK_COMPLETE.",
+                "",
+                f"Target agent filter: {target}",
+                f"Current round: {int(self.state.get('round', 0))}",
+                f"Current collaboration mode: {self.state.get('collaboration_mode', 'default')}",
+                "",
+                "[RECENT TRANSCRIPT]",
+                *recent_chat,
+                "",
+                "[RECENT OUTCOMES]",
+                *outcome_lines,
+            ]
+        )
+
     def append_outcome(self, record: dict[str, Any]) -> None:
         self.ensure_project_files()
         path = self.outcomes_path()
@@ -746,6 +818,49 @@ class Chatboks:
 
     def outcomes_path(self) -> Path:
         return self.state_file.parent / "outcomes.jsonl"
+
+    def load_recent_transcript_lines(self, limit: int = 12) -> list[str]:
+        self.ensure_project_files()
+        lines = [
+            line.rstrip()
+            for line in self.chatboks_md.read_text(encoding="utf-8").splitlines()
+            if line.startswith("[")
+        ]
+        return lines[-limit:] if limit > 0 else lines
+
+    def call_agent_zero_direct(self, prompt: str) -> str | None:
+        if "agent_zero" not in self.config.get("agents", {}):
+            self.stream.system("Agent Zero is not configured for this ChatBoks install.")
+            return None
+
+        statuses = self.load_agent_statuses()
+        self.update_state({"agent_status": statuses})
+        if not self.agent_is_available("agent_zero", statuses):
+            self.stream.system(
+                "Agent Zero is exhausted or unavailable. Use /agent agent_zero available when it is ready again."
+            )
+            return None
+
+        try:
+            self.check_token_limit("agent_zero")
+            agent = self.router.get_agent("agent_zero")
+            response = agent.call(prompt)
+        except AgentTimeoutError as exc:
+            self.stream.system(f"Agent Zero timed out while suggesting outcomes: {exc}")
+            return None
+        except TokenExhaustionError as exc:
+            self.stream.system(f"Agent Zero hit its token limit while suggesting outcomes: {exc}")
+            return None
+
+        self.update_token_count("agent_zero", response)
+        return response
+
+    def strip_signal_suffix(self, response: str) -> str:
+        signal = self.parse_signal(response)
+        if not signal:
+            return response.strip()
+        before_signal, _, _ = response.rpartition(f">>> {signal}")
+        return before_signal.strip()
 
     @staticmethod
     def format_counts(counts: dict[str, int]) -> str:

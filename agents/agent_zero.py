@@ -35,7 +35,9 @@ class AgentZeroAgent(BaseAgent):
             "Do not emit JSON, markdown fences, fake tool calls, or END_OF_MESSAGE. "
             "Reply in concise plain text. For setup checks, give one concrete next diagnostic "
             "command when possible. Use >>> QUESTION only when you include a specific question "
-            "for the human in the response body. If deep implementation, architecture, security "
+            "for the human in the response body. For outcome-scoring requests, suggest concrete "
+            "/win or /fail commands but do not pretend to record them. "
+            "If deep implementation, architecture, security "
             "review, vision, browser testing, or git work is needed, recommend the right agent "
             "instead of pretending to do it. End with exactly one ChatBoks signal: "
             ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
@@ -78,12 +80,14 @@ class AgentZeroAgent(BaseAgent):
                 {
                     "role": "system",
                     "content": (
-                        "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
-                        "No markdown fences. No tool calls. For setup checks, provide one "
-                        "concrete next diagnostic command when possible. Use >>> QUESTION only "
-                        "with a specific question in the body. End with exactly one of "
-                        ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
-                    ),
+                    "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
+                    "No markdown fences. No tool calls. For setup checks, provide one "
+                    "concrete next diagnostic command when possible. Use >>> QUESTION only "
+                    "with a specific question in the body. For outcome-scoring requests, "
+                    "suggest concrete /win or /fail commands but do not claim they were recorded. "
+                    "End with exactly one of "
+                    ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
+                ),
                 },
                 {"role": "user", "content": prompt},
             ],

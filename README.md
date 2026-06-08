@@ -53,6 +53,16 @@ These local slash commands do not call any agents or consume model tokens:
 
 Use this to compare collaboration modes, agent combinations, and unique model contributions over time.
 
+When you want help phrasing likely outcome entries from recent work, ask Agent Zero for suggestions:
+
+```text
+/suggest-outcome
+/suggest-outcome codex
+```
+
+This is advisory only. Agent Zero suggests candidate `/win` or `/fail` lines, but nothing is written to
+`.chatboks/outcomes.jsonl` until you run a manual outcome command yourself.
+
 ## Collaboration Modes
 
 Modes are project-local prompt frames that tell agents how to collaborate. They do not route extra agents by themselves.

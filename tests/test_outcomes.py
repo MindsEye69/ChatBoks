@@ -105,7 +105,53 @@ def test_outcomes_summary_reads_jsonl():
         print("PASS: /outcomes summarizes JSONL records")
 
 
+def test_suggest_outcome_uses_agent_zero_without_recording_jsonl():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {
+                "claude": {},
+                "codex": {},
+                "agent_zero": {},
+            }
+        }
+        app.ensure_project_files()
+        app.chatboks_md.write_text(
+            "\n".join(
+                [
+                    "[YOU] please review the timeout handling",
+                    "[CODEX] Found a retry bug and added a focused test.\n>>> TASK_COMPLETE",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        app.load_agent_statuses = MagicMock(return_value={})
+        app.update_state = MagicMock()
+        app.check_token_limit = MagicMock()
+        app.update_token_count = MagicMock()
+        fake_agent = MagicMock()
+        fake_agent.call.return_value = (
+            '/win codex timeout_recovery high "Found and fixed the retry bug."\n'
+            "Good fit because Codex both identified the defect and landed a test.\n"
+            ">>> TASK_COMPLETE"
+        )
+        app.router.get_agent.return_value = fake_agent
+
+        app.handle_user_input("/suggest-outcome codex")
+
+        fake_agent.call.assert_called_once()
+        prompt = fake_agent.call.call_args.args[0]
+        assert "Target agent filter: codex" in prompt
+        assert "[RECENT TRANSCRIPT]" in prompt
+        message = app.stream.system.call_args.args[0]
+        assert '/win codex timeout_recovery high "Found and fixed the retry bug."' in message
+        assert app.load_outcomes() == []
+        print("PASS: /suggest-outcome uses Agent Zero without recording JSONL")
+
+
 if __name__ == "__main__":
     test_win_command_records_jsonl_without_agent_round()
     test_outcomes_summary_reads_jsonl()
+    test_suggest_outcome_uses_agent_zero_without_recording_jsonl()
     print("\nAll outcome smoke tests passed.")
