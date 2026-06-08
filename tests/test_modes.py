@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from context.builder import ContextBuilder
 from orchestrator import COLLABORATION_MODES, Chatboks
+from router import RoutingDecision
 
 
 def _make_app(root: Path) -> Chatboks:
@@ -87,17 +88,16 @@ def test_handle_user_input_records_first_role_routed_agent_as_next():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
         app.state["collaboration_mode"] = "implement"
-        app.router.route_user_prompt.return_value = (
+        app.router.route_user_prompt_details.return_value = RoutingDecision(
             ["codex", "claude"],
             "patch the router",
-            None,
         )
         app.resolve_available_agents = MagicMock(return_value=["codex", "claude"])
         app.run_agent_round = MagicMock()
 
         app.handle_user_input("patch the router")
 
-        app.router.route_user_prompt.assert_called_once_with(
+        app.router.route_user_prompt_details.assert_called_once_with(
             "patch the router",
             collaboration_mode="implement",
         )

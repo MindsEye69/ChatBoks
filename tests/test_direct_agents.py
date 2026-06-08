@@ -322,6 +322,129 @@ def test_agent_zero_routing_policy_fallback_uses_active_task():
         print("PASS: Agent Zero fallback can summarize routing policy")
 
 
+def test_routing_intelligence_can_auto_route_status_questions_to_agent_zero():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "round_agents": ["claude", "codex"],
+                    "direct_agents": ["agent_zero"],
+                    "routing_intelligence": {"enabled": True},
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        decision = router.route_user_prompt_details("what's next for this project?")
+
+        assert decision.agents == ["agent_zero"]
+        assert decision.exclusive_agent is None
+        assert decision.strategy == "agent_zero_direct"
+        assert "Agent Zero" in (decision.note or "")
+        print("PASS: routing intelligence can auto-route status checks to Agent Zero")
+
+
+def test_routing_intelligence_can_auto_route_implementation_requests_to_codex():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "round_agents": ["claude", "codex"],
+                    "direct_agents": ["agent_zero"],
+                    "routing_intelligence": {"enabled": True},
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        decision = router.route_user_prompt_details("implement provider fallback for codex timeouts")
+
+        assert decision.agents == ["codex"]
+        assert decision.exclusive_agent is None
+        assert decision.strategy == "single_agent_codex"
+        assert "Codex" in (decision.note or "")
+        print("PASS: routing intelligence can auto-route implementation work to Codex")
+
+
+def test_routing_intelligence_can_auto_route_architecture_review_to_claude():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "round_agents": ["claude", "codex"],
+                    "direct_agents": ["agent_zero"],
+                    "routing_intelligence": {"enabled": True},
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        decision = router.route_user_prompt_details("review the architecture for token recovery")
+
+        assert decision.agents == ["claude"]
+        assert decision.exclusive_agent is None
+        assert decision.strategy == "single_agent_claude"
+        assert "Claude" in (decision.note or "")
+        print("PASS: routing intelligence can auto-route architecture review to Claude")
+
+
+def test_routing_intelligence_defers_to_full_round_for_brainstorm_requests():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "round_agents": ["claude", "codex"],
+                    "direct_agents": ["agent_zero"],
+                    "routing_intelligence": {"enabled": True},
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        decision = router.route_user_prompt_details(
+            "brainstorm three options for future routing policy",
+            collaboration_mode="brainstorm",
+        )
+
+        assert decision.agents == ["claude", "codex"]
+        assert decision.exclusive_agent is None
+        assert decision.strategy == "full_round"
+        assert decision.note is None
+        print("PASS: routing intelligence keeps brainstorm prompts in the full round")
+
+
 if __name__ == "__main__":
     test_normal_route_excludes_direct_agent()
     test_normal_route_uses_default_round_agents_when_configured()
@@ -335,4 +458,8 @@ if __name__ == "__main__":
     test_agent_zero_diagnostic_fallback_uses_active_task_only()
     test_agent_zero_diagnostic_fallback_allows_current_setup_task()
     test_agent_zero_routing_policy_fallback_uses_active_task()
+    test_routing_intelligence_can_auto_route_status_questions_to_agent_zero()
+    test_routing_intelligence_can_auto_route_implementation_requests_to_codex()
+    test_routing_intelligence_can_auto_route_architecture_review_to_claude()
+    test_routing_intelligence_defers_to_full_round_for_brainstorm_requests()
     print("\nAll direct-agent smoke tests passed.")

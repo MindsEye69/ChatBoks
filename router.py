@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,15 @@ AGENT_CLASSES = {
 }
 
 
+@dataclass(frozen=True)
+class RoutingDecision:
+    agents: list[str]
+    cleaned_prompt: str
+    exclusive_agent: str | None = None
+    note: str | None = None
+    strategy: str = "full_round"
+
+
 class Router:
     def __init__(self, config: dict[str, Any], project: str, project_path: Path) -> None:
         self.config = config
@@ -33,6 +43,8 @@ class Router:
             str(role).strip().lower(): self.normalize_round_agents(agents)
             for role, agents in dict(self.project_config.get("role_routes", {})).items()
         }
+        routing_config = self.project_config.get("routing_intelligence") or {}
+        self.routing_intelligence_enabled = bool(routing_config.get("enabled"))
 
     def primary(self) -> str:
         configured = self.project_config.get("primary")
@@ -53,6 +65,14 @@ class Router:
         text: str,
         collaboration_mode: str | None = None,
     ) -> tuple[list[str], str, str | None]:
+        decision = self.route_user_prompt_details(text, collaboration_mode)
+        return decision.agents, decision.cleaned_prompt, decision.exclusive_agent
+
+    def route_user_prompt_details(
+        self,
+        text: str,
+        collaboration_mode: str | None = None,
+    ) -> RoutingDecision:
         """Return the agents that should handle a user prompt.
 
         A leading @agent prefix is exclusive: @claude only calls Claude,
@@ -60,13 +80,16 @@ class Router:
         """
         stripped = text.lstrip()
         if not stripped.startswith("@"):
-            return self.normal_round_agents(collaboration_mode), text, None
+            auto = self.auto_route_prompt(text, collaboration_mode)
+            if auto is not None:
+                return auto
+            return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
 
         first, _, remainder = stripped.partition(" ")
         requested = first[1:].lower()
         if requested in {"all", "team", "everyone"}:
             cleaned = remainder.strip() or text
-            return list(self.agent_names), cleaned, None
+            return RoutingDecision(list(self.agent_names), cleaned, strategy="explicit_all")
 
         aliases = {
             "0": "agent_zero",
@@ -79,12 +102,12 @@ class Router:
         }
         agent_name = aliases.get(requested, requested)
         if agent_name not in self.config.get("agents", {}) or agent_name not in AGENT_CLASSES:
-            return self.normal_round_agents(collaboration_mode), text, None
+            return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
         if agent_name not in self.agent_names and agent_name not in self.direct_agent_names:
-            return self.normal_round_agents(collaboration_mode), text, None
+            return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
 
         cleaned = remainder.strip() or text
-        return [agent_name], cleaned, agent_name
+        return RoutingDecision([agent_name], cleaned, agent_name, strategy="explicit_agent")
 
     def normal_round_agents(self, collaboration_mode: str | None = None) -> list[str]:
         role = str(collaboration_mode or "").strip().lower()
@@ -104,6 +127,161 @@ class Router:
             if name in allowed and name not in normalized:
                 normalized.append(name)
         return normalized
+
+    def auto_route_prompt(
+        self,
+        text: str,
+        collaboration_mode: str | None = None,
+    ) -> RoutingDecision | None:
+        if not self.routing_intelligence_enabled:
+            return None
+
+        lowered = " ".join(text.lower().split())
+        if not lowered:
+            return None
+
+        if self.should_route_to_agent_zero(lowered, collaboration_mode):
+            return RoutingDecision(
+                ["agent_zero"],
+                text,
+                note="Routing intelligence: lightweight setup/status request -> Agent Zero.",
+                strategy="agent_zero_direct",
+            )
+
+        if self.should_route_to_codex(lowered, collaboration_mode):
+            return RoutingDecision(
+                ["codex"],
+                text,
+                note="Routing intelligence: implementation-style request -> Codex first.",
+                strategy="single_agent_codex",
+            )
+
+        if self.should_route_to_claude(lowered, collaboration_mode):
+            return RoutingDecision(
+                ["claude"],
+                text,
+                note="Routing intelligence: analysis-heavy request -> Claude first.",
+                strategy="single_agent_claude",
+            )
+        return None
+
+    def should_route_to_agent_zero(
+        self,
+        lowered: str,
+        collaboration_mode: str | None,
+    ) -> bool:
+        if "agent_zero" not in self.direct_agent_names and "agent_zero" not in self.agent_names:
+            return False
+        if collaboration_mode in {"brainstorm", "review", "bugsearch"}:
+            return False
+        if len(lowered) > 220:
+            return False
+        if self.contains_any(
+            lowered,
+            (
+                "implement ",
+                "fix ",
+                "patch ",
+                "refactor ",
+                "write test",
+                "add test",
+                "run test",
+                "review code",
+                "security review",
+                "threat model",
+                "architecture",
+                "design a",
+                "commit ",
+                "push ",
+            ),
+        ):
+            return False
+        return self.contains_any(
+            lowered,
+            (
+                "what's next",
+                "whats next",
+                "what is next",
+                "next step",
+                "status",
+                "routing policy",
+                "which agent",
+                "who should handle",
+                "project setup",
+                "check this project setup",
+                "diagnostic command",
+                "doctor.py",
+                "why is claude",
+                "why is codex",
+                "why is agent_zero",
+                "why is antigravity",
+                "current mode",
+                "context mode",
+            ),
+        )
+
+    def should_route_to_codex(
+        self,
+        lowered: str,
+        collaboration_mode: str | None,
+    ) -> bool:
+        if "codex" not in self.agent_names:
+            return False
+        if collaboration_mode in {"brainstorm", "review", "bugsearch"}:
+            return False
+        if self.contains_any(lowered, ("options", "tradeoff", "trade-off", "compare", "brainstorm")):
+            return False
+        if self.contains_any(lowered, ("architecture", "security review", "threat model")):
+            return False
+        return self.contains_any(
+            lowered,
+            (
+                "implement",
+                "fix",
+                "patch",
+                "refactor",
+                "wire up",
+                "add test",
+                "write test",
+                "update code",
+                "change the code",
+                "make the change",
+                "commit",
+                "push",
+                "start the next thing",
+                "proceed as you see fit",
+            ),
+        )
+
+    def should_route_to_claude(
+        self,
+        lowered: str,
+        collaboration_mode: str | None,
+    ) -> bool:
+        if "claude" not in self.agent_names:
+            return False
+        if collaboration_mode in {"brainstorm", "bugsearch"}:
+            return False
+        if self.contains_any(lowered, ("implement", "fix", "patch", "refactor", "commit", "push")):
+            return False
+        return self.contains_any(
+            lowered,
+            (
+                "review the design",
+                "review the architecture",
+                "architecture review",
+                "threat model",
+                "security review",
+                "explain how",
+                "why does",
+                "analyze the design",
+                "analyse the design",
+            ),
+        )
+
+    @staticmethod
+    def contains_any(text: str, needles: tuple[str, ...]) -> bool:
+        return any(needle in text for needle in needles)
 
     def get_agent(self, agent_name: str):
         if agent_name not in AGENT_CLASSES:

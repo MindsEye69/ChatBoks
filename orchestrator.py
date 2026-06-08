@@ -212,10 +212,15 @@ class Chatboks:
             self.handle_approval(text)
             return
 
-        agents, routed_text, exclusive_agent = self.router.route_user_prompt(
+        decision = self.router.route_user_prompt_details(
             text,
             collaboration_mode=self.state.get("collaboration_mode"),
         )
+        agents = decision.agents
+        routed_text = decision.cleaned_prompt
+        exclusive_agent = decision.exclusive_agent
+        if decision.note:
+            self.append_message("system", decision.note)
         agents = self.resolve_available_agents(agents, exclusive_agent)
         if not agents:
             return

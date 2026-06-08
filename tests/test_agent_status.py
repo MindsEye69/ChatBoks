@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from orchestrator import Chatboks
+from router import RoutingDecision
 
 
 def _make_app(root: Path) -> Chatboks:
@@ -37,10 +38,10 @@ def _make_app(root: Path) -> Chatboks:
     app.stream = MagicMock()
     app.router = MagicMock()
     app.router.primary.return_value = "claude"
-    app.router.route_user_prompt.side_effect = lambda text, **_kwargs: (
-        (["claude"], text.removeprefix("@claude").strip(), "claude")
+    app.router.route_user_prompt_details.side_effect = lambda text, **_kwargs: (
+        RoutingDecision(["claude"], text.removeprefix("@claude").strip(), "claude")
         if text.startswith("@claude")
-        else (["claude", "codex"], text, None)
+        else RoutingDecision(["claude", "codex"], text)
     )
     app.context = MagicMock()
     app._internal_write = False

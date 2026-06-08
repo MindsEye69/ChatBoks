@@ -5,6 +5,8 @@ projects:
     direct_agents: [agent_zero]
     primary: codex
     codegraph: true
+    routing_intelligence:
+      enabled: true
     role_routes:
       implement: [codex, claude]
       review: [claude, codex]

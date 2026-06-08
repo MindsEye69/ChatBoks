@@ -128,6 +128,27 @@ like `@zero` when you want the local/bootstrap model specifically. Use `@all ...
 non-direct project team for one prompt. Local/direct agents can fill a main seat only when explicitly marked with
 `can_fill_main_seat: true` and selected as a fallback for an exhausted agent.
 
+## Routing Intelligence
+
+ChatBoks can optionally use a small first-pass classifier before a normal round starts. This keeps explicit `@agent`
+routes unchanged while letting cheap/local coordination handle obvious low-cost requests.
+
+```yaml
+projects:
+  chatboks:
+    routing_intelligence:
+      enabled: true
+```
+
+Current basic behavior is conservative:
+
+- Lightweight setup, status, routing-policy, and diagnostic questions can auto-route to Agent Zero.
+- Obvious implementation requests can auto-route to Codex only.
+- Obvious design, architecture, and security-analysis requests can auto-route to Claude only.
+- Everything else still uses the normal project round or collaboration-mode lane.
+
+When the classifier engages, ChatBoks writes a short `[SYSTEM]` note so the auto-route is visible in `chatboks.md`.
+
 ## Help
 
 Use `/help` in the terminal to show the local command deck in an old-school BBS-style box.
