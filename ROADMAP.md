@@ -67,7 +67,6 @@ Remaining:
 
 - Role-based routing with predefined agent lanes per project.
 - Task auction classifier: Agent Zero routes dynamically and calls cloud models only when needed.
-- Session token usage bar in terminal.
 - Usage baseline sync:
   - Open browser to usage dashboard.
   - Detect login state.

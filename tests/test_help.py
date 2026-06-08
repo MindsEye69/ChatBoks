@@ -69,7 +69,28 @@ def test_stream_help_box_contains_bbs_frame_and_commands():
     print("PASS: help box renders command deck")
 
 
+def test_stream_token_usage_renders_session_bars():
+    stream = Stream(
+        {
+            "claude": {"token_limit": 180_000, "token_warning": 150_000},
+            "codex": {"token_limit": 120_000, "token_warning": 100_000},
+            "agent_zero": {"token_limit": 32_000, "token_warning": 24_000},
+        },
+        ["claude", "codex"],
+    )
+
+    line = stream.build_token_usage_line({"claude": 90_000, "codex": 12_000, "agent_zero": 4_000})
+
+    assert "session tokens:" in line
+    assert "CLAUDE" in line
+    assert "CODEX" in line
+    assert "AGENT_ZERO" in line
+    assert "[green][#####-----][/green]" in line
+    print("PASS: token usage bar renders configured and extra-count agents")
+
+
 if __name__ == "__main__":
     test_help_command_renders_without_agent_round()
     test_stream_help_box_contains_bbs_frame_and_commands()
+    test_stream_token_usage_renders_session_bars()
     print("\nAll help smoke tests passed.")

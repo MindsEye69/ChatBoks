@@ -25,6 +25,7 @@ class Stream:
     def __init__(self, agent_config: dict[str, Any], agents: list[str]) -> None:
         self.console = Console()
         self.agents = agents
+        self.agent_config = agent_config
         self.colors = DEFAULT_COLORS.copy()
         for name, config in agent_config.items():
             if "color" in config:
@@ -35,6 +36,9 @@ class Stream:
 
     def ready(self) -> None:
         self.console.print(Rule(style="green"))
+
+    def token_usage(self, token_counts: dict[str, int]) -> None:
+        self.console.print(f"[dim]{self.build_token_usage_line(token_counts)}[/dim]")
 
     def intro(self, project: str) -> None:
         if not self.console.is_terminal:
@@ -104,6 +108,56 @@ class Stream:
     def prompt(self, label: str = "You > ") -> str:
         self.console.print(f"[white bold]{label}[/white bold]", end="")
         return sys.stdin.readline().rstrip("\r\n")
+
+    def build_token_usage_line(self, token_counts: dict[str, int]) -> str:
+        segments = ["session tokens:"]
+        for agent_name in self.token_usage_agents(token_counts):
+            config = self.agent_config.get(agent_name, {})
+            used = int(token_counts.get(agent_name, 0))
+            limit = int(config.get("token_limit", 0) or 0)
+            warning = int(config.get("token_warning", 0) or 0)
+            if limit <= 0:
+                segments.append(f"{agent_name.upper()} {self.format_token_count(used)}")
+                continue
+            segments.append(
+                f"{agent_name.upper()} {self.render_token_bar(used, limit, warning)} "
+                f"{self.format_token_count(used)}/{self.format_token_count(limit)}"
+            )
+        return "  ".join(segments)
+
+    def token_usage_agents(self, token_counts: dict[str, int]) -> list[str]:
+        ordered = list(self.agents)
+        for agent_name in token_counts:
+            if agent_name not in ordered and agent_name in self.agent_config:
+                ordered.append(agent_name)
+        return ordered
+
+    @staticmethod
+    def render_token_bar(used: int, limit: int, warning: int, width: int = 10) -> str:
+        if limit <= 0:
+            return "[----------]"
+        ratio = max(0.0, min(1.0, used / limit))
+        filled = min(width, int(ratio * width))
+        if used > 0 and filled == 0:
+            filled = 1
+        bar = "#" * filled + "-" * (width - filled)
+        if used >= limit:
+            color = "red"
+        elif warning > 0 and used >= warning:
+            color = "yellow"
+        else:
+            color = "green"
+        return f"[{color}][{bar}][/{color}]"
+
+    @staticmethod
+    def format_token_count(value: int) -> str:
+        if value >= 1_000_000:
+            return f"{value / 1_000_000:.1f}m"
+        if value >= 10_000:
+            return f"{value // 1_000}k"
+        if value >= 1_000:
+            return f"{value / 1_000:.1f}k"
+        return str(value)
 
     def render_intro_frame(self, frame: str, project: str, index: int, total: int) -> Text:
         title = self.center_block(self.chatboks_wordmark(), self.console.width)

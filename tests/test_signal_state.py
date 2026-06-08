@@ -73,6 +73,17 @@ def test_check_token_limit_uses_default_warning_threshold():
         app.recover_token_exhaustion.assert_called_once()
 
 
+def test_update_token_count_refreshes_session_token_display():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"agents": {"codex": {"token_limit": 120_000, "token_warning": 100_000}}}
+
+        app.update_token_count("codex", "x" * 40)
+
+        assert app.state["context"]["token_counts"]["codex"] == 100_010
+        app.stream.token_usage.assert_called_once_with(app.state["context"]["token_counts"])
+
+
 def test_handle_approval_accepts_common_affirmatives():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))

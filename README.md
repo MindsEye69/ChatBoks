@@ -182,6 +182,12 @@ When the classifier engages, ChatBoks writes a short `[SYSTEM]` note so the auto
 
 Use `/help` in the terminal to show the local command deck in an old-school BBS-style box.
 
+## Session Token Usage
+
+ChatBoks shows a compact session token bar in the terminal after startup and after each agent response. The bar is
+estimated from response length and tracks each configured agent against its token limit so you can spot growing context
+pressure before a retry or compaction path is needed.
+
 ## Run
 
 ```bash

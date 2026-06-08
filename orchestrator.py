@@ -146,6 +146,7 @@ class Chatboks:
         if self.state.get("status") == "initializing":
             self.initialize_agents()
         self.stream.ready()
+        self.refresh_token_usage_display()
 
         if self.trigger == "commit":
             self.handle_commit_trigger()
@@ -1166,6 +1167,7 @@ class Chatboks:
         )
         self.state["context"]["token_counts"][agent_name] = 0
         self.save_state()
+        self.refresh_token_usage_display()
         return True
 
     def capture_git_diff(self) -> str:
@@ -1316,6 +1318,11 @@ class Chatboks:
         counts = self.state["context"].setdefault("token_counts", {})
         counts[agent_name] = counts.get(agent_name, 0) + tokens
         self.save_state()
+        self.refresh_token_usage_display()
+
+    def refresh_token_usage_display(self) -> None:
+        counts = self.state.get("context", {}).setdefault("token_counts", {})
+        self.stream.token_usage(counts)
 
     def mark_agent_completed(self, agent_name: str) -> None:
         completed = self.state.setdefault("completed_agents", [])
