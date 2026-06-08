@@ -1,19 +1,11 @@
 #!/bin/sh
+# ChatBoks managed post-commit hook template.
+#
+# Prefer installing a project-specific hook with:
+#   python install.py <project> --install-hook
+#
+# The installer writes absolute PYTHON, CHATBOKS_ROOT, CONFIG, and PROJECT
+# values so this works from any Git-managed project on Windows or Unix.
 
-PROJECT=$(basename "$(pwd)")
-CHATBOKS_STATE=".chatboks/state.json"
-
-if [ ! -f "$CHATBOKS_STATE" ]; then
-  exit 0
-fi
-
-STATUS=$(python3 -c "import json; s=json.load(open('$CHATBOKS_STATE', encoding='utf-8')); print(s.get('status', 'idle'))")
-COMMIT_MSG=$(git log -1 --pretty=%B)
-COMMIT_HASH=$(git log -1 --pretty=%h)
-AGENT=$(git log -1 --pretty=%an)
-
-printf "\n[SYSTEM] Commit by %s: %s (%s)\n" "$AGENT" "$COMMIT_MSG" "$COMMIT_HASH" >> chatboks.md
-
-if [ "$STATUS" = "handoff" ]; then
-  python3 "$HOME/.chatboks/orchestrator.py" "$PROJECT" --trigger=commit
-fi
+echo "Install this hook with: python install.py <project> --install-hook" >&2
+exit 0

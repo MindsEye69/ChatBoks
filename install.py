@@ -13,6 +13,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -34,6 +35,7 @@ def main() -> int:
     parser.add_argument("--config", type=Path, default=default_config_path())
     parser.add_argument("--yes", action="store_true", help="Assume yes for install prompts")
     parser.add_argument("--agent-zero", action="store_true", help="Install/check Forge and offer to add Agent Zero to selected projects")
+    parser.add_argument("--install-hook", action="store_true", help="Install ChatBoks post-commit handoff hook")
     args = parser.parse_args()
 
     if yaml is None:
@@ -62,6 +64,8 @@ def main() -> int:
             ok = False
             continue
         ok = ensure_project_codegraph(project, projects[project], config) and ok
+        if args.install_hook:
+            ok = ensure_project_hook(project, projects[project], args.config, args.yes) and ok
         if args.agent_zero:
             changed_config = offer_agent_zero(project, projects[project], args.yes) or changed_config
 
@@ -160,6 +164,70 @@ def ensure_project_codegraph(project: str, project_config: dict[str, Any], confi
 
     print(f"INFO {project}: initializing CodeGraph at {project_path}")
     return run([str(codegraph), "init", "-i"], cwd=project_path)
+
+
+def ensure_project_hook(
+    project: str,
+    project_config: dict[str, Any],
+    config_path: Path,
+    assume_yes: bool,
+) -> bool:
+    project_path = Path(project_config["path"]).expanduser()
+    git_dir = project_path / ".git"
+    if not git_dir.exists():
+        print(f"WARN {project}: no .git directory; post-commit hook skipped")
+        return False
+    hooks_dir = git_dir / "hooks"
+    hook_path = hooks_dir / "post-commit"
+    hook_text = build_post_commit_hook(
+        project=project,
+        python_exe=Path(sys.executable),
+        chatboks_root=Path(__file__).resolve().parent,
+        config_path=config_path.resolve(),
+    )
+
+    if hook_path.exists():
+        existing = hook_path.read_text(encoding="utf-8", errors="replace")
+        if existing == hook_text:
+            print(f"OK   {project}: ChatBoks post-commit hook already installed")
+            return True
+        if "ChatBoks managed post-commit hook" not in existing:
+            if not ask(f"{project}: replace existing post-commit hook with ChatBoks hook?", assume_yes):
+                print(f"SKIP {project}: existing post-commit hook left unchanged")
+                return False
+            backup = hooks_dir / "post-commit.chatboks-bak"
+            backup.write_text(existing, encoding="utf-8")
+            print(f"OK   {project}: existing hook backed up to {backup}")
+
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    hook_path.write_text(hook_text, encoding="utf-8", newline="\n")
+    print(f"OK   {project}: ChatBoks post-commit hook installed")
+    return True
+
+
+def build_post_commit_hook(
+    project: str,
+    python_exe: Path,
+    chatboks_root: Path,
+    config_path: Path,
+) -> str:
+    return "\n".join(
+        [
+            "#!/bin/sh",
+            "# ChatBoks managed post-commit hook",
+            f"PYTHON={shell_quote(python_exe.as_posix())}",
+            f"CHATBOKS_ROOT={shell_quote(chatboks_root.as_posix())}",
+            f"CONFIG={shell_quote(config_path.as_posix())}",
+            f"PROJECT={shell_quote(project)}",
+            '"$PYTHON" "$CHATBOKS_ROOT/hook_post_commit.py" "$PROJECT" --config "$CONFIG" --chatboks-root "$CHATBOKS_ROOT"',
+            "exit 0",
+            "",
+        ]
+    )
+
+
+def shell_quote(value: str) -> str:
+    return "'" + value.replace("'", "'\"'\"'") + "'"
 
 
 def find_codegraph_command() -> Path | None:

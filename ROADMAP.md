@@ -56,11 +56,11 @@ Completed:
 - Automatic timeout recovery.
 - Loop detection.
 - Role-based router.
+- Git hook for async handoffs.
 
 Remaining:
 
 - Antigravity support when `agy` ships on Windows.
-- Git hook for async handoffs.
 - Versioned adapter system for CLI flag drift.
 - Expand Agent Zero routing intelligence beyond direct local diagnostics.
 - Automated outcome scoring suggestions from Agent Zero.

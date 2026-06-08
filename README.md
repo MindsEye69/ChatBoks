@@ -151,6 +151,15 @@ python install.py taskfish
 
 The installer asks before installing anything. If Node.js is missing on Windows, it can offer to install Node.js LTS with `winget`. If CodeGraph is missing, it can offer to install `@colbymchenry/codegraph` globally with npm.
 
+To install the optional async handoff git hook for a configured project:
+
+```powershell
+python install.py taskfish --install-hook
+```
+
+The hook appends commit metadata to `chatboks.md`. If `.chatboks/state.json` has `status: "handoff"`, it invokes
+ChatBoks with `--trigger=commit` so the handoff target can continue after the commit.
+
 Run diagnostics with:
 
 ```bash

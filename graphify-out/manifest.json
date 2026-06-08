@@ -45,19 +45,19 @@
     "semantic_hash": "879daf566f03dc48fe5b6a6f91779745"
   },
   "doctor.py": {
-    "mtime": 1780140171.9288466,
-    "ast_hash": "7ba23f77f707b79a2a7485a73113ecc0",
-    "semantic_hash": "7ba23f77f707b79a2a7485a73113ecc0"
+    "mtime": 1780900819.4459617,
+    "ast_hash": "b4e9eb0f542277efe3a23afd8fc12a2f",
+    "semantic_hash": ""
   },
   "hooks/post-commit": {
-    "mtime": 1779909549.507165,
-    "ast_hash": "dc526469bc63f159fadfbc216489d610",
-    "semantic_hash": "dc526469bc63f159fadfbc216489d610"
+    "mtime": 1780900808.7062411,
+    "ast_hash": "120d1d5e7eccbe935eadd9f67b6e6eb7",
+    "semantic_hash": ""
   },
   "install.py": {
-    "mtime": 1780140276.7884893,
-    "ast_hash": "5a1ce9baac40bb33379a7596b7ce9b60",
-    "semantic_hash": "5a1ce9baac40bb33379a7596b7ce9b60"
+    "mtime": 1780900777.6964438,
+    "ast_hash": "b5574339fc493665691132e9aefe9e2e",
+    "semantic_hash": ""
   },
   "orchestrator.py": {
     "mtime": 1780900116.3629365,
@@ -160,13 +160,13 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1780880896.5138125,
-    "ast_hash": "ef2b54005db5c1ddd7cff8347773e3e1",
+    "mtime": 1780900828.1726723,
+    "ast_hash": "f20f7e4b3a04d0e6b25d1f18c71d3723",
     "semantic_hash": ""
   },
   "ROADMAP.md": {
-    "mtime": 1780900168.855273,
-    "ast_hash": "1747fabf5f56facfc34dff172b0c7b19",
+    "mtime": 1780900834.8913956,
+    "ast_hash": "df862ad755792de955058b354a317390",
     "semantic_hash": ""
   },
   "config.yaml": {
@@ -192,6 +192,16 @@
   "skills/implement.md": {
     "mtime": 1780589843.758142,
     "ast_hash": "332982cbf99243d8be779daad2f8e5ad",
+    "semantic_hash": ""
+  },
+  "hook_post_commit.py": {
+    "mtime": 1780900751.8764765,
+    "ast_hash": "e77e11a09f4520c25653112ec5a1ce17",
+    "semantic_hash": ""
+  },
+  "tests/test_git_hook.py": {
+    "mtime": 1780900796.3804033,
+    "ast_hash": "89d60ea95a779760d0130ef2aad14878",
     "semantic_hash": ""
   }
 }

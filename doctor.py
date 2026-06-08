@@ -112,7 +112,19 @@ def check_project(project: str, project_config: dict[str, Any], config: dict[str
 
     state_path = project_path / ".chatboks" / "state.json"
     print(("OK  " if state_path.exists() else "WARN") + f" state file: {state_path}")
+    ok = check_project_hook(project_path) and ok
     return ok
+
+
+def check_project_hook(project_path: Path) -> bool:
+    hook_path = project_path / ".git" / "hooks" / "post-commit"
+    if not hook_path.exists():
+        print(f"WARN post-commit hook: {hook_path}")
+        return True
+    text = hook_path.read_text(encoding="utf-8", errors="replace")
+    installed = "ChatBoks managed post-commit hook" in text and "hook_post_commit.py" in text
+    print(("OK  " if installed else "WARN") + f" post-commit hook: {hook_path}")
+    return True
 
 
 def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any], smoke_agents: bool) -> bool:
