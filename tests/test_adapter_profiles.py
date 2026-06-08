@@ -55,6 +55,20 @@ def test_doctor_accepts_known_profile_and_rejects_unknown_profile():
     assert not adapter_profile_known("codex", {"adapter_profile": "codex_exec_v9"})
     assert adapter_profile_known(
         "codex",
+        {
+            "adapter_profile": "codex_exec_v1",
+            "fallback_profiles": ["codex_exec_v1"],
+        },
+    )
+    assert not adapter_profile_known(
+        "codex",
+        {
+            "adapter_profile": "codex_exec_v1",
+            "fallback_profiles": ["codex_exec_v9"],
+        },
+    )
+    assert adapter_profile_known(
+        "codex",
         {"adapter_profile": "codex_exec_v9", "adapter_args": ["exec", "-"]},
     )
 

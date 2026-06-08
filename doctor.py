@@ -175,9 +175,15 @@ def adapter_profile_known(agent_name: str, agent_config: dict[str, Any]) -> bool
     if cls is None:
         return False
     if isinstance(agent_config.get("adapter_args"), list):
-        return True
-    profile = str(agent_config.get("adapter_profile") or cls.default_adapter_profile)
-    return profile == cls.default_adapter_profile or profile in cls.adapter_profiles
+        primary_ok = True
+    else:
+        profile = str(agent_config.get("adapter_profile") or cls.default_adapter_profile)
+        primary_ok = profile == cls.default_adapter_profile or profile in cls.adapter_profiles
+    fallback_profiles = agent_config.get("fallback_profiles") or []
+    if not isinstance(fallback_profiles, list):
+        return False
+    fallback_ok = all(str(profile) in cls.adapter_profiles for profile in fallback_profiles)
+    return primary_ok and fallback_ok
 
 
 def check_agent_zero(agent_config: dict[str, Any], smoke_agents: bool) -> bool:

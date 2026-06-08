@@ -22,8 +22,43 @@ class ScriptAgent(BaseAgent):
         )
         self.script_path = script_path
 
-    def command(self) -> list[str]:
+    def command(self, adapter_override: dict[str, object] | None = None) -> list[str]:
         return [self.cli, str(self.script_path)]
+
+
+class FallbackAgent(BaseAgent):
+    name = "fallback"
+    default_adapter_profile = "primary"
+    adapter_profiles = {
+        "primary": ["--model", "pro"],
+        "fallback": ["--model", "flash"],
+    }
+    default_args = adapter_profiles["primary"]
+
+    def __init__(self, root: Path) -> None:
+        super().__init__(
+            project_path=root,
+            config={
+                "cli": "fallback-cli",
+                "adapter_profile": "primary",
+                "fallback_profiles": ["fallback"],
+            },
+            role="test role",
+        )
+        self.commands_seen: list[list[str]] = []
+
+    def run_cli_once(
+        self,
+        prompt: str,
+        command: list[str],
+        timeout: float = 120,
+        idle_timeout: float | None = None,
+        max_timeout: float | None = None,
+    ) -> str:
+        self.commands_seen.append(command)
+        if "pro" in command:
+            raise TokenExhaustionError("prompt is too long for pro")
+        return f"used {' '.join(command)}\n>>> TASK_COMPLETE"
 
 
 def run_script(script: str, prompt: str = "hello", **kwargs: float) -> str:
@@ -143,6 +178,21 @@ def test_call_uses_extended_max_timeout_for_streaming_heartbeat() -> None:
         assert result == "ok\n>>> TASK_COMPLETE"
 
 
+def test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = FallbackAgent(Path(tmp))
+
+        result = agent.run_cli("context", timeout=5)
+
+        assert result == "used fallback-cli --model flash\n>>> TASK_COMPLETE"
+        assert agent.commands_seen == [
+            ["fallback-cli", "--model", "pro"],
+            ["fallback-cli", "--model", "flash"],
+        ]
+        assert agent.last_adapter_profile_used == "fallback"
+        assert agent.last_adapter_fallback_used is True
+
+
 if __name__ == "__main__":
     tests = [
         test_streaming_run_cli_returns_successful_stdout,
@@ -152,6 +202,7 @@ if __name__ == "__main__":
         test_streaming_run_cli_reports_nonzero_stderr,
         test_streaming_run_cli_detects_token_exhaustion_on_failure,
         test_call_uses_extended_max_timeout_for_streaming_heartbeat,
+        test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion,
     ]
     for test in tests:
         test()

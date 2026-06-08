@@ -61,6 +61,8 @@ class BaseAgent:
         self.config = config
         self.role = role
         self.cli = config["cli"]
+        self.last_adapter_profile_used = str(config.get("adapter_profile") or self.default_adapter_profile)
+        self.last_adapter_fallback_used = False
 
     def initialize(self, codegraph: str) -> str:
         return f"Codegraph loaded. Ready.\n\n{self.short_codegraph_status(codegraph)}"
@@ -104,19 +106,43 @@ class BaseAgent:
             )
         return f"{self.role}\n\n{context}\n\n{instruction}\n"
 
-    def command(self) -> list[str]:
-        return [self.cli, *self.adapter_args()]
+    def command(self, adapter_override: dict[str, Any] | None = None) -> list[str]:
+        return [self.cli, *self.adapter_args(adapter_override)]
 
-    def adapter_args(self) -> list[str]:
-        configured_args = self.config.get("adapter_args")
+    def adapter_args(self, adapter_override: dict[str, Any] | None = None) -> list[str]:
+        configured_args = (adapter_override or {}).get("adapter_args", self.config.get("adapter_args"))
         if isinstance(configured_args, list):
             return [self.expand_adapter_arg(str(arg)) for arg in configured_args]
 
-        profile = str(self.config.get("adapter_profile") or self.default_adapter_profile)
+        profile = str(
+            (adapter_override or {}).get("adapter_profile")
+            or self.config.get("adapter_profile")
+            or self.default_adapter_profile
+        )
         args = self.adapter_profiles.get(profile)
         if args is None:
             args = self.default_args
         return [self.expand_adapter_arg(arg) for arg in args]
+
+    def adapter_run_plan(self) -> list[dict[str, Any]]:
+        plan: list[dict[str, Any]] = [
+            {
+                "label": "primary",
+                "adapter_profile": self.config.get("adapter_profile") or self.default_adapter_profile,
+                "adapter_args": self.config.get("adapter_args"),
+            }
+        ]
+        fallback_profiles = self.config.get("fallback_profiles") or []
+        if not isinstance(fallback_profiles, list):
+            return plan
+        for index, profile in enumerate(fallback_profiles, start=1):
+            plan.append(
+                {
+                    "label": f"fallback_{index}",
+                    "adapter_profile": str(profile),
+                }
+            )
+        return plan
 
     def expand_adapter_arg(self, arg: str) -> str:
         return arg.format(project_path=str(self.project_path))
@@ -128,7 +154,42 @@ class BaseAgent:
         idle_timeout: float | None = None,
         max_timeout: float | None = None,
     ) -> str:
-        command = self.command()
+        self.last_adapter_fallback_used = False
+        last_error: TokenExhaustionError | None = None
+        plan = self.adapter_run_plan()
+        for index, adapter_override in enumerate(plan):
+            profile = str(
+                adapter_override.get("adapter_profile")
+                or self.config.get("adapter_profile")
+                or self.default_adapter_profile
+            )
+            self.last_adapter_profile_used = profile
+            command = self.command(adapter_override)
+            try:
+                return self.run_cli_once(
+                    prompt,
+                    command,
+                    timeout=timeout,
+                    idle_timeout=idle_timeout,
+                    max_timeout=max_timeout,
+                )
+            except TokenExhaustionError as exc:
+                last_error = exc
+                if index + 1 >= len(plan):
+                    raise
+                self.last_adapter_fallback_used = True
+        if last_error is not None:
+            raise last_error
+        return f"{self.name} returned no output.\n>>> BLOCKED"
+
+    def run_cli_once(
+        self,
+        prompt: str,
+        command: list[str],
+        timeout: float = 120,
+        idle_timeout: float | None = None,
+        max_timeout: float | None = None,
+    ) -> str:
         use_shell = os.name == "nt"
         run_command = subprocess.list2cmdline(command) if use_shell else command
         env = os.environ.copy()

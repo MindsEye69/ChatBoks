@@ -254,6 +254,19 @@ Known built-in profiles:
 - `codex_exec_v1`
 - `agy_run_v1`
 
+Agents can also define ordered fallback profiles for token-exhaustion recovery inside the same wrapper. This is useful
+when a CLI or provider supports a lighter backup model through a different flag set:
+
+```yaml
+agents:
+  gemini:
+    adapter_profile: gemini_pro_v1
+    fallback_profiles: [gemini_flash_v1]
+```
+
+ChatBoks keeps the same agent identity and only retries the wrapper with the next configured profile when the first
+profile reports token exhaustion.
+
 For a local CLI variant, set `adapter_args` on the agent. It overrides the named profile and supports
 `{project_path}` expansion:
 

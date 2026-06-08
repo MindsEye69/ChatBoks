@@ -62,7 +62,6 @@ Completed:
 Remaining:
 
 - Antigravity support when `agy` ships on Windows.
-- Provider/model fallback within the same agent wrapper, such as Gemini Pro to Flash when supported by the user's CLI.
 
 ## Phase 2 - Token Intelligence
 
