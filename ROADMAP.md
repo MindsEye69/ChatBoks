@@ -71,7 +71,6 @@ Remaining:
   - `console.anthropic.com/usage`
   - `platform.openai.com/usage`
   - `aistudio.google.com`
-- Cost estimation before execution.
 - Transcript compaction using `>>> SUMMARY_CHECKPOINT`.
 
 ## Phase 3 - Remote Control

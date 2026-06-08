@@ -199,6 +199,24 @@ context:
 When the warning threshold is crossed, ChatBoks emits a one-time system warning for the current session state. When the
 hard cap is reached, new work is blocked until context is reduced.
 
+## Cost Estimates
+
+When an agent raises a proposal, ChatBoks now shows a rough execution estimate before you approve it. The estimate
+always includes projected input/output tokens for the execution pass, and it includes USD only when that agent has
+pricing configured.
+
+```yaml
+agents:
+  codex:
+    cost_per_million_input_tokens: 1.50
+    cost_per_million_output_tokens: 6.00
+    estimated_execute_output_tokens: 2000
+```
+
+`estimated_execute_output_tokens` is a planning hint for the approval gate, not a hard runtime limit. Leave the cost
+fields unset when your CLI plan is flat-rate or unknown; ChatBoks will still show token estimates and mark dollar cost
+as unavailable.
+
 ## Usage Baselines
 
 ChatBoks can capture provider usage baselines into `.chatboks/usage_baselines.jsonl` with a local `/usage` command.

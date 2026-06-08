@@ -63,6 +63,50 @@ def test_execute_proposal_clears_active_proposal():
         assert app.state["proposal"] is None
 
 
+def test_handle_proposal_includes_execution_cost_estimate_when_configured():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {
+                "codex": {
+                    "cost_per_million_input_tokens": 1.5,
+                    "cost_per_million_output_tokens": 6.0,
+                    "estimated_execute_output_tokens": 2000,
+                }
+            }
+        }
+        app.router.primary.return_value = "codex"
+        app.context.build.return_value = "A" * 4000
+        fake_agent = MagicMock()
+        fake_agent.build_prompt.return_value = "B" * 8000
+        app.router.get_agent.return_value = fake_agent
+
+        app.handle_proposal("Ship it.\n>>> PROPOSAL", "codex")
+
+        gate_text = app.stream.proposal.call_args.args[0]
+        assert "Proposal from codex:" in gate_text
+        assert "Estimated execution via codex:" in gate_text
+        assert "Estimated cost: $" in gate_text
+        assert app.state["proposal"]["execution_estimate"]["cost_configured"] is True
+
+
+def test_handle_proposal_marks_cost_unavailable_when_rates_missing():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"agents": {"codex": {}}}
+        app.router.primary.return_value = "codex"
+        app.context.build.return_value = "A" * 1200
+        fake_agent = MagicMock()
+        fake_agent.build_prompt.return_value = "B" * 2400
+        app.router.get_agent.return_value = fake_agent
+
+        app.handle_proposal("Ship it.\n>>> PROPOSAL", "codex")
+
+        gate_text = app.stream.proposal.call_args.args[0]
+        assert "Estimated cost: unavailable" in gate_text
+        assert app.state["proposal"]["execution_estimate"]["cost_configured"] is False
+
+
 def test_check_token_limit_uses_default_warning_threshold():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -295,6 +339,8 @@ def test_agent_timeout_recovery_blocks_when_git_diff_repeats():
 if __name__ == "__main__":
     test_parse_signal_uses_declared_priority()
     test_execute_proposal_clears_active_proposal()
+    test_handle_proposal_includes_execution_cost_estimate_when_configured()
+    test_handle_proposal_marks_cost_unavailable_when_rates_missing()
     test_check_token_limit_uses_default_warning_threshold()
     test_handle_approval_accepts_common_affirmatives()
     test_dismiss_command_clears_active_proposal_without_agent_round()

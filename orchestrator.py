@@ -1306,6 +1306,9 @@ class Chatboks:
                 "proposal": proposal,
             }
         )
+        estimate = self.estimate_execution_cost()
+        proposal["execution_estimate"] = estimate
+        self.stream.proposal(self.format_proposal_gate(proposal, estimate))
         self.stream.system("Type APPROVE, MODIFY, or REJECT.")
 
     def handle_question(self, response: str) -> None:
@@ -1367,6 +1370,107 @@ class Chatboks:
                 "proposal": None,
             }
         )
+
+    def estimate_execution_cost(self) -> dict[str, Any]:
+        lead = self.estimate_execution_target()
+        if not lead:
+            return {
+                "agent": None,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_usd": None,
+                "cost_configured": False,
+                "note": "No available execution agent.",
+            }
+
+        context_pkg = self.context.build(self.state, self.chatboks_md)
+        agent = self.router.get_agent(lead)
+        prompt = agent.build_prompt(context_pkg, mode="execute")
+        input_tokens = self.estimate_token_count(prompt)
+        output_tokens = self.estimate_execution_output_tokens(lead, input_tokens)
+        input_cost = self.estimate_token_cost(lead, "cost_per_million_input_tokens", input_tokens)
+        output_cost = self.estimate_token_cost(lead, "cost_per_million_output_tokens", output_tokens)
+        total_cost = None
+        if input_cost is not None and output_cost is not None:
+            total_cost = input_cost + output_cost
+        return {
+            "agent": lead,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "input_usd": input_cost,
+            "output_usd": output_cost,
+            "total_usd": total_cost,
+            "cost_configured": total_cost is not None,
+        }
+
+    def estimate_execution_target(self) -> str | None:
+        lead = self.router.primary()
+        statuses = self.load_agent_statuses()
+        if self.agent_is_available(lead, statuses):
+            return lead
+        return self.find_agent_fallback(lead, statuses, []) or None
+
+    def estimate_execution_output_tokens(self, agent_name: str, input_tokens: int) -> int:
+        agent_config = self.config.get("agents", {}).get(agent_name, {})
+        configured = agent_config.get("estimated_execute_output_tokens")
+        if configured is not None:
+            return max(1, int(configured))
+        return max(750, min(6000, input_tokens // 3 if input_tokens else 1500))
+
+    def estimate_token_cost(
+        self,
+        agent_name: str,
+        field: str,
+        token_count: int,
+    ) -> float | None:
+        agent_config = self.config.get("agents", {}).get(agent_name, {})
+        rate = agent_config.get(field)
+        if rate is None:
+            return None
+        return (float(rate) * max(0, token_count)) / 1_000_000.0
+
+    @staticmethod
+    def estimate_token_count(text: str) -> int:
+        return max(1, len(text) // 4)
+
+    def format_proposal_gate(self, proposal: dict[str, Any], estimate: dict[str, Any]) -> str:
+        lines = [f"Proposal from {proposal.get('proposed_by')}:", proposal.get("summary") or "No summary."]
+        agent = estimate.get("agent")
+        if agent:
+            lines.append(
+                "Estimated execution via "
+                f"{agent}: ~{self.format_compact_number(int(estimate.get('input_tokens', 0)))} input "
+                f"+ ~{self.format_compact_number(int(estimate.get('output_tokens', 0)))} output tokens."
+            )
+        if estimate.get("cost_configured"):
+            lines.append(
+                "Estimated cost: "
+                f"{self.format_usd(float(estimate.get('total_usd', 0.0)))} "
+                f"({self.format_usd(float(estimate.get('input_usd', 0.0)))} in, "
+                f"{self.format_usd(float(estimate.get('output_usd', 0.0)))} out)."
+            )
+        elif agent:
+            lines.append(
+                "Estimated cost: unavailable until "
+                f"{agent} has cost_per_million_input_tokens and cost_per_million_output_tokens configured."
+            )
+        if estimate.get("note"):
+            lines.append(str(estimate["note"]))
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_usd(value: float) -> str:
+        return f"${value:.4f}"
+
+    @staticmethod
+    def format_compact_number(value: int) -> str:
+        if value >= 1_000_000:
+            return f"{value / 1_000_000:.1f}m"
+        if value >= 10_000:
+            return f"{value // 1_000}k"
+        if value >= 1_000:
+            return f"{value / 1_000:.1f}k"
+        return str(value)
 
     def call_agent_with_token_recovery(self, agent_name: str, mode: str) -> str:
         context_config = self.config.get("context", {})
