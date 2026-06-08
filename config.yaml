@@ -5,6 +5,12 @@ projects:
     direct_agents: [agent_zero]
     primary: codex
     codegraph: true
+    role_routes:
+      implement: [codex, claude]
+      review: [claude, codex]
+      bugsearch: [claude, codex]
+      diagnose: [claude, codex]
+      brainstorm: [claude, codex]
   taskfish:
     path: C:\Users\MindsEye\Desktop\Tasker\tasker-poc
     agents: [claude, codex]

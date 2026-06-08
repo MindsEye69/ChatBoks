@@ -55,10 +55,10 @@ Completed:
 - Dynamic timeout.
 - Automatic timeout recovery.
 - Loop detection.
+- Role-based router.
 
 Remaining:
 
-- Role-based router.
 - Antigravity support when `agy` ships on Windows.
 - Git hook for async handoffs.
 - Versioned adapter system for CLI flag drift.

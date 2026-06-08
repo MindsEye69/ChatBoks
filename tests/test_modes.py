@@ -83,8 +83,36 @@ def test_round_context_includes_mode_instruction():
     print("PASS: round context includes collaboration mode")
 
 
+def test_handle_user_input_records_first_role_routed_agent_as_next():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["collaboration_mode"] = "implement"
+        app.router.route_user_prompt.return_value = (
+            ["codex", "claude"],
+            "patch the router",
+            None,
+        )
+        app.resolve_available_agents = MagicMock(return_value=["codex", "claude"])
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("patch the router")
+
+        app.router.route_user_prompt.assert_called_once_with(
+            "patch the router",
+            collaboration_mode="implement",
+        )
+        assert app.state["next_agent"] == "codex"
+        assert app.state["active_task"] == "patch the router"
+        app.run_agent_round.assert_called_once_with(
+            initiator="patch the router",
+            agents=["codex", "claude"],
+        )
+        print("PASS: role-routed rounds store the first routed agent as next")
+
+
 if __name__ == "__main__":
     test_mode_command_updates_state_without_agent_round()
     test_mode_status_lists_available_modes()
     test_round_context_includes_mode_instruction()
+    test_handle_user_input_records_first_role_routed_agent_as_next()
     print("\nAll mode smoke tests passed.")

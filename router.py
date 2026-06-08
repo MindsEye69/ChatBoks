@@ -29,6 +29,10 @@ class Router:
         self.default_round_agents = self.normalize_round_agents(
             self.project_config.get("round_agents") or self.project_config.get("default_agents")
         )
+        self.role_routes = {
+            str(role).strip().lower(): self.normalize_round_agents(agents)
+            for role, agents in dict(self.project_config.get("role_routes", {})).items()
+        }
 
     def primary(self) -> str:
         configured = self.project_config.get("primary")
@@ -44,7 +48,11 @@ class Router:
             return "you"
         return self.agent_names[index + 1]
 
-    def route_user_prompt(self, text: str) -> tuple[list[str], str, str | None]:
+    def route_user_prompt(
+        self,
+        text: str,
+        collaboration_mode: str | None = None,
+    ) -> tuple[list[str], str, str | None]:
         """Return the agents that should handle a user prompt.
 
         A leading @agent prefix is exclusive: @claude only calls Claude,
@@ -52,7 +60,7 @@ class Router:
         """
         stripped = text.lstrip()
         if not stripped.startswith("@"):
-            return self.normal_round_agents(), text, None
+            return self.normal_round_agents(collaboration_mode), text, None
 
         first, _, remainder = stripped.partition(" ")
         requested = first[1:].lower()
@@ -71,14 +79,19 @@ class Router:
         }
         agent_name = aliases.get(requested, requested)
         if agent_name not in self.config.get("agents", {}) or agent_name not in AGENT_CLASSES:
-            return self.normal_round_agents(), text, None
+            return self.normal_round_agents(collaboration_mode), text, None
         if agent_name not in self.agent_names and agent_name not in self.direct_agent_names:
-            return self.normal_round_agents(), text, None
+            return self.normal_round_agents(collaboration_mode), text, None
 
         cleaned = remainder.strip() or text
         return [agent_name], cleaned, agent_name
 
-    def normal_round_agents(self) -> list[str]:
+    def normal_round_agents(self, collaboration_mode: str | None = None) -> list[str]:
+        role = str(collaboration_mode or "").strip().lower()
+        if role:
+            routed = self.role_routes.get(role)
+            if routed:
+                return list(routed)
         return self.default_round_agents or list(self.agent_names)
 
     def normalize_round_agents(self, value: Any) -> list[str]:

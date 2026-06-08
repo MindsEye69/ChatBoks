@@ -72,6 +72,69 @@ def test_normal_route_uses_default_round_agents_when_configured():
         print("PASS: normal route can be limited to default round agents")
 
 
+def test_role_route_uses_collaboration_mode_lane_when_configured():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "round_agents": ["claude", "codex"],
+                    "role_routes": {"implement": ["codex", "claude"]},
+                    "direct_agents": ["agent_zero"],
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        agents, prompt, exclusive = router.route_user_prompt(
+            "patch the timeout bug",
+            collaboration_mode="implement",
+        )
+
+        assert agents == ["codex", "claude"]
+        assert prompt == "patch the timeout bug"
+        assert exclusive is None
+        print("PASS: collaboration mode can select a role route")
+
+
+def test_role_route_falls_back_to_default_round_when_unknown():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "round_agents": ["claude"],
+                    "role_routes": {"implement": ["codex", "claude"]},
+                    "direct_agents": ["agent_zero"],
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        agents, _, exclusive = router.route_user_prompt(
+            "ordinary request",
+            collaboration_mode="default",
+        )
+
+        assert agents == ["claude"]
+        assert exclusive is None
+        print("PASS: unknown role route falls back to default round agents")
+
+
 def test_all_route_opts_into_full_project_team_not_direct_agents():
     with tempfile.TemporaryDirectory() as tmp:
         config = {
@@ -100,6 +163,37 @@ def test_all_route_opts_into_full_project_team_not_direct_agents():
         assert prompt == "compare options"
         assert exclusive is None
         print("PASS: @all opts into the full non-direct project team")
+
+
+def test_explicit_route_ignores_collaboration_mode_lane():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "chatboks": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "role_routes": {"implement": ["codex", "claude"]},
+                    "direct_agents": ["agent_zero"],
+                    "primary": "codex",
+                }
+            },
+            "agents": {
+                "agent_zero": {},
+                "claude": {},
+                "codex": {},
+            },
+        }
+        router = Router(config, "chatboks", Path(tmp))
+
+        agents, prompt, exclusive = router.route_user_prompt(
+            "@claude review this",
+            collaboration_mode="implement",
+        )
+
+        assert agents == ["claude"]
+        assert prompt == "review this"
+        assert exclusive == "claude"
+        print("PASS: explicit route ignores role lane")
 
 
 def test_agent_zero_direct_route_aliases_work():
@@ -231,7 +325,10 @@ def test_agent_zero_routing_policy_fallback_uses_active_task():
 if __name__ == "__main__":
     test_normal_route_excludes_direct_agent()
     test_normal_route_uses_default_round_agents_when_configured()
+    test_role_route_uses_collaboration_mode_lane_when_configured()
+    test_role_route_falls_back_to_default_round_when_unknown()
     test_all_route_opts_into_full_project_team_not_direct_agents()
+    test_explicit_route_ignores_collaboration_mode_lane()
     test_agent_zero_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
     test_agent_zero_call_accepts_base_timeout_keywords()

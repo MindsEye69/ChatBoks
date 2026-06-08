@@ -37,7 +37,7 @@ def _make_app(root: Path) -> Chatboks:
     app.stream = MagicMock()
     app.router = MagicMock()
     app.router.primary.return_value = "claude"
-    app.router.route_user_prompt.side_effect = lambda text: (
+    app.router.route_user_prompt.side_effect = lambda text, **_kwargs: (
         (["claude"], text.removeprefix("@claude").strip(), "claude")
         if text.startswith("@claude")
         else (["claude", "codex"], text, None)
