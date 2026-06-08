@@ -67,10 +67,6 @@ Remaining:
 
 - Role-based routing with predefined agent lanes per project.
 - Task auction classifier: Agent Zero routes dynamically and calls cloud models only when needed.
-- Usage baseline sync:
-  - Open browser to usage dashboard.
-  - Detect login state.
-  - Extract usage by screenshot and vision.
 - Supported dashboards:
   - `console.anthropic.com/usage`
   - `platform.openai.com/usage`

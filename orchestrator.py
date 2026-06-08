@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import shutil
 import subprocess
 import time
 from datetime import datetime, timedelta
@@ -86,12 +87,29 @@ HELP_COMMANDS = [
     ("/fail ...", "Record a collaboration failure without calling agents."),
     ("/suggest-outcome [agent]", "Ask Agent Zero for candidate /win or /fail lines from recent work."),
     ("/outcomes", "Show recent wins and failures."),
+    ("/usage", "Show saved provider usage baselines and available sync targets."),
+    ("/usage sync <provider>", "Open a provider usage dashboard, capture a screenshot, and save a baseline."),
     ("@claude / @codex / @zero", "Route the next prompt exclusively to one agent."),
     ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
     ("/dismiss", "Discard the active proposal without executing it."),
     ("exit / quit / bye", "End the ChatBoks terminal session."),
 ]
+
+USAGE_PROVIDERS = {
+    "anthropic": {
+        "label": "Anthropic Console",
+        "url": "https://console.anthropic.com/settings/usage",
+    },
+    "openai": {
+        "label": "OpenAI Platform",
+        "url": "https://platform.openai.com/usage",
+    },
+    "google": {
+        "label": "Google AI Studio",
+        "url": "https://aistudio.google.com/",
+    },
+}
 
 SKILLS_DIR = Path(__file__).resolve().parent / "skills"
 
@@ -254,6 +272,9 @@ class Chatboks:
         if command in {"/win", "/fail", "/outcome"}:
             self.handle_outcome_command(stripped)
             return True
+        if command == "/usage":
+            self.handle_usage_command(stripped)
+            return True
         if command in {"/suggest-outcome", "/suggest-outcomes"}:
             self.handle_outcome_suggestion_command(stripped)
             return True
@@ -278,7 +299,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /context, /agent, /mode, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /context, /agent, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -696,6 +717,286 @@ class Chatboks:
                 f"{record['category']} / {record['impact']}."
             ),
         )
+
+    def handle_usage_command(self, text: str) -> None:
+        try:
+            parts = shlex.split(text)
+        except ValueError as exc:
+            self.stream.system(f"Could not parse usage command: {exc}")
+            return
+
+        if len(parts) == 1 or parts[1].lower() in {"show", "status"}:
+            self.show_usage_baselines()
+            return
+
+        action = parts[1].lower()
+        if action != "sync":
+            self.stream.system("Usage: /usage | /usage sync <anthropic|openai|google|all>")
+            return
+
+        if len(parts) < 3:
+            self.stream.system("Usage: /usage sync <anthropic|openai|google|all>")
+            return
+
+        target = parts[2].lower()
+        if target == "all":
+            for provider in USAGE_PROVIDERS:
+                self.sync_usage_provider(provider)
+            return
+
+        self.sync_usage_provider(target)
+
+    def show_usage_baselines(self, provider: str | None = None, limit: int = 6) -> None:
+        records = self.load_usage_baselines()
+        if provider:
+            records = [record for record in records if record.get("provider") == provider]
+        if not records:
+            providers = ", ".join(sorted(USAGE_PROVIDERS))
+            self.stream.system(
+                "No usage baselines saved yet.\n"
+                f"Available providers: {providers}\n"
+                "Run /usage sync <provider> to capture one."
+            )
+            return
+
+        recent = records[-limit:]
+        latest_by_provider: dict[str, dict[str, Any]] = {}
+        for record in records:
+            provider_name = str(record.get("provider", "unknown"))
+            latest_by_provider[provider_name] = record
+
+        lines = [
+            f"Usage baselines: {len(records)}",
+            "Latest by provider:",
+        ]
+        for provider_name in sorted(latest_by_provider):
+            record = latest_by_provider[provider_name]
+            if record.get("status") == "error":
+                status = f"error: {record.get('error') or 'sync failed'}"
+            else:
+                status = "login required" if record.get("login_required") else "ready"
+            highlights = ", ".join(record.get("highlights") or []) or "no usage highlights detected"
+            lines.append(
+                f"- {provider_name}: {status} @ {record.get('timestamp')} | {highlights}"
+            )
+
+        lines.append("Recent captures:")
+        for record in recent:
+            if record.get("status") == "error":
+                summary = f"error: {record.get('error') or 'sync failed'}"
+            else:
+                summary = ", ".join(record.get("highlights") or []) or "no usage highlights detected"
+            lines.append(
+                f"- {record.get('provider')} {record.get('timestamp')} "
+                f"({record.get('title') or 'untitled'}): "
+                f"{summary}"
+            )
+        self.stream.system("\n".join(lines))
+
+    def sync_usage_provider(self, provider: str) -> dict[str, Any] | None:
+        provider_config = self.resolve_usage_provider(provider)
+        if provider_config is None:
+            known = ", ".join(sorted(USAGE_PROVIDERS))
+            self.stream.system(f"Unknown usage provider '{provider}'. Known providers: {known}")
+            return None
+
+        label = str(provider_config.get("label") or provider.title())
+        self.stream.system(f"Syncing usage baseline for {label}...")
+        record = self.capture_usage_baseline(provider, provider_config)
+        self.append_usage_baseline(record)
+
+        if record.get("status") == "ok":
+            summary = ", ".join(record.get("highlights") or []) or "no usage highlights detected"
+            state = "login required" if record.get("login_required") else "usage page detected"
+            self.stream.system(
+                f"Usage baseline saved for {provider}: {state}. {summary}"
+            )
+        else:
+            self.stream.system(
+                f"Usage baseline sync failed for {provider}: {record.get('error') or 'unknown error'}"
+            )
+        return record
+
+    def resolve_usage_provider(self, provider: str) -> dict[str, Any] | None:
+        built_in = USAGE_PROVIDERS.get(provider)
+        overrides = self.config.get("usage_providers", {})
+        custom = overrides.get(provider) if isinstance(overrides, dict) else None
+        if not built_in and not custom:
+            return None
+        resolved = dict(built_in or {})
+        if isinstance(custom, dict):
+            resolved.update(custom)
+        return resolved
+
+    def capture_usage_baseline(self, provider: str, provider_config: dict[str, Any]) -> dict[str, Any]:
+        timestamp = self.timestamp()
+        artifact_dir = self.usage_artifact_dir(provider, timestamp)
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        url = str(provider_config.get("url") or "")
+
+        try:
+            self.run_playwright_cli(["open", url], artifact_dir, provider)
+            self.run_playwright_cli(
+                ["run-code", "await page.waitForLoadState('domcontentloaded'); await page.waitForTimeout(1500)"],
+                artifact_dir,
+                provider,
+            )
+            final_url = self.run_playwright_cli(["eval", "location.href"], artifact_dir, provider)
+            title = self.run_playwright_cli(["eval", "document.title"], artifact_dir, provider)
+            body_text = self.run_playwright_cli(
+                ["eval", "() => document.body ? document.body.innerText.slice(0, 4000) : ''"],
+                artifact_dir,
+                provider,
+            )
+            screenshot_output = self.run_playwright_cli(["screenshot"], artifact_dir, provider)
+            screenshot_path = self.detect_playwright_screenshot(artifact_dir, screenshot_output)
+        except RuntimeError as exc:
+            return {
+                "timestamp": timestamp,
+                "project": self.project,
+                "provider": provider,
+                "label": str(provider_config.get("label") or provider.title()),
+                "url_requested": url,
+                "status": "error",
+                "error": str(exc),
+                "artifact_dir": str(artifact_dir),
+            }
+        finally:
+            self.close_playwright_usage_session(artifact_dir, provider)
+
+        login_required = self.usage_login_required(final_url, title, body_text)
+        highlights = self.extract_usage_highlights(body_text)
+        return {
+            "timestamp": timestamp,
+            "project": self.project,
+            "provider": provider,
+            "label": str(provider_config.get("label") or provider.title()),
+            "url_requested": url,
+            "final_url": final_url.strip(),
+            "title": title.strip(),
+            "status": "ok",
+            "login_required": login_required,
+            "highlights": highlights,
+            "body_excerpt": body_text.strip()[:2000],
+            "artifact_dir": str(artifact_dir),
+            "screenshot_path": str(screenshot_path) if screenshot_path else None,
+        }
+
+    def run_playwright_cli(
+        self,
+        args: list[str],
+        artifact_dir: Path,
+        provider: str,
+        timeout: int = 120,
+    ) -> str:
+        npx_cmd = shutil.which("npx.cmd") or shutil.which("npx")
+        if not npx_cmd:
+            raise RuntimeError("npx.cmd was not found on PATH. Install Node.js/npm first.")
+
+        command = [
+            npx_cmd,
+            "--yes",
+            "--package",
+            "@playwright/cli",
+            "playwright-cli",
+            "--session",
+            f"chatboks-usage-{provider}",
+            *args,
+        ]
+        result = subprocess.run(
+            command,
+            cwd=artifact_dir,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            check=False,
+        )
+        output = (result.stdout or "").strip()
+        error = (result.stderr or "").strip()
+        if result.returncode != 0:
+            raise RuntimeError(error or output or f"Playwright CLI failed: {' '.join(args)}")
+        return output
+
+    def close_playwright_usage_session(self, artifact_dir: Path, provider: str) -> None:
+        try:
+            self.run_playwright_cli(["close"], artifact_dir, provider, timeout=30)
+        except RuntimeError:
+            return
+
+    def append_usage_baseline(self, record: dict[str, Any]) -> None:
+        self.ensure_project_files()
+        path = self.usage_baselines_path()
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    def load_usage_baselines(self) -> list[dict[str, Any]]:
+        path = self.usage_baselines_path()
+        if not path.exists():
+            return []
+        records: list[dict[str, Any]] = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(data, dict):
+                records.append(data)
+        return records
+
+    def usage_baselines_path(self) -> Path:
+        return self.state_file.parent / "usage_baselines.jsonl"
+
+    def usage_artifact_dir(self, provider: str, timestamp: str) -> Path:
+        safe_timestamp = timestamp.replace(":", "-")
+        return self.proj_path / "output" / "playwright" / "usage" / provider / safe_timestamp
+
+    @staticmethod
+    def usage_login_required(final_url: str, title: str, body_text: str) -> bool:
+        combined = " ".join([final_url.lower(), title.lower(), body_text.lower()])
+        markers = (
+            "sign in",
+            "log in",
+            "login",
+            "continue with google",
+            "continue with openai",
+            "continue with anthropic",
+            "enter your password",
+            "verify it",
+            "authentication required",
+        )
+        return any(marker in combined for marker in markers)
+
+    @staticmethod
+    def extract_usage_highlights(body_text: str, limit: int = 8) -> list[str]:
+        keywords = ("usage", "spend", "cost", "credit", "quota", "limit", "token", "api")
+        highlights: list[str] = []
+        for raw_line in body_text.splitlines():
+            line = " ".join(raw_line.split()).strip()
+            lowered = line.lower()
+            if not line or len(line) < 3:
+                continue
+            if any(keyword in lowered for keyword in keywords):
+                highlights.append(line[:180])
+            if len(highlights) >= limit:
+                break
+        return highlights
+
+    @staticmethod
+    def detect_playwright_screenshot(artifact_dir: Path, command_output: str) -> Path | None:
+        for line in command_output.splitlines():
+            candidate = line.strip().strip('"')
+            if candidate.lower().endswith(".png"):
+                path = Path(candidate)
+                if not path.is_absolute():
+                    path = artifact_dir / path
+                if path.exists():
+                    return path
+        screenshots = sorted(artifact_dir.glob("*.png"), key=lambda path: path.stat().st_mtime)
+        return screenshots[-1] if screenshots else None
 
     def handle_outcome_suggestion_command(self, text: str) -> None:
         try:

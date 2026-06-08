@@ -199,6 +199,31 @@ context:
 When the warning threshold is crossed, ChatBoks emits a one-time system warning for the current session state. When the
 hard cap is reached, new work is blocked until context is reduced.
 
+## Usage Baselines
+
+ChatBoks can capture provider usage baselines into `.chatboks/usage_baselines.jsonl` with a local `/usage` command.
+
+```text
+/usage
+/usage sync anthropic
+/usage sync openai
+/usage sync google
+/usage sync all
+```
+
+Each sync opens the configured dashboard URL with Playwright CLI, captures a screenshot under
+`output/playwright/usage/`, records the final URL and page title, stores a body-text excerpt, and extracts a few
+usage-related highlight lines. If the page still looks like a login flow, the baseline is saved with `login_required`
+so you can tell the sync reached the provider but not the actual usage screen.
+
+Provider URLs can be overridden in `config.yaml`:
+
+```yaml
+usage_providers:
+  anthropic:
+    url: https://console.anthropic.com/settings/usage
+```
+
 ## Run
 
 ```bash
