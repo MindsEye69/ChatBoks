@@ -178,6 +178,32 @@ You can also route to it directly without adding it to normal rounds:
 
 Make sure Ollama is running and the selected model exists locally, for example with `ollama pull qwen2.5-coder:3b`.
 
+## Optional Graphify Map
+
+ChatBoks uses CodeGraph as the authoritative structural index for symbol lookup, call graphs, and impact analysis.
+Graphify can sit alongside it as a broader architecture map that includes code plus durable project docs.
+
+The current local setup was built with the Graphify CLI and local Ollama:
+
+```powershell
+uv tool install "graphifyy[ollama]"
+graphify extract . --backend ollama --model qwen2.5-coder:3b --max-concurrency 1 --max-workers 1
+$env:OLLAMA_MODEL = "qwen2.5-coder:3b"
+graphify cluster-only . --backend=ollama --no-viz
+graphify tree --label ChatBoks
+```
+
+Useful outputs live under `graphify-out/`:
+
+- `GRAPH_REPORT.md`: hubs, communities, surprising links, and freshness.
+- `graph.json`: queryable graph data.
+- `GRAPH_TREE.html`: local interactive browser view.
+
+After code-only changes, refresh the graph with `graphify update .`; semantic doc changes may need a local
+Ollama-backed extraction rerun.
+
+Do not install Graphify assistant hooks by default; they can conflict with ChatBoks' CodeGraph-first workflow.
+
 ## Ollama and Local Models (third-party integration)
 
 Agent Zero uses [Ollama](https://ollama.com/) as an optional local model runtime. The default configuration points at

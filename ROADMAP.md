@@ -52,12 +52,12 @@ Completed:
 - Manual `/agent` command for exhausted/blocked/available model status.
 - Fallback routing for normal rounds when a configured agent is unavailable.
 - Terminal `/help` command deck.
-
-Remaining:
-
 - Dynamic timeout.
 - Automatic timeout recovery.
 - Loop detection.
+
+Remaining:
+
 - Role-based router.
 - Antigravity support when `agy` ships on Windows.
 - Git hook for async handoffs.

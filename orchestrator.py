@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import subprocess
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -945,6 +946,7 @@ class Chatboks:
         timeout_retries = int(context_config.get("max_timeout_recovery_retries", 1))
         agent = self.router.get_agent(agent_name)
         timeout_attempts = 0
+        timeout_diff_snapshots: list[str] = []
         token_attempt = 0
 
         while token_attempt <= retries:
@@ -956,6 +958,11 @@ class Chatboks:
                 return agent.call(context_pkg)
             except AgentTimeoutError as exc:
                 timeout_attempts += 1
+                current_diff = self.capture_git_diff()
+                if self.agent_timeout_is_looping(current_diff, timeout_diff_snapshots):
+                    return self.loop_recovery_blocked(agent_name, exc, timeout_attempts)
+                if current_diff.strip():
+                    timeout_diff_snapshots.append(current_diff)
                 if not self.recover_agent_timeout(
                     agent_name,
                     exc,
@@ -1040,6 +1047,48 @@ class Chatboks:
         self.save_state()
         return True
 
+    def capture_git_diff(self) -> str:
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--no-ext-diff", "--"],
+                cwd=self.proj_path,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=15,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+        if result.returncode != 0:
+            return ""
+        return result.stdout
+
+    def agent_timeout_is_looping(self, current_diff: str, previous_diffs: list[str]) -> bool:
+        current_lines = self.diff_changed_lines(current_diff)
+        if not current_lines:
+            return False
+        threshold = float(self.config.get("context", {}).get("timeout_loop_overlap_threshold", 0.8))
+        for previous_diff in previous_diffs:
+            previous_lines = self.diff_changed_lines(previous_diff)
+            if not previous_lines:
+                continue
+            overlap = len(current_lines & previous_lines) / len(current_lines)
+            if overlap >= threshold:
+                return True
+        return False
+
+    @staticmethod
+    def diff_changed_lines(diff: str) -> set[str]:
+        changed: set[str] = set()
+        for line in diff.splitlines():
+            if line.startswith(("+++", "---")):
+                continue
+            if line.startswith(("+", "-")):
+                changed.add(line)
+        return changed
+
     def recover_agent_timeout(
         self,
         agent_name: str,
@@ -1087,6 +1136,33 @@ class Chatboks:
                 f"Recovery attempts: {retries}.",
                 f"Last error: {self.truncate_for_state(reason)}",
                 "The transcript has been summarized where possible; user input is needed before continuing.",
+                ">>> BLOCKED",
+            ]
+        )
+
+    def loop_recovery_blocked(
+        self,
+        agent_name: str,
+        error: AgentTimeoutError,
+        attempts: int,
+    ) -> str:
+        self.append_message(
+            "system",
+            "\n".join(
+                [
+                    ">>> LOOP_DETECTED",
+                    f"Agent: {agent_name}",
+                    f"Attempts: {attempts}",
+                    f"Reason: repeated git diff after timeout recovery ({self.truncate_for_state(str(error))})",
+                ]
+            ),
+        )
+        return "\n".join(
+            [
+                f"{agent_name} appears to be looping during timeout recovery.",
+                f"Recovery attempts: {attempts}.",
+                "The latest git diff substantially matches a previous timeout attempt.",
+                "Partial output and loop evidence have been checkpointed; user input is needed before continuing.",
                 ">>> BLOCKED",
             ]
         )

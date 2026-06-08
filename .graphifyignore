@@ -1,0 +1,20 @@
+# Keep Graphify focused on durable source/docs, not local runtime state.
+.git/
+.chatboks/
+.codegraph/
+.pytest_cache/
+.serena/
+__pycache__/
+
+graphify-out/
+chatboks.md
+state.json
+*.log
+*.db
+*.db-wal
+*.db-shm
+
+.env
+.env.*
+secrets.yaml
+config.local.yaml

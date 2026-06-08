@@ -71,6 +71,11 @@ codegraph.db
 *.db-wal
 *.db-shm
 
+# Graphify local cache / rebuild byproducts
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+
 # Local config / secrets
 .env
 .env.*

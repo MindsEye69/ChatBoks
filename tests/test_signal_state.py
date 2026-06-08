@@ -179,6 +179,76 @@ def test_agent_timeout_recovery_blocks_after_retry_budget():
         assert "unfinished analysis" in app.chatboks_md.read_text(encoding="utf-8")
 
 
+def test_agent_timeout_loop_detection_uses_changed_line_overlap():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"context": {"timeout_loop_overlap_threshold": 0.8}}
+        previous = "\n".join(
+            [
+                "diff --git a/a.py b/a.py",
+                "--- a/a.py",
+                "+++ b/a.py",
+                "-old line",
+                "+new line",
+                "+kept line",
+            ]
+        )
+        current = "\n".join(
+            [
+                "diff --git a/a.py b/a.py",
+                "--- a/a.py",
+                "+++ b/a.py",
+                "+new line",
+                "+kept line",
+            ]
+        )
+
+        assert app.agent_timeout_is_looping(current, [previous])
+        assert not app.agent_timeout_is_looping("+different line", [previous])
+
+
+def test_agent_timeout_recovery_blocks_when_git_diff_repeats():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_warning": 100_000}},
+            "context": {
+                "max_token_recovery_retries": 0,
+                "max_timeout_recovery_retries": 2,
+                "timeout_loop_overlap_threshold": 0.8,
+            },
+        }
+        app.state["context"]["token_counts"]["codex"] = 0
+        app.context.build.return_value = "context"
+        app.capture_git_diff = MagicMock(
+            return_value="\n".join(
+                [
+                    "diff --git a/orchestrator.py b/orchestrator.py",
+                    "--- a/orchestrator.py",
+                    "+++ b/orchestrator.py",
+                    "+same attempted patch",
+                ]
+            )
+        )
+
+        agent = MagicMock()
+        agent.call.side_effect = [
+            AgentTimeoutError("codex", "idle", 300, partial_output="attempt one"),
+            AgentTimeoutError("codex", "idle", 300, partial_output="attempt two"),
+            "Should not be reached.\n>>> TASK_COMPLETE",
+        ]
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("codex", mode="respond")
+
+        assert "codex appears to be looping during timeout recovery." in response
+        assert ">>> BLOCKED" in response
+        assert agent.call.call_count == 2
+        transcript = app.chatboks_md.read_text(encoding="utf-8")
+        assert ">>> TIMEOUT_RECOVERY" in transcript
+        assert ">>> LOOP_DETECTED" in transcript
+
+
 if __name__ == "__main__":
     test_parse_signal_uses_declared_priority()
     test_execute_proposal_clears_active_proposal()
@@ -189,4 +259,6 @@ if __name__ == "__main__":
     test_agent_zero_strips_prefixed_signal_lines_from_body()
     test_agent_timeout_recovery_checkpoints_partial_output_and_retries()
     test_agent_timeout_recovery_blocks_after_retry_budget()
+    test_agent_timeout_loop_detection_uses_changed_line_overlap()
+    test_agent_timeout_recovery_blocks_when_git_diff_repeats()
     print("All signal/state smoke tests passed.")
