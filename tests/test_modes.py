@@ -110,9 +110,34 @@ def test_handle_user_input_records_first_role_routed_agent_as_next():
         print("PASS: role-routed rounds store the first routed agent as next")
 
 
+def test_handle_user_input_records_mode_strategy_agent_as_next():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["collaboration_mode"] = "review"
+        app.router.route_user_prompt_details.return_value = RoutingDecision(
+            ["claude"],
+            "review the fallback path",
+            note="Mode strategy: review routes this request to Claude first.",
+            strategy="mode_solo_claude",
+        )
+        app.resolve_available_agents = MagicMock(return_value=["claude"])
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("review the fallback path")
+
+        assert app.state["next_agent"] == "claude"
+        assert app.state["active_task"] == "review the fallback path"
+        app.run_agent_round.assert_called_once_with(
+            initiator="review the fallback path",
+            agents=["claude"],
+        )
+        print("PASS: mode strategy rounds store the routed solo agent as next")
+
+
 if __name__ == "__main__":
     test_mode_command_updates_state_without_agent_round()
     test_mode_status_lists_available_modes()
     test_round_context_includes_mode_instruction()
     test_handle_user_input_records_first_role_routed_agent_as_next()
+    test_handle_user_input_records_mode_strategy_agent_as_next()
     print("\nAll mode smoke tests passed.")

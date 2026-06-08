@@ -7,6 +7,12 @@ projects:
     codegraph: true
     routing_intelligence:
       enabled: true
+    mode_strategies:
+      implement: solo_codex
+      review: solo_claude
+      diagnose: solo_claude
+      bugsearch: full_round
+      brainstorm: full_round
     role_routes:
       implement: [codex, claude]
       review: [claude, codex]

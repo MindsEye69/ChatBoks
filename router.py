@@ -43,6 +43,11 @@ class Router:
             str(role).strip().lower(): self.normalize_round_agents(agents)
             for role, agents in dict(self.project_config.get("role_routes", {})).items()
         }
+        self.mode_strategies = {
+            str(role).strip().lower(): str(strategy).strip().lower()
+            for role, strategy in dict(self.project_config.get("mode_strategies", {})).items()
+            if str(role).strip()
+        }
         routing_config = self.project_config.get("routing_intelligence") or {}
         self.routing_intelligence_enabled = bool(routing_config.get("enabled"))
 
@@ -83,6 +88,9 @@ class Router:
             auto = self.auto_route_prompt(text, collaboration_mode)
             if auto is not None:
                 return auto
+            mode_strategy = self.route_mode_strategy(text, collaboration_mode)
+            if mode_strategy is not None:
+                return mode_strategy
             return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
 
         first, _, remainder = stripped.partition(" ")
@@ -127,6 +135,34 @@ class Router:
             if name in allowed and name not in normalized:
                 normalized.append(name)
         return normalized
+
+    def route_mode_strategy(
+        self,
+        text: str,
+        collaboration_mode: str | None = None,
+    ) -> RoutingDecision | None:
+        role = str(collaboration_mode or "").strip().lower()
+        if not role:
+            return None
+
+        strategy = self.mode_strategies.get(role)
+        if strategy == "solo_codex" and "codex" in self.agent_names:
+            return RoutingDecision(
+                ["codex"],
+                text,
+                note=f"Mode strategy: {role} routes this request to Codex first.",
+                strategy="mode_solo_codex",
+            )
+        if strategy == "solo_claude" and "claude" in self.agent_names:
+            return RoutingDecision(
+                ["claude"],
+                text,
+                note=f"Mode strategy: {role} routes this request to Claude first.",
+                strategy="mode_solo_claude",
+            )
+        if strategy == "full_round":
+            return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
+        return None
 
     def auto_route_prompt(
         self,

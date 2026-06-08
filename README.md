@@ -65,7 +65,8 @@ This is advisory only. Agent Zero suggests candidate `/win` or `/fail` lines, bu
 
 ## Collaboration Modes
 
-Modes are project-local prompt frames that tell agents how to collaborate. They do not route extra agents by themselves.
+Modes are project-local prompt frames that tell agents how to collaborate. They can also apply a lightweight routing
+strategy when the project config opts in.
 
 ```text
 /mode
@@ -83,6 +84,24 @@ Modes are project-local prompt frames that tell agents how to collaborate. They 
 - `review`: findings-first code review posture.
 - `diagnose`: root cause and smallest useful probes.
 - `default`: normal relay behavior.
+
+ChatBoks supports separate lane order and routing strategy knobs per mode:
+
+```yaml
+projects:
+  chatboks:
+    mode_strategies:
+      implement: solo_codex
+      review: solo_claude
+      diagnose: solo_claude
+      bugsearch: full_round
+      brainstorm: full_round
+```
+
+- `solo_codex`: route that mode's requests to Codex only unless an explicit `@agent` tag or a stronger lightweight
+  Agent Zero route applies first.
+- `solo_claude`: same idea, but Claude-first.
+- `full_round`: keep the configured collaboration lane for that mode.
 
 ## Context Modes
 
@@ -155,7 +174,7 @@ Current basic behavior is conservative:
 - Lightweight setup, status, routing-policy, and diagnostic questions can auto-route to Agent Zero.
 - Obvious implementation requests can auto-route to Codex only.
 - Obvious design, architecture, and security-analysis requests can auto-route to Claude only.
-- Everything else still uses the normal project round or collaboration-mode lane.
+- Everything else still uses the configured mode strategy or collaboration-mode lane.
 
 When the classifier engages, ChatBoks writes a short `[SYSTEM]` note so the auto-route is visible in `chatboks.md`.
 
