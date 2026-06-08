@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.base import BaseAgent, TokenExhaustionError
+from agents.base import AgentTimeoutError, BaseAgent, TokenExhaustionError
 
 
 class ScriptAgent(BaseAgent):
@@ -57,9 +57,13 @@ def test_streaming_run_cli_idle_timeout_resets_on_output() -> None:
         "print('finished', flush=True)\n"
     )
 
-    result = run_script(script, idle_timeout=0.2, max_timeout=5)
+    with pytest.raises(AgentTimeoutError) as exc_info:
+        run_script(script, idle_timeout=0.2, max_timeout=5)
 
-    assert result == "CLI call idle timed out for script after 0.2 seconds.\n>>> BLOCKED"
+    error = exc_info.value
+    assert error.reason == "idle"
+    assert error.timeout_seconds == 0.2
+    assert error.partial_output == "started"
 
 
 def test_streaming_run_cli_enforces_absolute_max_timeout() -> None:
@@ -72,9 +76,28 @@ def test_streaming_run_cli_enforces_absolute_max_timeout() -> None:
         "    time.sleep(0.05)\n"
     )
 
-    result = run_script(script, idle_timeout=1, max_timeout=0.25)
+    with pytest.raises(AgentTimeoutError) as exc_info:
+        run_script(script, idle_timeout=1, max_timeout=0.25)
 
-    assert result == "CLI call timed out for script after 0.25 seconds.\n>>> BLOCKED"
+    error = exc_info.value
+    assert error.reason == "max"
+    assert error.timeout_seconds == 0.25
+    assert "tick" in error.partial_output
+
+
+def test_dynamic_idle_timeout_scales_with_prompt_size() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        script_path = root / "child.py"
+        script_path.write_text("import sys\nsys.stdin.read()\nprint('ok')\n", encoding="utf-8")
+        agent = ScriptAgent(script_path, root)
+        agent.config["timeout_prompt_chars_per_step"] = 10
+        agent.config["timeout_seconds_per_step"] = 2
+
+        idle_timeout, max_timeout = agent.resolve_timeouts("x" * 25, 5, None, 20)
+
+        assert idle_timeout == 9
+        assert max_timeout == 20
 
 
 def test_streaming_run_cli_reports_nonzero_stderr() -> None:
@@ -125,6 +148,7 @@ if __name__ == "__main__":
         test_streaming_run_cli_returns_successful_stdout,
         test_streaming_run_cli_idle_timeout_resets_on_output,
         test_streaming_run_cli_enforces_absolute_max_timeout,
+        test_dynamic_idle_timeout_scales_with_prompt_size,
         test_streaming_run_cli_reports_nonzero_stderr,
         test_streaming_run_cli_detects_token_exhaustion_on_failure,
         test_call_uses_extended_max_timeout_for_streaming_heartbeat,

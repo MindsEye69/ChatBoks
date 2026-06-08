@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agents.agent_zero import AgentZeroAgent
+from agents.base import AgentTimeoutError
 from orchestrator import Chatboks
 
 
@@ -99,6 +100,21 @@ def test_dismiss_command_clears_active_proposal_without_agent_round():
         app.run_agent_round.assert_not_called()
 
 
+def test_load_state_accepts_utf8_bom():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state_file.parent.mkdir(parents=True, exist_ok=True)
+        app.state_file.write_text(
+            '{"session": "test", "round": 2, "status": "idle"}',
+            encoding="utf-8-sig",
+        )
+
+        state = app.load_state()
+
+        assert state["status"] == "idle"
+        assert state["round"] == 2
+
+
 def test_agent_zero_strips_prefixed_signal_lines_from_body():
     agent = AgentZeroAgent.__new__(AgentZeroAgent)
     agent.name = "agent_zero"
@@ -109,11 +125,68 @@ def test_agent_zero_strips_prefixed_signal_lines_from_body():
     assert normalized == "What target?\n>>> QUESTION"
 
 
+def test_agent_timeout_recovery_checkpoints_partial_output_and_retries():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_warning": 100_000}},
+            "context": {"max_token_recovery_retries": 0, "max_timeout_recovery_retries": 1},
+        }
+        app.state["context"]["token_counts"]["codex"] = 0
+        app.context.build.return_value = "context"
+
+        agent = MagicMock()
+        agent.call.side_effect = [
+            AgentTimeoutError("codex", "idle", 300, partial_output="draft patch notes"),
+            "Recovered.\n>>> TASK_COMPLETE",
+        ]
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("codex", mode="respond")
+
+        assert response == "Recovered.\n>>> TASK_COMPLETE"
+        assert agent.call.call_count == 2
+        transcript = app.chatboks_md.read_text(encoding="utf-8")
+        assert ">>> TIMEOUT_CHECKPOINT" in transcript
+        assert "draft patch notes" in transcript
+        assert ">>> TIMEOUT_RECOVERY" in transcript
+
+
+def test_agent_timeout_recovery_blocks_after_retry_budget():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_warning": 100_000}},
+            "context": {"max_token_recovery_retries": 0, "max_timeout_recovery_retries": 0},
+        }
+        app.state["context"]["token_counts"]["codex"] = 0
+        app.context.build.return_value = "context"
+
+        agent = MagicMock()
+        agent.call.side_effect = AgentTimeoutError(
+            "codex",
+            "idle",
+            300,
+            partial_output="unfinished analysis",
+        )
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("codex", mode="respond")
+
+        assert "codex timed out and automatic recovery did not complete." in response
+        assert ">>> BLOCKED" in response
+        assert agent.call.call_count == 1
+        assert "unfinished analysis" in app.chatboks_md.read_text(encoding="utf-8")
+
+
 if __name__ == "__main__":
     test_parse_signal_uses_declared_priority()
     test_execute_proposal_clears_active_proposal()
     test_check_token_limit_uses_default_warning_threshold()
     test_handle_approval_accepts_common_affirmatives()
     test_dismiss_command_clears_active_proposal_without_agent_round()
+    test_load_state_accepts_utf8_bom()
     test_agent_zero_strips_prefixed_signal_lines_from_body()
+    test_agent_timeout_recovery_checkpoints_partial_output_and_retries()
+    test_agent_timeout_recovery_blocks_after_retry_budget()
     print("All signal/state smoke tests passed.")

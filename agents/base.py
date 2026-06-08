@@ -14,6 +14,25 @@ class TokenExhaustionError(RuntimeError):
     """Raised when an agent CLI rejects a prompt because the context is too large."""
 
 
+class AgentTimeoutError(RuntimeError):
+    """Raised when an agent CLI exceeds its idle or wall-clock timeout."""
+
+    def __init__(
+        self,
+        agent_name: str,
+        reason: str,
+        timeout_seconds: float,
+        partial_output: str = "",
+    ) -> None:
+        self.agent_name = agent_name
+        self.reason = reason
+        self.timeout_seconds = timeout_seconds
+        self.partial_output = partial_output.strip()
+        super().__init__(
+            f"CLI call {reason} timed out for {agent_name} after {timeout_seconds:g} seconds."
+        )
+
+
 class BaseAgent:
     name = "base"
     default_args: list[str] = []
@@ -98,12 +117,7 @@ class BaseAgent:
         run_command = subprocess.list2cmdline(command) if use_shell else command
         env = os.environ.copy()
         env["CHATBOKS"] = "1"
-        if max_timeout is None:
-            max_timeout = timeout
-        if idle_timeout is None:
-            idle_timeout = float(self.config.get("idle_timeout", timeout))
-        idle_timeout = float(idle_timeout)
-        max_timeout = float(max_timeout)
+        idle_timeout, max_timeout = self.resolve_timeouts(prompt, timeout, idle_timeout, max_timeout)
         extra: dict[str, Any] = {}
         if os.name == "nt":
             si = subprocess.STARTUPINFO()
@@ -193,12 +207,13 @@ class BaseAgent:
                 raise TokenExhaustionError(
                     combined_output or f"{self.name} exhausted its token context."
                 )
-            if timeout_reason == "idle":
-                return (
-                    f"CLI call idle timed out for {self.name} after {idle_timeout} seconds."
-                    "\n>>> BLOCKED"
-                )
-            return f"CLI call timed out for {self.name} after {max_timeout} seconds.\n>>> BLOCKED"
+            timeout_seconds = idle_timeout if timeout_reason == "idle" else max_timeout
+            raise AgentTimeoutError(
+                self.name,
+                timeout_reason,
+                timeout_seconds,
+                partial_output=combined_output,
+            )
 
         returncode = process.wait()
         for reader in readers:
@@ -247,6 +262,36 @@ class BaseAgent:
                 break
             if not drained:
                 time.sleep(0.01)
+
+    def resolve_timeouts(
+        self,
+        prompt: str,
+        timeout: float,
+        idle_timeout: float | None,
+        max_timeout: float | None,
+    ) -> tuple[float, float]:
+        base_timeout = float(timeout)
+        if max_timeout is None:
+            max_timeout = base_timeout
+        resolved_max = float(max_timeout)
+        if idle_timeout is not None:
+            return float(idle_timeout), resolved_max
+
+        configured_idle = self.config.get("idle_timeout")
+        if configured_idle is not None:
+            return float(configured_idle), resolved_max
+
+        if not self.config.get("dynamic_timeouts", True):
+            return base_timeout, resolved_max
+
+        chars_per_step = int(self.config.get("timeout_prompt_chars_per_step", 12_000))
+        seconds_per_step = float(self.config.get("timeout_seconds_per_step", 90))
+        if chars_per_step <= 0:
+            return min(base_timeout, resolved_max), resolved_max
+
+        prompt_steps = len(prompt) // chars_per_step
+        dynamic_idle = base_timeout + (prompt_steps * seconds_per_step)
+        return min(dynamic_idle, resolved_max), resolved_max
 
     @staticmethod
     def terminate_process(process: subprocess.Popen[str]) -> None:

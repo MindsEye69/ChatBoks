@@ -20,7 +20,7 @@ import yaml
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from agents.base import TokenExhaustionError
+from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
 from router import Router
 from ui.stream import Stream
@@ -940,26 +940,40 @@ class Chatboks:
         )
 
     def call_agent_with_token_recovery(self, agent_name: str, mode: str) -> str:
-        retries = int(self.config.get("context", {}).get("max_token_recovery_retries", 2))
+        context_config = self.config.get("context", {})
+        retries = int(context_config.get("max_token_recovery_retries", 2))
+        timeout_retries = int(context_config.get("max_timeout_recovery_retries", 1))
         agent = self.router.get_agent(agent_name)
+        timeout_attempts = 0
+        token_attempt = 0
 
-        for attempt in range(retries + 1):
+        while token_attempt <= retries:
             self.check_token_limit(agent_name)
             context_pkg = self.context.build(self.state, self.chatboks_md)
             try:
                 if mode == "execute":
                     return agent.execute(context_pkg)
                 return agent.call(context_pkg)
+            except AgentTimeoutError as exc:
+                timeout_attempts += 1
+                if not self.recover_agent_timeout(
+                    agent_name,
+                    exc,
+                    timeout_attempts,
+                    timeout_retries,
+                ):
+                    return self.timeout_recovery_blocked(agent_name, exc, timeout_attempts)
             except TokenExhaustionError as exc:
-                if attempt >= retries:
+                if token_attempt >= retries:
                     return self.token_recovery_blocked(agent_name, str(exc), retries)
+                token_attempt += 1
                 if not self.recover_token_exhaustion(
                     agent_name,
                     str(exc),
-                    attempt + 1,
+                    token_attempt,
                     retries,
                 ):
-                    return self.token_recovery_blocked(agent_name, str(exc), attempt + 1)
+                    return self.token_recovery_blocked(agent_name, str(exc), token_attempt)
 
         return self.token_recovery_blocked(agent_name, "Retry budget exhausted.", retries)
 
@@ -1026,6 +1040,46 @@ class Chatboks:
         self.save_state()
         return True
 
+    def recover_agent_timeout(
+        self,
+        agent_name: str,
+        error: AgentTimeoutError,
+        attempt: int,
+        max_retries: int,
+    ) -> bool:
+        if error.partial_output:
+            self.append_message(
+                "system",
+                "\n".join(
+                    [
+                        ">>> TIMEOUT_CHECKPOINT",
+                        f"Agent: {agent_name}",
+                        f"Reason: {self.truncate_for_state(str(error))}",
+                        "Partial output captured before timeout:",
+                        self.truncate_for_state(error.partial_output, limit=2000),
+                    ]
+                ),
+            )
+        if attempt > max_retries:
+            return False
+
+        self.stream.system(
+            f"{agent_name} {error.reason} timed out. "
+            f"Retrying with preserved partial output ({attempt}/{max_retries})."
+        )
+        self.append_message(
+            "system",
+            "\n".join(
+                [
+                    ">>> TIMEOUT_RECOVERY",
+                    f"Agent: {agent_name}",
+                    f"Attempt: {attempt}/{max_retries}",
+                    "Continue from the preserved checkpoint. Do not repeat completed work.",
+                ]
+            ),
+        )
+        return True
+
     def token_recovery_blocked(self, agent_name: str, reason: str, retries: int) -> str:
         return "\n".join(
             [
@@ -1033,6 +1087,22 @@ class Chatboks:
                 f"Recovery attempts: {retries}.",
                 f"Last error: {self.truncate_for_state(reason)}",
                 "The transcript has been summarized where possible; user input is needed before continuing.",
+                ">>> BLOCKED",
+            ]
+        )
+
+    def timeout_recovery_blocked(
+        self,
+        agent_name: str,
+        error: AgentTimeoutError,
+        attempts: int,
+    ) -> str:
+        return "\n".join(
+            [
+                f"{agent_name} timed out and automatic recovery did not complete.",
+                f"Recovery attempts: {attempts}.",
+                f"Last error: {self.truncate_for_state(str(error))}",
+                "Partial output has been checkpointed where available; user input is needed before continuing.",
                 ">>> BLOCKED",
             ]
         )
@@ -1122,7 +1192,7 @@ class Chatboks:
 
     def load_state(self) -> dict[str, Any]:
         if self.state_file.exists():
-            return self.normalize_state(json.loads(self.state_file.read_text(encoding="utf-8")))
+            return self.normalize_state(json.loads(self.state_file.read_text(encoding="utf-8-sig")))
         return self.default_state()
 
     def save_state(self) -> None:
