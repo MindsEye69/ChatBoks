@@ -57,11 +57,11 @@ Completed:
 - Loop detection.
 - Role-based router.
 - Git hook for async handoffs.
+- Versioned adapter system for CLI flag drift.
 
 Remaining:
 
 - Antigravity support when `agy` ships on Windows.
-- Versioned adapter system for CLI flag drift.
 - Expand Agent Zero routing intelligence beyond direct local diagnostics.
 - Automated outcome scoring suggestions from Agent Zero.
 - Mode-aware routing strategies after the dispatcher is stable.

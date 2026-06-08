@@ -48,18 +48,21 @@ agents:
     role_file: AGENT_ZERO.md
   claude:
     cli: C:\Users\MindsEye\AppData\Roaming\npm\claude.cmd
+    adapter_profile: claude_code_print_v1
     token_limit: 180000
     token_warning: 150000
     color: cyan
     role_file: CLAUDE.md
   codex:
     cli: C:\Users\MindsEye\AppData\Roaming\npm\codex.cmd
+    adapter_profile: codex_exec_v1
     token_limit: 120000
     token_warning: 100000
     color: green
     role_file: AGENTS.md
   antigravity:
     cli: agy
+    adapter_profile: agy_run_v1
     token_limit: 120000
     token_warning: 100000
     color: yellow

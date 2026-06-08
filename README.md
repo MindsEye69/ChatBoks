@@ -187,6 +187,34 @@ You can also route to it directly without adding it to normal rounds:
 
 Make sure Ollama is running and the selected model exists locally, for example with `ollama pull qwen2.5-coder:3b`.
 
+## Adapter Profiles
+
+Claude, Codex, and Antigravity CLI flags are selected through named adapter profiles so CLI drift can be fixed in
+configuration before code changes are needed.
+
+```yaml
+agents:
+  codex:
+    adapter_profile: codex_exec_v1
+```
+
+Known built-in profiles:
+
+- `claude_code_print_v1`
+- `codex_exec_v1`
+- `agy_run_v1`
+
+For a local CLI variant, set `adapter_args` on the agent. It overrides the named profile and supports
+`{project_path}` expansion:
+
+```yaml
+agents:
+  codex:
+    adapter_args: ["exec", "-C", "{project_path}", "-"]
+```
+
+`doctor.py` reports the selected adapter profile and warns when a named profile is unknown.
+
 ## Optional Graphify Map
 
 ChatBoks uses CodeGraph as the authoritative structural index for symbol lookup, call graphs, and impact analysis.

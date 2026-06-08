@@ -5,16 +5,16 @@ from agents.base import BaseAgent
 
 class CodexAgent(BaseAgent):
     name = "codex"
-
-    def command(self) -> list[str]:
-        # TODO: Verify Codex CLI flags against the installed CLI.
-        return [
-            self.cli,
+    default_adapter_profile = "codex_exec_v1"
+    adapter_profiles = {
+        "codex_exec_v1": [
             "exec",
             "-C",
-            str(self.project_path),
+            "{project_path}",
             "--dangerously-bypass-approvals-and-sandbox",
             "-s",
             "danger-full-access",
             "-",
-        ]
+        ],
+    }
+    default_args = adapter_profiles["codex_exec_v1"]

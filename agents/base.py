@@ -36,6 +36,8 @@ class AgentTimeoutError(RuntimeError):
 class BaseAgent:
     name = "base"
     default_args: list[str] = []
+    default_adapter_profile = "default"
+    adapter_profiles: dict[str, list[str]] = {}
     token_exhaustion_markers = (
         "context length exceeded",
         "context_length_exceeded",
@@ -103,7 +105,21 @@ class BaseAgent:
         return f"{self.role}\n\n{context}\n\n{instruction}\n"
 
     def command(self) -> list[str]:
-        return [self.cli, *self.default_args]
+        return [self.cli, *self.adapter_args()]
+
+    def adapter_args(self) -> list[str]:
+        configured_args = self.config.get("adapter_args")
+        if isinstance(configured_args, list):
+            return [self.expand_adapter_arg(str(arg)) for arg in configured_args]
+
+        profile = str(self.config.get("adapter_profile") or self.default_adapter_profile)
+        args = self.adapter_profiles.get(profile)
+        if args is None:
+            args = self.default_args
+        return [self.expand_adapter_arg(arg) for arg in args]
+
+    def expand_adapter_arg(self, arg: str) -> str:
+        return arg.format(project_path=str(self.project_path))
 
     def run_cli(
         self,

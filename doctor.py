@@ -20,6 +20,19 @@ try:
 except ImportError:  # pragma: no cover - diagnostic path
     yaml = None
 
+from agents.agent_zero import AgentZeroAgent
+from agents.antigravity import AntigravityAgent
+from agents.claude import ClaudeAgent
+from agents.codex import CodexAgent
+
+
+AGENT_CLASSES = {
+    "agent_zero": AgentZeroAgent,
+    "antigravity": AntigravityAgent,
+    "claude": ClaudeAgent,
+    "codex": CodexAgent,
+}
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a ChatBoks install")
@@ -138,6 +151,10 @@ def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any
     cli_ok = cli_path.exists() or shutil.which(cli) is not None
     print(("OK  " if cli_ok else "FAIL") + f" {agent_name} cli: {cli}")
     ok = ok and cli_ok
+    profile = str(agent_config.get("adapter_profile") or "default")
+    profile_ok = adapter_profile_known(agent_name, agent_config)
+    print(("OK  " if profile_ok else "WARN") + f" {agent_name} adapter profile: {profile}")
+    ok = ok and profile_ok
 
     if role_file:
         role_path = project_path / role_file
@@ -147,10 +164,20 @@ def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any
     if cli_ok:
         ok = check_cli_help(cli, agent_name) and ok
         if smoke_agents:
-            ok = smoke_agent_stdin(cli, agent_name, project_path, agent_config) and ok
+            ok = smoke_agent_stdin(agent_name, project_path, agent_config) and ok
         else:
             print(f"SKIP {agent_name} stdin smoke test (use --smoke-agents; may consume tokens)")
     return ok
+
+
+def adapter_profile_known(agent_name: str, agent_config: dict[str, Any]) -> bool:
+    cls = AGENT_CLASSES.get(agent_name)
+    if cls is None:
+        return False
+    if isinstance(agent_config.get("adapter_args"), list):
+        return True
+    profile = str(agent_config.get("adapter_profile") or cls.default_adapter_profile)
+    return profile == cls.default_adapter_profile or profile in cls.adapter_profiles
 
 
 def check_agent_zero(agent_config: dict[str, Any], smoke_agents: bool) -> bool:
@@ -187,25 +214,22 @@ def check_cli_help(cli: str, agent_name: str) -> bool:
 
 
 def smoke_agent_stdin(
-    cli: str,
     agent_name: str,
     project_path: Path,
     agent_config: dict[str, Any],
 ) -> bool:
     env = os.environ.copy()
     env["CHATBOKS"] = "1"
-    if agent_name == "claude":
-        command = [cli, "--print", "--dangerously-skip-permissions", "-"]
-    elif agent_name == "codex":
-        command = [cli, "exec", "-C", str(project_path), "--dangerously-bypass-approvals-and-sandbox", "-s", "danger-full-access", "-"]
-    elif agent_name == "agent_zero":
+    if agent_name == "agent_zero":
         return smoke_agent_zero(
             str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat")),
             str(agent_config.get("model", "qwen2.5-coder:3b")),
         )
-    else:
+    cls = AGENT_CLASSES.get(agent_name)
+    if cls is None:
         print(f"SKIP {agent_name} stdin smoke test: no adapter yet")
         return True
+    command = cls(project_path, agent_config, "doctor smoke").command()
     input_text = None if agent_name == "agent_zero" else "Reply with exactly: CHATBOKS_OK"
     result = run_capture(command, input_text=input_text, cwd=project_path, env=env, timeout=60)
     ok = result.returncode == 0 and "CHATBOKS_OK" in (result.stdout or "")
