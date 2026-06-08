@@ -841,9 +841,9 @@ class Chatboks:
                 artifact_dir,
                 provider,
             )
-            final_url = self.run_playwright_cli(["eval", "location.href"], artifact_dir, provider)
-            title = self.run_playwright_cli(["eval", "document.title"], artifact_dir, provider)
-            body_text = self.run_playwright_cli(
+            final_url = self.run_playwright_cli_value(["eval", "location.href"], artifact_dir, provider)
+            title = self.run_playwright_cli_value(["eval", "document.title"], artifact_dir, provider)
+            body_text = self.run_playwright_cli_value(
                 ["eval", "() => document.body ? document.body.innerText.slice(0, 4000) : ''"],
                 artifact_dir,
                 provider,
@@ -918,6 +918,16 @@ class Chatboks:
         if result.returncode != 0:
             raise RuntimeError(error or output or f"Playwright CLI failed: {' '.join(args)}")
         return output
+
+    def run_playwright_cli_value(
+        self,
+        args: list[str],
+        artifact_dir: Path,
+        provider: str,
+        timeout: int = 120,
+    ) -> str:
+        output = self.run_playwright_cli(["--raw", *args], artifact_dir, provider, timeout=timeout)
+        return self.extract_playwright_value(output)
 
     def close_playwright_usage_session(self, artifact_dir: Path, provider: str) -> None:
         try:
@@ -997,6 +1007,21 @@ class Chatboks:
                     return path
         screenshots = sorted(artifact_dir.glob("*.png"), key=lambda path: path.stat().st_mtime)
         return screenshots[-1] if screenshots else None
+
+    @staticmethod
+    def extract_playwright_value(output: str) -> str:
+        stripped = output.strip()
+        if stripped.startswith("### Result"):
+            lines = [line.strip() for line in stripped.splitlines() if line.strip()]
+            for line in lines:
+                if line.startswith("### Result "):
+                    value = line.removeprefix("### Result ").strip()
+                    if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+                        return value[1:-1]
+                    return value
+        if stripped.startswith('"') and stripped.endswith('"') and len(stripped) >= 2:
+            return stripped[1:-1]
+        return stripped
 
     def handle_outcome_suggestion_command(self, text: str) -> None:
         try:

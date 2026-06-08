@@ -141,9 +141,27 @@ def test_extract_usage_highlights_filters_relevant_lines():
     print("PASS: usage highlight extraction keeps relevant lines")
 
 
+def test_extract_playwright_value_handles_raw_and_verbose_outputs():
+    raw = '"Example Domain"'
+    verbose = '\n'.join(
+        [
+            '### Result "https://example.com/"',
+            "### Ran Playwright code",
+            "```js",
+            "await page.evaluate('() => (location.href)');",
+            "```",
+        ]
+    )
+
+    assert Chatboks.extract_playwright_value(raw) == "Example Domain"
+    assert Chatboks.extract_playwright_value(verbose) == "https://example.com/"
+    print("PASS: playwright value extraction handles raw and verbose output")
+
+
 if __name__ == "__main__":
     test_usage_show_reports_no_records_yet()
     test_usage_sync_records_playwright_capture_metadata()
     test_usage_summary_reads_saved_jsonl()
     test_extract_usage_highlights_filters_relevant_lines()
+    test_extract_playwright_value_handles_raw_and_verbose_outputs()
     print("\nAll usage sync smoke tests passed.")
