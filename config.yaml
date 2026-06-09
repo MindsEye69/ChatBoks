@@ -41,6 +41,18 @@ projects:
     agents: [claude, codex]
     primary: claude
     codegraph: true
+  biosassist:
+    path: C:\Users\MindsEye\Desktop\BiosAssist\Repo
+    agents: [claude, agent_zero]
+    direct_agents: [agent_zero]
+    primary: claude
+    codegraph: true
+    routing_intelligence:
+      enabled: true
+    mode_strategies:
+      brainstorm: full_round
+    role_routes:
+      brainstorm: [claude, agent_zero]
 
 agents:
   agent_zero:
