@@ -106,3 +106,79 @@ def test_check_project_includes_direct_agents():
 
     assert ok
     assert seen == ["claude", "codex", "agent_zero"]
+
+
+def test_parse_graphify_built_commit_reads_report():
+    with tempfile.TemporaryDirectory() as tmp:
+        report = Path(tmp) / "GRAPH_REPORT.md"
+        report.write_text("## Graph Freshness\n- Built from commit: `abc12345`\n", encoding="utf-8")
+
+        assert doctor.parse_graphify_built_commit(report) == "abc12345"
+
+
+def test_commits_match_accepts_short_or_full_prefixes():
+    assert doctor.commits_match("abc12345", "abc12345deadbeef")
+    assert doctor.commits_match("abc12345deadbeef", "abc12345")
+    assert not doctor.commits_match("abc12345", "def67890")
+
+
+def test_check_graphify_reports_stale_source_commit(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        graph_dir = root / "graphify-out"
+        graph_dir.mkdir()
+        (graph_dir / "graph.json").write_text("{}", encoding="utf-8")
+        (graph_dir / "GRAPH_REPORT.md").write_text(
+            "- Built from commit: `abc12345`\n",
+            encoding="utf-8",
+        )
+
+        with patch("doctor.find_command", return_value="graphify"):
+            with patch("doctor.latest_source_commit", return_value="def67890"):
+                with patch("doctor.source_worktree_dirty", return_value=False):
+                    doctor.check_graphify(root)
+
+    output = capsys.readouterr().out
+    assert "WARN graphify freshness" in output
+    assert "abc12345" in output
+    assert "def67890" in output
+
+
+def test_check_graphify_accepts_latest_source_commit(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        graph_dir = root / "graphify-out"
+        graph_dir.mkdir()
+        (graph_dir / "graph.json").write_text("{}", encoding="utf-8")
+        (graph_dir / "GRAPH_REPORT.md").write_text(
+            "- Built from commit: `abc12345`\n",
+            encoding="utf-8",
+        )
+
+        with patch("doctor.find_command", return_value="graphify"):
+            with patch("doctor.latest_source_commit", return_value="abc12345deadbeef"):
+                with patch("doctor.source_worktree_dirty", return_value=False):
+                    doctor.check_graphify(root)
+
+    output = capsys.readouterr().out
+    assert "OK   graphify freshness" in output
+
+
+def test_check_graphify_warns_when_source_worktree_dirty(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        graph_dir = root / "graphify-out"
+        graph_dir.mkdir()
+        (graph_dir / "graph.json").write_text("{}", encoding="utf-8")
+        (graph_dir / "GRAPH_REPORT.md").write_text(
+            "- Built from commit: `abc12345`\n",
+            encoding="utf-8",
+        )
+
+        with patch("doctor.find_command", return_value="graphify"):
+            with patch("doctor.latest_source_commit", return_value="abc12345deadbeef"):
+                with patch("doctor.source_worktree_dirty", return_value=True):
+                    doctor.check_graphify(root)
+
+    output = capsys.readouterr().out
+    assert "uncommitted non-graphify changes" in output

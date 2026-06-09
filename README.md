@@ -381,6 +381,14 @@ agents:
 ChatBoks uses CodeGraph as the authoritative structural index for symbol lookup, call graphs, and impact analysis.
 Graphify can sit alongside it as a broader architecture map that includes code plus durable project docs.
 
+Use them for different jobs:
+
+- **CodeGraph:** live structural work during implementation. Use it for symbol lookup, callers/callees, impact checks,
+  and flow tracing. Refresh with `codegraph sync` before handoff when code changed.
+- **Graphify:** slower project map for architecture orientation, durable docs, cross-file themes, community hubs, and
+  exploratory questions such as "what parts of the project cluster around remote control?". Refresh after source/doc
+  changes that should appear in the architecture map.
+
 The current local setup was built with the Graphify CLI and local Ollama:
 
 ```powershell
@@ -399,6 +407,21 @@ Useful outputs live under `graphify-out/`:
 
 After code-only changes, refresh the graph with `graphify update .`; semantic doc changes may need a local
 Ollama-backed extraction rerun.
+
+Recommended graph maintenance loop:
+
+```powershell
+codegraph sync
+python doctor.py chatboks
+graphify update .
+graphify tree --label ChatBoks
+python doctor.py chatboks
+```
+
+`doctor.py` checks that the Graphify report was built from the latest non-`graphify-out` source commit, so a separate
+commit containing only refreshed Graphify artifacts does not falsely make the graph look stale.
+
+See `GRAPH_WORKFLOW.md` for the short operational procedure.
 
 Do not install Graphify assistant hooks by default; they can conflict with ChatBoks' CodeGraph-first workflow.
 

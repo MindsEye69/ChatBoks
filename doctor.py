@@ -7,6 +7,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import sys
 import shutil
 import sqlite3
@@ -136,8 +137,102 @@ def check_project(project: str, project_config: dict[str, Any], config: dict[str
 
     state_path = project_path / ".chatboks" / "state.json"
     print(("OK  " if state_path.exists() else "WARN") + f" state file: {state_path}")
+    check_graphify(project_path)
     ok = check_project_hook(project_path) and ok
     return ok
+
+
+def check_graphify(project_path: Path) -> None:
+    graph_dir = project_path / "graphify-out"
+    report_path = graph_dir / "GRAPH_REPORT.md"
+    graph_path = graph_dir / "graph.json"
+    graphify = find_command("graphify")
+    if not graph_dir.exists():
+        print("WARN graphify output: graphify-out not found")
+        return
+
+    print(("OK  " if graphify else "WARN") + f" graphify command: {graphify or 'not found'}")
+    print(("OK  " if graph_path.exists() else "WARN") + f" graphify graph: {graph_path}")
+    if not report_path.exists():
+        print(f"WARN graphify report: {report_path}")
+        return
+
+    built_commit = parse_graphify_built_commit(report_path)
+    source_commit = latest_source_commit(project_path)
+    if not built_commit:
+        print(f"WARN graphify freshness: no built commit in {report_path}")
+        return
+    if source_worktree_dirty(project_path):
+        print("WARN graphify freshness: source working tree has uncommitted non-graphify changes")
+        return
+    if not source_commit:
+        print(f"WARN graphify freshness: built from {built_commit}, source commit unavailable")
+        return
+    if commits_match(built_commit, source_commit):
+        print(f"OK   graphify freshness: built from latest source commit {short_commit(source_commit)}")
+        return
+    print(
+        "WARN graphify freshness: "
+        f"built from {short_commit(built_commit)}, latest source commit is {short_commit(source_commit)}; "
+        "run `graphify update .` and `graphify tree --label ChatBoks`"
+    )
+
+
+def parse_graphify_built_commit(report_path: Path) -> str | None:
+    try:
+        text = report_path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return None
+    match = re.search(r"Built from commit:\s*`?([0-9a-fA-F]{7,40})`?", text)
+    return match.group(1) if match else None
+
+
+def latest_source_commit(project_path: Path) -> str | None:
+    result = run_capture(
+        [
+            "git",
+            "rev-list",
+            "-1",
+            "HEAD",
+            "--",
+            ".",
+            ":(exclude)graphify-out/**",
+        ],
+        cwd=project_path,
+        timeout=15,
+    )
+    if result.returncode != 0:
+        return None
+    commit = (result.stdout or "").strip().splitlines()
+    return commit[0] if commit else None
+
+
+def source_worktree_dirty(project_path: Path) -> bool:
+    result = run_capture(
+        [
+            "git",
+            "status",
+            "--porcelain",
+            "--",
+            ".",
+            ":(exclude)graphify-out/**",
+        ],
+        cwd=project_path,
+        timeout=15,
+    )
+    if result.returncode != 0:
+        return False
+    return bool((result.stdout or "").strip())
+
+
+def commits_match(a: str, b: str) -> bool:
+    a_lower = a.lower()
+    b_lower = b.lower()
+    return a_lower.startswith(b_lower) or b_lower.startswith(a_lower)
+
+
+def short_commit(commit: str) -> str:
+    return commit[:8]
 
 
 def check_project_hook(project_path: Path) -> bool:
