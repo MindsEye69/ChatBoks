@@ -25,7 +25,7 @@ except ImportError:  # pragma: no cover - diagnostic path
 from agents.agent_zero import AgentZeroAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
-from agents.codex import CodexAgent
+from agents.codex import CodexAgent, CodexSparkAgent
 from encoding_utils import configure_utf8_stdio, utf8_env
 
 
@@ -34,6 +34,7 @@ AGENT_CLASSES = {
     "antigravity": AntigravityAgent,
     "claude": ClaudeAgent,
     "codex": CodexAgent,
+    "codex_spark": CodexSparkAgent,
 }
 
 

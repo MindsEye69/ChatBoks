@@ -95,7 +95,7 @@ HELP_COMMANDS = [
     ("/outcomes", "Show recent wins and failures."),
     ("/usage", "Show saved provider usage baselines and available sync targets."),
     ("/usage sync <provider>", "Open a provider usage dashboard, capture a screenshot, and save a baseline."),
-    ("@claude / @codex / @zero", "Route the next prompt exclusively to one agent."),
+    ("@claude / @codex / @spark / @zero", "Route the next prompt exclusively to one agent."),
     ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
     ("/dismiss", "Discard the active proposal without executing it."),
@@ -117,6 +117,7 @@ HELP_PIN_COMMANDS = [
     "@all",
     "@claude",
     "@codex",
+    "@spark",
     "@zero",
     "exit",
 ]
@@ -139,6 +140,7 @@ USAGE_PROVIDERS = {
 ROLE_CALL_REQUESTS = {"role call", "roll call", "rolecall", "rollcall"}
 DIRECT_AGENT_ALIASES = {
     "agent_zero": "@zero",
+    "codex_spark": "@spark",
     "antigravity": "@agy",
 }
 

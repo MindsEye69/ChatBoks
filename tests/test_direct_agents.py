@@ -33,7 +33,7 @@ def _make_router(root: Path) -> Router:
             "chatboks": {
                 "path": str(root),
                 "agents": ["claude", "codex"],
-                "direct_agents": ["agent_zero"],
+                "direct_agents": ["agent_zero", "codex_spark"],
                 "primary": "codex",
             }
         },
@@ -41,6 +41,7 @@ def _make_router(root: Path) -> Router:
             "agent_zero": {},
             "claude": {},
             "codex": {},
+            "codex_spark": {},
         },
     }
     return Router(config, "chatboks", root)
@@ -222,6 +223,19 @@ def test_agent_zero_direct_route_aliases_work():
             assert exclusive == "agent_zero"
 
         print("PASS: Agent Zero direct route aliases work")
+
+
+def test_codex_spark_direct_route_aliases_work():
+    with tempfile.TemporaryDirectory() as tmp:
+        router = _make_router(Path(tmp))
+
+        for alias in ("@spark", "@codexspark", "@codex_spark"):
+            agents, prompt, exclusive = router.route_user_prompt(f"{alias} add a tiny test")
+            assert agents == ["codex_spark"]
+            assert prompt == "add a tiny test"
+            assert exclusive == "codex_spark"
+
+        print("PASS: Codex Spark direct route aliases work")
 
 
 def test_unlisted_agent_direct_route_falls_back_to_normal_round():
@@ -873,6 +887,7 @@ if __name__ == "__main__":
     test_all_route_opts_into_full_project_team_not_direct_agents()
     test_explicit_route_ignores_collaboration_mode_lane()
     test_agent_zero_direct_route_aliases_work()
+    test_codex_spark_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
     test_agent_zero_call_accepts_base_timeout_keywords()
     test_agent_zero_prompt_lists_real_local_commands()

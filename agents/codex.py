@@ -18,3 +18,23 @@ class CodexAgent(BaseAgent):
         ],
     }
     default_args = adapter_profiles["codex_exec_v1"]
+
+
+class CodexSparkAgent(CodexAgent):
+    name = "codex_spark"
+    default_adapter_profile = "codex_spark_exec_v1"
+    adapter_profiles = {
+        **CodexAgent.adapter_profiles,
+        "codex_spark_exec_v1": [
+            "exec",
+            "-C",
+            "{project_path}",
+            "-m",
+            "gpt-5.3-codex-spark",
+            "--dangerously-bypass-approvals-and-sandbox",
+            "-s",
+            "danger-full-access",
+            "-",
+        ],
+    }
+    default_args = adapter_profiles["codex_spark_exec_v1"]

@@ -2,7 +2,7 @@ projects:
   chatboks:
     path: C:\Users\MindsEye\Desktop\chatboks
     agents: [claude, codex]
-    direct_agents: [agent_zero]
+    direct_agents: [agent_zero, codex_spark]
     primary: codex
     codegraph: true
     routing_intelligence:
@@ -69,6 +69,13 @@ agents:
     token_warning: 100000
     color: green
     role_file: AGENTS.md
+  codex_spark:
+    cli: C:\Users\MindsEye\AppData\Roaming\npm\codex.cmd
+    adapter_profile: codex_spark_exec_v1
+    token_limit: 128000
+    token_warning: 100000
+    color: bright_green
+    role_file: CODEX_SPARK.md
   antigravity:
     cli: agy
     adapter_profile: agy_run_v1

@@ -7,7 +7,7 @@ from typing import Any
 from agents.agent_zero import AgentZeroAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
-from agents.codex import CodexAgent
+from agents.codex import CodexAgent, CodexSparkAgent
 from trust import load_role_with_approval
 
 
@@ -15,6 +15,7 @@ AGENT_CLASSES = {
     "agent_zero": AgentZeroAgent,
     "claude": ClaudeAgent,
     "codex": CodexAgent,
+    "codex_spark": CodexSparkAgent,
     "antigravity": AntigravityAgent,
 }
 
@@ -107,6 +108,8 @@ class Router:
             "zero": "agent_zero",
             "antigrav": "antigravity",
             "agy": "antigravity",
+            "spark": "codex_spark",
+            "codexspark": "codex_spark",
         }
         agent_name = aliases.get(requested, requested)
         if agent_name not in self.config.get("agents", {}) or agent_name not in AGENT_CLASSES:

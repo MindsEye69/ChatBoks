@@ -162,10 +162,11 @@ Availability is stored per project in `.chatboks/agent_status.json` and included
 rounds skip exhausted or blocked agents and use configured fallbacks when possible. Explicit routes such as `@claude`
 do not silently substitute another model; ChatBoks tells you the target is unavailable so you can decide what to do.
 
-Normal rounds use the configured default project team and exclude `direct_agents` such as Agent Zero. Use direct tags
-like `@zero` when you want the local/bootstrap model specifically. Use `@all ...` to opt into the full configured
-non-direct project team for one prompt. Local/direct agents can fill a main seat only when explicitly marked with
-`can_fill_main_seat: true` and selected as a fallback for an exhausted agent.
+Normal rounds use the configured default project team and exclude `direct_agents` such as Agent Zero or Codex Spark.
+Use direct tags like `@zero` when you want the local/bootstrap model specifically, or `@spark` when you want the fast
+Codex Spark lane for a small scoped coding task. Use `@all ...` to opt into the full configured non-direct project team
+for one prompt. Local/direct agents can fill a main seat only when explicitly marked with `can_fill_main_seat: true` and
+selected as a fallback for an exhausted agent.
 
 ## Routing Intelligence
 
@@ -350,6 +351,7 @@ Known built-in profiles:
 
 - `claude_code_print_v1`
 - `codex_exec_v1`
+- `codex_spark_exec_v1`
 - `agy_run_v1`
 
 Agents can also define ordered fallback profiles for token-exhaustion recovery inside the same wrapper. This is useful
