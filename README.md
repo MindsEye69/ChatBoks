@@ -282,6 +282,24 @@ By default, `doctor.py` avoids model-consuming calls. To test actual stdin pipin
 python doctor.py taskfish --smoke-agents
 ```
 
+For secure phone control, start the desktop-side remote bridge locally:
+
+```bash
+python remote_control.py chatboks
+```
+
+Security defaults:
+
+- Binds to loopback only (`127.0.0.1`) and refuses non-localhost addresses.
+- Uses a one-time pairing code to issue short-lived session tokens.
+- Requires a bearer token on every API request.
+- Keeps ChatBoks execution on the desktop that owns the repo.
+
+The bridge serves a small mobile web UI at `http://127.0.0.1:8765/`. Pair with the printed one-time code, then send
+prompts or slash commands from your phone through a private tunnel or VPN. The intended path is a private
+proxy such as Tailscale Serve that forwards to the loopback bridge; do not expose this port directly to the public
+internet.
+
 Agent Zero is an optional local/bootstrap agent backed directly by Ollama. The current recommended default is
 `gemma3:4b` through Ollama's local chat endpoint (`http://127.0.0.1:11434/api/chat`) with `think: false` so
 responses stay in normal output instead of Ollama's separate thinking field. It is configured but not added to

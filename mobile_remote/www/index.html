@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatBoks Remote</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>ChatBoks Remote</h1>
+      <p>Private desktop control</p>
+    </div>
+    <button id="refreshButton" class="ghost" type="button">Refresh</button>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Connection</h2>
+      <label class="field">
+        <span>Bridge URL</span>
+        <input id="baseUrl" type="url" placeholder="https://your-desktop.tailnet.ts.net">
+      </label>
+      <label class="field">
+        <span>Bearer token</span>
+        <input id="token" type="password" placeholder="Paste token from remote_control.py">
+      </label>
+      <div class="button-row">
+        <button id="saveButton" type="button">Save</button>
+        <button id="connectButton" class="ghost" type="button">Connect</button>
+      </div>
+      <p class="hint">Use a private Tailscale Serve URL. The app is not meant for public endpoints.</p>
+      <div id="errorBox" class="error hidden"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Session</h2>
+      <dl class="meta">
+        <div><dt>Status</dt><dd id="statusValue">-</dd></div>
+        <div><dt>Next agent</dt><dd id="nextAgentValue">-</dd></div>
+        <div><dt>Active task</dt><dd id="taskValue">-</dd></div>
+      </dl>
+      <pre id="tokenLine" class="token-line"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Quick checks</h2>
+      <div class="button-grid">
+        <button class="ghost quick-action" data-command="@zero role call" type="button">Agent Zero role call</button>
+        <button class="ghost quick-action" data-command="@zero what's next for ChatBoks?" type="button">Ask Zero what's next</button>
+        <button class="ghost quick-action" data-command="role call" type="button">Role call</button>
+        <button class="ghost quick-action" data-command="/agent" type="button">Agent status</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Prompt</h2>
+      <label class="field">
+        <span>Send prompt or slash command</span>
+        <textarea id="promptInput" rows="5" placeholder="Type your next prompt"></textarea>
+      </label>
+      <button id="sendButton" type="button">Send</button>
+    </section>
+
+    <section class="panel">
+      <h2>Transcript</h2>
+      <div id="transcriptList" class="stack"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Bridge events</h2>
+      <div id="eventsList" class="stack"></div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

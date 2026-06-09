@@ -1,0 +1,11 @@
+{
+  "appId": "com.chatboks.remote",
+  "appName": "ChatBoks Remote",
+  "webDir": "www",
+  "server": {
+    "cleartext": false,
+    "allowNavigation": [
+      "*.ts.net"
+    ]
+  }
+}
