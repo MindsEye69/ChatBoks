@@ -5,9 +5,9 @@
     "semantic_hash": "9bb6e60adbe6703f58f10c138b459653"
   },
   "agents/agent_zero.py": {
-    "mtime": 1780868017.7327511,
-    "ast_hash": "e4750ce1380d7c92f6abf47772c2b988",
-    "semantic_hash": "e4750ce1380d7c92f6abf47772c2b988"
+    "mtime": 1781004128.1633558,
+    "ast_hash": "88e34480202eddacffc08b65f4279b6b",
+    "semantic_hash": ""
   },
   "agents/antigravity.py": {
     "mtime": 1780902423.7754424,
@@ -15,9 +15,9 @@
     "semantic_hash": "a9f891c2127461346afd818f6d925bfc"
   },
   "agents/base.py": {
-    "mtime": 1780902404.8885467,
-    "ast_hash": "df6e590cc3f9e15f99cfeddb9c880168",
-    "semantic_hash": "df6e590cc3f9e15f99cfeddb9c880168"
+    "mtime": 1781009696.445073,
+    "ast_hash": "02456f6ddb6eb2e8cd310ad6e5bbed45",
+    "semantic_hash": ""
   },
   "agents/claude.py": {
     "mtime": 1780902423.644926,
@@ -35,19 +35,19 @@
     "semantic_hash": "e7cd77cc85378bbcdb4285dea0d4604e"
   },
   "context/builder.py": {
-    "mtime": 1780800187.8298352,
-    "ast_hash": "dd2c7729d91474dac7882c590d9cf98d",
-    "semantic_hash": "dd2c7729d91474dac7882c590d9cf98d"
+    "mtime": 1781009696.4470727,
+    "ast_hash": "8ebf3ad4247b89299e9e744ac30d5676",
+    "semantic_hash": ""
   },
   "context/summarizer.py": {
-    "mtime": 1779909549.1544216,
-    "ast_hash": "879daf566f03dc48fe5b6a6f91779745",
-    "semantic_hash": "879daf566f03dc48fe5b6a6f91779745"
+    "mtime": 1781009696.4460726,
+    "ast_hash": "6998247d2cde39a584493296ac217de0",
+    "semantic_hash": ""
   },
   "doctor.py": {
-    "mtime": 1780902476.3527172,
-    "ast_hash": "0cfcfa28061107ae12b565f33797773f",
-    "semantic_hash": "0cfcfa28061107ae12b565f33797773f"
+    "mtime": 1781009696.4470727,
+    "ast_hash": "a0cc5ae374002040b697709db17fe15b",
+    "semantic_hash": ""
   },
   "hooks/post-commit": {
     "mtime": 1780900808.7062411,
@@ -55,54 +55,54 @@
     "semantic_hash": "120d1d5e7eccbe935eadd9f67b6e6eb7"
   },
   "install.py": {
-    "mtime": 1780900777.6964438,
-    "ast_hash": "b5574339fc493665691132e9aefe9e2e",
-    "semantic_hash": "b5574339fc493665691132e9aefe9e2e"
+    "mtime": 1781009696.448073,
+    "ast_hash": "0b942a49e487d71352be3801561d9892",
+    "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1780900116.3629365,
-    "ast_hash": "33ff6072c487e966aa4b08ee8e87fd41",
-    "semantic_hash": "33ff6072c487e966aa4b08ee8e87fd41"
+    "mtime": 1781010416.8442013,
+    "ast_hash": "093ab105934ff3e68ff3e3480974c421",
+    "semantic_hash": ""
   },
   "router.py": {
-    "mtime": 1780900048.8202393,
-    "ast_hash": "ec6544c58d6ebcb42772d04945bdc00d",
-    "semantic_hash": "ec6544c58d6ebcb42772d04945bdc00d"
+    "mtime": 1781009696.4490721,
+    "ast_hash": "9133b3868a7a3bcfdfa7f425964f867c",
+    "semantic_hash": ""
   },
   "tests/test_agent_status.py": {
-    "mtime": 1780900209.8664773,
-    "ast_hash": "5e269df67de27035892aeb923401ec43",
-    "semantic_hash": "5e269df67de27035892aeb923401ec43"
+    "mtime": 1780955261.1872468,
+    "ast_hash": "79750eaab37b520537172d7028e14d21",
+    "semantic_hash": ""
   },
   "tests/test_base_agent_streaming.py": {
-    "mtime": 1780875449.6172078,
-    "ast_hash": "912aa5e6adc37d54c9e941041885c612",
-    "semantic_hash": "912aa5e6adc37d54c9e941041885c612"
+    "mtime": 1781009738.1999903,
+    "ast_hash": "e0365c650087de53406be4f8a1e9cacd",
+    "semantic_hash": ""
   },
   "tests/test_context_modes.py": {
-    "mtime": 1780847837.172355,
-    "ast_hash": "53a70b05f24e275e44ca3aa25e461eb8",
-    "semantic_hash": "53a70b05f24e275e44ca3aa25e461eb8"
+    "mtime": 1780936890.533539,
+    "ast_hash": "9fbd0b32cc51e2e41dca41eacde7feda",
+    "semantic_hash": ""
   },
   "tests/test_direct_agents.py": {
-    "mtime": 1780900083.7269037,
-    "ast_hash": "12f3a5a244c3e583f93fa443bc43d8b3",
-    "semantic_hash": "12f3a5a244c3e583f93fa443bc43d8b3"
+    "mtime": 1781004234.4292853,
+    "ast_hash": "5baa451ab521edea23f0e2b594841ba5",
+    "semantic_hash": ""
   },
   "tests/test_help.py": {
-    "mtime": 1780271336.6042278,
-    "ast_hash": "03f7e8817aab2ddfe95bf18e2a043607",
-    "semantic_hash": "03f7e8817aab2ddfe95bf18e2a043607"
+    "mtime": 1781010459.86257,
+    "ast_hash": "3aefa82f302f8107b62f15e1ed58474a",
+    "semantic_hash": ""
   },
   "tests/test_modes.py": {
-    "mtime": 1780900141.023704,
-    "ast_hash": "7eff318dbfa62ca4d53609824c4f4b50",
-    "semantic_hash": "7eff318dbfa62ca4d53609824c4f4b50"
+    "mtime": 1780925794.4272184,
+    "ast_hash": "25e5243fa2a6dc81932544ec01dc0d60",
+    "semantic_hash": ""
   },
   "tests/test_outcomes.py": {
-    "mtime": 1780268244.2618425,
-    "ast_hash": "4bb681dc2058b35d7c4fba78c68c16dd",
-    "semantic_hash": "4bb681dc2058b35d7c4fba78c68c16dd"
+    "mtime": 1780925359.4009066,
+    "ast_hash": "4278397b16ee93ba44e76408f2473e9c",
+    "semantic_hash": ""
   },
   "tests/test_proposal_buffering.py": {
     "mtime": 1780266195.4330177,
@@ -110,19 +110,19 @@
     "semantic_hash": "8b37a887bbdbc8f8e9da6750febacee5"
   },
   "tests/test_role_trust.py": {
-    "mtime": 1780425869.8112178,
-    "ast_hash": "acb53692bc0246f46fd169694a91fb4a",
-    "semantic_hash": "acb53692bc0246f46fd169694a91fb4a"
+    "mtime": 1781006151.485937,
+    "ast_hash": "2ef80bd90bd7ad82b89560fd33526d72",
+    "semantic_hash": ""
   },
   "tests/test_security_hardening.py": {
-    "mtime": 1780352109.4267635,
-    "ast_hash": "50dfaf83c0a932876f0354a4ff5259a6",
-    "semantic_hash": "50dfaf83c0a932876f0354a4ff5259a6"
+    "mtime": 1780960642.9740686,
+    "ast_hash": "330682c4758296d099b5c9ec9954de0f",
+    "semantic_hash": ""
   },
   "tests/test_signal_state.py": {
-    "mtime": 1780880777.697315,
-    "ast_hash": "e664938efa24c3c471198ee61c3b2d7b",
-    "semantic_hash": "e664938efa24c3c471198ee61c3b2d7b"
+    "mtime": 1780936826.215451,
+    "ast_hash": "0a0850813af6e946f13e3bc494cd09ca",
+    "semantic_hash": ""
   },
   "tests/test_skills.py": {
     "mtime": 1780589844.0484583,
@@ -130,14 +130,14 @@
     "semantic_hash": "29b1aba7030b95dd57dd819a63d8f194"
   },
   "tests/test_slash_buffering.py": {
-    "mtime": 1780342615.9830618,
-    "ast_hash": "23937b22c0811e9dee3af24e508b7841",
-    "semantic_hash": "23937b22c0811e9dee3af24e508b7841"
+    "mtime": 1780927427.8714871,
+    "ast_hash": "6f741e22c44549dc30ca8cf638a56a0b",
+    "semantic_hash": ""
   },
   "trust.py": {
-    "mtime": 1780352696.618435,
-    "ast_hash": "a0d322c0e51676392d7d9c325e4f5fee",
-    "semantic_hash": "a0d322c0e51676392d7d9c325e4f5fee"
+    "mtime": 1781009696.450072,
+    "ast_hash": "2e7584c03fbc75f217271cd830db0911",
+    "semantic_hash": ""
   },
   "ui/__init__.py": {
     "mtime": 1779909549.2690222,
@@ -145,14 +145,14 @@
     "semantic_hash": "b2cd4d8c4d3ff8e25b412c4cf7550a30"
   },
   "ui/stream.py": {
-    "mtime": 1780271284.524782,
-    "ast_hash": "853a5b3582fe14bc992ea906feaeed31",
-    "semantic_hash": "853a5b3582fe14bc992ea906feaeed31"
+    "mtime": 1781010416.8452013,
+    "ast_hash": "f4d813d89a67a3d3b2a04d8f2ec71950",
+    "semantic_hash": ""
   },
   "AGENT_ZERO.md": {
-    "mtime": 1780148432.129733,
-    "ast_hash": "a52d56e08c64aa7cf8e635101c95d8c8",
-    "semantic_hash": "a52d56e08c64aa7cf8e635101c95d8c8"
+    "mtime": 1781004204.5172465,
+    "ast_hash": "a5ff30ad8218323a99244314174fdf33",
+    "semantic_hash": ""
   },
   "CREDITS.md": {
     "mtime": 1780589843.951964,
@@ -160,18 +160,18 @@
     "semantic_hash": "ec6e73c93a04f0e849149095746b1f28"
   },
   "README.md": {
-    "mtime": 1780902516.087476,
-    "ast_hash": "3ce9ea4637e95b0c912ee48b81333cdf",
+    "mtime": 1780997636.3450954,
+    "ast_hash": "d0f9287461999e3c846012615870b301",
     "semantic_hash": ""
   },
   "ROADMAP.md": {
-    "mtime": 1780902526.12262,
-    "ast_hash": "253cf825cd0f0a356c3be2265b30bed8",
+    "mtime": 1781011752.3084466,
+    "ast_hash": "b370f69f8ac3aaf9eacb5e961aa9fac5",
     "semantic_hash": ""
   },
   "config.yaml": {
-    "mtime": 1780902435.7535913,
-    "ast_hash": "7acc640227cbb76b313a81e57ccdb726",
+    "mtime": 1780958817.4134998,
+    "ast_hash": "c0bfff6eba32e5879bdfcafb8166cef0",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -195,9 +195,9 @@
     "semantic_hash": "332982cbf99243d8be779daad2f8e5ad"
   },
   "hook_post_commit.py": {
-    "mtime": 1780900751.8764765,
-    "ast_hash": "e77e11a09f4520c25653112ec5a1ce17",
-    "semantic_hash": "e77e11a09f4520c25653112ec5a1ce17"
+    "mtime": 1781009696.448073,
+    "ast_hash": "4744eb719bcb4433ef10c745acd05d09",
+    "semantic_hash": ""
   },
   "tests/test_git_hook.py": {
     "mtime": 1780900796.3804033,
@@ -205,8 +205,343 @@
     "semantic_hash": "89d60ea95a779760d0130ef2aad14878"
   },
   "tests/test_adapter_profiles.py": {
-    "mtime": 1780902501.3938415,
-    "ast_hash": "3de257a87f24dcdfea923a55e0292160",
-    "semantic_hash": "3de257a87f24dcdfea923a55e0292160"
+    "mtime": 1780926516.2071633,
+    "ast_hash": "ca6ade8da1ead51cfe31ab181c81136b",
+    "semantic_hash": ""
+  },
+  "context/transcript.py": {
+    "mtime": 1780936744.210715,
+    "ast_hash": "49b149af2f751e3024d4c1f4312a59d1",
+    "semantic_hash": ""
+  },
+  "encoding_utils.py": {
+    "mtime": 1781009696.4440725,
+    "ast_hash": "4671d464fc181edd1568cd3efa401c89",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/build.gradle": {
+    "mtime": 1781001140.0385764,
+    "ast_hash": "f0febdb45dbcf91329f5e074428c5a13",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/capacitor.build.gradle": {
+    "mtime": 1780995354.293941,
+    "ast_hash": "b863e425fbde80251bd3c68ac8ccba02",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java": {
+    "mtime": 1780416477.0,
+    "ast_hash": "fbaf7cc870c663eb52dcf218531c439d",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/assets/capacitor.config.json": {
+    "mtime": 1781001490.011214,
+    "ast_hash": "c65368fe38675417bb84430bfc427590",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/assets/capacitor.plugins.json": {
+    "mtime": 1780995354.2809424,
+    "ast_hash": "58e0494c51d30eb3494f7c9198986bb9",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/assets/public/app.js": {
+    "mtime": 1781001477.6853364,
+    "ast_hash": "61bdea54d48c7426a2a9cc12ca879002",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/assets/public/cordova.js": {
+    "mtime": 1781001490.0122137,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/assets/public/cordova_plugins.js": {
+    "mtime": 1781001490.0132136,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/java/com/chatboks/remote/MainActivity.java": {
+    "mtime": 1780995319.1083186,
+    "ast_hash": "00a03bfc53a832bb2a6d51a9bcddd348",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java": {
+    "mtime": 1780416477.0,
+    "ast_hash": "e91b4501c14da821682fa5c26a16d616",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/build.gradle": {
+    "mtime": 1780416477.0,
+    "ast_hash": "edcd663b51acb2986e22ef151e00036f",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/capacitor-cordova-android-plugins/build.gradle": {
+    "mtime": 1780995354.3019402,
+    "ast_hash": "56ee1e41ba80b64df15915bd7c40d6df",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/capacitor-cordova-android-plugins/cordova.variables.gradle": {
+    "mtime": 1780995354.3029423,
+    "ast_hash": "8ccd69ac09ef80b05c393964b2f6e349",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/capacitor.settings.gradle": {
+    "mtime": 1780995354.293941,
+    "ast_hash": "455ebb7f9fe84a6974da6bdae43097c2",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/gradlew": {
+    "mtime": 1780416477.0,
+    "ast_hash": "f092910dfa8e47c5a37a452c3f6baf8a",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/settings.gradle": {
+    "mtime": 1780416477.0,
+    "ast_hash": "f6cd925b3f859e23c3d819fe2459e0e4",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/variables.gradle": {
+    "mtime": 1780416477.0,
+    "ast_hash": "7f844007d51d16140dbd0903de821b18",
+    "semantic_hash": ""
+  },
+  "mobile_remote/build-debug.ps1": {
+    "mtime": 1781000304.8856792,
+    "ast_hash": "d88d5daee07fa6adf564f6d5b2fb4843",
+    "semantic_hash": ""
+  },
+  "mobile_remote/build-release.ps1": {
+    "mtime": 1781001154.5581958,
+    "ast_hash": "f45c796eeb9fde55710d1c3ead545ded",
+    "semantic_hash": ""
+  },
+  "mobile_remote/capacitor.config.json": {
+    "mtime": 1780995276.5808938,
+    "ast_hash": "e514e136a513b6dd1a3d92b49ef50880",
+    "semantic_hash": ""
+  },
+  "mobile_remote/install-debug.ps1": {
+    "mtime": 1781001039.4015834,
+    "ast_hash": "a49792e87f4ad08852eb406d357dd471",
+    "semantic_hash": ""
+  },
+  "mobile_remote/package.json": {
+    "mtime": 1780995276.5798936,
+    "ast_hash": "00c922ca897db660266e49e7727ddf43",
+    "semantic_hash": ""
+  },
+  "mobile_remote/www/app.js": {
+    "mtime": 1781001477.6853364,
+    "ast_hash": "61bdea54d48c7426a2a9cc12ca879002",
+    "semantic_hash": ""
+  },
+  "remote_control.py": {
+    "mtime": 1781009696.4670718,
+    "ast_hash": "2893939c6964dc88cc9c14b00d6cebf7",
+    "semantic_hash": ""
+  },
+  "tests/test_doctor.py": {
+    "mtime": 1780992889.3737185,
+    "ast_hash": "0aa698f09d5da541e22955e7c57e718d",
+    "semantic_hash": ""
+  },
+  "tests/test_encoding_utils.py": {
+    "mtime": 1781009778.0105538,
+    "ast_hash": "1dbf582ac776641970760035a408f67e",
+    "semantic_hash": ""
+  },
+  "tests/test_install.py": {
+    "mtime": 1780993874.4945104,
+    "ast_hash": "dad0fa48304a36640d72d637c59f2695",
+    "semantic_hash": ""
+  },
+  "tests/test_remote_control.py": {
+    "mtime": 1780995657.7929468,
+    "ast_hash": "72f490228a66ced754b3e795eb14e93c",
+    "semantic_hash": ""
+  },
+  "tests/test_usage_sync.py": {
+    "mtime": 1780936146.9033377,
+    "ast_hash": "b5836b94de35d3753eee5c3b248ee4fa",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1781006120.594229,
+    "ast_hash": "20100f52dc7540a53314c9db809d14c3",
+    "semantic_hash": ""
+  },
+  "ANTIGRAVITY.md": {
+    "mtime": 1781006120.5952287,
+    "ast_hash": "eb400d1bd2e307b765b428823d8fe050",
+    "semantic_hash": ""
+  },
+  "CHATBOKS_PROTOCOL.md": {
+    "mtime": 1781006120.5932283,
+    "ast_hash": "dea6282708a5ab19311310039c61529b",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1781006120.594229,
+    "ast_hash": "f4f391882020ed58e4a2dce4b9c8d711",
+    "semantic_hash": ""
+  },
+  "mobile_remote/README.md": {
+    "mtime": 1781001049.8633425,
+    "ast_hash": "56bf46e83f2645e2299f0988fccd4c57",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/assets/public/index.html": {
+    "mtime": 1781001458.593421,
+    "ast_hash": "7908aedfc50e9636b88d2100dc67c18a",
+    "semantic_hash": ""
+  },
+  "mobile_remote/www/index.html": {
+    "mtime": 1781001458.593421,
+    "ast_hash": "7908aedfc50e9636b88d2100dc67c18a",
+    "semantic_hash": ""
+  },
+  "output/playwright/usage/smoke-raw/.playwright-cli/page-2026-06-08T16-29-47-279Z.yml": {
+    "mtime": 1780936187.2810876,
+    "ast_hash": "38d4e51a1b014ee8cfe880bfea6a0ef1",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/3589e20c-7303-4793-95f3-a3b11175a6de/1-Photo-1.jpg": {
+    "mtime": 1781001395.4755535,
+    "ast_hash": "60aa98a7bb5cddef646def7fe2f6779e",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/cf81abd6-b2ab-48d6-91ac-2433b6f28586/1-Photo-1.jpg": {
+    "mtime": 1781001585.0111089,
+    "ast_hash": "f6cc573ee2b64ea3e4774f3ef3fb06aa",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-land-hdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "f7a80786dd355bd39014e58027aa6e19",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-land-mdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "acc976d4a36479233371a53021525c0c",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-land-xhdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "b8c72969bc1f78aab71a76035360d4af",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-land-xxhdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "f87e988387b07d843905f38b084929fb",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-land-xxxhdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "055a69553b16b0bf5f72094a2e459fc7",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-port-hdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "5eb10d16c81338abe8bbc033d49638a8",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-port-mdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "d855a76a5070c8e6fcfd83a27549bdce",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-port-xhdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "df100b2a36bdb98b711cca58941728de",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-port-xxhdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "2c1b668364e815256f67b71dcdfa4d6e",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable-port-xxxhdpi/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "b5b1b22b59abe686c1df0d74a423d034",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/drawable/splash.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "acc976d4a36479233371a53021525c0c",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-hdpi/ic_launcher.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "1956941339dd5fe36d5c66601c89a08d",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "73b1e06d769fa08a9c3b8328cc15fd75",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "f43e5674865a00186dd76183cf1f2f8e",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-mdpi/ic_launcher.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "7ed1b3739b83215d0c4a0b4a7f2dcab4",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "5b77e8aec8b17eed320a97567c7cb8bf",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "a49547a32c7d9b529af607b033811d81",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "5689511ee4e41a367d0342f37ac48bdf",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "15cdded29b9877ac98c5931024c5da5d",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "c890fa4af62a63486d5dea62441ce7ab",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "a3285eeaedda8201f04e7737b9df8421",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "4e9584ecc16d1fc75afb798688ce576f",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "14cde87848553e24d7106f56eb8ceb6f",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "9e029293ab1ae8e3a6a7b7d0b7177e46",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "ed3696b7c52d9747411a475dbe3fa34a",
+    "semantic_hash": ""
+  },
+  "mobile_remote/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png": {
+    "mtime": 1780416477.0,
+    "ast_hash": "85addb4159ecd3f76f02fbacd5ec86de",
+    "semantic_hash": ""
   }
 }
