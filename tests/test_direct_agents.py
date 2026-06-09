@@ -13,6 +13,20 @@ from agents.agent_zero import AgentZeroAgent
 from router import Router
 
 
+class FakeJsonResponse:
+    def __init__(self, payload: dict[str, object]) -> None:
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def read(self):
+        return json.dumps(self.payload).encode("utf-8")
+
+
 def _make_router(root: Path) -> Router:
     config = {
         "projects": {
@@ -375,7 +389,11 @@ def test_agent_zero_rewrites_role_call_stub_into_real_role_call():
             "Agent Zero role",
         )
 
-        result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "role call")
+        with patch(
+            "agents.agent_zero.urllib.request.urlopen",
+            return_value=FakeJsonResponse({"models": [{"name": "gemma3:4b"}]}),
+        ):
+            result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "role call")
 
         assert "Agent Zero online." in result
         assert "gemma3:4b" in result
@@ -433,12 +451,66 @@ def test_agent_zero_role_call_fallback_handles_bare_signal():
             "Agent Zero role",
         )
 
-        result = agent.fallback_for_bare_signal("role call")
+        with patch(
+            "agents.agent_zero.urllib.request.urlopen",
+            return_value=FakeJsonResponse({"models": [{"name": "gemma3:4b"}]}),
+        ):
+            result = agent.fallback_for_bare_signal("role call")
 
         assert "Agent Zero online." in result
         assert "gemma3:4b" in result
         assert ">>> TASK_COMPLETE" in result
         print("PASS: Agent Zero bare role call fallback stays useful")
+
+
+def test_agent_zero_role_call_short_circuits_generation_with_tags_check():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {
+                "cli": "ollama",
+                "endpoint": "http://127.0.0.1:11434/api/chat",
+                "project_name": "chatboks",
+                "model": "gemma3:4b",
+            },
+            "Agent Zero role",
+        )
+        requested_urls: list[str] = []
+
+        def fake_urlopen(request_or_url, timeout):
+            url = getattr(request_or_url, "full_url", request_or_url)
+            requested_urls.append(str(url))
+            return FakeJsonResponse({"models": [{"name": "gemma3:4b"}]})
+
+        with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
+            result = agent.call("role call")
+
+        assert requested_urls == ["http://127.0.0.1:11434/api/tags"]
+        assert "Agent Zero online." in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero role call uses a cheap readiness check instead of generation")
+
+
+def test_agent_zero_defaults_to_gemma3_4b_when_model_is_omitted():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "endpoint": "http://127.0.0.1:11434/api/chat", "project_name": "chatboks"},
+            "Agent Zero role",
+        )
+        captured_payload: dict[str, object] = {}
+
+        def fake_urlopen(request, timeout):
+            del timeout
+            captured_payload.update(json.loads(request.data.decode("utf-8")))
+            return FakeJsonResponse({"message": {"content": "Ready.\n>>> TASK_COMPLETE"}})
+
+        with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
+            result = agent.call("check setup")
+
+        assert captured_payload["model"] == "gemma3:4b"
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Agent Zero defaults to gemma3:4b when model is omitted")
 
 
 def test_agent_zero_next_step_fallback_handles_bare_signal():

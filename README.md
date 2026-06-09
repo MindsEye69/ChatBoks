@@ -377,7 +377,7 @@ Do not install Graphify assistant hooks by default; they can conflict with ChatB
 ## Ollama and Local Models (third-party integration)
 
 Agent Zero uses [Ollama](https://ollama.com/) as an optional local model runtime. The default configuration points at
-`qwen2.5-coder:3b`, but ChatBoks does not own, bundle, or license Ollama or the model weights. Ollama and any models
+`gemma3:4b`, but ChatBoks does not own, bundle, or license Ollama or the model weights. Ollama and any models
 you install are third-party projects with their own licenses, terms, update cadence, storage needs, and support channels.
 
 ChatBoks core orchestration works without Ollama. If Ollama or the selected local model is unavailable, Agent Zero can

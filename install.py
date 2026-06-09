@@ -105,7 +105,7 @@ def ensure_codegraph(assume_yes: bool) -> bool:
 
 def ensure_agent_zero_ollama(config: dict[str, Any], assume_yes: bool) -> bool:
     agent_config = config.get("agents", {}).get("agent_zero", {})
-    model = str(agent_config.get("model", "qwen2.5-coder:3b"))
+    model = str(agent_config.get("model", "gemma3:4b"))
     endpoint = str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
     tags_endpoint = endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
 

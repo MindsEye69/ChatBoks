@@ -56,6 +56,21 @@ class AgentZeroAgent(BaseAgent):
     def command(self) -> list[str]:
         return [str(self.config.get("cli", "ollama"))]
 
+    def call(self, context_package: str) -> str:
+        if self.is_role_call_request(context_package):
+            return self.role_call_response()
+        return super().call(context_package)
+
+    def configured_model(self) -> str:
+        return str(self.config.get("model", "gemma3:4b"))
+
+    def endpoint(self) -> str:
+        return str(self.config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
+
+    @staticmethod
+    def tags_endpoint(endpoint: str) -> str:
+        return endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
+
     @staticmethod
     def _is_loopback_endpoint(endpoint: str) -> bool:
         try:
@@ -79,13 +94,16 @@ class AgentZeroAgent(BaseAgent):
         max_timeout: float | None = None,
     ) -> str:
         _ = idle_timeout
-        endpoint = str(self.config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
+        current_request = self.extract_current_request(prompt)
+        if self.is_role_call_request(current_request):
+            return self.role_call_response()
+        endpoint = self.endpoint()
         if not self._is_loopback_endpoint(endpoint):
             return (
                 f"Agent Zero endpoint '{endpoint}' is not a loopback address. "
                 "Only localhost, 127.x.x.x, or ::1 endpoints are permitted.\n>>> BLOCKED"
             )
-        model = str(self.config.get("model", "qwen2.5-coder:3b"))
+        model = self.configured_model()
         payload = {
             "model": model,
             "think": self.config.get("think", False),
@@ -286,9 +304,30 @@ class AgentZeroAgent(BaseAgent):
         )
 
     def role_call_response(self) -> str:
-        model = str(self.config.get("model", "unknown"))
+        model = self.configured_model()
+        endpoint = self.endpoint()
+        if not self._is_loopback_endpoint(endpoint):
+            status_line = (
+                f"Agent Zero configured for Ollama model `{model}`, but the endpoint is blocked by loopback policy: {endpoint}."
+            )
+        else:
+            tags_endpoint = self.tags_endpoint(endpoint)
+            try:
+                with urllib.request.urlopen(tags_endpoint, timeout=5) as response:
+                    data = json.loads(response.read().decode("utf-8"))
+                models = {str(item.get("name")) for item in data.get("models", []) if item.get("name")}
+                if model in models:
+                    status_line = f"Agent Zero online. Local coordinator ready via Ollama model `{model}`."
+                else:
+                    status_line = (
+                        f"Agent Zero configured for Ollama model `{model}`, but that model is not currently available in Ollama."
+                    )
+            except (OSError, urllib.error.URLError, json.JSONDecodeError):
+                status_line = (
+                    f"Agent Zero configured for Ollama model `{model}`, but the local Ollama runtime did not answer a readiness check."
+                )
         return (
-            f"Agent Zero online. Local coordinator active via Ollama model `{model}`.\n"
+            f"{status_line}\n"
             "I handle lightweight setup checks, routing, summaries, and simple status questions.\n"
             "Use /agent to inspect availability or @zero for a direct local diagnostic.\n"
             ">>> TASK_COMPLETE"
