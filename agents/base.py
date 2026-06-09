@@ -273,6 +273,11 @@ class BaseAgent:
             time.sleep(0.01)
 
         if timeout_reason:
+            partial_output = "\n".join(
+                part.strip()
+                for part in ("".join(stderr_parts), "".join(stdout_parts))
+                if part.strip()
+            )
             self.terminate_process(process)
             self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.5)
             combined_output = "\n".join(
@@ -289,7 +294,7 @@ class BaseAgent:
                 self.name,
                 timeout_reason,
                 timeout_seconds,
-                partial_output=combined_output,
+                partial_output=partial_output,
             )
 
         returncode = process.wait()

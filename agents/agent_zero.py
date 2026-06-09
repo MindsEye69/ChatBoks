@@ -35,7 +35,7 @@ class AgentZeroAgent(BaseAgent):
             "You are Agent Zero for ChatBoks: a local, cheap coordinator for setup, "
             "diagnostics, routing, summaries, and small status checks. You do not have tools. "
             "Do not emit JSON, markdown fences, fake tool calls, or END_OF_MESSAGE. "
-            "Reply in concise plain text. Prefer one concrete next validation step grounded in "
+            "Reply in concise plain text. Prefer one concrete next action grounded in "
             "the provided context over broad category questions. For setup checks, give one "
             "concrete next diagnostic command when possible. Valid local commands include "
             "/help, /agent, /mode, /context, /usage, /suggest-outcome, /wins, /failures, "
@@ -57,8 +57,12 @@ class AgentZeroAgent(BaseAgent):
         return [str(self.config.get("cli", "ollama"))]
 
     def call(self, context_package: str) -> str:
-        if self.is_role_call_request(context_package):
+        current_request = self.extract_current_request(context_package)
+        lowered_request = current_request.lower()
+        if self.is_role_call_request(current_request):
             return self.role_call_response()
+        if self.is_next_step_request(lowered_request):
+            return self.next_step_response(lowered_request)
         return super().call(context_package)
 
     def configured_model(self) -> str:
@@ -113,8 +117,8 @@ class AgentZeroAgent(BaseAgent):
                     "role": "system",
                     "content": (
                         "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
-                        "No markdown fences. No tool calls. Prefer one concrete next validation "
-                        "step grounded in the provided context over broad category questions. "
+                        "No markdown fences. No tool calls. Prefer one concrete next action "
+                        "grounded in the provided context over broad category questions. "
                         "For setup checks, provide one concrete next diagnostic command when "
                         "possible. Valid local commands include /help, /agent, /mode, /context, "
                         "/usage, /suggest-outcome, /wins, /failures, and /outcomes. For "
@@ -293,14 +297,29 @@ class AgentZeroAgent(BaseAgent):
         return normalized in self.role_call_requests
 
     def next_step_response(self, lowered_request: str) -> str:
+        if self.is_model_switch_validation_request(lowered_request):
+            return (
+                "Next test: run @zero role call, then @zero what's next for ChatBoks? "
+                "Confirm both answers are concrete, fast, and do not suggest nonexistent "
+                "commands such as /status.\n>>> TASK_COMPLETE"
+            )
+        if "test" in lowered_request:
+            return (
+                "Next test: run the smallest smoke for the most recent change, then route "
+                "any failure to Codex with the exact error text. For Agent Zero specifically, "
+                "use @zero role call and @zero what's next for ChatBoks? as the quick quality checks.\n"
+                ">>> TASK_COMPLETE"
+            )
         if "chatboks" in lowered_request or "project" in lowered_request:
             return (
-                "Next check: run /agent to confirm availability, then ask for the next scoped "
-                "implementation or validation task.\n>>> TASK_COMPLETE"
+                "Next ChatBoks step: continue the smallest active validation item, then hand "
+                "implementation or git work to Codex. Quick check first: run /agent to confirm "
+                "availability before starting a longer round.\n>>> TASK_COMPLETE"
             )
         return (
-            "Next check: run /agent for current availability, or ask @zero for a focused local "
-            "diagnostic if you want the cheapest next pass.\n>>> TASK_COMPLETE"
+            "Next step: pick one scoped validation or diagnostic, keep Agent Zero on status/routing, "
+            "and route implementation or repo edits to Codex. Run /agent first if availability is unclear.\n"
+            ">>> TASK_COMPLETE"
         )
 
     def role_call_response(self) -> str:

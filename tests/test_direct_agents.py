@@ -298,7 +298,7 @@ def test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_b
             return FakeResponse()
 
         with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
-            result = agent.call("what's next?")
+            result = agent.call("check setup")
 
         assert result.endswith(">>> TASK_COMPLETE")
         assert captured_payload["model"] == "gemma3:4b"
@@ -361,7 +361,8 @@ def test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action():
 
         result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "what's next for ChatBoks?")
 
-        assert "Next check: run /agent" in result
+        assert "Next ChatBoks step:" in result
+        assert "run /agent" in result
         assert ">>> TASK_COMPLETE" in result
         print("PASS: Agent Zero rewrites next-step stubs into a useful ChatBoks action")
 
@@ -376,7 +377,8 @@ def test_agent_zero_rewrites_next_step_agent_command_with_extra_text():
 
         result = agent.normalize_output("/agent what's next for ChatBoks?\n>>> TASK_COMPLETE", "what's next for ChatBoks?")
 
-        assert "Next check: run /agent" in result
+        assert "Next ChatBoks step:" in result
+        assert "run /agent" in result
         assert ">>> TASK_COMPLETE" in result
         print("PASS: Agent Zero rewrites /agent command echoes into a useful next-step action")
 
@@ -415,7 +417,7 @@ def test_agent_zero_ignores_unknown_directive_lines_from_model():
         )
 
         assert ">>> DIAGNOSTIC_COMMAND" not in result
-        assert "Next check: run /agent" in result
+        assert "Next ChatBoks step:" in result
         assert result.endswith(">>> TASK_COMPLETE")
         print("PASS: Agent Zero ignores unknown directive lines from the local model")
 
@@ -523,9 +525,45 @@ def test_agent_zero_next_step_fallback_handles_bare_signal():
 
         result = agent.fallback_for_bare_signal("what's next for ChatBoks?")
 
-        assert "Next check: run /agent" in result
+        assert "Next ChatBoks step:" in result
+        assert "run /agent" in result
         assert ">>> TASK_COMPLETE" in result
         print("PASS: Agent Zero bare next-step fallback stays useful")
+
+
+def test_agent_zero_next_step_call_short_circuits_generation():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        with patch("agents.agent_zero.urllib.request.urlopen") as urlopen:
+            result = agent.call("what's next for ChatBoks?")
+
+        urlopen.assert_not_called()
+        assert "Next ChatBoks step:" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero next-step requests use deterministic guidance")
+
+
+def test_agent_zero_test_next_call_short_circuits_generation():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        with patch("agents.agent_zero.urllib.request.urlopen") as urlopen:
+            result = agent.call("what should I test next after switching to gemma3:4b?")
+
+        urlopen.assert_not_called()
+        assert "@zero role call" in result
+        assert "/status" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero model-switch test suggestions use deterministic guidance")
 
 
 def test_agent_zero_diagnostic_fallback_allows_current_setup_task():
@@ -837,9 +875,21 @@ if __name__ == "__main__":
     test_agent_zero_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
     test_agent_zero_call_accepts_base_timeout_keywords()
+    test_agent_zero_prompt_lists_real_local_commands()
+    test_agent_zero_rewrites_model_switch_validation_away_from_context_mode()
+    test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action()
+    test_agent_zero_rewrites_next_step_agent_command_with_extra_text()
+    test_agent_zero_rewrites_role_call_stub_into_real_role_call()
+    test_agent_zero_ignores_unknown_directive_lines_from_model()
     test_agent_zero_diagnostic_fallback_uses_active_task_only()
     test_agent_zero_diagnostic_fallback_allows_current_setup_task()
     test_agent_zero_routing_policy_fallback_uses_active_task()
+    test_agent_zero_role_call_fallback_handles_bare_signal()
+    test_agent_zero_role_call_short_circuits_generation_with_tags_check()
+    test_agent_zero_defaults_to_gemma3_4b_when_model_is_omitted()
+    test_agent_zero_next_step_fallback_handles_bare_signal()
+    test_agent_zero_next_step_call_short_circuits_generation()
+    test_agent_zero_test_next_call_short_circuits_generation()
     test_routing_intelligence_can_auto_route_status_questions_to_agent_zero()
     test_routing_intelligence_can_auto_route_implementation_requests_to_codex()
     test_routing_intelligence_can_auto_route_architecture_review_to_claude()
