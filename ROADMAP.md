@@ -254,6 +254,7 @@ IO Website:
 1. Commit and push the current transcript compaction, Agent Zero, trust-hardening, and documentation batch.
 2. Continue refining Agent Zero direct responses for role call, routing-policy, and next-step prompts.
 3. Reproduce the intermittent stacked-window desktop glitch locally while observing the visible app shell.
-4. Run a fresh `python doctor.py taskfish` from the real Python environment and then a selective `--smoke-agents` pass when usage is acceptable.
-5. Decide whether Agent Zero should remain direct-only by default or join more routing paths after its response quality improves.
-6. Resume the paused Android remote-control tunnel work from the Phase 3 snapshot once local UAC approval for Tailscale install is available.
+4. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
+5. Run a fresh `python doctor.py taskfish` from the real Python environment and then a selective `--smoke-agents` pass when usage is acceptable.
+6. Decide whether Agent Zero should remain direct-only by default or join more routing paths after its response quality improves.
+7. Resume the paused Android remote-control tunnel work from the Phase 3 snapshot once local UAC approval for Tailscale install is available.
