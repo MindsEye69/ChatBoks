@@ -336,15 +336,30 @@ class Router:
             # Project-local role file: requires trust approval before loading.
             approved = load_role_with_approval(self.project_path, role_file)
             if approved is not None:
-                return approved
+                return self.with_shared_protocol(approved)
             # Fall back to the installed role file in the chatboks source directory.
             # Installed files are under ChatBoks control, so no approval needed.
             fallback = Path(__file__).parent / Path(role_file).name
             if fallback.exists():
-                return fallback.read_text(encoding="utf-8")
-        return (
+                return self.with_shared_protocol(fallback.read_text(encoding="utf-8"))
+        return self.with_shared_protocol(
             f"You are {agent_name} in Chatboks, a human-supervised coding relay. "
             "Collaborate with the other agents, push back when useful, and end with "
             "a >>> control signal when a decision, handoff, completion, question, "
             "or block occurs."
         )
+
+    @staticmethod
+    def shared_protocol() -> str:
+        protocol_path = Path(__file__).parent / "CHATBOKS_PROTOCOL.md"
+        if not protocol_path.exists():
+            return ""
+        return protocol_path.read_text(encoding="utf-8").strip()
+
+    @classmethod
+    def with_shared_protocol(cls, role: str) -> str:
+        protocol = cls.shared_protocol()
+        role = role.strip()
+        if not protocol:
+            return role
+        return f"{protocol}\n\n---\n\n{role}"

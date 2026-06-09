@@ -319,6 +319,7 @@ def test_router_unapproved_project_role_falls_back_to_installed_role():
             result = router.load_role("agent_zero", {"role_file": "AGENT_ZERO.md"})
 
         assert "Project-local role must not load" not in result
+        assert "ChatBoks Collaboration Protocol" in result
         assert "Agent Zero's Role - ChatBoks" in result
 
 
@@ -337,7 +338,45 @@ def test_router_fallback_uses_role_basename_only():
         with patch("router.load_role_with_approval", return_value=None):
             result = router.load_role("agent_zero", {"role_file": "../AGENT_ZERO.md"})
 
+        assert "ChatBoks Collaboration Protocol" in result
         assert "Agent Zero's Role - ChatBoks" in result
+
+
+def test_router_prepends_protocol_to_approved_project_role():
+    with tempfile.TemporaryDirectory() as tmp:
+        project = Path(tmp)
+        router = Router(
+            {
+                "projects": {"chatboks": {"agents": ["agent_zero"]}},
+                "agents": {"agent_zero": {}},
+            },
+            "chatboks",
+            project,
+        )
+
+        with patch("router.load_role_with_approval", return_value="Project approved role.\n"):
+            result = router.load_role("agent_zero", {"role_file": "AGENT_ZERO.md"})
+
+        assert result.startswith("# ChatBoks Collaboration Protocol")
+        assert "Project approved role." in result
+
+
+def test_router_prepends_protocol_to_default_role():
+    with tempfile.TemporaryDirectory() as tmp:
+        project = Path(tmp)
+        router = Router(
+            {
+                "projects": {"chatboks": {"agents": ["missing_agent"]}},
+                "agents": {"missing_agent": {}},
+            },
+            "chatboks",
+            project,
+        )
+
+        result = router.load_role("missing_agent", {})
+
+        assert result.startswith("# ChatBoks Collaboration Protocol")
+        assert "You are missing_agent in Chatboks" in result
 
 
 if __name__ == "__main__":
