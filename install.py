@@ -24,12 +24,15 @@ try:
 except ImportError:  # pragma: no cover - bootstrap path
     yaml = None
 
+from encoding_utils import configure_utf8_stdio, utf8_env
+
 
 CODEGRAPH_PACKAGE = "@colbymchenry/codegraph"
 NODE_PACKAGE = "OpenJS.NodeJS.LTS"
 
 
 def main() -> int:
+    configure_utf8_stdio()
     parser = argparse.ArgumentParser(description="Set up ChatBoks dependencies")
     parser.add_argument("project", nargs="?", help="Optional project name from config.yaml")
     parser.add_argument("--config", type=Path, default=default_config_path())
@@ -45,7 +48,7 @@ def main() -> int:
         print(f"FAIL missing config: {args.config}")
         return 1
 
-    config = yaml.safe_load(args.config.read_text(encoding="utf-8")) or {}
+    config = yaml.safe_load(args.config.read_text(encoding="utf-8-sig")) or {}
     projects = config.get("projects", {})
     selected = [args.project] if args.project else sorted(projects)
 
@@ -125,6 +128,9 @@ def ensure_agent_zero_ollama(config: dict[str, Any], assume_yes: bool) -> bool:
         [ollama, "list"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=utf8_env(),
         timeout=30,
     )
     has_model = result.returncode == 0 and model in result.stdout
@@ -262,6 +268,9 @@ def npm_package_installed(package: str) -> bool:
         [npm, "list", "-g", package, "--depth=0", "--json"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=utf8_env(),
         timeout=30,
     )
     if result.returncode != 0:
@@ -296,7 +305,15 @@ def ask(question: str, assume_yes: bool) -> bool:
 
 def run(command: list[str], cwd: Path | None = None) -> bool:
     try:
-        result = subprocess.run(command, cwd=cwd, text=True, timeout=300)
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=utf8_env(),
+            timeout=300,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         print(f"FAIL {' '.join(command)} ({exc})")
         return False

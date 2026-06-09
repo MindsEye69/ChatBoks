@@ -341,7 +341,7 @@ class Router:
             # Installed files are under ChatBoks control, so no approval needed.
             fallback = Path(__file__).parent / Path(role_file).name
             if fallback.exists():
-                return self.with_shared_protocol(fallback.read_text(encoding="utf-8"))
+                return self.with_shared_protocol(fallback.read_text(encoding="utf-8-sig"))
         return self.with_shared_protocol(
             f"You are {agent_name} in Chatboks, a human-supervised coding relay. "
             "Collaborate with the other agents, push back when useful, and end with "
@@ -354,7 +354,7 @@ class Router:
         protocol_path = Path(__file__).parent / "CHATBOKS_PROTOCOL.md"
         if not protocol_path.exists():
             return ""
-        return protocol_path.read_text(encoding="utf-8").strip()
+        return protocol_path.read_text(encoding="utf-8-sig").strip()
 
     @classmethod
     def with_shared_protocol(cls, role: str) -> str:

@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from encoding_utils import utf8_env
+
 
 class TokenExhaustionError(RuntimeError):
     """Raised when an agent CLI rejects a prompt because the context is too large."""
@@ -192,7 +194,7 @@ class BaseAgent:
     ) -> str:
         use_shell = os.name == "nt"
         run_command = subprocess.list2cmdline(command) if use_shell else command
-        env = os.environ.copy()
+        env = utf8_env()
         env["CHATBOKS"] = "1"
         idle_timeout, max_timeout = self.resolve_timeouts(prompt, timeout, idle_timeout, max_timeout)
         extra: dict[str, Any] = {}
@@ -384,6 +386,7 @@ class BaseAgent:
                 ["taskkill", "/PID", str(process.pid), "/T", "/F"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                env=utf8_env(),
                 check=False,
             )
             try:

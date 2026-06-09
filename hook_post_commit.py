@@ -15,8 +15,11 @@ try:
 except ImportError:  # pragma: no cover - hook install should catch this
     yaml = None
 
+from encoding_utils import configure_utf8_stdio, utf8_env
+
 
 def main() -> int:
+    configure_utf8_stdio()
     parser = argparse.ArgumentParser(description="Run ChatBoks post-commit handoff hook")
     parser.add_argument("project")
     parser.add_argument("--config", type=Path, required=True)
@@ -28,7 +31,7 @@ def main() -> int:
     if not args.config.exists():
         return 0
 
-    config = yaml.safe_load(args.config.read_text(encoding="utf-8")) or {}
+    config = yaml.safe_load(args.config.read_text(encoding="utf-8-sig")) or {}
     project_config = (config.get("projects") or {}).get(args.project)
     if not project_config:
         return 0
@@ -57,6 +60,7 @@ def main() -> int:
             str(args.config),
         ],
         cwd=project_path,
+        env=utf8_env(),
         check=False,
     )
     return 0
@@ -89,6 +93,7 @@ def git_output(project_path: Path, command: list[str]) -> str:
             text=True,
             encoding="utf-8",
             errors="replace",
+            env=utf8_env(),
             timeout=30,
             check=False,
         )

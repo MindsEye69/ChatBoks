@@ -40,7 +40,7 @@ def _approval_path(project_path: Path, role_filename: str) -> Path:
 def _load_approved_hash(project_path: Path, role_filename: str) -> str | None:
     path = _approval_path(project_path, role_filename)
     try:
-        text = path.read_text(encoding="utf-8").strip()
+        text = path.read_text(encoding="utf-8-sig").strip()
         return text or None
     except OSError:
         return None
@@ -130,7 +130,7 @@ def load_role_with_approval(
     if resolved is None or not resolved.exists():
         return None
 
-    content = resolved.read_text(encoding="utf-8")
+    content = resolved.read_text(encoding="utf-8-sig")
     content_hash = _sha256(content)
     approved_hash = _load_approved_hash(project_path, role_filename)
 

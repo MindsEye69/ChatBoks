@@ -224,7 +224,7 @@ class ContextBuilder:
         lines = int(self.context_config.get("recent_chatboks_lines", 120))
         if not path.exists():
             return "[CHATBOKS] No history yet."
-        all_lines = path.read_text(encoding="utf-8").splitlines()
+        all_lines = path.read_text(encoding="utf-8-sig").splitlines()
         checkpoint = find_last_summary_checkpoint(all_lines)
         if checkpoint is None:
             recent = self.last_transcript_turns(all_lines, turns) if turns is not None else all_lines[-lines:]
@@ -273,7 +273,7 @@ class ContextBuilder:
         if not path.exists():
             return "[OUTCOMES] None recorded."
         records: list[dict[str, Any]] = []
-        for line in path.read_text(encoding="utf-8").splitlines():
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
             try:
                 item = json.loads(line)
             except json.JSONDecodeError:

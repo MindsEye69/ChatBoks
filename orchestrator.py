@@ -24,6 +24,7 @@ from watchdog.observers import Observer
 
 from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
+from encoding_utils import configure_utf8_stdio, utf8_env
 from router import Router
 from ui.stream import Stream
 
@@ -344,7 +345,7 @@ class Chatboks:
         if skills_root not in resolved.parents or not resolved.is_file():
             self.stream.system(f"Skill not found: {requested}")
             return
-        content = resolved.read_text(encoding="utf-8")
+        content = resolved.read_text(encoding="utf-8-sig")
         preview = "\n".join(content.splitlines()[:80]).strip()
         self.stream.system(preview or f"Skill is empty: {requested}")
 
@@ -356,7 +357,7 @@ class Chatboks:
         for path in sorted(SKILLS_DIR.glob("*.md")):
             if path.name.lower() == "readme.md":
                 continue
-            content = path.read_text(encoding="utf-8")
+            content = path.read_text(encoding="utf-8-sig")
             summary = Chatboks.skill_summary(content)
             skills.append((path.stem, summary))
         return skills
@@ -557,7 +558,7 @@ class Chatboks:
         if not path.exists():
             return {}
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
         except (OSError, json.JSONDecodeError):
             return {}
         if not isinstance(data, dict):
@@ -919,6 +920,7 @@ class Chatboks:
             text=True,
             encoding="utf-8",
             errors="replace",
+            env=utf8_env(),
             timeout=timeout,
             check=False,
         )
@@ -955,7 +957,7 @@ class Chatboks:
         if not path.exists():
             return []
         records: list[dict[str, Any]] = []
-        for line in path.read_text(encoding="utf-8").splitlines():
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
             if not line.strip():
                 continue
             try:
@@ -1143,7 +1145,7 @@ class Chatboks:
         if not path.exists():
             return []
         records: list[dict[str, Any]] = []
-        for line in path.read_text(encoding="utf-8").splitlines():
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
             if not line.strip():
                 continue
             try:
@@ -1161,7 +1163,7 @@ class Chatboks:
         self.ensure_project_files()
         lines = [
             line.rstrip()
-            for line in self.chatboks_md.read_text(encoding="utf-8").splitlines()
+            for line in self.chatboks_md.read_text(encoding="utf-8-sig").splitlines()
             if line.startswith("[")
         ]
         return lines[-limit:] if limit > 0 else lines
@@ -1715,6 +1717,7 @@ class Chatboks:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
+                env=utf8_env(),
                 timeout=15,
                 check=False,
             )
@@ -1973,7 +1976,7 @@ class Chatboks:
         path = config_path or Path("~/.chatboks/config.yaml").expanduser()
         if not path.exists():
             raise SystemExit(f"Missing config file: {path}")
-        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        return yaml.safe_load(path.read_text(encoding="utf-8-sig")) or {}
 
     def normalize_state(self, state: dict[str, Any]) -> dict[str, Any]:
         state.setdefault("round_intent", "respond")
@@ -2070,6 +2073,7 @@ class Chatboks:
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_utf8_stdio()
     parser = argparse.ArgumentParser(description="Chatboks orchestrator")
     parser.add_argument("project", help="Project name from ~/.chatboks/config.yaml")
     parser.add_argument("--config", type=Path, help="Alternate config.yaml path")

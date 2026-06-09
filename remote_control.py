@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from context.transcript import is_transcript_turn
+from encoding_utils import configure_utf8_stdio
 from orchestrator import Chatboks
 from ui.stream import Stream
 
@@ -58,7 +59,7 @@ def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[d
     if not path.exists():
         return []
 
-    lines = path.read_text(encoding="utf-8").splitlines()
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
     if lines[:1] == ["---"]:
         try:
             second = lines.index("---", 1)
@@ -801,6 +802,7 @@ def build_mobile_shell(project: str) -> str:
 
 
 def main() -> int:
+    configure_utf8_stdio()
     parser = argparse.ArgumentParser(description="Secure remote bridge for ChatBoks")
     parser.add_argument("project", help="Project name from config.yaml")
     parser.add_argument("--config", type=Path, default=None, help="Optional path to ChatBoks config.yaml")

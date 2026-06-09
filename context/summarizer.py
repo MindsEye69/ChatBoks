@@ -23,7 +23,7 @@ class Summarizer:
     def summarize(self, chatboks_md: Path) -> str:
         if not chatboks_md.exists():
             return "[SUMMARY] No prior chatboks log."
-        lines = chatboks_md.read_text(encoding="utf-8").splitlines()
+        lines = chatboks_md.read_text(encoding="utf-8-sig").splitlines()
         key_lines = self.summary_seed(lines)
         if not key_lines:
             return "[SUMMARY] No decision lines found."

@@ -83,6 +83,20 @@ def test_streaming_run_cli_returns_successful_stdout() -> None:
     assert result == "first line\nhello from stdin\n>>> TASK_COMPLETE"
 
 
+def test_streaming_run_cli_forces_utf8_child_environment() -> None:
+    script = (
+        "import os, sys\n"
+        "sys.stdin.read()\n"
+        "print(os.environ.get('PYTHONUTF8'))\n"
+        "print(os.environ.get('PYTHONIOENCODING'))\n"
+        "print('>>> TASK_COMPLETE')\n"
+    )
+
+    result = run_script(script, timeout=5)
+
+    assert result == "1\nutf-8\n>>> TASK_COMPLETE"
+
+
 def test_streaming_run_cli_idle_timeout_resets_on_output() -> None:
     script = (
         "import sys, time\n"

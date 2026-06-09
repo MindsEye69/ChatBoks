@@ -25,6 +25,7 @@ from agents.agent_zero import AgentZeroAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
 from agents.codex import CodexAgent
+from encoding_utils import configure_utf8_stdio, utf8_env
 
 
 AGENT_CLASSES = {
@@ -36,6 +37,7 @@ AGENT_CLASSES = {
 
 
 def main() -> int:
+    configure_utf8_stdio()
     parser = argparse.ArgumentParser(description="Validate a ChatBoks install")
     parser.add_argument("project", nargs="?", help="Optional project name from config.yaml")
     parser.add_argument("--config", type=Path, default=default_config_path())
@@ -56,7 +58,7 @@ def main() -> int:
         print(f"FAIL missing config: {args.config}")
         return 1
 
-    config = yaml.safe_load(args.config.read_text(encoding="utf-8")) or {}
+    config = yaml.safe_load(args.config.read_text(encoding="utf-8-sig")) or {}
     print(f"OK   config: {args.config}")
     ok = check_node_and_codegraph() and ok
 
@@ -318,10 +320,11 @@ def run_capture(
             capture_output=True,
             text=True,
             cwd=cwd,
-            env=env,
+            env=utf8_env(env),
             timeout=timeout,
             shell=use_shell,
             encoding="utf-8",
+            errors="replace",
             **extra,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
