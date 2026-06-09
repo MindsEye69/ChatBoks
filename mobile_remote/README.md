@@ -52,6 +52,19 @@ npx cap open android
 
 Build the APK from Android Studio after the project opens.
 
+For this desktop, a local helper script is also available:
+
+```powershell
+./build-debug.ps1
+```
+
+That script expects:
+
+- Android CLI / SDK under `%LOCALAPPDATA%\Android\Sdk`
+- Microsoft Build of OpenJDK 21 under `%LOCALAPPDATA%\Programs\MicrosoftJDK\21.0.10\jdk-21.0.10+7`
+
+It writes `android/local.properties` locally, sets `JAVA_HOME`, and runs `gradlew assembleDebug`.
+
 ## Notes
 
 - The bridge only allows API origins from the app container (`capacitor://localhost`, `http://localhost`, `https://localhost`).
