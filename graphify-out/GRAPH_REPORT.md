@@ -1,8 +1,7 @@
-# Graph Report - chatboks  (2026-06-09)
+# Graph Report - .  (2026-06-09)
 
 ## Corpus Check
-- 79 files · ~56,823 words
-- Verdict: corpus is large enough that graph structure adds value.
+- cluster-only mode — file stats not available
 
 ## Summary
 - 938 nodes · 2364 edges · 52 communities (46 shown, 6 thin omitted)
@@ -10,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cf08112d`
+- Built from commit: `d3b9624f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
