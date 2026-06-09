@@ -337,6 +337,36 @@ def test_agent_zero_rewrites_model_switch_validation_away_from_context_mode():
         print("PASS: Agent Zero rewrites model-switch validation away from /context")
 
 
+def test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "what's next for ChatBoks?")
+
+        assert "Next check: run /agent" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero rewrites next-step stubs into a useful ChatBoks action")
+
+
+def test_agent_zero_rewrites_next_step_agent_command_with_extra_text():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        result = agent.normalize_output("/agent what's next for ChatBoks?\n>>> TASK_COMPLETE", "what's next for ChatBoks?")
+
+        assert "Next check: run /agent" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero rewrites /agent command echoes into a useful next-step action")
+
+
 def test_agent_zero_rewrites_role_call_stub_into_real_role_call():
     with tempfile.TemporaryDirectory() as tmp:
         agent = AgentZeroAgent(
@@ -351,6 +381,25 @@ def test_agent_zero_rewrites_role_call_stub_into_real_role_call():
         assert "gemma3:4b" in result
         assert ">>> TASK_COMPLETE" in result
         print("PASS: Agent Zero rewrites a stub role call into a useful response")
+
+
+def test_agent_zero_ignores_unknown_directive_lines_from_model():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        result = agent.normalize_output(
+            ">>> DIAGNOSTIC_COMMAND\n/agent what's next for ChatBoks?",
+            "what's next for ChatBoks?",
+        )
+
+        assert ">>> DIAGNOSTIC_COMMAND" not in result
+        assert "Next check: run /agent" in result
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Agent Zero ignores unknown directive lines from the local model")
 
 
 def test_agent_zero_diagnostic_fallback_uses_active_task_only():
@@ -390,6 +439,21 @@ def test_agent_zero_role_call_fallback_handles_bare_signal():
         assert "gemma3:4b" in result
         assert ">>> TASK_COMPLETE" in result
         print("PASS: Agent Zero bare role call fallback stays useful")
+
+
+def test_agent_zero_next_step_fallback_handles_bare_signal():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        result = agent.fallback_for_bare_signal("what's next for ChatBoks?")
+
+        assert "Next check: run /agent" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero bare next-step fallback stays useful")
 
 
 def test_agent_zero_diagnostic_fallback_allows_current_setup_task():

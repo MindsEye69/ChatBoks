@@ -17,6 +17,7 @@ class AgentZeroAgent(BaseAgent):
     name = "agent_zero"
     signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
     role_call_requests = {"role call", "roll call", "rolecall", "rollcall"}
+    next_step_markers = ("what's next", "whats next", "what is next", "next step", "what should i test next")
 
     @property
     def project_name(self) -> str:
@@ -161,7 +162,7 @@ class AgentZeroAgent(BaseAgent):
             body_lines = [
                 line.strip()
                 for line in before_signal.splitlines()
-                if line.strip() and line.strip() not in signal_lines
+                if line.strip() and line.strip() not in signal_lines and not line.strip().startswith(">>>")
             ]
             body = self.rewrite_guidance("\n".join(body_lines).strip(), prompt)
             if not body and signal in {"QUESTION", "TASK_COMPLETE"}:
@@ -171,7 +172,12 @@ class AgentZeroAgent(BaseAgent):
         body_lines = [
             line.strip()
             for line in cleaned.splitlines()
-            if line.strip() and line.strip() not in self.signals and line.strip() not in signal_lines
+            if (
+                line.strip()
+                and line.strip() not in self.signals
+                and line.strip() not in signal_lines
+                and not line.strip().startswith(">>>")
+            )
         ]
         body = self.rewrite_guidance("\n".join(body_lines).strip(), prompt)
         return f"{body}\n>>> TASK_COMPLETE" if body else ">>> TASK_COMPLETE"
@@ -197,6 +203,8 @@ class AgentZeroAgent(BaseAgent):
                 "Next check: run @zero role call once and confirm Agent Zero answers promptly "
                 "on the lighter model without suggesting nonexistent commands.\n>>> TASK_COMPLETE"
             )
+        if self.is_next_step_request(lowered):
+            return self.next_step_response(lowered)
         if "routing policy" in lowered:
             return (
                 "- Normal prompts go to the configured default round agents for the project.\n"
@@ -228,8 +236,19 @@ class AgentZeroAgent(BaseAgent):
         lowered_body = body.lower()
         if self.is_role_call_request(current_request):
             normalized = " ".join(lowered_body.split())
-            if normalized in {"run: /agent", "/agent"}:
+            if normalized in {"run: /agent", "/agent"} or normalized.startswith("/agent "):
                 return self.role_call_response().removesuffix("\n>>> TASK_COMPLETE")
+        if self.is_next_step_request(lowered_request):
+            normalized = " ".join(lowered_body.split())
+            if normalized in {"run: /agent", "/agent"} or normalized.startswith("/agent "):
+                return self.next_step_response(lowered_request).removesuffix("\n>>> TASK_COMPLETE")
+            if "/context" in lowered_body or "context before proceeding" in lowered_body:
+                if self.is_model_switch_validation_request(lowered_request):
+                    return (
+                        "Next check: run @zero role call once and confirm Agent Zero answers "
+                        "promptly on gemma3:4b without UI lag or invented commands."
+                    )
+                return self.next_step_response(lowered_request).removesuffix("\n>>> TASK_COMPLETE")
         if "/status" in lowered_body:
             body = re.sub(r"(?i)/status", "/agent", body)
             lowered_body = body.lower()
@@ -248,9 +267,23 @@ class AgentZeroAgent(BaseAgent):
             and ("switch" in lowered_request or "gemma3:4b" in lowered_request or "lighter model" in lowered_request)
         )
 
+    def is_next_step_request(self, lowered_request: str) -> bool:
+        return any(marker in lowered_request for marker in self.next_step_markers)
+
     def is_role_call_request(self, request: str) -> bool:
         normalized = " ".join(request.strip().lower().split())
         return normalized in self.role_call_requests
+
+    def next_step_response(self, lowered_request: str) -> str:
+        if "chatboks" in lowered_request or "project" in lowered_request:
+            return (
+                "Next check: run /agent to confirm availability, then ask for the next scoped "
+                "implementation or validation task.\n>>> TASK_COMPLETE"
+            )
+        return (
+            "Next check: run /agent for current availability, or ask @zero for a focused local "
+            "diagnostic if you want the cheapest next pass.\n>>> TASK_COMPLETE"
+        )
 
     def role_call_response(self) -> str:
         model = str(self.config.get("model", "unknown"))

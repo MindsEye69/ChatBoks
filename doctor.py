@@ -7,6 +7,7 @@ import argparse
 import importlib.util
 import json
 import os
+import sys
 import shutil
 import sqlite3
 import subprocess
@@ -73,6 +74,9 @@ def main() -> int:
 
 def check_python_deps() -> bool:
     ok = True
+    print(f"OK   current python: {sys.executable} ({sys.version.split()[0]})")
+    launcher_ok, launcher_message = check_py_launcher()
+    print(("OK  " if launcher_ok else "WARN") + f" py launcher: {launcher_message}")
     for module in ("rich", "watchdog", "yaml"):
         present = importlib.util.find_spec(module) is not None
         print(("OK  " if present else "FAIL") + f" python module: {module}")
@@ -107,7 +111,12 @@ def check_project(project: str, project_config: dict[str, Any], config: dict[str
         print(f"FAIL project path missing: {project_path}")
         return False
 
-    for agent_name in project_config.get("agents", []):
+    configured_agents = list(project_config.get("agents", []))
+    for agent_name in project_config.get("direct_agents", []):
+        if agent_name not in configured_agents:
+            configured_agents.append(agent_name)
+
+    for agent_name in configured_agents:
         agent_config = config.get("agents", {}).get(agent_name, {})
         ok = check_agent(project_path, agent_name, agent_config, smoke_agents) and ok
 
@@ -189,12 +198,16 @@ def adapter_profile_known(agent_name: str, agent_config: dict[str, Any]) -> bool
 def check_agent_zero(agent_config: dict[str, Any], smoke_agents: bool) -> bool:
     ok = True
     cli = agent_config.get("cli", "ollama")
-    cli_ok = shutil.which(cli) is not None
-    print(("OK  " if cli_ok else "WARN") + f" agent_zero ollama cli: {cli}")
+    cli_path = find_ollama_command(cli)
+    cli_ok = cli_path is not None
+    print(("OK  " if cli_ok else "WARN") + f" agent_zero ollama cli: {cli_path or cli}")
 
     endpoint = str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
+    endpoint_ok = AgentZeroAgent._is_loopback_endpoint(endpoint)
+    print(("OK  " if endpoint_ok else "FAIL") + f" agent_zero endpoint scope: {endpoint}")
+    ok = ok and endpoint_ok
     tags_endpoint = endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
-    model = str(agent_config.get("model", "qwen2.5-coder:3b"))
+    model = str(agent_config.get("model", "gemma3:4b"))
     models = fetch_ollama_models(tags_endpoint)
     if models is None:
         print(f"FAIL agent_zero ollama endpoint: {tags_endpoint}")
@@ -206,7 +219,7 @@ def check_agent_zero(agent_config: dict[str, Any], smoke_agents: bool) -> bool:
     ok = ok and has_model
 
     if smoke_agents and has_model:
-        ok = smoke_agent_zero(endpoint, model) and ok
+        ok = smoke_agent_zero(endpoint, model, think=bool(agent_config.get("think", False))) and ok
     elif not smoke_agents:
         print("SKIP agent_zero smoke test (use --smoke-agents)")
     return ok
@@ -229,7 +242,8 @@ def smoke_agent_stdin(
     if agent_name == "agent_zero":
         return smoke_agent_zero(
             str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat")),
-            str(agent_config.get("model", "qwen2.5-coder:3b")),
+            str(agent_config.get("model", "gemma3:4b")),
+            think=bool(agent_config.get("think", False)),
         )
     cls = AGENT_CLASSES.get(agent_name)
     if cls is None:
@@ -252,9 +266,10 @@ def fetch_ollama_models(tags_endpoint: str) -> set[str] | None:
     return {str(model.get("name")) for model in data.get("models", []) if model.get("name")}
 
 
-def smoke_agent_zero(endpoint: str, model: str) -> bool:
+def smoke_agent_zero(endpoint: str, model: str, think: bool = False) -> bool:
     payload = {
         "model": model,
+        "think": think,
         "stream": False,
         "messages": [
             {"role": "system", "content": "Plain text only."},
@@ -335,6 +350,39 @@ def find_command(name: str) -> str | None:
         if candidate.exists():
             return str(candidate)
     return None
+
+
+def find_ollama_command(cli: str | os.PathLike[str]) -> str | None:
+    cli_str = str(cli)
+    cli_path = Path(cli_str)
+    if cli_path.exists():
+        return str(cli_path)
+    found = find_command(cli_str)
+    if found:
+        return found
+    local_appdata = Path(os.environ.get("LOCALAPPDATA", ""))
+    candidates = [
+        local_appdata / "Programs" / "Ollama" / "ollama.exe",
+        Path("C:/Program Files/Ollama/ollama.exe"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def check_py_launcher() -> tuple[bool, str]:
+    launcher = shutil.which("py")
+    if not launcher:
+        return False, "not found"
+    result = run_capture([launcher, "-0p"], timeout=15)
+    output = "\n".join(part for part in ((result.stdout or "").strip(), (result.stderr or "").strip()) if part).strip()
+    if result.returncode == 0 and output and "No installed Pythons found!" not in output:
+        first_line = output.splitlines()[0].strip()
+        return True, first_line
+    if output:
+        return False, output.splitlines()[0].strip()
+    return False, f"exit code {result.returncode}"
 
 
 def npm_package_installed(package: str) -> bool:
