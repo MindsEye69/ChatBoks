@@ -65,6 +65,26 @@ That script expects:
 
 It writes `android/local.properties` locally, sets `JAVA_HOME`, and runs `gradlew assembleDebug`.
 
+To install that debug APK onto a USB-connected Android device:
+
+```powershell
+./install-debug.ps1
+```
+
+That script rebuilds the debug APK, checks `adb`, and installs with `adb install -r`.
+
+For a signed release build, set these environment variables first:
+
+```powershell
+$env:CHATBOKS_ANDROID_KEYSTORE_PATH="C:\path\to\chatboks-release.jks"
+$env:CHATBOKS_ANDROID_KEYSTORE_PASSWORD="..."
+$env:CHATBOKS_ANDROID_KEY_ALIAS="chatboks"
+$env:CHATBOKS_ANDROID_KEY_PASSWORD="..."
+./build-release.ps1
+```
+
+`build-release.ps1` writes `android/keystore.properties` locally, which is ignored by git.
+
 ## Notes
 
 - The bridge only allows API origins from the app container (`capacitor://localhost`, `http://localhost`, `https://localhost`).
