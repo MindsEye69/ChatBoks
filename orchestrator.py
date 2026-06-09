@@ -1844,13 +1844,13 @@ class Chatboks:
                     if confirmation == "confirmed":
                         self.maybe_announce_direct_standby_agents(initiator, active_agents)
                         self.stream.system("Task complete. Awaiting next instruction.")
-                        self.update_state({"status": "idle", "confirmation": None})
+                        self.update_state({"status": "idle", "active_task": None, "confirmation": None})
                         return
                     if confirmation == "terminal":
                         return
                     self.maybe_announce_direct_standby_agents(initiator, active_agents)
                     self.stream.system("Task complete. Awaiting next instruction.")
-                    self.update_state({"status": "idle", "confirmation": None})
+                    self.update_state({"status": "idle", "active_task": None, "confirmation": None})
                     return
                 if signal == "BLOCKED":
                     if not is_last_agent:

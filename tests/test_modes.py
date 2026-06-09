@@ -181,6 +181,7 @@ def test_confirmation_mode_verifies_completed_output():
         assert app.call_agent_with_token_recovery.call_args_list[1].args == ("claude",)
         assert app.call_agent_with_token_recovery.call_count == 2
         assert app.state["status"] == "idle"
+        assert app.state["active_task"] is None
         assert app.state["confirmation"] is None
         system_messages = [call.args[1] for call in app.append_message.call_args_list if call.args[0] == "system"]
         assert any("Confirmation mode:" in message for message in system_messages)
@@ -214,6 +215,7 @@ def test_confirmation_mode_returns_failed_check_to_executor_once():
         assert called_agents == ["codex", "claude", "codex", "claude"]
         assert app.state["confirmation_repairs_used"] == 1
         assert app.state["status"] == "idle"
+        assert app.state["active_task"] is None
         app.stream.system.assert_any_call("Confirmation requested repair from codex; returning control to codex.")
         app.stream.system.assert_any_call("Confirmation complete: claude verified codex's output.")
         print("PASS: confirmation mode returns failed checks to executor once")
