@@ -2,6 +2,15 @@
 
 This is a thin Capacitor shell for the secure desktop bridge in `remote_control.py`.
 
+## Early Development Notice
+
+This remote-control path is still early and experimental. Using it is your own responsibility. Even with the current
+loopback, pairing, token, and private-network safeguards, this project is not presented as a production-grade remote
+administration system.
+
+If you enable phone access to a desktop session that can read, write, or execute on your machine, you are responsible
+for how that access is exposed, which devices can reach it, and what damage a mistake or compromise could cause.
+
 Security model:
 
 - The desktop bridge stays loopback-only on the PC.

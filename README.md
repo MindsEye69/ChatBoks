@@ -4,6 +4,16 @@ Local multi-agent coding orchestration for Claude, Codex, and other AI agents vi
 
 ChatBoks is a human-supervised multi-agent relay for coding projects. Claude, Codex, and eventually Antigravity collaborate through a shared `chatboks.md` stream while the orchestrator maintains `.chatboks/state.json` for machine-readable state.
 
+## Early Development Notice
+
+ChatBoks is still in early development. It is an experimental local orchestration tool, not a hardened production
+platform. If you choose to run it, automate with it, or expose any companion tooling around it, you do so at your own
+risk and under your own responsibility.
+
+This matters most for anything that can affect your real machine state, including agent-triggered edits, shell access,
+git operations, hooks, and any remote access or mobile-control path. Review the code, keep the trust boundary narrow,
+and do not expose local control surfaces to untrusted networks or users.
+
 ## Files
 
 - `orchestrator.py`: main terminal process and approval gates
