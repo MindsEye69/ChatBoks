@@ -54,6 +54,40 @@ def test_help_command_renders_without_agent_round():
         print("PASS: /help renders locally without routing to agents")
 
 
+def test_help_pin_commands_toggle_prompt_strip():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+
+        app.handle_user_input("/help unpin")
+
+        assert app.state["help_pin"] is False
+        app.save_state.assert_called()
+        app.stream.system.assert_called_with("Pinned prompt help is off. Use /help pin to show it again.")
+
+        app.handle_user_input("/help pin")
+
+        assert app.state["help_pin"] is True
+        app.stream.system.assert_called_with("Pinned prompt help is on. Use /help unpin to hide it.")
+        print("PASS: /help pin and /help unpin toggle prompt strip")
+
+
+def test_prompt_help_pin_respects_state():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+
+        app.show_prompt_help_pin()
+        app.stream.help_pin.assert_called_once()
+
+        app.stream.help_pin.reset_mock()
+        app.state["help_pin"] = False
+        app.show_prompt_help_pin()
+        app.stream.help_pin.assert_not_called()
+
+        app.show_prompt_help_pin(force=True)
+        app.stream.help_pin.assert_called_once()
+        print("PASS: prompt help pin respects state and force preview")
+
+
 def test_stream_help_box_contains_bbs_frame_and_commands():
     buffer = io.StringIO()
     stream = Stream({}, [])
@@ -67,6 +101,21 @@ def test_stream_help_box_contains_bbs_frame_and_commands():
     assert "/agent" in output
     assert "APPROVE / MODIFY / REJECT" in output
     print("PASS: help box renders command deck")
+
+
+def test_stream_help_pin_contains_compact_commands():
+    buffer = io.StringIO()
+    stream = Stream({}, [])
+    stream.console = Console(file=buffer, width=80, color_system=None)
+
+    stream.help_pin(["/help", "/agent", "@zero", "exit"])
+
+    output = buffer.getvalue()
+    assert "commands:" in output
+    assert "/help" in output
+    assert "@zero" in output
+    assert "exit" in output
+    print("PASS: compact help pin renders prompt command strip")
 
 
 def test_stream_token_usage_renders_session_bars():
@@ -108,7 +157,10 @@ def test_stream_standby_uses_agent_label():
 
 if __name__ == "__main__":
     test_help_command_renders_without_agent_round()
+    test_help_pin_commands_toggle_prompt_strip()
+    test_prompt_help_pin_respects_state()
     test_stream_help_box_contains_bbs_frame_and_commands()
+    test_stream_help_pin_contains_compact_commands()
     test_stream_token_usage_renders_session_bars()
     test_stream_standby_uses_agent_label()
     print("\nAll help smoke tests passed.")

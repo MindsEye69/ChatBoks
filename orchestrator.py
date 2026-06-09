@@ -75,6 +75,9 @@ DEFAULT_AGENT_FALLBACKS = {
 
 HELP_COMMANDS = [
     ("/help", "Show this command deck."),
+    ("/help compact", "Show the compact prompt command strip once."),
+    ("/help pin", "Show the compact command strip before each prompt."),
+    ("/help unpin", "Stop showing the compact command strip before each prompt."),
     ("/skills", "List native ChatBoks workflow skills."),
     ("/skills <name>", "Preview a workflow skill without calling agents."),
     ("/context", "Show current context mode: lean, normal, or full."),
@@ -95,6 +98,24 @@ HELP_COMMANDS = [
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
     ("/dismiss", "Discard the active proposal without executing it."),
     ("exit / quit / bye", "End the ChatBoks terminal session."),
+]
+
+HELP_PIN_COMMANDS = [
+    "/help",
+    "/skills",
+    "/context",
+    "/agent",
+    "/mode",
+    "/usage",
+    "/win",
+    "/fail",
+    "/outcomes",
+    "/dismiss",
+    "@all",
+    "@claude",
+    "@codex",
+    "@zero",
+    "exit",
 ]
 
 USAGE_PROVIDERS = {
@@ -203,6 +224,8 @@ class Chatboks:
     def run_input_loop(self) -> None:
         while True:
             try:
+                if not self.input_buffer:
+                    self.show_prompt_help_pin()
                 user_input = self.stream.prompt("... > " if self.input_buffer else "You > ")
                 if not user_input.strip() and not self.input_buffer:
                     continue
@@ -274,7 +297,7 @@ class Chatboks:
 
         command = stripped.split(maxsplit=1)[0].lower()
         if command in {"/help", "/h", "/?"}:
-            self.handle_help_command()
+            self.handle_help_command(stripped)
             return True
         if command in {"/skill", "/skills"}:
             self.handle_skills_command(stripped)
@@ -313,13 +336,37 @@ class Chatboks:
         )
         return True
 
-    def handle_help_command(self) -> None:
+    def handle_help_command(self, text: str = "/help") -> None:
+        parts = text.split(maxsplit=1)
+        action = parts[1].strip().lower() if len(parts) > 1 else ""
+        if action in {"pin", "pinned", "on"}:
+            self.update_state({"help_pin": True})
+            self.stream.system("Pinned prompt help is on. Use /help unpin to hide it.")
+            return
+        if action in {"unpin", "off", "hide"}:
+            self.update_state({"help_pin": False})
+            self.stream.system("Pinned prompt help is off. Use /help pin to show it again.")
+            return
+        if action in {"compact", "mini"}:
+            self.show_prompt_help_pin(force=True)
+            return
+        if action:
+            self.stream.system("Unknown /help option. Try /help, /help compact, /help pin, or /help unpin.")
+            return
         if hasattr(self.stream, "help_box"):
             self.stream.help_box(HELP_COMMANDS)
             return
         lines = ["ChatBoks commands:"]
         lines.extend(f"- {command}: {description}" for command, description in HELP_COMMANDS)
         self.stream.system("\n".join(lines))
+
+    def show_prompt_help_pin(self, force: bool = False) -> None:
+        if not force and not self.state.get("help_pin", True):
+            return
+        if hasattr(self.stream, "help_pin"):
+            self.stream.help_pin(HELP_PIN_COMMANDS)
+            return
+        self.stream.system("Commands: " + "  ".join(HELP_PIN_COMMANDS))
 
     def handle_skills_command(self, text: str) -> None:
         parts = text.split(maxsplit=1)
@@ -1994,6 +2041,7 @@ class Chatboks:
         state.setdefault("expected_agents", [])
         state.setdefault("completed_agents", [])
         state.setdefault("handoff_to", None)
+        state.setdefault("help_pin", True)
 
         # Sanitize untrusted free-text fields that come from agent output or state.json.
         for field in ("handoff_reason", "handoff_context", "active_task"):

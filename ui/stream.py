@@ -113,6 +113,10 @@ class Stream:
         lines.append(rule)
         self.console.print("\n".join(lines), style="green")
 
+    def help_pin(self, commands: list[str]) -> None:
+        command_text = "  ".join(commands)
+        self.console.print(f"[dim green]commands:[/dim green] [green]{command_text}[/green]")
+
     def proposal(self, text: str) -> None:
         self.console.print(Rule(style="yellow"))
         self.console.print(f"[yellow]{text}[/yellow]")
