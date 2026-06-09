@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shlex
 import shutil
 import subprocess
@@ -85,6 +86,7 @@ HELP_COMMANDS = [
     ("/agent", "List agent availability for this project."),
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
     ("/agent <name> available", "Mark a model available again."),
+    ("/graph", "Show CodeGraph and Graphify freshness."),
     ("/mode", "Show the current collaboration mode and available modes."),
     ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, diagnose."),
     ("/win ...", "Record a collaboration win without calling agents."),
@@ -105,6 +107,7 @@ HELP_PIN_COMMANDS = [
     "/skills",
     "/context",
     "/agent",
+    "/graph",
     "/mode",
     "/usage",
     "/win",
@@ -327,12 +330,15 @@ class Chatboks:
         if command in {"/agent", "/agents"}:
             self.handle_agent_command(stripped)
             return True
+        if command in {"/graph", "/graphs"}:
+            self.handle_graph_command()
+            return True
         if command == "/dismiss":
             self.handle_dismiss_command()
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /context, /agent, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /context, /agent, /graph, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -367,6 +373,152 @@ class Chatboks:
             self.stream.help_pin(HELP_PIN_COMMANDS)
             return
         self.stream.system("Commands: " + "  ".join(HELP_PIN_COMMANDS))
+
+    def handle_graph_command(self) -> None:
+        lines = ["Graph status:"]
+        lines.extend(self.codegraph_status_lines())
+        lines.extend(self.graphify_status_lines())
+        self.stream.system("\n".join(lines))
+
+    def codegraph_status_lines(self) -> list[str]:
+        db_path = self.context.find_codegraph_db(self.config.get("context", {}).get("codegraph", {}))
+        if not db_path:
+            return ["- CodeGraph: WARN, database not found. Run `codegraph init -i` or `codegraph sync`."]
+        conn = None
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(db_path)
+            tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            counts = {}
+            for table in ("files", "nodes", "edges"):
+                if table in tables:
+                    counts[table] = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        except sqlite3.Error as exc:
+            return [f"- CodeGraph: FAIL, SQLite query failed for {db_path}: {exc}"]
+        finally:
+            if conn is not None:
+                conn.close()
+        detail = []
+        for label, key in (("files", "files"), ("nodes", "nodes"), ("edges", "edges")):
+            if key in counts:
+                detail.append(f"{counts[key]} {label}")
+        suffix = f" ({', '.join(detail)})" if detail else ""
+        return [f"- CodeGraph: OK{suffix}", f"  DB: {db_path}"]
+
+    def graphify_status_lines(self) -> list[str]:
+        graph_dir = self.proj_path / "graphify-out"
+        graph_path = graph_dir / "graph.json"
+        report_path = graph_dir / "GRAPH_REPORT.md"
+        tree_path = graph_dir / "GRAPH_TREE.html"
+        if not graph_dir.exists():
+            return ["- Graphify: WARN, graphify-out not found. Run `graphify update .`."]
+        lines = [f"- Graphify graph: {graph_path if graph_path.exists() else 'missing'}"]
+        if tree_path.exists():
+            lines.append(f"  Tree: {tree_path}")
+        if not report_path.exists():
+            lines.append(f"  Freshness: WARN, missing {report_path}")
+            return lines
+        report = self.read_graphify_report(report_path)
+        built_commit = self.parse_graphify_built_commit(report)
+        summary = self.parse_graphify_summary(report)
+        source_commit = self.latest_source_commit()
+        if summary:
+            lines.append(f"  Summary: {summary}")
+        if self.source_worktree_dirty():
+            lines.append("  Freshness: WARN, source working tree has uncommitted non-graphify changes")
+            return lines
+        if not built_commit:
+            lines.append("  Freshness: WARN, no built commit found in GRAPH_REPORT.md")
+            return lines
+        if not source_commit:
+            lines.append(f"  Freshness: WARN, built from {self.short_commit(built_commit)}, source commit unavailable")
+            return lines
+        if self.commits_match(built_commit, source_commit):
+            lines.append(f"  Freshness: OK, built from latest source commit {self.short_commit(source_commit)}")
+        else:
+            lines.append(
+                "  Freshness: STALE, "
+                f"built from {self.short_commit(built_commit)}, latest source commit is {self.short_commit(source_commit)}"
+            )
+            lines.append("  Refresh: graphify update . && graphify tree --label ChatBoks")
+        return lines
+
+    @staticmethod
+    def read_graphify_report(report_path: Path) -> str:
+        try:
+            return report_path.read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            return ""
+
+    @staticmethod
+    def parse_graphify_built_commit(report: str) -> str | None:
+        match = re.search(r"Built from commit:\s*`?([0-9a-fA-F]{7,40})`?", report)
+        return match.group(1) if match else None
+
+    @staticmethod
+    def parse_graphify_summary(report: str) -> str | None:
+        for line in report.splitlines():
+            stripped = line.strip()
+            if re.match(r"^-\s+\d+\s+nodes\s+.", stripped):
+                return stripped.lstrip("- ").strip()
+        return None
+
+    def latest_source_commit(self) -> str | None:
+        result = self.run_git(
+            [
+                "rev-list",
+                "-1",
+                "HEAD",
+                "--",
+                ".",
+                ":(exclude)graphify-out/**",
+            ]
+        )
+        if result.returncode != 0:
+            return None
+        commit = (result.stdout or "").strip().splitlines()
+        return commit[0] if commit else None
+
+    def source_worktree_dirty(self) -> bool:
+        result = self.run_git(
+            [
+                "status",
+                "--porcelain",
+                "--",
+                ".",
+                ":(exclude)graphify-out/**",
+            ]
+        )
+        if result.returncode != 0:
+            return False
+        return bool((result.stdout or "").strip())
+
+    def run_git(self, args: list[str]) -> subprocess.CompletedProcess[str]:
+        try:
+            return subprocess.run(
+                ["git", *args],
+                cwd=self.proj_path,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=utf8_env(),
+                timeout=15,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return subprocess.CompletedProcess(["git", *args], 1, "", str(exc))
+
+    @staticmethod
+    def commits_match(a: str, b: str) -> bool:
+        a_lower = a.lower()
+        b_lower = b.lower()
+        return a_lower.startswith(b_lower) or b_lower.startswith(a_lower)
+
+    @staticmethod
+    def short_commit(commit: str) -> str:
+        return commit[:8]
 
     def handle_skills_command(self, text: str) -> None:
         parts = text.split(maxsplit=1)

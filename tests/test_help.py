@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import sqlite3
 import sys
 import tempfile
 from pathlib import Path
@@ -88,6 +89,90 @@ def test_prompt_help_pin_respects_state():
         print("PASS: prompt help pin respects state and force preview")
 
 
+def test_graph_command_renders_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_agent_round = MagicMock()
+        app.codegraph_status_lines = MagicMock(return_value=["- CodeGraph: OK"])
+        app.graphify_status_lines = MagicMock(return_value=["- Graphify: OK"])
+
+        app.handle_user_input("/graph")
+
+        app.stream.system.assert_called_once_with("Graph status:\n- CodeGraph: OK\n- Graphify: OK")
+        app.run_agent_round.assert_not_called()
+        print("PASS: /graph renders locally without routing to agents")
+
+
+def test_codegraph_status_lines_reads_sqlite_counts():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        db = root / "codegraph.db"
+        conn = sqlite3.connect(db)
+        try:
+            conn.execute("CREATE TABLE files (id INTEGER)")
+            conn.execute("CREATE TABLE nodes (id INTEGER)")
+            conn.execute("CREATE TABLE edges (id INTEGER)")
+            conn.executemany("INSERT INTO files VALUES (?)", [(1,), (2,)])
+            conn.executemany("INSERT INTO nodes VALUES (?)", [(1,), (2,), (3,)])
+            conn.executemany("INSERT INTO edges VALUES (?)", [(1,)])
+            conn.commit()
+        finally:
+            conn.close()
+
+        app = _make_app(root)
+        app.context.find_codegraph_db.return_value = db
+
+        lines = app.codegraph_status_lines()
+
+        assert lines[0] == "- CodeGraph: OK (2 files, 3 nodes, 1 edges)"
+        assert str(db) in lines[1]
+        print("PASS: /graph CodeGraph status reads sqlite counts")
+
+
+def test_graphify_status_lines_reports_fresh_graph():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        graph_dir = root / "graphify-out"
+        graph_dir.mkdir()
+        (graph_dir / "graph.json").write_text("{}", encoding="utf-8")
+        (graph_dir / "GRAPH_TREE.html").write_text("<html></html>", encoding="utf-8")
+        (graph_dir / "GRAPH_REPORT.md").write_text(
+            "- 877 nodes · 2170 edges · 44 communities\n"
+            "- Built from commit: `abc12345`\n",
+            encoding="utf-8",
+        )
+        app = _make_app(root)
+        app.latest_source_commit = MagicMock(return_value="abc12345deadbeef")
+        app.source_worktree_dirty = MagicMock(return_value=False)
+
+        lines = app.graphify_status_lines()
+
+        assert any("Summary: 877 nodes" in line for line in lines)
+        assert any("Freshness: OK" in line for line in lines)
+        print("PASS: /graph Graphify status reports fresh graph")
+
+
+def test_graphify_status_lines_reports_stale_graph():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        graph_dir = root / "graphify-out"
+        graph_dir.mkdir()
+        (graph_dir / "graph.json").write_text("{}", encoding="utf-8")
+        (graph_dir / "GRAPH_REPORT.md").write_text(
+            "- Built from commit: `abc12345`\n",
+            encoding="utf-8",
+        )
+        app = _make_app(root)
+        app.latest_source_commit = MagicMock(return_value="def67890")
+        app.source_worktree_dirty = MagicMock(return_value=False)
+
+        lines = app.graphify_status_lines()
+
+        assert any("Freshness: STALE" in line for line in lines)
+        assert any("graphify update ." in line for line in lines)
+        print("PASS: /graph Graphify status reports stale graph")
+
+
 def test_stream_help_box_contains_bbs_frame_and_commands():
     buffer = io.StringIO()
     stream = Stream({}, [])
@@ -159,6 +244,10 @@ if __name__ == "__main__":
     test_help_command_renders_without_agent_round()
     test_help_pin_commands_toggle_prompt_strip()
     test_prompt_help_pin_respects_state()
+    test_graph_command_renders_without_agent_round()
+    test_codegraph_status_lines_reads_sqlite_counts()
+    test_graphify_status_lines_reports_fresh_graph()
+    test_graphify_status_lines_reports_stale_graph()
     test_stream_help_box_contains_bbs_frame_and_commands()
     test_stream_help_pin_contains_compact_commands()
     test_stream_token_usage_renders_session_bars()
