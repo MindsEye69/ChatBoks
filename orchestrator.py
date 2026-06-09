@@ -111,6 +111,12 @@ USAGE_PROVIDERS = {
     },
 }
 
+ROLE_CALL_REQUESTS = {"role call", "roll call", "rolecall", "rollcall"}
+DIRECT_AGENT_ALIASES = {
+    "agent_zero": "@zero",
+    "antigravity": "@agy",
+}
+
 SKILLS_DIR = Path(__file__).resolve().parent / "skills"
 
 
@@ -182,7 +188,10 @@ class Chatboks:
 
     def initialize_agents(self) -> None:
         codegraph = self.context.load_codegraph()
-        self.stream.role_call(self.proj_config["agents"])
+        self.stream.role_call(
+            self.proj_config["agents"],
+            standby_agents=self.direct_standby_agents(self.proj_config["agents"]),
+        )
         for agent_name in self.proj_config["agents"]:
             self.stream.system(f"Initializing {agent_name}...")
             agent = self.router.get_agent(agent_name)
@@ -1281,6 +1290,7 @@ class Chatboks:
                 if signal in {"TASK_COMPLETE", "TASK COMPLETE"}:
                     if not is_last_agent:
                         continue
+                    self.maybe_announce_direct_standby_agents(initiator, active_agents)
                     self.stream.system("Task complete. Awaiting next instruction.")
                     self.update_state({"status": "idle"})
                     return
@@ -1297,6 +1307,7 @@ class Chatboks:
                 return
 
             if self.all_expected_agents_completed():
+                self.maybe_announce_direct_standby_agents(initiator, active_agents)
                 self.stream.system("Round complete. Awaiting next instruction.")
                 self.update_state({"status": "idle", "next_agent": "you"})
                 return
@@ -1314,6 +1325,41 @@ class Chatboks:
                 last_pos = pos
                 last_signal = signal
         return last_signal
+
+    def maybe_announce_direct_standby_agents(
+        self,
+        initiator: str | None,
+        active_agents: list[str],
+    ) -> None:
+        if not self.is_role_call_request(initiator):
+            return
+        standby_agents = self.direct_standby_agents(active_agents)
+        if not standby_agents:
+            return
+        for agent_name in standby_agents:
+            self.stream.standby(agent_name, self.format_direct_standby_message(agent_name))
+
+    def direct_standby_agents(self, active_agents: list[str]) -> list[str]:
+        configured = self.proj_config.get("direct_agents", [])
+        return [
+            name
+            for name in configured
+            if name in self.config.get("agents", {}) and name not in active_agents
+        ]
+
+    @staticmethod
+    def is_role_call_request(text: str | None) -> bool:
+        if not text:
+            return False
+        normalized = " ".join(text.strip().lower().split())
+        return normalized in ROLE_CALL_REQUESTS
+
+    def format_direct_standby_message(self, agent_name: str) -> str:
+        alias = DIRECT_AGENT_ALIASES.get(agent_name, f"@{agent_name}")
+        return (
+            f"Standby via {alias}. Available on demand; stays idle unless explicitly routed "
+            "or needed as a fallback."
+        )
 
     def handle_proposal(self, response: str, proposed_by: str) -> None:
         proposal = {
@@ -1621,17 +1667,7 @@ class Chatboks:
             f"{agent_name} token context exhausted. Compressing transcript.{retry_text}"
         )
         summary = self.context.summarize(self.chatboks_md)
-        self.append_message(
-            "system",
-            "\n".join(
-                [
-                    ">>> SUMMARY_CHECKPOINT",
-                    f"Agent: {agent_name}",
-                    f"Reason: {self.truncate_for_state(reason)}",
-                    summary,
-                ]
-            ),
-        )
+        self.append_summary_checkpoint(agent_name, reason, summary)
         agent = self.router.get_agent(agent_name)
         codegraph = self.context.load_codegraph()
         try:
@@ -1655,6 +1691,20 @@ class Chatboks:
         self.save_state()
         self.refresh_token_usage_display()
         return True
+
+    def append_summary_checkpoint(self, agent_name: str, reason: str, summary: str) -> None:
+        self.append_message(
+            "system",
+            "\n".join(
+                [
+                    ">>> SUMMARY_CHECKPOINT",
+                    f"Agent: {agent_name}",
+                    f"Reason: {self.truncate_for_state(reason)}",
+                    summary,
+                    ">>> SUMMARY_CHECKPOINT_END",
+                ]
+            ),
+        )
 
     def capture_git_diff(self) -> str:
         try:

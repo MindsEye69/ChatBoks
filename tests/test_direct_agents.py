@@ -1,6 +1,7 @@
 """Smoke tests for agents that are available only through explicit @routes."""
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -253,6 +254,105 @@ def test_agent_zero_call_accepts_base_timeout_keywords():
         print("PASS: Agent Zero call accepts BaseAgent timeout keywords")
 
 
+def test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_by_default():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {
+                "cli": "ollama",
+                "endpoint": "http://127.0.0.1:11434/api/chat",
+                "model": "gemma3:4b",
+                "project_name": "chatboks",
+            },
+            "Agent Zero role",
+        )
+        captured_payload: dict[str, object] = {}
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            def read(self):
+                return b'{"message":{"content":"Ready.\\n>>> TASK_COMPLETE"}}'
+
+        def fake_urlopen(request, timeout):
+            del timeout
+            captured_payload.update(json.loads(request.data.decode("utf-8")))
+            return FakeResponse()
+
+        with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
+            result = agent.call("what's next?")
+
+        assert result.endswith(">>> TASK_COMPLETE")
+        assert captured_payload["model"] == "gemma3:4b"
+        assert captured_payload["think"] is False
+        assert captured_payload["stream"] is False
+        print("PASS: Agent Zero payload uses the configured model and disables Ollama thinking")
+
+
+def test_agent_zero_prompt_lists_real_local_commands():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Agent Zero role",
+        )
+
+        prompt = agent.build_prompt("Current context", mode="respond")
+
+        assert "/agent" in prompt
+        assert "python doctor.py <project>" in prompt
+        assert "Do not invent commands such as /status." in prompt
+        assert "@zero role call" in prompt
+        assert "Do not suggest /context unless the user is explicitly asking about context mode." in prompt
+        print("PASS: Agent Zero prompt names valid local commands")
+
+
+def test_agent_zero_rewrites_model_switch_validation_away_from_context_mode():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Agent Zero role",
+        )
+        prompt = (
+            "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
+            "Old turn: use /context to inspect context mode.\n\n"
+            "[ACTIVE TASK]\n"
+            "what should I test next after switching to gemma3:4b?\n\n"
+            "[HANDOFF] None."
+        )
+
+        result = agent.normalize_output(
+            "/context - Let's establish the current context before proceeding.\n>>> TASK_COMPLETE",
+            prompt,
+        )
+
+        assert "@zero role call" in result
+        assert "/context" not in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero rewrites model-switch validation away from /context")
+
+
+def test_agent_zero_rewrites_role_call_stub_into_real_role_call():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "role call")
+
+        assert "Agent Zero online." in result
+        assert "gemma3:4b" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero rewrites a stub role call into a useful response")
+
+
 def test_agent_zero_diagnostic_fallback_uses_active_task_only():
     with tempfile.TemporaryDirectory() as tmp:
         agent = AgentZeroAgent(
@@ -274,6 +374,22 @@ def test_agent_zero_diagnostic_fallback_uses_active_task_only():
         assert "bare control signal" in result
         assert ">>> BLOCKED" in result
         print("PASS: Agent Zero fallback ignores stale diagnostic history")
+
+
+def test_agent_zero_role_call_fallback_handles_bare_signal():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Agent Zero role",
+        )
+
+        result = agent.fallback_for_bare_signal("role call")
+
+        assert "Agent Zero online." in result
+        assert "gemma3:4b" in result
+        assert ">>> TASK_COMPLETE" in result
+        print("PASS: Agent Zero bare role call fallback stays useful")
 
 
 def test_agent_zero_diagnostic_fallback_allows_current_setup_task():

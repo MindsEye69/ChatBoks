@@ -1,6 +1,6 @@
 # ChatBoks Roadmap
 
-Version: v3 handover baseline, updated June 1, 2026.
+Version: v3 handover baseline, updated June 9, 2026.
 
 Chatboks is a local multi-agent coding orchestration system for Claude, Codex, and eventually Antigravity, with the human user as overseer. Agents collaborate through `chatboks.md`, machine state persists in `.chatboks/state.json`, and CodeGraph provides SQLite-backed codebase context.
 
@@ -19,6 +19,11 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
 - `/help` shows a terminal command deck in a BBS-style box.
+- Transcript compaction now rolls forward from `>>> SUMMARY_CHECKPOINT` boundaries while preserving the latest summary plus fresh tail context.
+- Session token usage bars and per-session warning/cap thresholds are live.
+- Proposal approval gates now show rough token and optional USD cost estimates.
+- Role-file trust approval is enforced for project-local role files, with approved hashes stored outside the project tree.
+- Agent Zero is now validated against Ollama's direct REST API with `think: false`, and `gemma3:4b` is the current best local balance between usefulness and desktop impact.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -65,13 +70,21 @@ Remaining:
 
 ## Phase 2 - Token Intelligence
 
+Completed:
+
 - Role-based routing with predefined agent lanes per project.
-- Task auction classifier: Agent Zero routes dynamically and calls cloud models only when needed.
-- Supported dashboards:
+- Collaboration-mode lane strategies such as `solo_codex`, `solo_claude`, and `full_round`.
+- Conservative routing intelligence for lightweight Agent Zero, Codex-first, and Claude-first auto-routing.
+- Session token usage bars plus per-session warning and hard-cap thresholds.
+- Provider usage baseline capture for:
   - `console.anthropic.com/usage`
   - `platform.openai.com/usage`
   - `aistudio.google.com`
-- Transcript compaction using `>>> SUMMARY_CHECKPOINT`.
+
+Remaining:
+
+- Task auction / classifier refinement so Agent Zero answers more low-cost prompts without devolving into generic or bare-signal responses.
+- Better token accounting from provider-native telemetry instead of response-length estimation alone.
 
 ## Phase 3 - Remote Control
 
@@ -116,9 +129,12 @@ Responsibilities:
 
 Recommended stack:
 
-- Base model: Qwen2.5 Coder 3B, quantized
+- Base model: Gemma 3 4B, quantized
 - Runtime: direct Ollama REST API
-- Upgrade path: Llama 3.1 8B Q4 or another local model for users with 16GB+ RAM
+- Notes:
+  - `gemma4:12b` produced better raw capability but was too disruptive on the desktop during normal use.
+  - `gemma3:4b` remained light enough to run without noticeable workstation impact during mobile/remote use.
+- Upgrade path: Llama 3.1 8B Q4 or another local model for users with more headroom, after desktop-impact testing.
 
 Routing lanes:
 
@@ -129,8 +145,9 @@ Routing lanes:
 
 Open question:
 
-- Measure Windows CPU latency for `qwen2.5-coder:3b`; target routing decisions under 10 seconds.
-- Current blocker: measure Windows CPU latency for the direct Ollama adapter and keep routing decisions under 10 seconds.
+- Keep Agent Zero routing decisions under 10 seconds on Windows while improving answer quality.
+- Improve Agent Zero role-call, "what's next?", and "what should I test next?" responses so they stay concrete and ChatBoks-native.
+- Reproduce and isolate the intermittent stacked-window glitch in the desktop app path; isolated CLI role calls have not reproduced it so far.
 
 ## Execution Model Improvements
 
@@ -210,12 +227,8 @@ IO Website:
 
 ## Immediate Next Steps
 
-1. Install CodeGraph globally or add the existing CodeGraph CLI to PATH.
-2. Initialize CodeGraph for the ChatBoks repo itself.
-3. Run `python doctor.py taskfish` from the real Python environment with dependencies installed.
-4. Test `python doctor.py taskfish --smoke-agents` when token usage is acceptable.
-5. Implement dynamic timeout.
-6. Implement automatic timeout recovery.
-7. Implement loop detection.
-8. Add session token usage bars in `ui/stream.py`.
-9. Test Agent Zero latency with Ollama and Qwen2.5 Coder 3B.
+1. Commit and push the current transcript compaction, Agent Zero, trust-hardening, and documentation batch.
+2. Continue refining Agent Zero direct responses for role call, routing-policy, and next-step prompts.
+3. Reproduce the intermittent stacked-window desktop glitch locally while observing the visible app shell.
+4. Run a fresh `python doctor.py taskfish` from the real Python environment and then a selective `--smoke-agents` pass when usage is acceptable.
+5. Decide whether Agent Zero should remain direct-only by default or join more routing paths after its response quality improves.

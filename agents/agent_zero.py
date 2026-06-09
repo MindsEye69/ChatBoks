@@ -16,6 +16,7 @@ from agents.base import BaseAgent
 class AgentZeroAgent(BaseAgent):
     name = "agent_zero"
     signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
+    role_call_requests = {"role call", "roll call", "rolecall", "rollcall"}
 
     @property
     def project_name(self) -> str:
@@ -33,10 +34,17 @@ class AgentZeroAgent(BaseAgent):
             "You are Agent Zero for ChatBoks: a local, cheap coordinator for setup, "
             "diagnostics, routing, summaries, and small status checks. You do not have tools. "
             "Do not emit JSON, markdown fences, fake tool calls, or END_OF_MESSAGE. "
-            "Reply in concise plain text. For setup checks, give one concrete next diagnostic "
-            "command when possible. Use >>> QUESTION only when you include a specific question "
-            "for the human in the response body. For outcome-scoring requests, suggest concrete "
-            "/win or /fail commands but do not pretend to record them. "
+            "Reply in concise plain text. Prefer one concrete next validation step grounded in "
+            "the provided context over broad category questions. For setup checks, give one "
+            "concrete next diagnostic command when possible. Valid local commands include "
+            "/help, /agent, /mode, /context, /usage, /suggest-outcome, /wins, /failures, "
+            "and /outcomes. For environment checks, prefer python doctor.py <project> or "
+            "/agent. For model-switch validation, prefer @zero role call or @zero what's next "
+            "for ChatBoks? as the next check. Do not suggest /context unless the user is "
+            "explicitly asking about context mode. Do not invent commands such as /status. "
+            "Use >>> QUESTION only when you "
+            "include a specific question for the human in the response body. For outcome-scoring "
+            "requests, suggest concrete /win or /fail commands but do not pretend to record them. "
             "If deep implementation, architecture, security "
             "review, vision, browser testing, or git work is needed, recommend the right agent "
             "instead of pretending to do it. End with exactly one ChatBoks signal: "
@@ -50,11 +58,15 @@ class AgentZeroAgent(BaseAgent):
     @staticmethod
     def _is_loopback_endpoint(endpoint: str) -> bool:
         try:
-            host = urllib.parse.urlparse(endpoint).hostname or ""
+            host = (urllib.parse.urlparse(endpoint).hostname or "").strip().lower()
+            if not host:
+                return False
+            if host == "localhost":
+                return True
             try:
                 return ipaddress.ip_address(host).is_loopback
             except ValueError:
-                return ipaddress.ip_address(socket.gethostbyname(host)).is_loopback
+                return False
         except Exception:
             return False
 
@@ -75,19 +87,27 @@ class AgentZeroAgent(BaseAgent):
         model = str(self.config.get("model", "qwen2.5-coder:3b"))
         payload = {
             "model": model,
+            "think": self.config.get("think", False),
             "stream": False,
             "messages": [
                 {
                     "role": "system",
                     "content": (
-                    "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
-                    "No markdown fences. No tool calls. For setup checks, provide one "
-                    "concrete next diagnostic command when possible. Use >>> QUESTION only "
-                    "with a specific question in the body. For outcome-scoring requests, "
-                    "suggest concrete /win or /fail commands but do not claim they were recorded. "
-                    "End with exactly one of "
-                    ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
-                ),
+                        "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
+                        "No markdown fences. No tool calls. Prefer one concrete next validation "
+                        "step grounded in the provided context over broad category questions. "
+                        "For setup checks, provide one concrete next diagnostic command when "
+                        "possible. Valid local commands include /help, /agent, /mode, /context, "
+                        "/usage, /suggest-outcome, /wins, /failures, and /outcomes. For "
+                        "environment checks, prefer python doctor.py <project> or /agent. For "
+                        "model-switch validation, prefer @zero role call or @zero what's next "
+                        "for ChatBoks? as the next check. Do not suggest /context unless the "
+                        "user is explicitly asking about context mode. Do not invent commands "
+                        "such as /status. Use >>> QUESTION only with a "
+                        "specific question in the body. For outcome-scoring requests, suggest "
+                        "concrete /win or /fail commands but do not claim they were recorded. "
+                        "End with exactly one of >>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
+                    ),
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -143,7 +163,7 @@ class AgentZeroAgent(BaseAgent):
                 for line in before_signal.splitlines()
                 if line.strip() and line.strip() not in signal_lines
             ]
-            body = "\n".join(body_lines).strip()
+            body = self.rewrite_guidance("\n".join(body_lines).strip(), prompt)
             if not body and signal in {"QUESTION", "TASK_COMPLETE"}:
                 return self.fallback_for_bare_signal(prompt)
             return f"{body}\n>>> {signal}" if body else f">>> {signal}"
@@ -153,7 +173,7 @@ class AgentZeroAgent(BaseAgent):
             for line in cleaned.splitlines()
             if line.strip() and line.strip() not in self.signals and line.strip() not in signal_lines
         ]
-        body = "\n".join(body_lines).strip()
+        body = self.rewrite_guidance("\n".join(body_lines).strip(), prompt)
         return f"{body}\n>>> TASK_COMPLETE" if body else ">>> TASK_COMPLETE"
 
     @staticmethod
@@ -170,6 +190,13 @@ class AgentZeroAgent(BaseAgent):
     def fallback_for_bare_signal(self, prompt: str) -> str:
         current_request = self.extract_current_request(prompt)
         lowered = current_request.lower()
+        if self.is_role_call_request(current_request):
+            return self.role_call_response()
+        if self.is_model_switch_validation_request(lowered):
+            return (
+                "Next check: run @zero role call once and confirm Agent Zero answers promptly "
+                "on the lighter model without suggesting nonexistent commands.\n>>> TASK_COMPLETE"
+            )
         if "routing policy" in lowered:
             return (
                 "- Normal prompts go to the configured default round agents for the project.\n"
@@ -191,6 +218,47 @@ class AgentZeroAgent(BaseAgent):
         return (
             "Agent Zero returned a bare control signal without an actionable response. "
             "Retry the request or route it to Codex.\n>>> BLOCKED"
+        )
+
+    def rewrite_guidance(self, body: str, prompt: str) -> str:
+        if not body:
+            return body
+        current_request = self.extract_current_request(prompt)
+        lowered_request = current_request.lower()
+        lowered_body = body.lower()
+        if self.is_role_call_request(current_request):
+            normalized = " ".join(lowered_body.split())
+            if normalized in {"run: /agent", "/agent"}:
+                return self.role_call_response().removesuffix("\n>>> TASK_COMPLETE")
+        if "/status" in lowered_body:
+            body = re.sub(r"(?i)/status", "/agent", body)
+            lowered_body = body.lower()
+        if self.is_model_switch_validation_request(lowered_request):
+            if "/context" in lowered_body or "context before proceeding" in lowered_body:
+                return (
+                    "Next check: run @zero role call once and confirm Agent Zero answers "
+                    "promptly on gemma3:4b without UI lag or invented commands."
+                )
+        return body
+
+    @staticmethod
+    def is_model_switch_validation_request(lowered_request: str) -> bool:
+        return (
+            ("test next" in lowered_request or "validate next" in lowered_request or "what should i test next" in lowered_request)
+            and ("switch" in lowered_request or "gemma3:4b" in lowered_request or "lighter model" in lowered_request)
+        )
+
+    def is_role_call_request(self, request: str) -> bool:
+        normalized = " ".join(request.strip().lower().split())
+        return normalized in self.role_call_requests
+
+    def role_call_response(self) -> str:
+        model = str(self.config.get("model", "unknown"))
+        return (
+            f"Agent Zero online. Local coordinator active via Ollama model `{model}`.\n"
+            "I handle lightweight setup checks, routing, summaries, and simple status questions.\n"
+            "Use /agent to inspect availability or @zero for a direct local diagnostic.\n"
+            ">>> TASK_COMPLETE"
         )
 
     @staticmethod

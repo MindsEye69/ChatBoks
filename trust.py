@@ -75,13 +75,30 @@ def _prompt_approval(resolved: Path, role_filename: str, content: str, reason: s
     print(f"  SHA-256       : {digest}")
     print("  Preview (first 5 lines):")
     for line in content.splitlines()[:5]:
-        print(f"    {line}")
+        print(f"    {_safe_preview_line(line)}")
     print()
     try:
         answer = input("  Approve loading this role file? [y/N] ").strip().lower()
     except (EOFError, OSError):
         answer = "n"
     return answer in {"y", "yes"}
+
+
+def _safe_preview_line(text: str) -> str:
+    preview: list[str] = []
+    for char in text:
+        codepoint = ord(char)
+        if char == "\t":
+            preview.append("\\t")
+        elif char == "\r":
+            preview.append("\\r")
+        elif char == "\n":
+            preview.append("\\n")
+        elif codepoint < 32 or codepoint == 127:
+            preview.append(f"\\x{codepoint:02x}")
+        else:
+            preview.append(char)
+    return "".join(preview)
 
 
 def load_role_with_approval(

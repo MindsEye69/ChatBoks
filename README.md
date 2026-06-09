@@ -282,7 +282,10 @@ By default, `doctor.py` avoids model-consuming calls. To test actual stdin pipin
 python doctor.py taskfish --smoke-agents
 ```
 
-Agent Zero is an optional local/bootstrap agent backed directly by Ollama. By default it calls `qwen2.5-coder:3b` through Ollama's local chat endpoint (`http://127.0.0.1:11434/api/chat`). It is configured but not added to project teams by default. To check Ollama/model availability and ask whether Agent Zero should join a project, run:
+Agent Zero is an optional local/bootstrap agent backed directly by Ollama. The current recommended default is
+`gemma3:4b` through Ollama's local chat endpoint (`http://127.0.0.1:11434/api/chat`) with `think: false` so
+responses stay in normal output instead of Ollama's separate thinking field. It is configured but not added to
+project teams by default. To check Ollama/model availability and ask whether Agent Zero should join a project, run:
 
 ```bash
 python install.py tinyguardian --agent-zero
@@ -295,7 +298,14 @@ You can also route to it directly without adding it to normal rounds:
 @agent0 check this project setup and recommend the next diagnostic command.
 ```
 
-Make sure Ollama is running and the selected model exists locally, for example with `ollama pull qwen2.5-coder:3b`.
+Make sure Ollama is running and the selected model exists locally, for example with `ollama pull gemma3:4b`.
+
+Observed behavior so far:
+
+- `gemma4:12b` was usable but too disruptive for normal desktop multitasking.
+- `gemma3:4b` has been the best current balance between usefulness and workstation impact.
+- Intermittent stacked-window glitches seen in the desktop app path have not been reproduced by isolated ChatBoks CLI
+  role calls, so that issue appears to sit above the raw relay/model layer.
 
 ## Adapter Profiles
 

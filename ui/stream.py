@@ -66,14 +66,26 @@ class Stream:
         self.banner(project)
         self.console.print("[dim green]relay bus online - shared context locked[/dim green]")
 
-    def role_call(self, agents: list[str]) -> None:
+    def role_call(self, agents: list[str], standby_agents: list[str] | None = None) -> None:
         names = "  ".join(f"[{self.colors.get(agent, 'white')}]{agent.upper()}[/{self.colors.get(agent, 'white')}]" for agent in agents)
-        self.console.print(f"[dim]role call:[/dim] {names}")
+        message = f"[dim]role call:[/dim] {names}"
+        if standby_agents:
+            standby = "  ".join(
+                f"[{self.colors.get(agent, 'white')}]{agent.upper()}[/{self.colors.get(agent, 'white')}]"
+                for agent in standby_agents
+            )
+            message += f"  [dim](standby: {standby})[/dim]"
+        self.console.print(message)
 
     def message(self, sender: str, text: str, timestamp: str) -> None:
         color = self.colors.get(sender.lower(), "white")
         label = f"[{color}][{sender.upper()}][/{color}]"
         self.console.print(f"{label} [dim]{timestamp}[/dim]\n{text.strip()}")
+
+    def standby(self, agent_name: str, text: str) -> None:
+        color = self.colors.get(agent_name.lower(), "white")
+        label = f"[{color}][{agent_name.upper()}][/{color}]"
+        self.console.print(f"{label} [dim]{text.strip()}[/dim]")
 
     def system(self, text: str) -> None:
         self.console.print(f"[dim white][SYSTEM] {text}[/dim white]")

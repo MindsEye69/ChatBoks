@@ -175,6 +175,30 @@ def test_explicit_route_to_exhausted_agent_does_not_substitute():
         print("PASS: explicit exhausted route asks user to override")
 
 
+def test_role_call_announces_direct_standby_agents_without_starting_them():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["projects"]["test"]["direct_agents"] = ["agent_zero"]
+        app.proj_config = app.config["projects"]["test"]
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Claude online.\n>>> HANDOFF",
+                "Codex online.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.handle_user_input("role call")
+
+        assert app.call_agent_with_token_recovery.call_count == 2
+        assert [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list] == ["claude", "codex"]
+        app.stream.standby.assert_called_once()
+        standby_agent, standby_text = app.stream.standby.call_args.args
+        assert standby_agent == "agent_zero"
+        assert "Standby via @zero." in standby_text
+        assert "stays idle unless explicitly routed" in standby_text
+        print("PASS: role call shows Agent Zero standby without waking it")
+
+
 if __name__ == "__main__":
     test_agent_command_marks_exhausted_without_agent_round()
     test_exhausted_command_accepts_duration_and_clock_time()
@@ -183,4 +207,5 @@ if __name__ == "__main__":
     test_direct_fallback_must_be_allowed_to_fill_main_seat()
     test_agent_zero_can_substitute_after_main_agents_exhausted_when_allowed()
     test_explicit_route_to_exhausted_agent_does_not_substitute()
+    test_role_call_announces_direct_standby_agents_without_starting_them()
     print("\nAll agent status smoke tests passed.")

@@ -239,6 +239,26 @@ def test_agent_timeout_recovery_checkpoints_partial_output_and_retries():
         assert ">>> TIMEOUT_RECOVERY" in transcript
 
 
+def test_recover_token_exhaustion_writes_bounded_summary_checkpoint():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.context.summarize.return_value = "[SUMMARY]\n- [YOU] preserve this"
+        app.context.load_codegraph.return_value = "[CODEGRAPH]"
+
+        agent = MagicMock()
+        agent.reinitialize.return_value = "Recovered compactly."
+        agent.is_token_exhaustion.return_value = False
+        app.router.get_agent.return_value = agent
+
+        recovered = app.recover_token_exhaustion("codex", "Prompt too large.", attempt=1, max_retries=2)
+
+        assert recovered is True
+        transcript = app.chatboks_md.read_text(encoding="utf-8")
+        assert ">>> SUMMARY_CHECKPOINT" in transcript
+        assert "- [YOU] preserve this" in transcript
+        assert ">>> SUMMARY_CHECKPOINT_END" in transcript
+
+
 def test_agent_timeout_recovery_blocks_after_retry_budget():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -347,6 +367,7 @@ if __name__ == "__main__":
     test_load_state_accepts_utf8_bom()
     test_agent_zero_strips_prefixed_signal_lines_from_body()
     test_agent_timeout_recovery_checkpoints_partial_output_and_retries()
+    test_recover_token_exhaustion_writes_bounded_summary_checkpoint()
     test_agent_timeout_recovery_blocks_after_retry_budget()
     test_agent_timeout_loop_detection_uses_changed_line_overlap()
     test_agent_timeout_recovery_blocks_when_git_diff_repeats()

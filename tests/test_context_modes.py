@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from context.builder import ContextBuilder
+from context.summarizer import Summarizer
 from orchestrator import Chatboks
 
 
@@ -82,6 +83,107 @@ def test_full_context_includes_broad_codegraph_dumps():
         assert "build_massive_context" in payload
 
 
+def test_normal_context_preserves_checkpoint_summary_and_recent_tail():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        _make_codegraph(root)
+        chat = root / "chatboks.md"
+        chat.write_text(
+            "\n".join(
+                [
+                    "[YOU] old request",
+                    "[CLAUDE] old analysis",
+                    "[SYSTEM] >>> SUMMARY_CHECKPOINT",
+                    "Agent: codex",
+                    "Reason: token exhaustion",
+                    "[SUMMARY]",
+                    "- [YOU] old request",
+                    "- >>> PROPOSAL",
+                    ">>> SUMMARY_CHECKPOINT_END",
+                    "[YOU] new request",
+                    "[CODEX] fresh implementation notes",
+                    "[SYSTEM] follow-up state",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        builder = ContextBuilder(root, {"context": {"recent_chatboks_lines": 2}})
+
+        payload = builder.build(_state("normal"), chat)
+
+        assert "[SYSTEM] >>> SUMMARY_CHECKPOINT" in payload
+        assert "[SUMMARY]" in payload
+        assert "- [YOU] old request" in payload
+        assert "[YOU] new request" in payload
+        assert "[SYSTEM] follow-up state" in payload
+        assert "[CLAUDE] old analysis" not in payload
+
+
+def test_lean_context_keeps_checkpoint_summary_with_recent_turns():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        _make_codegraph(root)
+        chat = root / "chatboks.md"
+        chat.write_text(
+            "\n".join(
+                [
+                    "[YOU] old request",
+                    "[SYSTEM] >>> SUMMARY_CHECKPOINT",
+                    "Agent: codex",
+                    "Reason: token exhaustion",
+                    "[SUMMARY]",
+                    "- [YOU] old request",
+                    "- [SYSTEM] preserved decision",
+                    ">>> SUMMARY_CHECKPOINT_END",
+                    "[YOU] current ask",
+                    "[CLAUDE] current reply",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        builder = ContextBuilder(root, {})
+
+        payload = builder.build(_state("lean"), chat)
+
+        assert "[SYSTEM] >>> SUMMARY_CHECKPOINT" in payload
+        assert "- [SYSTEM] preserved decision" in payload
+        assert "[YOU] current ask" in payload
+        assert "[CLAUDE] current reply" in payload
+
+
+def test_summarizer_rolls_forward_checkpoint_without_repeating_markers():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        chat = root / "chatboks.md"
+        chat.write_text(
+            "\n".join(
+                [
+                    "[SYSTEM] >>> SUMMARY_CHECKPOINT",
+                    "Agent: codex",
+                    "Reason: token exhaustion",
+                    "[SUMMARY]",
+                    "- [YOU] prior task",
+                    "- >>> PROPOSAL",
+                    ">>> SUMMARY_CHECKPOINT_END",
+                    "[SYSTEM] compacted once already",
+                    "[YOU] continue from here",
+                    "[CLAUDE] detailed analysis",
+                    ">>> TASK_COMPLETE",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        summary = Summarizer(max_items=8).summarize(chat)
+
+        assert "- [YOU] prior task" in summary
+        assert "- >>> PROPOSAL" in summary
+        assert "- [SYSTEM] compacted once already" in summary
+        assert "- [YOU] continue from here" in summary
+        assert "SUMMARY_CHECKPOINT_END" not in summary
+        assert ">>> SUMMARY_CHECKPOINT" not in summary
+
+
 def test_context_command_updates_state_without_agent_round():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -111,5 +213,8 @@ def test_context_command_updates_state_without_agent_round():
 if __name__ == "__main__":
     test_lean_context_omits_broad_codegraph_dumps()
     test_full_context_includes_broad_codegraph_dumps()
+    test_normal_context_preserves_checkpoint_summary_and_recent_tail()
+    test_lean_context_keeps_checkpoint_summary_with_recent_turns()
+    test_summarizer_rolls_forward_checkpoint_without_repeating_markers()
     test_context_command_updates_state_without_agent_round()
     print("\nAll context mode smoke tests passed.")

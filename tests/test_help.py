@@ -93,8 +93,22 @@ def test_stream_token_usage_renders_session_bars():
     print("PASS: token usage bar renders configured and extra-count agents")
 
 
+def test_stream_standby_uses_agent_label():
+    buffer = io.StringIO()
+    stream = Stream({"agent_zero": {"color": "magenta"}}, [])
+    stream.console = Console(file=buffer, width=80, color_system=None)
+
+    stream.standby("agent_zero", "Standby via @zero. Available on demand.")
+
+    output = buffer.getvalue()
+    assert "[AGENT_ZERO]" in output
+    assert "Standby via @zero. Available on demand." in output
+    print("PASS: standby line renders with agent label")
+
+
 if __name__ == "__main__":
     test_help_command_renders_without_agent_round()
     test_stream_help_box_contains_bbs_frame_and_commands()
     test_stream_token_usage_renders_session_bars()
+    test_stream_standby_uses_agent_label()
     print("\nAll help smoke tests passed.")

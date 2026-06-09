@@ -24,7 +24,9 @@ from trust import (
     load_role_with_approval,
     _approval_path,
     _load_approved_hash,
+    _prompt_approval,
     _save_approved_hash,
+    _safe_preview_line,
     _sha256,
     _resolve_safe,
 )
@@ -273,6 +275,24 @@ def test_resolve_safe_accepts_normal_file():
         result = _resolve_safe(project, "CLAUDE.md")
         assert result is not None
         assert result.name == "CLAUDE.md"
+
+
+# ---------------------------------------------------------------------------
+# Terminal-safe preview
+# ---------------------------------------------------------------------------
+
+def test_safe_preview_line_escapes_control_characters():
+    assert _safe_preview_line("ok\t\x1b[31mred\x7f") == r"ok\t\x1b[31mred\x7f"
+
+
+def test_prompt_approval_preview_does_not_emit_raw_escape_sequences(capsys):
+    resolved = Path("C:/tmp/CLAUDE.md")
+    with patch("builtins.input", return_value="n"):
+        _prompt_approval(resolved, "CLAUDE.md", "\x1b[31mred\x1b[0m\n", "first use")
+
+    out = capsys.readouterr().out
+    assert "\\x1b[31mred\\x1b[0m" in out
+    assert "\x1b[31mred\x1b[0m" not in out
 
 
 # ---------------------------------------------------------------------------

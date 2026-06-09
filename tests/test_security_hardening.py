@@ -227,6 +227,11 @@ def test_is_loopback_endpoint_unparseable_returns_false():
     assert AgentZeroAgent._is_loopback_endpoint("not_a_url") is False
 
 
+def test_is_loopback_endpoint_arbitrary_hostname_resolving_to_loopback_is_rejected():
+    with patch("socket.gethostbyname", return_value="127.0.0.1"):
+        assert AgentZeroAgent._is_loopback_endpoint("http://workstation.local:11434/api/chat") is False
+
+
 # ---------------------------------------------------------------------------
 # F7: CodeGraph column name validation
 # ---------------------------------------------------------------------------
