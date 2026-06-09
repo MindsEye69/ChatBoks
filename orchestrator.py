@@ -59,6 +59,11 @@ COLLABORATION_MODES = {
         "Review mode. Use code-review posture: findings first, ordered by severity, with file/line references "
         "and residual test risk. Avoid broad redesign unless necessary."
     ),
+    "confirmation": (
+        "Confirmation mode. The responsible model does the work, then a different configured model verifies whether "
+        "the requested outcome is actually complete. The verifier should not redo the task; it confirms completion "
+        "or sends specific missing work back for a bounded repair pass."
+    ),
     "diagnose": (
         "Diagnose mode. Establish the root cause with the smallest useful probes. Recommend concrete commands "
         "or narrow fixes before broad implementation."
@@ -87,8 +92,9 @@ HELP_COMMANDS = [
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
     ("/agent <name> available", "Mark a model available again."),
     ("/graph", "Show CodeGraph and Graphify freshness."),
+    ("/model-commands", "List registered model-specific executable commands."),
     ("/mode", "Show the current collaboration mode and available modes."),
-    ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, diagnose."),
+    ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, confirmation, diagnose."),
     ("/win ...", "Record a collaboration win without calling agents."),
     ("/fail ...", "Record a collaboration failure without calling agents."),
     ("/suggest-outcome [agent]", "Ask Agent Zero for candidate /win or /fail lines from recent work."),
@@ -108,6 +114,7 @@ HELP_PIN_COMMANDS = [
     "/context",
     "/agent",
     "/graph",
+    "/model-commands",
     "/mode",
     "/usage",
     "/win",
@@ -281,6 +288,17 @@ class Chatboks:
         exclusive_agent = decision.exclusive_agent
         if decision.note:
             self.append_message("system", decision.note)
+        if exclusive_agent:
+            escaped = self.model_command_escape_text(routed_text)
+            if escaped is not None:
+                routed_text = escaped
+            elif self.handle_model_command_if_present(exclusive_agent, routed_text):
+                return
+            else:
+                note = self.model_command_wrong_owner_note(exclusive_agent, routed_text)
+                if note:
+                    self.append_message("system", note)
+                    routed_text = f"[MODEL COMMAND NOTE]\n{note}\n\n{routed_text}"
         agents = self.resolve_available_agents(agents, exclusive_agent)
         if not agents:
             return
@@ -291,6 +309,7 @@ class Chatboks:
                 "next_agent": next_agent,
                 "active_task": routed_text,
                 "agent_status": self.load_agent_statuses(),
+                "confirmation_repairs_used": 0,
             }
         )
         self.run_agent_round(initiator=routed_text, agents=agents)
@@ -335,12 +354,15 @@ class Chatboks:
         if command in {"/graph", "/graphs"}:
             self.handle_graph_command()
             return True
+        if command in {"/model-commands", "/model-command", "/model-cmds"}:
+            self.handle_model_commands_command()
+            return True
         if command == "/dismiss":
             self.handle_dismiss_command()
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /context, /agent, /graph, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /context, /agent, /graph, /model-commands, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -375,6 +397,177 @@ class Chatboks:
             self.stream.help_pin(HELP_PIN_COMMANDS)
             return
         self.stream.system("Commands: " + "  ".join(HELP_PIN_COMMANDS))
+
+    def handle_model_commands_command(self) -> None:
+        lines = ["Registered model commands:"]
+        found = False
+        for agent_name in sorted(self.config.get("agents", {})):
+            for command in self.agent_model_commands(agent_name):
+                found = True
+                aliases = ", ".join(command["aliases"])
+                status = "enabled" if command.get("enabled", True) else "disabled"
+                description = command.get("description") or "No description."
+                lines.append(f"- {agent_name}: {command['name']} ({status}); aliases: {aliases}; {description}")
+        if not found:
+            lines.append("- none")
+        self.stream.system("\n".join(lines))
+
+    def handle_model_command_if_present(self, agent_name: str, text: str) -> bool:
+        escaped = self.model_command_escape_text(text)
+        if escaped is not None:
+            return False
+
+        match = self.find_agent_model_command(agent_name, text)
+        if match is None:
+            return False
+
+        command, args = match
+        if not command.get("enabled", True):
+            self.append_message("system", f"Model command {command['name']} for {agent_name} is disabled.")
+            return True
+        if command.get("type") != "cli_subcommand":
+            self.append_message(
+                "system",
+                f"Model command {command['name']} for {agent_name} has unsupported type: {command.get('type')}.",
+            )
+            return True
+
+        available = self.resolve_available_agents([agent_name], agent_name)
+        if not available:
+            return True
+
+        self.update_state(
+            {
+                "status": "active",
+                "next_agent": agent_name,
+                "active_task": f"model command: {command['name']}",
+                "agent_status": self.load_agent_statuses(),
+            }
+        )
+        try:
+            response = self.execute_model_cli_subcommand(agent_name, command, args)
+        except AgentTimeoutError as exc:
+            partial = f"{exc.partial_output.rstrip()}\n" if exc.partial_output else ""
+            response = f"{partial}{exc}\n>>> BLOCKED"
+        except TokenExhaustionError as exc:
+            response = f"{exc}\n>>> BLOCKED"
+        except Exception as exc:
+            response = f"Model command {command['name']} for {agent_name} failed: {exc}\n>>> BLOCKED"
+        if response.strip() and self.parse_signal(response) is None:
+            response = f"{response.rstrip()}\n>>> TASK_COMPLETE"
+        self.append_message(agent_name, response)
+        self.update_token_count(agent_name, response)
+        self.update_state({"status": "idle", "next_agent": "you", "last_agent": agent_name, "active_task": None})
+        return True
+
+    def model_command_wrong_owner_note(self, agent_name: str, text: str) -> str | None:
+        escaped = self.model_command_escape_text(text)
+        if escaped is not None:
+            return None
+        token, _ = self.model_command_token_and_args(text)
+        if not token:
+            return None
+        for owner in sorted(self.config.get("agents", {})):
+            if owner == agent_name:
+                continue
+            for command in self.agent_model_commands(owner):
+                if token in command["normalized_aliases"]:
+                    owner_alias = DIRECT_AGENT_ALIASES.get(owner, f"@{owner}")
+                    return (
+                        f"Model command hint: `{token}` belongs to {owner}, not {agent_name}; "
+                        f"it was not executed. Use {owner_alias} /{command['name']} ... to run it."
+                    )
+        return None
+
+    @staticmethod
+    def model_command_escape_text(text: str) -> str | None:
+        stripped = text.lstrip()
+        if stripped == "--":
+            return ""
+        if stripped.startswith("-- "):
+            return stripped[3:].lstrip()
+        return None
+
+    def find_agent_model_command(self, agent_name: str, text: str) -> tuple[dict[str, Any], list[str]] | None:
+        token, args_text = self.model_command_token_and_args(text)
+        if not token:
+            return None
+        for command in self.agent_model_commands(agent_name):
+            if token in command["normalized_aliases"]:
+                return command, self.split_model_command_args(args_text)
+        return None
+
+    @staticmethod
+    def model_command_token_and_args(text: str) -> tuple[str | None, str]:
+        stripped = text.strip()
+        if not stripped:
+            return None, ""
+        first, _, rest = stripped.partition(" ")
+        token = first.removeprefix("/").strip().lower()
+        if not token:
+            return None, ""
+        return token, rest.strip()
+
+    def agent_model_commands(self, agent_name: str) -> list[dict[str, Any]]:
+        agent_config = self.config.get("agents", {}).get(agent_name, {})
+        raw_commands = agent_config.get("model_commands") or []
+        if not isinstance(raw_commands, list):
+            return []
+        commands: list[dict[str, Any]] = []
+        for raw in raw_commands:
+            if not isinstance(raw, dict):
+                continue
+            name = str(raw.get("name") or "").strip().lower().removeprefix("/")
+            if not name:
+                continue
+            aliases = raw.get("aliases") or []
+            if not isinstance(aliases, list):
+                aliases = []
+            alias_values = [name]
+            alias_values.extend(str(alias).strip() for alias in aliases if str(alias).strip())
+            normalized_aliases = sorted({alias.removeprefix("/").lower() for alias in alias_values})
+            command = dict(raw)
+            command["name"] = name
+            command["aliases"] = [f"/{alias}" for alias in normalized_aliases]
+            command["normalized_aliases"] = normalized_aliases
+            command.setdefault("enabled", True)
+            commands.append(command)
+        return commands
+
+    @staticmethod
+    def split_model_command_args(args_text: str) -> list[str]:
+        if not args_text:
+            return []
+        try:
+            return shlex.split(args_text)
+        except ValueError:
+            return args_text.split()
+
+    def execute_model_cli_subcommand(self, agent_name: str, command: dict[str, Any], args: list[str]) -> str:
+        agent = self.router.get_agent(agent_name)
+        argv = self.model_command_argv(command, args)
+        if not argv:
+            return f"Model command {command['name']} has no argv configured.\n>>> BLOCKED"
+        return agent.run_cli_once(
+            "",
+            [agent.cli, *argv],
+            timeout=float(command.get("timeout", 300) or 300),
+            max_timeout=float(command.get("max_timeout", 900) or 900),
+        )
+
+    def model_command_argv(self, command: dict[str, Any], args: list[str]) -> list[str]:
+        raw_argv = command.get("argv") or []
+        if not isinstance(raw_argv, list):
+            return []
+        argv: list[str] = []
+        joined_args = " ".join(args)
+        for item in raw_argv:
+            part = str(item)
+            if part == "{args}":
+                argv.extend(args)
+            else:
+                argv.append(part.format(project_path=str(self.proj_path), args=joined_args))
+        return argv
 
     def handle_graph_command(self) -> None:
         lines = ["Graph status:"]
@@ -1432,6 +1625,160 @@ class Chatboks:
         self.update_state({"status": "active", "next_agent": handoff_to})
         self.run_agent_round(agents=[handoff_to])
 
+    def confirmation_mode_active(self, intent: str) -> bool:
+        if intent == "confirm":
+            return False
+        return str(self.state.get("collaboration_mode") or "default").lower() == "confirmation"
+
+    def confirmation_repair_budget(self) -> int:
+        raw_budget = self.config.get("rounds", {}).get("max_confirmation_repairs")
+        if raw_budget is None:
+            return 1
+        return max(0, int(raw_budget))
+
+    def select_confirmation_agent(self, executor: str, active_agents: list[str]) -> str | None:
+        statuses = self.load_agent_statuses()
+        self.update_state({"agent_status": statuses})
+        candidates: list[str] = []
+        for agent in list(self.proj_config.get("agents") or []):
+            if agent != executor and agent not in candidates:
+                candidates.append(agent)
+        for agent in active_agents:
+            if agent != executor and agent not in candidates:
+                candidates.append(agent)
+        for agent in candidates:
+            if self.agent_is_available(agent, statuses):
+                return agent
+        return None
+
+    def confirmation_request_text(
+        self,
+        executor: str,
+        verifier: str,
+        initiator: str | None,
+        executor_response: str,
+    ) -> str:
+        task = initiator or self.state.get("active_task") or "the current task"
+        return "\n".join(
+            [
+                "Confirmation mode:",
+                f"- Responsible agent: {executor}",
+                f"- Verifier: {verifier}",
+                f"- Original request: {task}",
+                "",
+                "Verifier instructions:",
+                "- Do not redo the task or duplicate implementation work.",
+                "- Check whether the responsible agent's claimed outcome is complete, tested, and consistent with the request.",
+                "- Reply >>> TASK_COMPLETE only if the outcome is confirmed.",
+                "- Reply >>> HANDOFF with specific missing work if the responsible agent should repair it.",
+                "- Reply >>> BLOCKED only if human input or external state is required.",
+                "",
+                "Responsible agent output under review:",
+                self.strip_signal_suffix(executor_response),
+            ]
+        )
+
+    def confirm_completion_if_needed(
+        self,
+        executor: str,
+        executor_response: str,
+        initiator: str | None,
+        active_agents: list[str],
+        intent: str,
+    ) -> str | None:
+        if not self.confirmation_mode_active(intent):
+            return None
+        verifier = self.select_confirmation_agent(executor, active_agents)
+        if verifier is None:
+            self.append_message("system", "Confirmation mode: no available verifier; accepting completion.")
+            return "confirmed"
+
+        request = self.confirmation_request_text(executor, verifier, initiator, executor_response)
+        self.append_message("system", request)
+        self.update_state(
+            {
+                "status": "active",
+                "round_intent": "confirm",
+                "expected_agents": [verifier],
+                "completed_agents": [],
+                "next_agent": verifier,
+                "active_task": request,
+                "confirmation": {
+                    "executor": executor,
+                    "verifier": verifier,
+                    "repairs_used": int(self.state.get("confirmation_repairs_used", 0) or 0),
+                },
+            }
+        )
+
+        response = self.call_agent_with_token_recovery(verifier, mode="respond")
+        signal = self.parse_signal(response)
+        self.append_message(verifier, response)
+        self.update_token_count(verifier, response)
+        self.mark_agent_completed(verifier)
+        self.update_state({"last_agent": verifier, "next_agent": "you"})
+
+        if signal in {"TASK_COMPLETE", "TASK COMPLETE", "SKIP"}:
+            self.stream.system(f"Confirmation complete: {verifier} verified {executor}'s output.")
+            return "confirmed"
+        if signal == "QUESTION":
+            self.handle_question(response)
+            return "terminal"
+        return self.handle_confirmation_repair(executor, verifier, response, initiator)
+
+    def handle_confirmation_repair(
+        self,
+        executor: str,
+        verifier: str,
+        verifier_response: str,
+        initiator: str | None,
+    ) -> str:
+        repairs_used = int(self.state.get("confirmation_repairs_used", 0) or 0)
+        if repairs_used >= self.confirmation_repair_budget():
+            self.stream.system("Confirmation blocked: repair budget exhausted. Your input needed.")
+            self.update_state(
+                {
+                    "status": "blocked",
+                    "next_agent": "you",
+                    "confirmation": {
+                        "executor": executor,
+                        "verifier": verifier,
+                        "repairs_used": repairs_used,
+                        "blocked_reason": "repair_budget_exhausted",
+                    },
+                }
+            )
+            return "terminal"
+
+        repairs_used += 1
+        self.update_state({"confirmation_repairs_used": repairs_used})
+        repair_request = "\n".join(
+            [
+                "Confirmation repair:",
+                f"{verifier} did not confirm {executor}'s output.",
+                "Address only the verifier's concrete objections, preserve partial work, then end with a control signal.",
+                "",
+                "Verifier response:",
+                self.strip_signal_suffix(verifier_response),
+            ]
+        )
+        self.append_message("system", repair_request)
+        self.stream.system(f"Confirmation requested repair from {executor}; returning control to {executor}.")
+        self.update_state(
+            {
+                "status": "active",
+                "next_agent": executor,
+                "active_task": repair_request,
+                "confirmation": {
+                    "executor": executor,
+                    "verifier": verifier,
+                    "repairs_used": repairs_used,
+                },
+            }
+        )
+        self.run_agent_round(initiator=repair_request, agents=[executor], intent="confirmation_repair")
+        return "terminal"
+
     def run_agent_round(
         self,
         initiator: str | None = None,
@@ -1493,9 +1840,17 @@ class Chatboks:
                 if signal in {"TASK_COMPLETE", "TASK COMPLETE"}:
                     if not is_last_agent:
                         continue
+                    confirmation = self.confirm_completion_if_needed(agent_name, response, initiator, active_agents, intent)
+                    if confirmation == "confirmed":
+                        self.maybe_announce_direct_standby_agents(initiator, active_agents)
+                        self.stream.system("Task complete. Awaiting next instruction.")
+                        self.update_state({"status": "idle", "confirmation": None})
+                        return
+                    if confirmation == "terminal":
+                        return
                     self.maybe_announce_direct_standby_agents(initiator, active_agents)
                     self.stream.system("Task complete. Awaiting next instruction.")
-                    self.update_state({"status": "idle"})
+                    self.update_state({"status": "idle", "confirmation": None})
                     return
                 if signal == "BLOCKED":
                     if not is_last_agent:

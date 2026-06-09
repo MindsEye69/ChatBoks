@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from context.builder import ContextBuilder
 from orchestrator import COLLABORATION_MODES, Chatboks
-from router import RoutingDecision
+from router import Router, RoutingDecision
 
 
 def _make_app(root: Path) -> Chatboks:
@@ -134,10 +134,127 @@ def test_handle_user_input_records_mode_strategy_agent_as_next():
         print("PASS: mode strategy rounds store the routed solo agent as next")
 
 
+def test_router_confirmation_mode_strategy_routes_to_primary():
+    with tempfile.TemporaryDirectory() as tmp:
+        config = {
+            "projects": {
+                "test": {
+                    "path": str(Path(tmp)),
+                    "agents": ["claude", "codex"],
+                    "primary": "codex",
+                    "mode_strategies": {"confirmation": "confirm_round"},
+                }
+            },
+            "agents": {"claude": {}, "codex": {}},
+        }
+        router = Router(config, "test", Path(tmp))
+
+        decision = router.route_user_prompt_details("implement the thing", collaboration_mode="confirmation")
+
+        assert decision.agents == ["codex"]
+        assert decision.strategy == "mode_confirmation"
+        assert "confirmation" in (decision.note or "")
+        print("PASS: confirmation mode strategy routes to primary executor")
+
+
+def test_confirmation_mode_verifies_completed_output():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_confirmation_repairs": 1},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["confirmation"]
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Implemented.\n>>> TASK_COMPLETE",
+                "Confirmed complete.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        assert app.call_agent_with_token_recovery.call_args_list[0].args == ("codex",)
+        assert app.call_agent_with_token_recovery.call_args_list[1].args == ("claude",)
+        assert app.call_agent_with_token_recovery.call_count == 2
+        assert app.state["status"] == "idle"
+        assert app.state["confirmation"] is None
+        system_messages = [call.args[1] for call in app.append_message.call_args_list if call.args[0] == "system"]
+        assert any("Confirmation mode:" in message for message in system_messages)
+        app.stream.system.assert_any_call("Confirmation complete: claude verified codex's output.")
+        print("PASS: confirmation mode verifies completed output")
+
+
+def test_confirmation_mode_returns_failed_check_to_executor_once():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_confirmation_repairs": 1},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["confirmation"]
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Implemented.\n>>> TASK_COMPLETE",
+                "Missing a focused test.\n>>> HANDOFF",
+                "Added the missing test.\n>>> TASK_COMPLETE",
+                "Confirmed after repair.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        called_agents = [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list]
+        assert called_agents == ["codex", "claude", "codex", "claude"]
+        assert app.state["confirmation_repairs_used"] == 1
+        assert app.state["status"] == "idle"
+        app.stream.system.assert_any_call("Confirmation requested repair from codex; returning control to codex.")
+        app.stream.system.assert_any_call("Confirmation complete: claude verified codex's output.")
+        print("PASS: confirmation mode returns failed checks to executor once")
+
+
+def test_confirmation_mode_blocks_when_repair_budget_is_exhausted():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_confirmation_repairs": 0},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["confirmation"]
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Implemented.\n>>> TASK_COMPLETE",
+                "Missing verification.\n>>> HANDOFF",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        assert app.call_agent_with_token_recovery.call_count == 2
+        assert app.state["status"] == "blocked"
+        assert app.state["next_agent"] == "you"
+        assert app.state["confirmation"]["blocked_reason"] == "repair_budget_exhausted"
+        app.stream.system.assert_any_call("Confirmation blocked: repair budget exhausted. Your input needed.")
+        print("PASS: confirmation mode blocks when repair budget is exhausted")
+
+
 if __name__ == "__main__":
     test_mode_command_updates_state_without_agent_round()
     test_mode_status_lists_available_modes()
     test_round_context_includes_mode_instruction()
     test_handle_user_input_records_first_role_routed_agent_as_next()
     test_handle_user_input_records_mode_strategy_agent_as_next()
+    test_router_confirmation_mode_strategy_routes_to_primary()
+    test_confirmation_mode_verifies_completed_output()
+    test_confirmation_mode_returns_failed_check_to_executor_once()
+    test_confirmation_mode_blocks_when_repair_budget_is_exhausted()
     print("\nAll mode smoke tests passed.")

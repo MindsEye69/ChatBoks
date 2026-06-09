@@ -45,6 +45,7 @@ def test_slash_commands_bypass_buffer():
         "/mode bugsearch",
         "/agent codex exhausted 60m",
         "/graph",
+        "/model-commands",
         "/usage",
         "/suggest-outcome codex",
         "/wins",
@@ -107,6 +108,12 @@ def test_handle_user_input_routes_slash_commands_without_buffer():
         app.handle_graph_command = MagicMock()
         app.handle_user_input("/graph")
         app.handle_graph_command.assert_called_once()
+        app.run_agent_round.assert_not_called()
+
+        # /model-commands should stay local and not trigger a round
+        app.handle_model_commands_command = MagicMock()
+        app.handle_user_input("/model-commands")
+        app.handle_model_commands_command.assert_called_once()
         app.run_agent_round.assert_not_called()
 
         # /suggest-outcome should stay local and not trigger a round

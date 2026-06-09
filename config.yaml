@@ -10,12 +10,14 @@ projects:
     mode_strategies:
       implement: solo_codex
       review: solo_claude
+      confirmation: confirm_round
       diagnose: solo_claude
       bugsearch: full_round
       brainstorm: full_round
     role_routes:
       implement: [codex, claude]
       review: [claude, codex]
+      confirmation: [codex, claude]
       bugsearch: [claude, codex]
       diagnose: [claude, codex]
       brainstorm: [claude, codex]
@@ -62,6 +64,13 @@ agents:
     token_warning: 150000
     color: cyan
     role_file: CLAUDE.md
+    model_commands:
+      - name: ultrareview
+        aliases: [/ultrareview, ultrareview]
+        type: cli_subcommand
+        argv: [ultrareview, "{args}"]
+        description: Run Claude Code Ultrareview for the current branch, PR, or target.
+        enabled: true
   codex:
     cli: C:\Users\MindsEye\AppData\Roaming\npm\codex.cmd
     adapter_profile: codex_exec_v1

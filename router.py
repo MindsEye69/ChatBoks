@@ -165,6 +165,13 @@ class Router:
             )
         if strategy == "full_round":
             return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
+        if strategy == "confirm_round":
+            return RoutingDecision(
+                [self.primary()],
+                text,
+                note=f"Mode strategy: {role} routes this request to {self.primary()} with confirmation.",
+                strategy="mode_confirmation",
+            )
         return None
 
     def auto_route_prompt(

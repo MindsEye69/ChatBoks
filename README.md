@@ -84,6 +84,7 @@ strategy when the project config opts in.
 /mode bugsearch
 /mode implement
 /mode review
+/mode confirmation
 /mode diagnose
 /mode default
 ```
@@ -92,6 +93,7 @@ strategy when the project config opts in.
 - `bugsearch`: concrete defects, edge cases, regressions, and test gaps.
 - `implement`: scoped patches, tests, and buildable changes.
 - `review`: findings-first code review posture.
+- `confirmation`: responsible model works first; another model verifies completion before ChatBoks calls it done.
 - `diagnose`: root cause and smallest useful probes.
 - `default`: normal relay behavior.
 
@@ -103,6 +105,7 @@ projects:
     mode_strategies:
       implement: solo_codex
       review: solo_claude
+      confirmation: confirm_round
       diagnose: solo_claude
       bugsearch: full_round
       brainstorm: full_round
@@ -112,6 +115,9 @@ projects:
   Agent Zero route applies first.
 - `solo_claude`: same idea, but Claude-first.
 - `full_round`: keep the configured collaboration lane for that mode.
+- `confirm_round`: start with the project primary when no stronger route applies, then ask a different configured
+  main agent to verify final completion. If the verifier does not confirm, ChatBoks gives the responsible agent one
+  bounded repair pass by default and verifies again.
 
 ## Context Modes
 
@@ -167,6 +173,25 @@ Use direct tags like `@zero` when you want the local/bootstrap model specificall
 Codex Spark lane for a small scoped coding task. Use `@all ...` to opt into the full configured non-direct project team
 for one prompt. Local/direct agents can fill a main seat only when explicitly marked with `can_fill_main_seat: true` and
 selected as a fallback for an exhausted agent.
+
+## Model-Specific Commands
+
+ChatBoks owns raw slash commands. A prompt such as `/help` or `/graph` is handled locally and is never sent to a model.
+Provider/model commands use an explicit model namespace:
+
+```text
+@claude /ultrareview main
+@claude -- /ultrareview main
+/model-commands
+```
+
+`@claude /ultrareview main` runs the registered Claude CLI subcommand from `config.yaml`. The `--` form escapes the
+slash command and sends `/ultrareview main` to the addressed model as ordinary prompt text. If a command belongs to a
+different model, ChatBoks shows a hint and lets the addressed model discuss the request without executing the command.
+
+Use `/model-commands` to list registered executable model commands. In this first version, ChatBoks only executes
+explicitly configured `cli_subcommand` entries; unknown provider slash commands are treated as normal prompt text after
+an explicit `@agent` route.
 
 ## Routing Intelligence
 
