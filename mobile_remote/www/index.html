@@ -23,14 +23,19 @@
         <input id="baseUrl" type="url" placeholder="https://your-desktop.tailnet.ts.net">
       </label>
       <label class="field">
-        <span>Bearer token</span>
-        <input id="token" type="password" placeholder="Paste token from remote_control.py">
+        <span>Pairing code</span>
+        <input id="pairCode" type="text" placeholder="Enter one-time pairing code" autocomplete="one-time-code">
+      </label>
+      <label class="field">
+        <span>Session token</span>
+        <input id="token" type="password" placeholder="Filled after pairing; optional to save">
       </label>
       <div class="button-row">
         <button id="saveButton" type="button">Save</button>
+        <button id="pairButton" class="ghost" type="button">Pair</button>
         <button id="connectButton" class="ghost" type="button">Connect</button>
       </div>
-      <p class="hint">Use a private Tailscale Serve URL. The app is not meant for public endpoints.</p>
+      <p class="hint">Use a private Tailscale Serve URL. Pair with the one-time desktop code first. Session tokens are short-lived and meant only for your own device.</p>
       <div id="errorBox" class="error hidden"></div>
     </section>
 

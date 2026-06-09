@@ -5,6 +5,7 @@ const state = {
 
 const els = {
   baseUrl: document.getElementById("baseUrl"),
+  pairCode: document.getElementById("pairCode"),
   token: document.getElementById("token"),
   errorBox: document.getElementById("errorBox"),
   status: document.getElementById("statusValue"),
@@ -16,6 +17,7 @@ const els = {
   events: document.getElementById("eventsList"),
   refresh: document.getElementById("refreshButton"),
   save: document.getElementById("saveButton"),
+  pair: document.getElementById("pairButton"),
   connect: document.getElementById("connectButton"),
   send: document.getElementById("sendButton"),
 };
@@ -56,7 +58,15 @@ function currentBaseUrl() {
 function currentToken() {
   const value = els.token.value.trim();
   if (!value) {
-    throw new Error("Enter the bearer token from the desktop bridge.");
+    throw new Error("Pair with the desktop bridge first, or enter a saved session token.");
+  }
+  return value;
+}
+
+function currentPairCode() {
+  const value = els.pairCode.value.trim().toUpperCase();
+  if (!value) {
+    throw new Error("Enter the one-time pairing code from the desktop bridge.");
   }
   return value;
 }
@@ -76,6 +86,26 @@ async function apiFetch(path, options = {}) {
   if (!response.ok) {
     throw new Error(body.error || `Request failed (${response.status})`);
   }
+  return body;
+}
+
+async function pairDevice() {
+  const baseUrl = currentBaseUrl();
+  const pairCode = currentPairCode();
+  const response = await fetch(baseUrl + "/api/pair", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ pair_code: pairCode }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.error || `Pairing failed (${response.status})`);
+  }
+  els.token.value = body.session_token || "";
+  els.pairCode.value = "";
+  saveSettings();
   return body;
 }
 
@@ -136,10 +166,27 @@ els.save.addEventListener("click", () => {
   showError("");
 });
 
+els.pair.addEventListener("click", async () => {
+  try {
+    saveSettings();
+    const data = await pairDevice();
+    showError(`Paired successfully. Session token valid for ${data.ttl_seconds || "a limited time"} seconds.`);
+  } catch (error) {
+    showError(error.message || String(error));
+  }
+});
+
 els.connect.addEventListener("click", async () => {
-  saveSettings();
-  state.eventCursor = 0;
-  await refreshSession();
+  try {
+    saveSettings();
+    if (!els.token.value.trim()) {
+      await pairDevice();
+    }
+    state.eventCursor = 0;
+    await refreshSession();
+  } catch (error) {
+    showError(error.message || String(error));
+  }
 });
 
 els.refresh.addEventListener("click", refreshSession);
