@@ -20,7 +20,7 @@
   </header>
 
   <main class="layout">
-    <section id="connectionPanel" class="panel">
+    <section id="connectionPanel" class="panel rail-panel connection-panel">
       <div class="section-head">
         <h2>Connection</h2>
         <button id="connectionCollapseButton" class="ghost compact" type="button">Hide</button>
@@ -46,7 +46,7 @@
       <div id="errorBox" class="error hidden"></div>
     </section>
 
-    <section id="sessionPanel" class="panel">
+    <section id="sessionPanel" class="panel rail-panel session-panel">
       <div class="section-head">
         <h2>Session</h2>
         <button id="sessionCollapseButton" class="ghost compact" type="button">Hide</button>
@@ -62,26 +62,26 @@
       </dl>
     </section>
 
-    <section id="tokenPanel" class="panel hidden">
+    <section id="tokenPanel" class="panel rail-panel token-panel hidden">
       <h2>Token usage</h2>
       <pre id="tokenLine" class="token-line"></pre>
     </section>
 
-    <section class="panel">
+    <section class="panel response-panel">
       <div class="section-head">
         <h2>Latest response</h2>
       </div>
       <div id="latestResponse" class="latest-response">-</div>
     </section>
 
-    <section id="transcriptPanel" class="panel hidden">
+    <section id="transcriptPanel" class="panel transcript-panel hidden">
       <div class="section-head">
         <h2>Transcript</h2>
       </div>
       <div id="transcriptList" class="stack"></div>
     </section>
 
-    <section class="panel">
+    <section class="panel events-panel">
       <h2>Bridge events</h2>
       <div id="eventsList" class="stack"></div>
     </section>

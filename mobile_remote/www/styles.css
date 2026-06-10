@@ -60,6 +60,8 @@ body {
   display: grid;
   gap: 12px;
   padding: 16px;
+  max-width: 1480px;
+  margin: 0 auto;
 }
 
 .panel {
@@ -216,6 +218,13 @@ button.compact {
   color: var(--text);
 }
 
+.response-panel,
+.transcript-panel,
+.events-panel,
+.rail-panel {
+  min-width: 0;
+}
+
 @media (max-width: 520px) {
   .topbar {
     gap: 10px;
@@ -337,4 +346,97 @@ button.compact {
   width: 1px;
   height: 1px;
   opacity: 0;
+}
+
+@media (min-width: 900px) {
+  body {
+    padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .topbar {
+    grid-template-columns: minmax(180px, auto) minmax(0, 1fr);
+    padding: 12px 20px;
+  }
+
+  .topbar-actions {
+    display: flex;
+    justify-content: flex-end;
+    width: auto;
+    max-width: none;
+  }
+
+  .layout {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, 340px);
+    grid-template-areas:
+      "left main right"
+      "left transcript right";
+    align-items: start;
+    gap: 14px;
+    padding: 16px 20px 22px;
+  }
+
+  .rail-panel {
+    grid-column: 1;
+  }
+
+  .connection-panel {
+    grid-row: 1;
+  }
+
+  .session-panel {
+    grid-row: 2;
+  }
+
+  .token-panel {
+    grid-row: 3;
+  }
+
+  .response-panel {
+    grid-area: main;
+    min-height: min(54vh, 560px);
+  }
+
+  .response-panel .latest-response {
+    max-height: min(48vh, 500px);
+  }
+
+  .transcript-panel {
+    grid-area: transcript;
+  }
+
+  .events-panel {
+    grid-area: right;
+    position: sticky;
+    top: 76px;
+    max-height: calc(100vh - 236px);
+    overflow: auto;
+  }
+
+  .composer {
+    left: 50%;
+    right: auto;
+    width: min(760px, calc(100vw - 40px));
+    transform: translateX(-50%);
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .composer textarea {
+    min-height: 52px;
+  }
+}
+
+@media (min-width: 1180px) {
+  .layout {
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(280px, 360px);
+  }
+
+  .response-panel {
+    min-height: min(62vh, 650px);
+  }
+
+  .response-panel .latest-response {
+    max-height: min(56vh, 590px);
+  }
 }
