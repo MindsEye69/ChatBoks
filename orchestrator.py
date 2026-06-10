@@ -2730,10 +2730,61 @@ class Chatboks:
             "project": self.project,
             "sender": sender,
             "round": self.state.get("round"),
+            "context": self.thought_packet_context(sender),
             "packet": packet.to_record(),
         }
         with packet_file.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
+
+    def thought_packet_context(self, sender: str) -> dict[str, Any]:
+        intent = str(self.state.get("round_intent") or "respond")
+        mode = str(self.state.get("collaboration_mode") or "default")
+        context: dict[str, Any] = {
+            "intent": intent,
+            "mode": mode,
+        }
+        active_task = self.state.get("active_task")
+        if active_task:
+            context["active_task"] = self.truncate_context_value(active_task)
+
+        confirmation = self.state.get("confirmation")
+        if isinstance(confirmation, dict):
+            executor = str(confirmation.get("executor") or "")
+            verifier = str(confirmation.get("verifier") or "")
+            context["confirmation"] = {
+                "executor": executor,
+                "verifier": verifier,
+                "repairs_used": int(confirmation.get("repairs_used", 0) or 0),
+                "stage": self.confirmation_packet_stage(sender, intent, executor, verifier),
+            }
+        elif mode == "confirmation":
+            context["confirmation"] = {
+                "executor": sender,
+                "verifier": "",
+                "repairs_used": int(self.state.get("confirmation_repairs_used", 0) or 0),
+                "stage": "executor_output",
+            }
+        return context
+
+    def confirmation_packet_stage(
+        self,
+        sender: str,
+        intent: str,
+        executor: str,
+        verifier: str,
+    ) -> str:
+        if intent == "confirm" and sender == verifier:
+            return "verifier_review"
+        if intent == "confirmation_repair" and sender == executor:
+            return "executor_repair"
+        if sender == verifier:
+            return "verifier_review"
+        if sender == executor:
+            return "executor_output"
+        return "related_agent"
+
+    def truncate_context_value(self, value: object, limit: int = 600) -> str:
+        return " ".join(str(value).strip().split())[:limit]
 
     def buffer_or_complete_input(self, text: str) -> str | None:
         stripped = text.strip()

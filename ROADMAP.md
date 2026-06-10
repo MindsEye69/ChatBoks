@@ -23,7 +23,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Manual `/sleep` creates durable session memory under `.chatboks/sleep/`, appends a summary checkpoint, and feeds that memory back into future agent context.
 - `/sleep` now acts as a work-block closure report: durable memory, CodeGraph sync attempt, Graphify freshness, git state, diagnostics hint, and `/resume` wake cue.
 - `/resume` shows a visible start-of-session readiness report with graph, memory, packet, git, session, and next-action status.
-- Thought Packets v1 are supported: valid `>>> PACKET` blocks are captured to `.chatboks/packets.jsonl` and used by `/sleep` as cleaner memory input.
+- Thought Packets v1 are supported: valid `>>> PACKET` blocks are captured to `.chatboks/packets.jsonl` with round/mode/confirmation context and used by `/sleep` as cleaner memory input.
 - Session token usage bars and per-session warning/cap thresholds are live.
 - Proposal approval gates now show rough token and optional USD cost estimates.
 - Role-file trust approval is enforced for project-local role files, with approved hashes stored outside the project tree.
@@ -89,6 +89,7 @@ Completed:
 - `/sleep` closure report with memory consolidation, CodeGraph sync, Graphify freshness, git status, diagnostics hint, and `/resume` wake cue.
 - `/resume` command for deliberate session rehydration: graph status, sleep memory, packet trace, git status, doctor hints, and stale-state warnings.
 - Thought Packet capture and packet-aware sleep summaries.
+- Confirmation-mode Thought Packets now include context metadata that distinguishes executor output, verifier review, and executor repair packets.
 
 Remaining:
 
@@ -250,13 +251,14 @@ Implemented:
 - `/sleep` also runs a safe closure checklist: CodeGraph sync attempt, Graphify freshness, git status, diagnostics hint, and `/resume` wake cue.
 - `/resume` provides a visible rehydration command that checks CodeGraph, Graphify, sleep memory, packet memory, git status, session state, and doctor hints.
 - Thought Packet blocks are optional but parsed when agents emit them.
+- Packet records include orchestration context, including confirmation stages, without changing the agent-authored packet block syntax.
 - Packet memory improves `/sleep` by preserving observed facts, risks, next actions, and unresolved signals more cleanly than transcript scraping.
 
 Planned:
 
 - Startup light resume: automatically check for stale graphs/memory without doing expensive work or flooding the terminal.
 - End-of-session `/sleep`: optional heavier closure modes that can refresh Graphify, run doctor/tests, and mark a clean break.
-- Packet-driven confirmation: use packet `risks` and `observed` fields as verifier checklists.
+- Packet-driven confirmation: use packet `risks` and `observed` fields as verifier checklists, and block silent completion when unresolved risks remain.
 - Mobile remote trace view: optional Agent Trace / Packet Trace panel after backend behavior settles.
 
 ## Project Notes
@@ -289,10 +291,8 @@ IO Website:
 
 ## Immediate Next Steps
 
-1. Use Thought Packets in confirmation mode:
-   - verifier sees executor `observed` and `risks`
-   - unresolved risks prevent silent completion
-2. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
+1. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
+2. Use packet `risks` and `observed` fields as active confirmation checklists, including unresolved-risk gating.
 3. Add optional heavier `/sleep` modes for Graphify refresh, doctor, and focused tests.
 4. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
 5. Run an Agent Zero model bake-off with Gemma 4 QAT:

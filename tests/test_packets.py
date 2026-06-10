@@ -97,9 +97,107 @@ signal: TASK_COMPLETE
         assert len(records) == 1
         assert records[0]["sender"] == "codex"
         assert records[0]["round"] == 7
+        assert records[0]["context"]["intent"] == "respond"
+        assert records[0]["context"]["mode"] == "default"
         assert records[0]["packet"]["agent"] == "codex"
         assert records[0]["packet"]["observed"] == ["parser stores packets"]
         assert ">>> PACKET" in app.chatboks_md.read_text(encoding="utf-8")
+
+
+def test_confirmation_packet_context_marks_executor_output():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        app = _make_app(root)
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["active_task"] = "implement the confirmation packet trace"
+        response = """Implemented.
+>>> PACKET
+stance: ADD
+observed:
+- implementation packet recorded
+risks:
+- verifier has not reviewed yet
+next_action: verifier review
+signal: TASK_COMPLETE
+>>> PACKET_END
+>>> TASK_COMPLETE
+"""
+
+        app.append_message("codex", response)
+
+        record = json.loads(app.packet_file.read_text(encoding="utf-8").splitlines()[0])
+        assert record["context"]["mode"] == "confirmation"
+        assert record["context"]["active_task"] == "implement the confirmation packet trace"
+        assert record["context"]["confirmation"] == {
+            "executor": "codex",
+            "verifier": "",
+            "repairs_used": 0,
+            "stage": "executor_output",
+        }
+
+
+def test_confirmation_packet_context_marks_verifier_review_and_repair():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        app = _make_app(root)
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["round_intent"] = "confirm"
+        app.state["active_task"] = "Confirmation mode: verify codex"
+        app.state["confirmation"] = {
+            "executor": "codex",
+            "verifier": "claude",
+            "repairs_used": 0,
+        }
+        verifier_response = """Verified.
+>>> PACKET
+stance: VERIFY
+observed:
+- verifier checked executor output
+risks:
+- none
+next_action: close task
+signal: TASK_COMPLETE
+>>> PACKET_END
+>>> TASK_COMPLETE
+"""
+
+        app.append_message("claude", verifier_response)
+
+        app.state["round_intent"] = "confirmation_repair"
+        app.state["active_task"] = "Confirmation repair: address missing test"
+        app.state["confirmation"] = {
+            "executor": "codex",
+            "verifier": "claude",
+            "repairs_used": 1,
+        }
+        repair_response = """Repaired.
+>>> PACKET
+stance: ADD
+observed:
+- repair addressed verifier objection
+risks:
+- awaiting verifier
+next_action: verifier recheck
+signal: TASK_COMPLETE
+>>> PACKET_END
+>>> TASK_COMPLETE
+"""
+
+        app.append_message("codex", repair_response)
+
+        records = [json.loads(line) for line in app.packet_file.read_text(encoding="utf-8").splitlines()]
+        assert records[0]["context"]["confirmation"] == {
+            "executor": "codex",
+            "verifier": "claude",
+            "repairs_used": 0,
+            "stage": "verifier_review",
+        }
+        assert records[1]["context"]["confirmation"] == {
+            "executor": "codex",
+            "verifier": "claude",
+            "repairs_used": 1,
+            "stage": "executor_repair",
+        }
 
 
 def test_summarizer_prefers_packet_memory():

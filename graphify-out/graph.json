@@ -320,7 +320,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "agents_base_baseagent",
-      "community": 1,
+      "community": 48,
       "norm_label": "baseagent"
     },
     {
@@ -350,7 +350,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "agents_base_py_any",
-      "community": 1,
+      "community": 48,
       "norm_label": "any"
     },
     {
@@ -360,7 +360,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "agents_base_baseagent_initialize",
-      "community": 1,
+      "community": 48,
       "norm_label": ".initialize()"
     },
     {
@@ -370,7 +370,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "agents_base_baseagent_call",
-      "community": 1,
+      "community": 48,
       "norm_label": ".call()"
     },
     {
@@ -380,7 +380,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "agents_base_baseagent_reinitialize",
-      "community": 1,
+      "community": 48,
       "norm_label": ".reinitialize()"
     },
     {
@@ -390,7 +390,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "agents_base_baseagent_execute",
-      "community": 1,
+      "community": 48,
       "norm_label": ".execute()"
     },
     {
@@ -400,7 +400,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "agents_base_baseagent_build_prompt",
-      "community": 1,
+      "community": 48,
       "norm_label": ".build_prompt()"
     },
     {
@@ -410,7 +410,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "agents_base_baseagent_command",
-      "community": 1,
+      "community": 48,
       "norm_label": ".command()"
     },
     {
@@ -420,7 +420,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_args",
-      "community": 1,
+      "community": 48,
       "norm_label": ".adapter_args()"
     },
     {
@@ -430,7 +430,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_run_plan",
-      "community": 1,
+      "community": 48,
       "norm_label": ".adapter_run_plan()"
     },
     {
@@ -440,7 +440,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "agents_base_baseagent_expand_adapter_arg",
-      "community": 1,
+      "community": 48,
       "norm_label": ".expand_adapter_arg()"
     },
     {
@@ -450,7 +450,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli",
-      "community": 1,
+      "community": 48,
       "norm_label": ".run_cli()"
     },
     {
@@ -460,7 +460,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli_once",
-      "community": 1,
+      "community": 48,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -470,7 +470,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "agents_base_baseagent_drain_output",
-      "community": 1,
+      "community": 48,
       "norm_label": ".drain_output()"
     },
     {
@@ -480,7 +480,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "queue",
-      "community": 1,
+      "community": 48,
       "norm_label": "queue"
     },
     {
@@ -490,7 +490,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "popen",
-      "community": 1,
+      "community": 48,
       "norm_label": "popen"
     },
     {
@@ -500,7 +500,7 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "agents_base_baseagent_resolve_timeouts",
-      "community": 1,
+      "community": 48,
       "norm_label": ".resolve_timeouts()"
     },
     {
@@ -510,7 +510,7 @@
       "source_location": "L381",
       "_origin": "ast",
       "id": "agents_base_baseagent_terminate_process",
-      "community": 1,
+      "community": 48,
       "norm_label": ".terminate_process()"
     },
     {
@@ -520,7 +520,7 @@
       "source_location": "L404",
       "_origin": "ast",
       "id": "agents_base_baseagent_short_codegraph_status",
-      "community": 1,
+      "community": 48,
       "norm_label": ".short_codegraph_status()"
     },
     {
@@ -530,7 +530,7 @@
       "source_location": "L411",
       "_origin": "ast",
       "id": "agents_base_baseagent_is_token_exhaustion",
-      "community": 1,
+      "community": 48,
       "norm_label": ".is_token_exhaustion()"
     },
     {
@@ -960,7 +960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "context_packets",
-      "community": 9,
+      "community": 11,
       "norm_label": "packets.py"
     },
     {
@@ -970,7 +970,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "context_packets_thoughtpacket",
-      "community": 9,
+      "community": 11,
       "norm_label": "thoughtpacket"
     },
     {
@@ -980,7 +980,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "context_packets_thoughtpacket_to_record",
-      "community": 9,
+      "community": 11,
       "norm_label": ".to_record()"
     },
     {
@@ -990,7 +990,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "context_packets_py_any",
-      "community": 9,
+      "community": 11,
       "norm_label": "any"
     },
     {
@@ -1000,7 +1000,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "context_packets_extract_packets",
-      "community": 9,
+      "community": 11,
       "norm_label": "extract_packets()"
     },
     {
@@ -1010,7 +1010,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "context_packets_parse_packet_body",
-      "community": 9,
+      "community": 11,
       "norm_label": "parse_packet_body()"
     },
     {
@@ -1020,7 +1020,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "context_packets_normalize_value",
-      "community": 9,
+      "community": 11,
       "norm_label": "normalize_value()"
     },
     {
@@ -1030,7 +1030,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "context_packets_clean_list",
-      "community": 9,
+      "community": 11,
       "norm_label": "clean_list()"
     },
     {
@@ -1040,7 +1040,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "context_packets_packet_records_from_jsonl",
-      "community": 9,
+      "community": 11,
       "norm_label": "packet_records_from_jsonl()"
     },
     {
@@ -3220,7 +3220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "orchestrator",
-      "community": 9,
+      "community": 11,
       "norm_label": "orchestrator.py"
     },
     {
@@ -3230,7 +3230,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler",
-      "community": 48,
+      "community": 11,
       "norm_label": "chatboksfilehandler"
     },
     {
@@ -3240,7 +3240,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "filesystemeventhandler",
-      "community": 48,
+      "community": 11,
       "norm_label": "filesystemeventhandler"
     },
     {
@@ -3250,7 +3250,7 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler_init",
-      "community": 48,
+      "community": 11,
       "norm_label": ".__init__()"
     },
     {
@@ -3280,7 +3280,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "orchestrator_chatboks",
-      "community": 44,
+      "community": 52,
       "norm_label": "chatboks"
     },
     {
@@ -3520,7 +3520,7 @@
       "source_location": "L617",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_memory_status_lines",
-      "community": 44,
+      "community": 46,
       "norm_label": ".sleep_memory_status_lines()"
     },
     {
@@ -3680,7 +3680,7 @@
       "source_location": "L840",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_skills_command",
-      "community": 44,
+      "community": 52,
       "norm_label": ".handle_skills_command()"
     },
     {
@@ -3690,7 +3690,7 @@
       "source_location": "L869",
       "_origin": "ast",
       "id": "orchestrator_chatboks_available_skills",
-      "community": 44,
+      "community": 52,
       "norm_label": ".available_skills()"
     },
     {
@@ -3700,7 +3700,7 @@
       "source_location": "L882",
       "_origin": "ast",
       "id": "orchestrator_chatboks_skill_summary",
-      "community": 44,
+      "community": 52,
       "norm_label": ".skill_summary()"
     },
     {
@@ -3720,7 +3720,7 @@
       "source_location": "L902",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_agent_command",
-      "community": 0,
+      "community": 6,
       "norm_label": ".handle_agent_command()"
     },
     {
@@ -3770,7 +3770,7 @@
       "source_location": "L984",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resolve_available_agents",
-      "community": 0,
+      "community": 6,
       "norm_label": ".resolve_available_agents()"
     },
     {
@@ -3820,7 +3820,7 @@
       "source_location": "L1072",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_agent_statuses",
-      "community": 0,
+      "community": 6,
       "norm_label": ".load_agent_statuses()"
     },
     {
@@ -3830,7 +3830,7 @@
       "source_location": "L1100",
       "_origin": "ast",
       "id": "orchestrator_chatboks_save_agent_statuses",
-      "community": 0,
+      "community": 6,
       "norm_label": ".save_agent_statuses()"
     },
     {
@@ -3840,7 +3840,7 @@
       "source_location": "L1107",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_status_path",
-      "community": 0,
+      "community": 6,
       "norm_label": ".agent_status_path()"
     },
     {
@@ -3910,7 +3910,7 @@
       "source_location": "L1190",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_sleep_command",
-      "community": 44,
+      "community": 46,
       "norm_label": ".handle_sleep_command()"
     },
     {
@@ -3960,7 +3960,7 @@
       "source_location": "L1263",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_sleep_status",
-      "community": 44,
+      "community": 46,
       "norm_label": ".show_sleep_status()"
     },
     {
@@ -3980,7 +3980,7 @@
       "source_location": "L1331",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_usage_command",
-      "community": 46,
+      "community": 0,
       "norm_label": ".handle_usage_command()"
     },
     {
@@ -3990,7 +3990,7 @@
       "source_location": "L1359",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_usage_baselines",
-      "community": 46,
+      "community": 0,
       "norm_label": ".show_usage_baselines()"
     },
     {
@@ -4000,7 +4000,7 @@
       "source_location": "L1406",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sync_usage_provider",
-      "community": 46,
+      "community": 0,
       "norm_label": ".sync_usage_provider()"
     },
     {
@@ -4010,7 +4010,7 @@
       "source_location": "L1430",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resolve_usage_provider",
-      "community": 46,
+      "community": 0,
       "norm_label": ".resolve_usage_provider()"
     },
     {
@@ -4060,7 +4060,7 @@
       "source_location": "L1549",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_usage_baseline",
-      "community": 46,
+      "community": 0,
       "norm_label": ".append_usage_baseline()"
     },
     {
@@ -4070,7 +4070,7 @@
       "source_location": "L1555",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_usage_baselines",
-      "community": 46,
+      "community": 0,
       "norm_label": ".load_usage_baselines()"
     },
     {
@@ -4080,7 +4080,7 @@
       "source_location": "L1571",
       "_origin": "ast",
       "id": "orchestrator_chatboks_usage_baselines_path",
-      "community": 46,
+      "community": 0,
       "norm_label": ".usage_baselines_path()"
     },
     {
@@ -4140,7 +4140,7 @@
       "source_location": "L1637",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_suggestion_command",
-      "community": 47,
+      "community": 45,
       "norm_label": ".handle_outcome_suggestion_command()"
     },
     {
@@ -4150,7 +4150,7 @@
       "source_location": "L1665",
       "_origin": "ast",
       "id": "orchestrator_chatboks_build_outcome_suggestion_prompt",
-      "community": 47,
+      "community": 52,
       "norm_label": ".build_outcome_suggestion_prompt()"
     },
     {
@@ -4160,7 +4160,7 @@
       "source_location": "L1705",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_outcome",
-      "community": 47,
+      "community": 52,
       "norm_label": ".append_outcome()"
     },
     {
@@ -4170,7 +4170,7 @@
       "source_location": "L1711",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_outcomes",
-      "community": 47,
+      "community": 52,
       "norm_label": ".show_outcomes()"
     },
     {
@@ -4180,7 +4180,7 @@
       "source_location": "L1743",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_outcomes",
-      "community": 47,
+      "community": 52,
       "norm_label": ".load_outcomes()"
     },
     {
@@ -4190,7 +4190,7 @@
       "source_location": "L1759",
       "_origin": "ast",
       "id": "orchestrator_chatboks_outcomes_path",
-      "community": 47,
+      "community": 52,
       "norm_label": ".outcomes_path()"
     },
     {
@@ -4200,7 +4200,7 @@
       "source_location": "L1762",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_recent_transcript_lines",
-      "community": 47,
+      "community": 52,
       "norm_label": ".load_recent_transcript_lines()"
     },
     {
@@ -4210,7 +4210,7 @@
       "source_location": "L1771",
       "_origin": "ast",
       "id": "orchestrator_chatboks_call_agent_zero_direct",
-      "community": 47,
+      "community": 45,
       "norm_label": ".call_agent_zero_direct()"
     },
     {
@@ -4230,7 +4230,7 @@
       "source_location": "L1806",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_counts",
-      "community": 47,
+      "community": 52,
       "norm_label": ".format_counts()"
     },
     {
@@ -4250,7 +4250,7 @@
       "source_location": "L1819",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_commit_trigger",
-      "community": 0,
+      "community": 52,
       "norm_label": ".handle_commit_trigger()"
     },
     {
@@ -4260,7 +4260,7 @@
       "source_location": "L1826",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_handoff",
-      "community": 0,
+      "community": 45,
       "norm_label": ".handle_handoff()"
     },
     {
@@ -4440,7 +4440,7 @@
       "source_location": "L2221",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_cost",
-      "community": 44,
+      "community": 52,
       "norm_label": ".estimate_execution_cost()"
     },
     {
@@ -4450,7 +4450,7 @@
       "source_location": "L2253",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_target",
-      "community": 0,
+      "community": 52,
       "norm_label": ".estimate_execution_target()"
     },
     {
@@ -4460,7 +4460,7 @@
       "source_location": "L2260",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_output_tokens",
-      "community": 44,
+      "community": 52,
       "norm_label": ".estimate_execution_output_tokens()"
     },
     {
@@ -4470,7 +4470,7 @@
       "source_location": "L2267",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_cost",
-      "community": 44,
+      "community": 52,
       "norm_label": ".estimate_token_cost()"
     },
     {
@@ -4480,7 +4480,7 @@
       "source_location": "L2280",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_count",
-      "community": 44,
+      "community": 52,
       "norm_label": ".estimate_token_count()"
     },
     {
@@ -4490,7 +4490,7 @@
       "source_location": "L2283",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_proposal_gate",
-      "community": 44,
+      "community": 52,
       "norm_label": ".format_proposal_gate()"
     },
     {
@@ -4500,7 +4500,7 @@
       "source_location": "L2309",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_usd",
-      "community": 44,
+      "community": 52,
       "norm_label": ".format_usd()"
     },
     {
@@ -4510,7 +4510,7 @@
       "source_location": "L2313",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_compact_number",
-      "community": 44,
+      "community": 52,
       "norm_label": ".format_compact_number()"
     },
     {
@@ -4590,7 +4590,7 @@
       "source_location": "L2485",
       "_origin": "ast",
       "id": "orchestrator_chatboks_write_sleep_memory",
-      "community": 44,
+      "community": 46,
       "norm_label": ".write_sleep_memory()"
     },
     {
@@ -4600,7 +4600,7 @@
       "source_location": "L2526",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_dir",
-      "community": 44,
+      "community": 46,
       "norm_label": ".sleep_dir()"
     },
     {
@@ -4610,7 +4610,7 @@
       "source_location": "L2529",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_latest_path",
-      "community": 44,
+      "community": 46,
       "norm_label": ".sleep_latest_path()"
     },
     {
@@ -4620,7 +4620,7 @@
       "source_location": "L2533",
       "_origin": "ast",
       "id": "orchestrator_chatboks_summary_item_count",
-      "community": 44,
+      "community": 46,
       "norm_label": ".summary_item_count()"
     },
     {
@@ -4640,7 +4640,7 @@
       "source_location": "L2555",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_timeout_is_looping",
-      "community": 49,
+      "community": 52,
       "norm_label": ".agent_timeout_is_looping()"
     },
     {
@@ -4650,7 +4650,7 @@
       "source_location": "L2570",
       "_origin": "ast",
       "id": "orchestrator_chatboks_diff_changed_lines",
-      "community": 49,
+      "community": 52,
       "norm_label": ".diff_changed_lines()"
     },
     {
@@ -4770,7 +4770,7 @@
       "source_location": "L2718",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_thought_packets",
-      "community": 44,
+      "community": 52,
       "norm_label": ".capture_thought_packets()"
     },
     {
@@ -4780,7 +4780,7 @@
       "source_location": "L2725",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_thought_packet",
-      "community": 44,
+      "community": 52,
       "norm_label": ".append_thought_packet()"
     },
     {
@@ -4794,10 +4794,40 @@
       "norm_label": "thoughtpacket"
     },
     {
+      "label": ".thought_packet_context()",
+      "file_type": "code",
+      "source_file": "orchestrator.py",
+      "source_location": "L2739",
+      "_origin": "ast",
+      "id": "orchestrator_chatboks_thought_packet_context",
+      "community": 52,
+      "norm_label": ".thought_packet_context()"
+    },
+    {
+      "label": ".confirmation_packet_stage()",
+      "file_type": "code",
+      "source_file": "orchestrator.py",
+      "source_location": "L2769",
+      "_origin": "ast",
+      "id": "orchestrator_chatboks_confirmation_packet_stage",
+      "community": 52,
+      "norm_label": ".confirmation_packet_stage()"
+    },
+    {
+      "label": ".truncate_context_value()",
+      "file_type": "code",
+      "source_file": "orchestrator.py",
+      "source_location": "L2786",
+      "_origin": "ast",
+      "id": "orchestrator_chatboks_truncate_context_value",
+      "community": 52,
+      "norm_label": ".truncate_context_value()"
+    },
+    {
       "label": ".buffer_or_complete_input()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2738",
+      "source_location": "L2789",
       "_origin": "ast",
       "id": "orchestrator_chatboks_buffer_or_complete_input",
       "community": 52,
@@ -4807,17 +4837,17 @@
       "label": ".ensure_project_files()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2762",
+      "source_location": "L2813",
       "_origin": "ast",
       "id": "orchestrator_chatboks_ensure_project_files",
-      "community": 0,
+      "community": 6,
       "norm_label": ".ensure_project_files()"
     },
     {
       "label": ".load_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2783",
+      "source_location": "L2834",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_state",
       "community": 0,
@@ -4827,7 +4857,7 @@
       "label": ".save_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2788",
+      "source_location": "L2839",
       "_origin": "ast",
       "id": "orchestrator_chatboks_save_state",
       "community": 45,
@@ -4837,7 +4867,7 @@
       "label": ".update_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2792",
+      "source_location": "L2843",
       "_origin": "ast",
       "id": "orchestrator_chatboks_update_state",
       "community": 45,
@@ -4847,7 +4877,7 @@
       "label": ".default_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2796",
+      "source_location": "L2847",
       "_origin": "ast",
       "id": "orchestrator_chatboks_default_state",
       "community": 0,
@@ -4857,7 +4887,7 @@
       "label": ".load_config()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2821",
+      "source_location": "L2872",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_config",
       "community": 0,
@@ -4867,7 +4897,7 @@
       "label": ".normalize_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2827",
+      "source_location": "L2878",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_state",
       "community": 0,
@@ -4877,7 +4907,7 @@
       "label": ".is_complete_user_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2861",
+      "source_location": "L2912",
       "_origin": "ast",
       "id": "orchestrator_chatboks_is_complete_user_message",
       "community": 52,
@@ -4887,7 +4917,7 @@
       "label": ".extract_first_line()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2893",
+      "source_location": "L2944",
       "_origin": "ast",
       "id": "orchestrator_chatboks_extract_first_line",
       "community": 45,
@@ -4897,7 +4927,7 @@
       "label": ".normalize_modification()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2901",
+      "source_location": "L2952",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_modification",
       "community": 45,
@@ -4907,7 +4937,7 @@
       "label": ".sender_tag()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2911",
+      "source_location": "L2962",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sender_tag",
       "community": 6,
@@ -4917,20 +4947,20 @@
       "label": ".timestamp()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2918",
+      "source_location": "L2969",
       "_origin": "ast",
       "id": "orchestrator_chatboks_timestamp",
-      "community": 0,
+      "community": 6,
       "norm_label": ".timestamp()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2922",
+      "source_location": "L2973",
       "_origin": "ast",
       "id": "orchestrator_main",
-      "community": 9,
+      "community": 52,
       "norm_label": "main()"
     },
     {
@@ -4940,7 +4970,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "orchestrator_rationale_164",
-      "community": 48,
+      "community": 11,
       "norm_label": "watch chatboks.md for external handoff changes."
     },
     {
@@ -5790,7 +5820,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "router_router_get_agent",
-      "community": 4,
+      "community": 1,
       "norm_label": ".get_agent()"
     },
     {
@@ -5800,7 +5830,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "router_router_load_role",
-      "community": 4,
+      "community": 1,
       "norm_label": ".load_role()"
     },
     {
@@ -5810,7 +5840,7 @@
       "source_location": "L363",
       "_origin": "ast",
       "id": "router_router_shared_protocol",
-      "community": 4,
+      "community": 1,
       "norm_label": ".shared_protocol()"
     },
     {
@@ -5820,7 +5850,7 @@
       "source_location": "L370",
       "_origin": "ast",
       "id": "router_router_with_shared_protocol",
-      "community": 4,
+      "community": 1,
       "norm_label": ".with_shared_protocol()"
     },
     {
@@ -7510,7 +7540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_outcomes",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_outcomes.py"
     },
     {
@@ -7520,7 +7550,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_make_app",
-      "community": 51,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -7530,7 +7560,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_py_path",
-      "community": 51,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -7540,7 +7570,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_py_chatboks",
-      "community": 51,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -7550,7 +7580,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_win_command_records_jsonl_without_agent_round",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_win_command_records_jsonl_without_agent_round()"
     },
     {
@@ -7560,7 +7590,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_outcomes_summary_reads_jsonl",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_outcomes_summary_reads_jsonl()"
     },
     {
@@ -7570,7 +7600,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_suggest_outcome_uses_agent_zero_without_recording_jsonl",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_suggest_outcome_uses_agent_zero_without_recording_jsonl()"
     },
     {
@@ -7580,7 +7610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_outcomes_rationale_1",
-      "community": 51,
+      "community": 11,
       "norm_label": "smoke tests for manual collaboration outcome tracking."
     },
     {
@@ -7590,7 +7620,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_packets",
-      "community": 9,
+      "community": 11,
       "norm_label": "test_packets.py"
     },
     {
@@ -7600,7 +7630,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_packets_make_app",
-      "community": 9,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -7610,7 +7640,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_packets_py_path",
-      "community": 9,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -7620,7 +7650,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_packets_py_chatboks",
-      "community": 9,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -7630,7 +7660,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "tests_test_packets_test_extract_packets_parses_valid_block",
-      "community": 9,
+      "community": 11,
       "norm_label": "test_extract_packets_parses_valid_block()"
     },
     {
@@ -7640,7 +7670,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "tests_test_packets_test_extract_packets_ignores_malformed_block",
-      "community": 9,
+      "community": 11,
       "norm_label": "test_extract_packets_ignores_malformed_block()"
     },
     {
@@ -7650,17 +7680,37 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_packets_test_append_message_persists_packet_jsonl",
-      "community": 9,
+      "community": 11,
       "norm_label": "test_append_message_persists_packet_jsonl()"
+    },
+    {
+      "label": "test_confirmation_packet_context_marks_executor_output()",
+      "file_type": "code",
+      "source_file": "tests/test_packets.py",
+      "source_location": "L107",
+      "_origin": "ast",
+      "id": "tests_test_packets_test_confirmation_packet_context_marks_executor_output",
+      "community": 11,
+      "norm_label": "test_confirmation_packet_context_marks_executor_output()"
+    },
+    {
+      "label": "test_confirmation_packet_context_marks_verifier_review_and_repair()",
+      "file_type": "code",
+      "source_file": "tests/test_packets.py",
+      "source_location": "L139",
+      "_origin": "ast",
+      "id": "tests_test_packets_test_confirmation_packet_context_marks_verifier_review_and_repair",
+      "community": 11,
+      "norm_label": "test_confirmation_packet_context_marks_verifier_review_and_repair()"
     },
     {
       "label": "test_summarizer_prefers_packet_memory()",
       "file_type": "code",
       "source_file": "tests/test_packets.py",
-      "source_location": "L105",
+      "source_location": "L203",
       "_origin": "ast",
       "id": "tests_test_packets_test_summarizer_prefers_packet_memory",
-      "community": 9,
+      "community": 11,
       "norm_label": "test_summarizer_prefers_packet_memory()"
     },
     {
@@ -8920,7 +8970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_skills",
-      "community": 56,
+      "community": 11,
       "norm_label": "test_skills.py"
     },
     {
@@ -8930,7 +8980,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_make_app",
-      "community": 56,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -8940,7 +8990,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_py_path",
-      "community": 56,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -8950,7 +9000,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_py_chatboks",
-      "community": 56,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -8960,7 +9010,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_skills_test_skills_command_lists_native_skills_without_agent_round",
-      "community": 56,
+      "community": 11,
       "norm_label": "test_skills_command_lists_native_skills_without_agent_round()"
     },
     {
@@ -8970,7 +9020,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "tests_test_skills_test_skills_command_previews_requested_skill",
-      "community": 56,
+      "community": 11,
       "norm_label": "test_skills_command_previews_requested_skill()"
     },
     {
@@ -8980,7 +9030,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "tests_test_skills_test_skill_summary_prefers_summary_field",
-      "community": 56,
+      "community": 11,
       "norm_label": "test_skill_summary_prefers_summary_field()"
     },
     {
@@ -8990,7 +9040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_skills_rationale_1",
-      "community": 56,
+      "community": 11,
       "norm_label": "smoke tests for native chatboks skill discovery."
     },
     {
@@ -9380,7 +9430,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_init",
-      "community": 9,
+      "community": 3,
       "norm_label": "__init__.py"
     },
     {
@@ -9390,7 +9440,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_stream",
-      "community": 9,
+      "community": 3,
       "norm_label": "stream.py"
     },
     {
@@ -10387,7 +10437,7 @@
       "label": "Phase 3 - Remote Control",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L100",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "roadmap_phase_3_remote_control",
       "community": 5,
@@ -10397,7 +10447,7 @@
       "label": "Phase 4 - Polish and Public Release",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L131",
+      "source_location": "L132",
       "_origin": "ast",
       "id": "roadmap_phase_4_polish_and_public_release",
       "community": 5,
@@ -10407,7 +10457,7 @@
       "label": "Agent Zero",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L145",
+      "source_location": "L146",
       "_origin": "ast",
       "id": "roadmap_agent_zero",
       "community": 5,
@@ -10417,7 +10467,7 @@
       "label": "Execution Model Improvements",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L188",
+      "source_location": "L189",
       "_origin": "ast",
       "id": "roadmap_execution_model_improvements",
       "community": 5,
@@ -10427,7 +10477,7 @@
       "label": "Memory Lifecycle",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L236",
+      "source_location": "L237",
       "_origin": "ast",
       "id": "roadmap_memory_lifecycle",
       "community": 5,
@@ -10437,7 +10487,7 @@
       "label": "Project Notes",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L262",
+      "source_location": "L264",
       "_origin": "ast",
       "id": "roadmap_project_notes",
       "community": 5,
@@ -10447,7 +10497,7 @@
       "label": "Immediate Next Steps",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L290",
+      "source_location": "L292",
       "_origin": "ast",
       "id": "roadmap_immediate_next_steps",
       "community": 5,
@@ -21502,9 +21552,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1215",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_sleep_closure_lines",
-      "target": "orchestrator_py_any",
-      "confidence_score": 1.0
+      "target": "orchestrator_py_any"
     },
     {
       "relation": "references",
@@ -21526,6 +21576,17 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "orchestrator_chatboks_sync_usage_provider",
+      "target": "orchestrator_py_any"
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L2739",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks_thought_packet_context",
       "target": "orchestrator_py_any"
     },
     {
@@ -21826,9 +21887,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1230",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_codegraph_sync_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_codegraph_sync_closure_lines"
     },
     {
       "relation": "method",
@@ -21859,6 +21920,16 @@
       "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
       "target": "orchestrator_chatboks_confirmation_mode_active"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L2769",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks",
+      "target": "orchestrator_chatboks_confirmation_packet_stage"
     },
     {
       "relation": "method",
@@ -22146,9 +22217,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1260",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_git_sleep_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_git_sleep_closure_lines"
     },
     {
       "relation": "method",
@@ -22156,9 +22227,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1254",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_graphify_sleep_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_graphify_sleep_closure_lines"
     },
     {
       "relation": "method",
@@ -22986,9 +23057,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1215",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_sleep_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_sleep_closure_lines"
     },
     {
       "relation": "method",
@@ -23094,6 +23165,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "orchestrator.py",
+      "source_location": "L2739",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks",
+      "target": "orchestrator_chatboks_thought_packet_context"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
       "source_location": "L1171",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -23129,6 +23210,16 @@
       "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
       "target": "orchestrator_chatboks_total_session_tokens"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L2786",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks",
+      "target": "orchestrator_chatboks_truncate_context_value"
     },
     {
       "relation": "method",
@@ -24677,9 +24768,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1261",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_git_sleep_closure_lines",
-      "target": "orchestrator_chatboks_resume_git_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_resume_git_lines"
     },
     {
       "relation": "calls",
@@ -24754,9 +24845,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1251",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_codegraph_sync_closure_lines",
-      "target": "orchestrator_chatboks_codegraph_status_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_codegraph_status_lines"
     },
     {
       "relation": "calls",
@@ -24765,9 +24856,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1255",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_graphify_sleep_closure_lines",
-      "target": "orchestrator_chatboks_graphify_status_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_graphify_status_lines"
     },
     {
       "relation": "calls",
@@ -25531,9 +25622,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1213",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_handle_sleep_command",
-      "target": "orchestrator_chatboks_sleep_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_sleep_closure_lines"
     },
     {
       "relation": "calls",
@@ -25564,9 +25655,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1223",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_sleep_closure_lines",
-      "target": "orchestrator_chatboks_codegraph_sync_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_codegraph_sync_closure_lines"
     },
     {
       "relation": "calls",
@@ -25575,9 +25666,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1225",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_sleep_closure_lines",
-      "target": "orchestrator_chatboks_git_sleep_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_git_sleep_closure_lines"
     },
     {
       "relation": "calls",
@@ -25586,9 +25677,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_sleep_closure_lines",
-      "target": "orchestrator_chatboks_graphify_sleep_closure_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_graphify_sleep_closure_lines"
     },
     {
       "relation": "calls",
@@ -25597,9 +25688,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1248",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_codegraph_sync_closure_lines",
-      "target": "orchestrator_chatboks_truncate_for_state",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_truncate_for_state"
     },
     {
       "relation": "calls",
@@ -27287,6 +27378,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "orchestrator.py",
+      "source_location": "L2733",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks_append_thought_packet",
+      "target": "orchestrator_chatboks_thought_packet_context"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
       "source_location": "L2560",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -27323,6 +27425,28 @@
       "confidence_score": 0.5,
       "source": "thoughtpacket",
       "target": "ui_stream_stream"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L2758",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks_thought_packet_context",
+      "target": "orchestrator_chatboks_confirmation_packet_stage"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L2748",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "orchestrator_chatboks_thought_packet_context",
+      "target": "orchestrator_chatboks_truncate_context_value"
     },
     {
       "relation": "calls",
@@ -31562,9 +31686,9 @@
       "source_file": "tests/test_context_modes.py",
       "source_location": "L336",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_context_modes",
-      "target": "tests_test_context_modes_test_sleep_closure_reports_graphify_warning_and_git_state",
-      "confidence_score": 1.0
+      "target": "tests_test_context_modes_test_sleep_closure_reports_graphify_warning_and_git_state"
     },
     {
       "relation": "contains",
@@ -31572,9 +31696,9 @@
       "source_file": "tests/test_context_modes.py",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_context_modes",
-      "target": "tests_test_context_modes_test_sleep_closure_runs_codegraph_sync_and_reports_status",
-      "confidence_score": 1.0
+      "target": "tests_test_context_modes_test_sleep_closure_runs_codegraph_sync_and_reports_status"
     },
     {
       "relation": "contains",
@@ -31689,9 +31813,9 @@
       "source_file": "tests/test_context_modes.py",
       "source_location": "L323",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_context_modes_test_sleep_closure_runs_codegraph_sync_and_reports_status",
-      "target": "tests_test_context_modes_make_codegraph",
-      "confidence_score": 1.0
+      "target": "tests_test_context_modes_make_codegraph"
     },
     {
       "relation": "calls",
@@ -31766,9 +31890,9 @@
       "source_file": "tests/test_context_modes.py",
       "source_location": "L338",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_context_modes_test_sleep_closure_reports_graphify_warning_and_git_state",
-      "target": "tests_test_context_modes_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_context_modes_py_path"
     },
     {
       "relation": "calls",
@@ -31777,9 +31901,9 @@
       "source_file": "tests/test_context_modes.py",
       "source_location": "L317",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_context_modes_test_sleep_closure_runs_codegraph_sync_and_reports_status",
-      "target": "tests_test_context_modes_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_context_modes_py_path"
     },
     {
       "relation": "calls",
@@ -34394,6 +34518,26 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_packets.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_packets",
+      "target": "tests_test_packets_test_confirmation_packet_context_marks_executor_output"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_packets.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_packets",
+      "target": "tests_test_packets_test_confirmation_packet_context_marks_verifier_review_and_repair"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_packets.py",
       "source_location": "L64",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -34458,10 +34602,54 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_packets.py",
+      "source_location": "L110",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_packets_test_confirmation_packet_context_marks_executor_output",
+      "target": "tests_test_packets_make_app"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_packets.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_packets_test_confirmation_packet_context_marks_verifier_review_and_repair",
+      "target": "tests_test_packets_make_app"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_packets.py",
       "source_location": "L79",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_packets_test_append_message_persists_packet_jsonl",
+      "target": "tests_test_packets_py_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_packets.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_packets_test_confirmation_packet_context_marks_executor_output",
+      "target": "tests_test_packets_py_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_packets.py",
+      "source_location": "L141",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_packets_test_confirmation_packet_context_marks_verifier_review_and_repair",
       "target": "tests_test_packets_py_path"
     },
     {
@@ -39788,5 +39976,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "281d01a98f36af6d519a586fb0681110b6d3e25b"
+  "built_at_commit": "c21002a517c8b5c386098ac96181d8517036a1e7"
 }
