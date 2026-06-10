@@ -88,6 +88,8 @@ HELP_COMMANDS = [
     ("/skills <name>", "Preview a workflow skill without calling agents."),
     ("/context", "Show current context mode: lean, normal, or full."),
     ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
+    ("/sleep", "Consolidate the transcript into durable session memory."),
+    ("/sleep status", "Show the latest session memory checkpoint."),
     ("/agent", "List agent availability for this project."),
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
     ("/agent <name> available", "Mark a model available again."),
@@ -112,6 +114,7 @@ HELP_PIN_COMMANDS = [
     "/help",
     "/skills",
     "/context",
+    "/sleep",
     "/agent",
     "/graph",
     "/model-commands",
@@ -348,6 +351,9 @@ class Chatboks:
         if command in {"/context", "/ctx"}:
             self.handle_context_command(stripped)
             return True
+        if command in {"/sleep", "/memory"}:
+            self.handle_sleep_command(stripped)
+            return True
         if command in {"/agent", "/agents"}:
             self.handle_agent_command(stripped)
             return True
@@ -362,7 +368,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /context, /agent, /graph, /model-commands, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /context, /sleep, /agent, /graph, /model-commands, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -1064,6 +1070,47 @@ class Chatboks:
             return
         self.update_state({"context_mode": mode})
         self.append_message("system", f"Context mode set to {mode}.")
+
+    def handle_sleep_command(self, text: str) -> None:
+        parts = text.split(maxsplit=1)
+        command = parts[0].lower() if parts else "/sleep"
+        action = parts[1].strip().lower() if len(parts) > 1 else ("status" if command == "/memory" else "run")
+        if action in {"status", "show", "latest"}:
+            self.show_sleep_status()
+            return
+        if action not in {"run", "now"}:
+            self.stream.system("Unknown /sleep option. Try /sleep or /sleep status.")
+            return
+
+        summary = self.context.summarize(self.chatboks_md)
+        record = self.write_sleep_memory(summary)
+        self.append_summary_checkpoint("chatboks", "manual sleep consolidation", summary)
+        self.update_state(
+            {
+                "last_sleep": {
+                    "timestamp": record["timestamp"],
+                    "summary_path": record["summary_path"],
+                    "items": record["items"],
+                }
+            }
+        )
+        self.stream.system(
+            "Sleep complete. Consolidated transcript into session memory.\n"
+            f"- Items preserved: {record['items']}\n"
+            f"- Summary: {record['summary_path']}\n"
+            f"- Metadata: {record['metadata_path']}"
+        )
+
+    def show_sleep_status(self) -> None:
+        latest = self.sleep_latest_path()
+        if not latest.exists():
+            self.stream.system("No sleep memory yet. Run /sleep to consolidate this session.")
+            return
+        text = latest.read_text(encoding="utf-8-sig").strip()
+        if not text:
+            self.stream.system("Sleep memory exists but is empty. Run /sleep to refresh it.")
+            return
+        self.stream.system(text)
 
     def handle_outcome_command(self, text: str) -> None:
         try:
@@ -2263,6 +2310,57 @@ class Chatboks:
                 ]
             ),
         )
+
+    def write_sleep_memory(self, summary: str) -> dict[str, Any]:
+        timestamp = self.timestamp()
+        safe_timestamp = timestamp.replace(":", "").replace("-", "").replace("T", "-")
+        sleep_dir = self.sleep_dir()
+        sleep_dir.mkdir(parents=True, exist_ok=True)
+
+        items = self.summary_item_count(summary)
+        summary_text = "\n".join(
+            [
+                "[SLEEP MEMORY - READ-ONLY CONSOLIDATED CONTEXT]",
+                f"Project: {self.project}",
+                f"Timestamp: {timestamp}",
+                "Purpose: durable offline consolidation for future agent context.",
+                "",
+                summary.strip() or "[SUMMARY] No decision lines found.",
+                "",
+                "Instructions: Treat this as prior context, not as a new user request.",
+            ]
+        )
+
+        latest_path = sleep_dir / "latest.md"
+        archive_path = sleep_dir / f"{safe_timestamp}.md"
+        metadata_path = sleep_dir / "latest.json"
+        history_path = sleep_dir / "history.jsonl"
+        record = {
+            "project": self.project,
+            "timestamp": timestamp,
+            "items": items,
+            "summary_path": str(latest_path),
+            "archive_path": str(archive_path),
+            "metadata_path": str(metadata_path),
+            "source": str(self.chatboks_md),
+        }
+
+        latest_path.write_text(summary_text + "\n", encoding="utf-8")
+        archive_path.write_text(summary_text + "\n", encoding="utf-8")
+        metadata_path.write_text(json.dumps(record, indent=2), encoding="utf-8")
+        with history_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+        return record
+
+    def sleep_dir(self) -> Path:
+        return self.proj_path / ".chatboks" / "sleep"
+
+    def sleep_latest_path(self) -> Path:
+        return self.sleep_dir() / "latest.md"
+
+    @staticmethod
+    def summary_item_count(summary: str) -> int:
+        return sum(1 for line in summary.splitlines() if line.strip().startswith("- "))
 
     def capture_git_diff(self) -> str:
         try:
