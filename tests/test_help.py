@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import io
+import json
 import sqlite3
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -101,6 +103,110 @@ def test_graph_command_renders_without_agent_round():
         app.stream.system.assert_called_once_with("Graph status:\n- CodeGraph: OK\n- Graphify: OK")
         app.run_agent_round.assert_not_called()
         print("PASS: /graph renders locally without routing to agents")
+
+
+def test_resume_command_renders_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_agent_round = MagicMock()
+        app.resume_project_lines = MagicMock(return_value=["- Project: test"])
+        app.resume_git_lines = MagicMock(return_value=["- Git: main, clean"])
+        app.codegraph_status_lines = MagicMock(return_value=["- CodeGraph: OK"])
+        app.graphify_status_lines = MagicMock(return_value=["- Graphify: OK"])
+        app.sleep_memory_status_lines = MagicMock(return_value=(["- Sleep memory: 3 items"], True))
+        app.packet_status_lines = MagicMock(return_value=["- Thought packets: 2 captured"])
+        app.resume_session_lines = MagicMock(return_value=["- Session: idle"])
+        app.resume_next_action_lines = MagicMock(return_value=["- Next action: Ready for work."])
+
+        app.handle_user_input("/resume")
+
+        app.stream.system.assert_called_once_with(
+            "Resume readiness:\n"
+            "- Project: test\n"
+            "- Git: main, clean\n"
+            "- CodeGraph: OK\n"
+            "- Graphify: OK\n"
+            "- Sleep memory: 3 items\n"
+            "- Thought packets: 2 captured\n"
+            "- Session: idle\n"
+            "- Next action: Ready for work."
+        )
+        app.run_agent_round.assert_not_called()
+        print("PASS: /resume renders locally without routing to agents")
+
+
+def test_resume_git_lines_reports_dirty_count():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_git = MagicMock(
+            side_effect=[
+                subprocess.CompletedProcess(["git"], 0, "main\n", ""),
+                subprocess.CompletedProcess(["git"], 0, " M orchestrator.py\n?? tests/test_resume.py\n", ""),
+            ]
+        )
+
+        lines = app.resume_git_lines()
+
+        assert lines == ["- Git: main, dirty (2 pending changes)"]
+        print("PASS: /resume git status reports dirty count")
+
+
+def test_sleep_memory_status_lines_reads_metadata():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        sleep_dir = root / ".chatboks" / "sleep"
+        sleep_dir.mkdir(parents=True)
+        (sleep_dir / "latest.json").write_text(
+            json.dumps(
+                {
+                    "timestamp": "2026-06-10T12:00:00+02:00",
+                    "items": 4,
+                    "summary_path": str(sleep_dir / "latest.md"),
+                }
+            ),
+            encoding="utf-8",
+        )
+        app = _make_app(root)
+
+        lines, has_sleep = app.sleep_memory_status_lines()
+
+        assert has_sleep is True
+        assert lines[0] == "- Sleep memory: 4 items, last consolidated 2026-06-10T12:00:00+02:00"
+        assert str(sleep_dir / "latest.md") in lines[1]
+        print("PASS: /resume reads sleep memory metadata")
+
+
+def test_packet_status_lines_reports_latest_packet():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        packet_file = root / ".chatboks" / "packets.jsonl"
+        packet_file.parent.mkdir(parents=True)
+        packet_file.write_text(
+            json.dumps(
+                {
+                    "sender": "codex",
+                    "packet": {
+                        "agent": "codex",
+                        "stance": "VERIFY",
+                        "observed": ["tests passed"],
+                        "risks": [],
+                        "next_action": "commit when ready",
+                        "signal": "TASK_COMPLETE",
+                    },
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        app = _make_app(root)
+        app.packet_file = packet_file
+
+        lines = app.packet_status_lines()
+
+        assert lines[0] == "- Thought packets: 1 captured"
+        assert lines[1] == "  Latest: codex VERIFY -> TASK_COMPLETE; observed 1, risks 0"
+        assert lines[2] == "  Next action: commit when ready"
+        print("PASS: /resume reports latest thought packet")
 
 
 def test_codegraph_status_lines_reads_sqlite_counts():

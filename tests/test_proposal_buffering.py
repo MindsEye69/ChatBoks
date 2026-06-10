@@ -144,8 +144,40 @@ def test_question_after_proposal_abandons_buffer():
     print("PASS: QUESTION after PROPOSAL abandons buffered proposal")
 
 
+def test_blocked_after_prior_completion_is_warning_not_terminal_block():
+    """A weak trailing agent must not override a prior completed result."""
+    app = _make_app()
+    app.proj_config = {**app.proj_config, "agents": ["claude", "agent_zero"]}
+
+    def fake_call(agent_name: str, mode: str) -> str:
+        if agent_name == "claude":
+            return "Committed and pushed with evidence.\n>>> TASK_COMPLETE"
+        return "Agent Zero returned a bare control signal.\n>>> BLOCKED"
+
+    app.call_agent_with_token_recovery = fake_call  # type: ignore[method-assign]
+    app.append_message = MagicMock()
+    app.update_token_count = MagicMock()
+    app.mark_agent_completed = MagicMock()
+    app.update_state = MagicMock()
+    app.save_state = MagicMock()
+    app.maybe_announce_direct_standby_agents = MagicMock()
+
+    app.run_agent_round()
+
+    app.stream.system.assert_any_call("agent_zero blocked after claude completed the task; treating as a warning.")
+    app.stream.system.assert_any_call("Task complete. Awaiting next instruction.")
+    app.update_state.assert_any_call({"status": "idle", "active_task": None, "confirmation": None})
+    assert all(
+        call.args[0].get("status") != "blocked"
+        for call in app.update_state.call_args_list
+        if call.args and isinstance(call.args[0], dict)
+    )
+    print("PASS: trailing BLOCKED after prior completion is downgraded to warning")
+
+
 if __name__ == "__main__":
     test_proposal_buffered_until_all_agents_complete()
     test_single_agent_proposal_still_fires()
     test_question_after_proposal_abandons_buffer()
+    test_blocked_after_prior_completion_is_warning_not_terminal_block()
     print("\nAll smoke tests passed.")

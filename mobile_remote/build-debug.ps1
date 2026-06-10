@@ -21,6 +21,14 @@ $env:PATH = "$jdkDir\bin;$env:PATH"
 $env:ANDROID_HOME = $sdkDir
 $env:ANDROID_SDK_ROOT = $sdkDir
 
+Push-Location $PSScriptRoot
+try {
+    npm run copy
+}
+finally {
+    Pop-Location
+}
+
 Push-Location $androidDir
 try {
     .\gradlew.bat assembleDebug

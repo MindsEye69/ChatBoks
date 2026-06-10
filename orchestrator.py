@@ -25,7 +25,7 @@ from watchdog.observers import Observer
 
 from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
-from context.packets import ThoughtPacket, extract_packets
+from context.packets import ThoughtPacket, extract_packets, packet_records_from_jsonl
 from encoding_utils import configure_utf8_stdio, utf8_env
 from router import Router
 from ui.stream import Stream
@@ -87,6 +87,7 @@ HELP_COMMANDS = [
     ("/help unpin", "Stop showing the compact command strip before each prompt."),
     ("/skills", "List native ChatBoks workflow skills."),
     ("/skills <name>", "Preview a workflow skill without calling agents."),
+    ("/resume", "Show start-of-session readiness: graphs, memory, packets, git, and next action."),
     ("/context", "Show current context mode: lean, normal, or full."),
     ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
     ("/sleep", "Consolidate the transcript into durable session memory."),
@@ -114,6 +115,7 @@ HELP_COMMANDS = [
 HELP_PIN_COMMANDS = [
     "/help",
     "/skills",
+    "/resume",
     "/context",
     "/sleep",
     "/agent",
@@ -350,6 +352,9 @@ class Chatboks:
         if command in {"/mode", "/modes"}:
             self.handle_mode_command(stripped)
             return True
+        if command == "/resume":
+            self.handle_resume_command()
+            return True
         if command in {"/context", "/ctx"}:
             self.handle_context_command(stripped)
             return True
@@ -370,7 +375,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /context, /sleep, /agent, /graph, /model-commands, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /agent, /graph, /model-commands, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -576,6 +581,115 @@ class Chatboks:
             else:
                 argv.append(part.format(project_path=str(self.proj_path), args=joined_args))
         return argv
+
+    def handle_resume_command(self) -> None:
+        lines = ["Resume readiness:"]
+        lines.extend(self.resume_project_lines())
+        lines.extend(self.resume_git_lines())
+        lines.extend(self.codegraph_status_lines())
+        graphify_lines = self.graphify_status_lines()
+        lines.extend(graphify_lines)
+        sleep_lines, has_sleep_memory = self.sleep_memory_status_lines()
+        lines.extend(sleep_lines)
+        lines.extend(self.packet_status_lines())
+        lines.extend(self.resume_session_lines())
+        lines.extend(self.resume_next_action_lines(graphify_lines, has_sleep_memory))
+        self.stream.system("\n".join(lines))
+
+    def resume_project_lines(self) -> list[str]:
+        return [
+            f"- Project: {self.project}",
+            f"  Path: {self.proj_path}",
+        ]
+
+    def resume_git_lines(self) -> list[str]:
+        branch_result = self.run_git(["rev-parse", "--abbrev-ref", "HEAD"])
+        status_result = self.run_git(["status", "--porcelain"])
+        if branch_result.returncode != 0 or status_result.returncode != 0:
+            reason = (branch_result.stderr or status_result.stderr or "git unavailable").strip()
+            return [f"- Git: WARN, {reason}"]
+        branch = (branch_result.stdout or "").strip() or "unknown"
+        changes = [line for line in (status_result.stdout or "").splitlines() if line.strip()]
+        if not changes:
+            return [f"- Git: {branch}, clean"]
+        return [f"- Git: {branch}, dirty ({len(changes)} pending changes)"]
+
+    def sleep_memory_status_lines(self) -> tuple[list[str], bool]:
+        metadata_path = self.sleep_dir() / "latest.json"
+        latest_path = self.sleep_latest_path()
+        if not metadata_path.exists() and not latest_path.exists():
+            return (["- Sleep memory: none yet. Run /sleep at a work break."], False)
+        if not metadata_path.exists():
+            return ([f"- Sleep memory: present at {latest_path}, metadata missing"], True)
+        try:
+            record = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError) as exc:
+            return ([f"- Sleep memory: WARN, could not read {metadata_path}: {exc}"], True)
+        timestamp = record.get("timestamp") or "unknown time"
+        items = record.get("items")
+        item_text = f"{items} items" if isinstance(items, int) else "unknown item count"
+        summary_path = record.get("summary_path") or str(latest_path)
+        return (
+            [
+                f"- Sleep memory: {item_text}, last consolidated {timestamp}",
+                f"  Summary: {summary_path}",
+            ],
+            True,
+        )
+
+    def packet_status_lines(self) -> list[str]:
+        packet_path = getattr(self, "packet_file", self.proj_path / ".chatboks" / "packets.jsonl")
+        if not packet_path.exists():
+            return ["- Thought packets: none captured yet."]
+        try:
+            records = packet_records_from_jsonl(packet_path.read_text(encoding="utf-8-sig"))
+        except OSError as exc:
+            return [f"- Thought packets: WARN, could not read {packet_path}: {exc}"]
+        if not records:
+            return [f"- Thought packets: none parseable in {packet_path}"]
+        latest = records[-1]
+        packet = latest.get("packet") if isinstance(latest, dict) else {}
+        packet = packet if isinstance(packet, dict) else {}
+        agent = packet.get("agent") or latest.get("sender") or "unknown"
+        stance = packet.get("stance") or "UNKNOWN"
+        signal = packet.get("signal") or "UNKNOWN"
+        observed = packet.get("observed") if isinstance(packet.get("observed"), list) else []
+        risks = packet.get("risks") if isinstance(packet.get("risks"), list) else []
+        lines = [
+            f"- Thought packets: {len(records)} captured",
+            f"  Latest: {agent} {stance} -> {signal}; observed {len(observed)}, risks {len(risks)}",
+        ]
+        next_action = str(packet.get("next_action") or "").strip()
+        if next_action:
+            lines.append(f"  Next action: {next_action}")
+        return lines
+
+    def resume_session_lines(self) -> list[str]:
+        main_agents = ", ".join(self.proj_config.get("agents", [])) or "none"
+        direct_agents = sorted(self.proj_config.get("direct_agents", {}) or {})
+        direct_text = ", ".join(direct_agents) if direct_agents else "none"
+        counts = self.state.get("context", {}).get("token_counts", {})
+        token_total = sum(int(value or 0) for value in counts.values()) if isinstance(counts, dict) else 0
+        return [
+            f"- Session: {self.state.get('status', 'unknown')}; next agent {self.state.get('next_agent', 'you')}",
+            f"  Mode: {self.state.get('collaboration_mode', 'default')}; context {self.state.get('context_mode', 'lean')}",
+            f"  Agents: {main_agents}; direct: {direct_text}",
+            f"  Session tokens: {token_total:,}",
+        ]
+
+    def resume_next_action_lines(self, graphify_lines: list[str], has_sleep_memory: bool) -> list[str]:
+        if self.source_worktree_dirty():
+            action = "Review or commit the current working tree before broad changes."
+        elif any("Freshness: STALE" in line or "Freshness: WARN" in line for line in graphify_lines):
+            action = "Refresh Graphify with `graphify update . && graphify tree --label ChatBoks`."
+        elif not has_sleep_memory:
+            action = "Run /sleep when you pause this work block to create durable session memory."
+        else:
+            action = "Ready for work."
+        return [
+            f"- Next action: {action}",
+            "  Full diagnostics: python doctor.py <project>",
+        ]
 
     def handle_graph_command(self) -> None:
         lines = ["Graph status:"]
@@ -1839,6 +1953,7 @@ class Chatboks:
 
         for _ in range(max_rounds):
             pending_proposal: tuple[str, str] | None = None
+            completed_agent: str | None = None
             self.state["round"] = int(self.state.get("round", 0)) + 1
             self.state["round_intent"] = intent
             self.state["expected_agents"] = active_agents
@@ -1887,6 +2002,7 @@ class Chatboks:
                     self.handle_agent_handoff(response, agent_name)
                     return
                 if signal in {"TASK_COMPLETE", "TASK COMPLETE"}:
+                    completed_agent = agent_name
                     if not is_last_agent:
                         continue
                     confirmation = self.confirm_completion_if_needed(agent_name, response, initiator, active_agents, intent)
@@ -1902,6 +2018,16 @@ class Chatboks:
                     self.update_state({"status": "idle", "active_task": None, "confirmation": None})
                     return
                 if signal == "BLOCKED":
+                    if completed_agent is not None:
+                        self.stream.system(
+                            f"{agent_name} blocked after {completed_agent} completed the task; treating as a warning."
+                        )
+                        if not is_last_agent:
+                            continue
+                        self.maybe_announce_direct_standby_agents(initiator, active_agents)
+                        self.stream.system("Task complete. Awaiting next instruction.")
+                        self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                        return
                     if not is_last_agent:
                         self.stream.system(f"{agent_name} blocked. Continuing to {next_agent}.")
                         continue

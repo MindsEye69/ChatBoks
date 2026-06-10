@@ -3,6 +3,9 @@ const defaultBridgeUrl = "http://warhammer.tail169679.ts.net:8765";
 const state = {
   eventCursor: 0,
   pollTimer: null,
+  eventItems: [],
+  commandEvents: [],
+  commandActive: false,
 };
 
 const els = {
@@ -156,9 +159,16 @@ async function apiFetch(path, options = {}) {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error || `Request failed (${response.status})`);
+    const error = new Error(body.error || `Request failed (${response.status})`);
+    error.status = response.status;
+    throw error;
   }
   return body;
+}
+
+function isAuthError(error) {
+  const message = error && error.message ? error.message : "";
+  return error && (error.status === 401 || error.status === 403 || message.toLowerCase().includes("token"));
 }
 
 async function pairDevice() {
@@ -206,6 +216,16 @@ function visibleEvents(items) {
   return items.filter((item) => !isTokenUsageMessage(item));
 }
 
+function isCommandProgressEvent(item) {
+  const sender = (item.sender || "").toLowerCase();
+  const text = (item.text || "").trim();
+  return sender === "system" && (text === "Command accepted. Waiting for agents." || text.startsWith("session tokens:"));
+}
+
+function visibleCommandEvents(items) {
+  return visibleEvents(items).filter((item) => !isCommandProgressEvent(item));
+}
+
 function latestResponseGroup(items) {
   const lastUserIndex = items.reduce((latest, item, index) => {
     return (item.sender || "").toLowerCase() === "you" ? index : latest;
@@ -223,7 +243,8 @@ function latestResponseGroup(items) {
 }
 
 function renderLatestResponse(items) {
-  const group = latestResponseGroup(items);
+  const commandEvents = visibleCommandEvents(state.commandEvents);
+  const group = commandEvents.length ? commandEvents : latestResponseGroup(items);
   if (!group.length) {
     els.latestResponse.textContent = "-";
     return;
@@ -231,6 +252,7 @@ function renderLatestResponse(items) {
   els.latestResponse.textContent = group
     .map((item) => `${(item.sender || "unknown").toUpperCase()}\n${item.text || ""}`.trim())
     .join("\n\n");
+  els.latestResponse.scrollTop = els.latestResponse.scrollHeight;
 }
 
 function renderProjects(projects = [], currentProject = "") {
@@ -306,8 +328,15 @@ function applySession(data, { scrollLatest = false } = {}) {
   const events = data.events || [];
   if (events.length) {
     state.eventCursor = events[events.length - 1].id;
+    state.eventItems.push(...events);
+    state.eventItems = state.eventItems.slice(-80);
+    if (state.commandActive || data.command_running) {
+      state.commandEvents.push(...events);
+      state.commandEvents = state.commandEvents.slice(-40);
+    }
   }
-  renderList(els.events, visibleEvents(events));
+  renderList(els.events, visibleEvents(state.eventItems));
+  renderLatestResponse(transcript);
   if (scrollLatest) {
     window.requestAnimationFrame(scrollLatestResponseIntoView);
   }
@@ -316,6 +345,7 @@ function applySession(data, { scrollLatest = false } = {}) {
     scheduleRefreshPoll();
   } else {
     stopPolling();
+    state.commandActive = false;
     if (els.sendStatus.textContent.includes("Waiting")) {
       setSendState(false, "Latest response shown.");
       clearSendStatusSoon();
@@ -329,7 +359,7 @@ function scheduleRefreshPoll() {
   }
   state.pollTimer = window.setTimeout(async () => {
     state.pollTimer = null;
-    await refreshSession({ scrollLatest: true });
+    await refreshSession({ scrollLatest: false });
   }, 3000);
 }
 
@@ -340,6 +370,9 @@ async function switchProject(project) {
   setSendState(true, `Switching to ${project}...`);
   try {
     state.eventCursor = 0;
+    state.commandEvents = [];
+    state.commandActive = false;
+    state.eventItems = [];
     const data = await apiFetch("/api/project", {
       method: "POST",
       body: JSON.stringify({ project }),
@@ -369,22 +402,28 @@ async function sendPrompt(text) {
     return;
   }
   setSendState(true, "Sending to ChatBoks...");
+  state.commandEvents = [];
+  state.commandActive = true;
   try {
     const data = await apiFetch("/api/command", {
       method: "POST",
       body: JSON.stringify({ text: cleaned }),
     });
     els.prompt.value = "";
-    applySession(data, { scrollLatest: true });
+    applySession(data, { scrollLatest: false });
     if (data.command_running) {
       setSendState(false, "Sent. Waiting for agents...");
     } else {
-      setSendState(false, "Sent. Latest response shown.");
+      setSendState(false, "Sent. Latest response updated.");
       clearSendStatusSoon();
     }
   } catch (error) {
-    setSendState(false, "Send failed.");
-    showError(describeNetworkError(error));
+    const detail = describeNetworkError(error);
+    setSendState(false, `Send failed: ${detail}`);
+    showError(detail);
+    if (isAuthError(error)) {
+      setConnectionCollapsed(false);
+    }
   }
 }
 
