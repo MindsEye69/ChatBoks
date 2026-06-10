@@ -21,6 +21,8 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - `/help` shows a terminal command deck in a BBS-style box.
 - Transcript compaction now rolls forward from `>>> SUMMARY_CHECKPOINT` boundaries while preserving the latest summary plus fresh tail context.
 - Manual `/sleep` creates durable session memory under `.chatboks/sleep/`, appends a summary checkpoint, and feeds that memory back into future agent context.
+- `/sleep` now acts as a work-block closure report: durable memory, CodeGraph sync attempt, Graphify freshness, git state, diagnostics hint, and `/resume` wake cue.
+- `/resume` shows a visible start-of-session readiness report with graph, memory, packet, git, session, and next-action status.
 - Thought Packets v1 are supported: valid `>>> PACKET` blocks are captured to `.chatboks/packets.jsonl` and used by `/sleep` as cleaner memory input.
 - Session token usage bars and per-session warning/cap thresholds are live.
 - Proposal approval gates now show rough token and optional USD cost estimates.
@@ -84,13 +86,14 @@ Completed:
   - `platform.openai.com/usage`
   - `aistudio.google.com`
 - Manual `/sleep` session-memory consolidation.
+- `/sleep` closure report with memory consolidation, CodeGraph sync, Graphify freshness, git status, diagnostics hint, and `/resume` wake cue.
+- `/resume` command for deliberate session rehydration: graph status, sleep memory, packet trace, git status, doctor hints, and stale-state warnings.
 - Thought Packet capture and packet-aware sleep summaries.
 
 Remaining:
 
 - Task auction / classifier refinement so Agent Zero answers more low-cost prompts without devolving into generic or bare-signal responses.
 - Better token accounting from provider-native telemetry instead of response-length estimation alone.
-- `/resume` command for deliberate session rehydration: graph status, sleep memory, packet trace, git status, doctor hints, and stale-state warnings.
 - Automatic light resume check at startup, with manual `/resume` for the full visible report.
 - Optional automatic `/sleep` trigger after long idle periods or high transcript growth, while keeping manual `/sleep` as the explicit break marker.
 
@@ -244,14 +247,15 @@ Current pieces:
 Implemented:
 
 - `/sleep` runs deterministic consolidation, writes sleep artifacts, appends a `>>> SUMMARY_CHECKPOINT`, and injects latest sleep memory into future context.
+- `/sleep` also runs a safe closure checklist: CodeGraph sync attempt, Graphify freshness, git status, diagnostics hint, and `/resume` wake cue.
+- `/resume` provides a visible rehydration command that checks CodeGraph, Graphify, sleep memory, packet memory, git status, session state, and doctor hints.
 - Thought Packet blocks are optional but parsed when agents emit them.
 - Packet memory improves `/sleep` by preserving observed facts, risks, next actions, and unresolved signals more cleanly than transcript scraping.
 
 Planned:
 
-- `/resume`: visible rehydration command that checks CodeGraph, Graphify, sleep memory, packet memory, git status, and doctor hints.
 - Startup light resume: automatically check for stale graphs/memory without doing expensive work or flooding the terminal.
-- End-of-session `/sleep`: expand from transcript consolidation into a closure routine that can optionally sync CodeGraph, refresh Graphify, run doctor/tests, and mark a clean break.
+- End-of-session `/sleep`: optional heavier closure modes that can refresh Graphify, run doctor/tests, and mark a clean break.
 - Packet-driven confirmation: use packet `risks` and `observed` fields as verifier checklists.
 - Mobile remote trace view: optional Agent Trace / Packet Trace panel after backend behavior settles.
 
@@ -285,33 +289,21 @@ IO Website:
 
 ## Immediate Next Steps
 
-1. Implement `/resume` as the start-of-session readiness report:
-   - CodeGraph status/sync hint
-   - Graphify freshness
-   - latest sleep memory status
-   - packet count/latest packet summary
-   - git branch/dirty state
-   - doctor hint or optional doctor run
-2. Expand `/sleep` into an end-of-session closure command:
-   - consolidate memory
-   - optionally sync CodeGraph
-   - optionally refresh Graphify after source/doc changes
-   - optionally run doctor/focused tests
-   - record the break in `chatboks.md`
-3. Use Thought Packets in confirmation mode:
+1. Use Thought Packets in confirmation mode:
    - verifier sees executor `observed` and `risks`
    - unresolved risks prevent silent completion
-4. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
-5. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
-6. Run an Agent Zero model bake-off with Gemma 4 QAT:
+2. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
+3. Add optional heavier `/sleep` modes for Graphify refresh, doctor, and focused tests.
+4. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
+5. Run an Agent Zero model bake-off with Gemma 4 QAT:
    - current `gemma3:4b` baseline
    - `Gemma 4 E4B QAT Q4_0`
    - `Gemma 4 E2B QAT`
    - optional `Gemma 4 12B QAT Q4_0` under explicit desktop-impact observation
-7. Reproduce and isolate the intermittent stacked-window desktop glitch if it returns.
-8. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
-9. Improve mobile remote polish:
+6. Reproduce and isolate the intermittent stacked-window desktop glitch if it returns.
+7. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
+8. Improve mobile remote polish:
    - connection recovery feedback
    - approval controls
    - optional Agent Trace / Packet Trace view
-10. Fix Android rebuild JDK selection so APK builds consistently use a supported JDK.
+9. Fix Android rebuild JDK selection so APK builds consistently use a supported JDK.

@@ -90,7 +90,7 @@ HELP_COMMANDS = [
     ("/resume", "Show start-of-session readiness: graphs, memory, packets, git, and next action."),
     ("/context", "Show current context mode: lean, normal, or full."),
     ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
-    ("/sleep", "Consolidate the transcript into durable session memory."),
+    ("/sleep", "Close a work block: consolidate memory, sync CodeGraph, and report graph/git state."),
     ("/sleep status", "Show the latest session memory checkpoint."),
     ("/agent", "List agent availability for this project."),
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
@@ -1210,12 +1210,55 @@ class Chatboks:
                 }
             }
         )
-        self.stream.system(
-            "Sleep complete. Consolidated transcript into session memory.\n"
-            f"- Items preserved: {record['items']}\n"
-            f"- Summary: {record['summary_path']}\n"
-            f"- Metadata: {record['metadata_path']}"
-        )
+        self.stream.system("\n".join(self.sleep_closure_lines(record)))
+
+    def sleep_closure_lines(self, record: dict[str, Any]) -> list[str]:
+        lines = [
+            "Sleep complete. Work block closed.",
+            "- Memory: consolidated transcript into durable session memory",
+            f"  Items preserved: {record['items']}",
+            f"  Summary: {record['summary_path']}",
+            f"  Metadata: {record['metadata_path']}",
+        ]
+        lines.extend(self.codegraph_sync_closure_lines())
+        lines.extend(self.graphify_sleep_closure_lines())
+        lines.extend(self.git_sleep_closure_lines())
+        lines.append("- Full diagnostics: python doctor.py <project>")
+        lines.append("- Wake command: /resume")
+        return lines
+
+    def codegraph_sync_closure_lines(self) -> list[str]:
+        if shutil.which("codegraph") is None:
+            return ["- CodeGraph sync: SKIP, `codegraph` not found on PATH"]
+        try:
+            result = subprocess.run(
+                ["codegraph", "sync"],
+                cwd=self.proj_path,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=utf8_env(),
+                timeout=90,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return [f"- CodeGraph sync: WARN, {exc}"]
+        if result.returncode != 0:
+            detail = self.truncate_for_state((result.stderr or result.stdout or "sync failed").strip(), 300)
+            return [f"- CodeGraph sync: WARN, {detail}"]
+        lines = ["- CodeGraph sync: OK"]
+        lines.extend(f"  {line}" for line in self.codegraph_status_lines())
+        return lines
+
+    def graphify_sleep_closure_lines(self) -> list[str]:
+        lines = self.graphify_status_lines()
+        if any("STALE" in line or "WARN" in line for line in lines):
+            lines.append("  Sleep note: refresh Graphify after source/doc changes are committed.")
+        return lines
+
+    def git_sleep_closure_lines(self) -> list[str]:
+        return self.resume_git_lines()
 
     def show_sleep_status(self) -> None:
         latest = self.sleep_latest_path()

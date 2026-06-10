@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import sqlite3
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -286,6 +287,7 @@ def test_sleep_command_writes_memory_and_stays_local():
         app.router = MagicMock()
         app.context = MagicMock()
         app.context.summarize.return_value = "[SUMMARY]\n- [YOU] keep this decision"
+        app.sleep_closure_lines = MagicMock(return_value=["Sleep complete. Work block closed."])
         app._internal_write = False
         app.input_buffer = []
         app.state = app.normalize_state({"session": "test", "round": 0, "status": "active"})
@@ -306,7 +308,50 @@ def test_sleep_command_writes_memory_and_stays_local():
         assert ">>> SUMMARY_CHECKPOINT" in transcript
         assert "Reason: manual sleep consolidation" in transcript
         assert app.state["last_sleep"]["items"] == 1
+        app.stream.system.assert_called_once_with("Sleep complete. Work block closed.")
         app.run_agent_round.assert_not_called()
+
+
+def test_sleep_closure_runs_codegraph_sync_and_reports_status():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        app = Chatboks.__new__(Chatboks)
+        app.config = {}
+        app.proj_path = root
+        app.context = MagicMock()
+        app.context.find_codegraph_db.return_value = root / ".codegraph" / "codegraph.db"
+        _make_codegraph(root)
+
+        with patch("orchestrator.shutil.which", return_value="codegraph"), patch(
+            "orchestrator.subprocess.run",
+            return_value=subprocess.CompletedProcess(["codegraph", "sync"], 0, "synced", ""),
+        ) as run:
+            lines = app.codegraph_sync_closure_lines()
+
+        run.assert_called_once()
+        assert lines[0] == "- CodeGraph sync: OK"
+        assert any("CodeGraph: OK" in line for line in lines)
+
+
+def test_sleep_closure_reports_graphify_warning_and_git_state():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        app = Chatboks.__new__(Chatboks)
+        app.project = "test"
+        app.proj_path = root
+        app.run_git = MagicMock(
+            side_effect=[
+                subprocess.CompletedProcess(["git"], 0, "main\n", ""),
+                subprocess.CompletedProcess(["git"], 0, "", ""),
+            ]
+        )
+
+        graphify_lines = app.graphify_sleep_closure_lines()
+        git_lines = app.git_sleep_closure_lines()
+
+        assert any("Graphify: WARN" in line for line in graphify_lines)
+        assert graphify_lines[-1] == "  Sleep note: refresh Graphify after source/doc changes are committed."
+        assert git_lines == ["- Git: main, clean"]
 
 
 if __name__ == "__main__":
@@ -319,4 +364,6 @@ if __name__ == "__main__":
     test_summarizer_filters_role_call_and_groups_durable_items()
     test_context_command_updates_state_without_agent_round()
     test_sleep_command_writes_memory_and_stays_local()
+    test_sleep_closure_runs_codegraph_sync_and_reports_status()
+    test_sleep_closure_reports_graphify_warning_and_git_state()
     print("\nAll context mode smoke tests passed.")
