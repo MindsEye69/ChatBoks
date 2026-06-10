@@ -326,6 +326,35 @@ def test_confirmation_mode_returns_failed_check_to_executor_once():
         print("PASS: confirmation mode returns failed checks to executor once")
 
 
+def test_confirmation_mode_executor_handoff_continues_to_verifier():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_confirmation_repairs": 1},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["confirmation"]
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Implemented and ready for review.\n>>> HANDOFF",
+                "Verified the implementation.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        called_agents = [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list]
+        assert called_agents == ["codex", "claude"]
+        assert app.state["status"] == "idle"
+        assert app.state["active_task"] is None
+        assert app.state["confirmation"] is None
+        app.stream.system.assert_any_call("Confirmation complete: claude verified codex's output.")
+        print("PASS: confirmation executor handoff continues to verifier")
+
+
 def test_confirmation_mode_blocks_when_repair_budget_is_exhausted():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))

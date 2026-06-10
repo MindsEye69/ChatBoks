@@ -1620,7 +1620,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "encoding_utils",
-      "community": 16,
+      "community": 9,
       "norm_label": "encoding_utils.py"
     },
     {
@@ -1630,7 +1630,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "encoding_utils_configure_utf8_stdio",
-      "community": 16,
+      "community": 9,
       "norm_label": "configure_utf8_stdio()"
     },
     {
@@ -1650,7 +1650,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "encoding_utils_rationale_8",
-      "community": 16,
+      "community": 9,
       "norm_label": "prefer utf-8 for chatboks console/process i/o on every platform."
     },
     {
@@ -3320,7 +3320,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "orchestrator_chatboks_initialize_agents",
-      "community": 44,
+      "community": 45,
       "norm_label": ".initialize_agents()"
     },
     {
@@ -3390,7 +3390,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_model_commands_command",
-      "community": 6,
+      "community": 47,
       "norm_label": ".handle_model_commands_command()"
     },
     {
@@ -3420,7 +3420,7 @@
       "source_location": "L534",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_wrong_owner_note",
-      "community": 6,
+      "community": 45,
       "norm_label": ".model_command_wrong_owner_note()"
     },
     {
@@ -3440,7 +3440,7 @@
       "source_location": "L562",
       "_origin": "ast",
       "id": "orchestrator_chatboks_find_agent_model_command",
-      "community": 6,
+      "community": 47,
       "norm_label": ".find_agent_model_command()"
     },
     {
@@ -3450,7 +3450,7 @@
       "source_location": "L572",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_token_and_args",
-      "community": 6,
+      "community": 47,
       "norm_label": ".model_command_token_and_args()"
     },
     {
@@ -3460,7 +3460,7 @@
       "source_location": "L582",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_model_commands",
-      "community": 6,
+      "community": 47,
       "norm_label": ".agent_model_commands()"
     },
     {
@@ -3470,7 +3470,7 @@
       "source_location": "L609",
       "_origin": "ast",
       "id": "orchestrator_chatboks_split_model_command_args",
-      "community": 6,
+      "community": 47,
       "norm_label": ".split_model_command_args()"
     },
     {
@@ -3660,7 +3660,7 @@
       "source_location": "L872",
       "_origin": "ast",
       "id": "orchestrator_py_completedprocess",
-      "community": 3,
+      "community": 44,
       "norm_label": "completedprocess"
     },
     {
@@ -3730,7 +3730,7 @@
       "source_location": "L960",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_agent_command",
-      "community": 47,
+      "community": 0,
       "norm_label": ".handle_agent_command()"
     },
     {
@@ -3830,7 +3830,7 @@
       "source_location": "L1130",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_agent_statuses",
-      "community": 47,
+      "community": 0,
       "norm_label": ".load_agent_statuses()"
     },
     {
@@ -3840,7 +3840,7 @@
       "source_location": "L1158",
       "_origin": "ast",
       "id": "orchestrator_chatboks_save_agent_statuses",
-      "community": 47,
+      "community": 0,
       "norm_label": ".save_agent_statuses()"
     },
     {
@@ -3850,7 +3850,7 @@
       "source_location": "L1165",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_status_path",
-      "community": 47,
+      "community": 0,
       "norm_label": ".agent_status_path()"
     },
     {
@@ -3980,7 +3980,7 @@
       "source_location": "L1332",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_command",
-      "community": 47,
+      "community": 0,
       "norm_label": ".handle_outcome_command()"
     },
     {
@@ -4170,7 +4170,7 @@
       "source_location": "L1763",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_outcome",
-      "community": 47,
+      "community": 0,
       "norm_label": ".append_outcome()"
     },
     {
@@ -4270,7 +4270,7 @@
       "source_location": "L1884",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_handoff",
-      "community": 46,
+      "community": 45,
       "norm_label": ".handle_handoff()"
     },
     {
@@ -4397,7 +4397,7 @@
       "label": ".parse_signal()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2247",
+      "source_location": "L2255",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_signal",
       "community": 45,
@@ -4407,7 +4407,7 @@
       "label": ".maybe_announce_direct_standby_agents()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2258",
+      "source_location": "L2266",
       "_origin": "ast",
       "id": "orchestrator_chatboks_maybe_announce_direct_standby_agents",
       "community": 44,
@@ -4417,7 +4417,7 @@
       "label": ".direct_standby_agents()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2271",
+      "source_location": "L2279",
       "_origin": "ast",
       "id": "orchestrator_chatboks_direct_standby_agents",
       "community": 44,
@@ -4427,7 +4427,7 @@
       "label": ".is_role_call_request()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2280",
+      "source_location": "L2288",
       "_origin": "ast",
       "id": "orchestrator_chatboks_is_role_call_request",
       "community": 44,
@@ -4437,7 +4437,7 @@
       "label": ".format_direct_standby_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2286",
+      "source_location": "L2294",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_direct_standby_message",
       "community": 44,
@@ -4447,7 +4447,7 @@
       "label": ".handle_proposal()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2293",
+      "source_location": "L2301",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_proposal",
       "community": 45,
@@ -4457,7 +4457,7 @@
       "label": ".handle_question()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2314",
+      "source_location": "L2322",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_question",
       "community": 45,
@@ -4467,7 +4467,7 @@
       "label": ".handle_agent_handoff()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2318",
+      "source_location": "L2326",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_agent_handoff",
       "community": 45,
@@ -4477,7 +4477,7 @@
       "label": ".handle_approval()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2330",
+      "source_location": "L2338",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_approval",
       "community": 45,
@@ -4487,7 +4487,7 @@
       "label": ".execute_proposal()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2354",
+      "source_location": "L2362",
       "_origin": "ast",
       "id": "orchestrator_chatboks_execute_proposal",
       "community": 45,
@@ -4497,17 +4497,17 @@
       "label": ".estimate_execution_cost()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2374",
+      "source_location": "L2382",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_cost",
-      "community": 0,
+      "community": 44,
       "norm_label": ".estimate_execution_cost()"
     },
     {
       "label": ".estimate_execution_target()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2406",
+      "source_location": "L2414",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_target",
       "community": 0,
@@ -4517,37 +4517,37 @@
       "label": ".estimate_execution_output_tokens()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2413",
+      "source_location": "L2421",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_output_tokens",
-      "community": 0,
+      "community": 44,
       "norm_label": ".estimate_execution_output_tokens()"
     },
     {
       "label": ".estimate_token_cost()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2420",
+      "source_location": "L2428",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_cost",
-      "community": 0,
+      "community": 44,
       "norm_label": ".estimate_token_cost()"
     },
     {
       "label": ".estimate_token_count()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2433",
+      "source_location": "L2441",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_count",
-      "community": 0,
+      "community": 44,
       "norm_label": ".estimate_token_count()"
     },
     {
       "label": ".format_proposal_gate()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2436",
+      "source_location": "L2444",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_proposal_gate",
       "community": 44,
@@ -4557,7 +4557,7 @@
       "label": ".format_usd()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2462",
+      "source_location": "L2470",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_usd",
       "community": 44,
@@ -4567,7 +4567,7 @@
       "label": ".format_compact_number()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2466",
+      "source_location": "L2474",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_compact_number",
       "community": 44,
@@ -4577,7 +4577,7 @@
       "label": ".call_agent_with_token_recovery()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2475",
+      "source_location": "L2483",
       "_origin": "ast",
       "id": "orchestrator_chatboks_call_agent_with_token_recovery",
       "community": 49,
@@ -4587,7 +4587,7 @@
       "label": ".check_token_limit()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2519",
+      "source_location": "L2527",
       "_origin": "ast",
       "id": "orchestrator_chatboks_check_token_limit",
       "community": 49,
@@ -4597,7 +4597,7 @@
       "label": ".session_token_budget()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2532",
+      "source_location": "L2540",
       "_origin": "ast",
       "id": "orchestrator_chatboks_session_token_budget",
       "community": 52,
@@ -4607,7 +4607,7 @@
       "label": ".total_session_tokens()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2542",
+      "source_location": "L2550",
       "_origin": "ast",
       "id": "orchestrator_chatboks_total_session_tokens",
       "community": 52,
@@ -4617,7 +4617,7 @@
       "label": ".ensure_session_token_budget()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2546",
+      "source_location": "L2554",
       "_origin": "ast",
       "id": "orchestrator_chatboks_ensure_session_token_budget",
       "community": 45,
@@ -4627,7 +4627,7 @@
       "label": ".recover_token_exhaustion()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2583",
+      "source_location": "L2591",
       "_origin": "ast",
       "id": "orchestrator_chatboks_recover_token_exhaustion",
       "community": 49,
@@ -4637,7 +4637,7 @@
       "label": ".append_summary_checkpoint()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2624",
+      "source_location": "L2632",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_summary_checkpoint",
       "community": 49,
@@ -4647,7 +4647,7 @@
       "label": ".write_sleep_memory()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2638",
+      "source_location": "L2646",
       "_origin": "ast",
       "id": "orchestrator_chatboks_write_sleep_memory",
       "community": 44,
@@ -4657,7 +4657,7 @@
       "label": ".sleep_dir()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2679",
+      "source_location": "L2687",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_dir",
       "community": 44,
@@ -4667,7 +4667,7 @@
       "label": ".sleep_latest_path()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2682",
+      "source_location": "L2690",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_latest_path",
       "community": 44,
@@ -4677,7 +4677,7 @@
       "label": ".summary_item_count()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2686",
+      "source_location": "L2694",
       "_origin": "ast",
       "id": "orchestrator_chatboks_summary_item_count",
       "community": 44,
@@ -4687,17 +4687,17 @@
       "label": ".capture_git_diff()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2689",
+      "source_location": "L2697",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_git_diff",
-      "community": 9,
+      "community": 49,
       "norm_label": ".capture_git_diff()"
     },
     {
       "label": ".agent_timeout_is_looping()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2708",
+      "source_location": "L2716",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_timeout_is_looping",
       "community": 49,
@@ -4707,7 +4707,7 @@
       "label": ".diff_changed_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2723",
+      "source_location": "L2731",
       "_origin": "ast",
       "id": "orchestrator_chatboks_diff_changed_lines",
       "community": 49,
@@ -4717,7 +4717,7 @@
       "label": ".recover_agent_timeout()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2732",
+      "source_location": "L2740",
       "_origin": "ast",
       "id": "orchestrator_chatboks_recover_agent_timeout",
       "community": 49,
@@ -4727,7 +4727,7 @@
       "label": "AgentTimeoutError",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2732",
+      "source_location": "L2740",
       "_origin": "ast",
       "id": "agenttimeouterror",
       "community": 48,
@@ -4737,7 +4737,7 @@
       "label": ".token_recovery_blocked()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2772",
+      "source_location": "L2780",
       "_origin": "ast",
       "id": "orchestrator_chatboks_token_recovery_blocked",
       "community": 49,
@@ -4747,7 +4747,7 @@
       "label": ".loop_recovery_blocked()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2783",
+      "source_location": "L2791",
       "_origin": "ast",
       "id": "orchestrator_chatboks_loop_recovery_blocked",
       "community": 49,
@@ -4757,7 +4757,7 @@
       "label": ".timeout_recovery_blocked()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2810",
+      "source_location": "L2818",
       "_origin": "ast",
       "id": "orchestrator_chatboks_timeout_recovery_blocked",
       "community": 49,
@@ -4767,7 +4767,7 @@
       "label": ".truncate_for_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2827",
+      "source_location": "L2835",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_for_state",
       "community": 49,
@@ -4777,7 +4777,7 @@
       "label": ".update_token_count()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2833",
+      "source_location": "L2841",
       "_origin": "ast",
       "id": "orchestrator_chatboks_update_token_count",
       "community": 45,
@@ -4787,7 +4787,7 @@
       "label": ".refresh_token_usage_display()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2841",
+      "source_location": "L2849",
       "_origin": "ast",
       "id": "orchestrator_chatboks_refresh_token_usage_display",
       "community": 52,
@@ -4797,7 +4797,7 @@
       "label": ".mark_agent_completed()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2845",
+      "source_location": "L2853",
       "_origin": "ast",
       "id": "orchestrator_chatboks_mark_agent_completed",
       "community": 45,
@@ -4807,7 +4807,7 @@
       "label": ".all_expected_agents_completed()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2851",
+      "source_location": "L2859",
       "_origin": "ast",
       "id": "orchestrator_chatboks_all_expected_agents_completed",
       "community": 45,
@@ -4817,7 +4817,7 @@
       "label": ".append_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2856",
+      "source_location": "L2864",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_message",
       "community": 45,
@@ -4827,67 +4827,67 @@
       "label": ".capture_thought_packets()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2871",
+      "source_location": "L2879",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_thought_packets",
-      "community": 56,
+      "community": 44,
       "norm_label": ".capture_thought_packets()"
     },
     {
       "label": ".append_thought_packet()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2878",
+      "source_location": "L2886",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_thought_packet",
-      "community": 56,
+      "community": 44,
       "norm_label": ".append_thought_packet()"
     },
     {
       "label": "ThoughtPacket",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2878",
+      "source_location": "L2886",
       "_origin": "ast",
       "id": "thoughtpacket",
-      "community": 56,
+      "community": 11,
       "norm_label": "thoughtpacket"
     },
     {
       "label": ".thought_packet_context()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2892",
+      "source_location": "L2900",
       "_origin": "ast",
       "id": "orchestrator_chatboks_thought_packet_context",
-      "community": 56,
+      "community": 44,
       "norm_label": ".thought_packet_context()"
     },
     {
       "label": ".confirmation_packet_stage()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2922",
+      "source_location": "L2930",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_packet_stage",
-      "community": 56,
+      "community": 44,
       "norm_label": ".confirmation_packet_stage()"
     },
     {
       "label": ".truncate_context_value()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2939",
+      "source_location": "L2947",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_context_value",
-      "community": 56,
+      "community": 44,
       "norm_label": ".truncate_context_value()"
     },
     {
       "label": ".buffer_or_complete_input()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2942",
+      "source_location": "L2950",
       "_origin": "ast",
       "id": "orchestrator_chatboks_buffer_or_complete_input",
       "community": 52,
@@ -4897,17 +4897,17 @@
       "label": ".ensure_project_files()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2966",
+      "source_location": "L2974",
       "_origin": "ast",
       "id": "orchestrator_chatboks_ensure_project_files",
-      "community": 47,
+      "community": 0,
       "norm_label": ".ensure_project_files()"
     },
     {
       "label": ".load_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2987",
+      "source_location": "L2995",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_state",
       "community": 46,
@@ -4917,7 +4917,7 @@
       "label": ".save_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2992",
+      "source_location": "L3000",
       "_origin": "ast",
       "id": "orchestrator_chatboks_save_state",
       "community": 45,
@@ -4927,7 +4927,7 @@
       "label": ".update_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2996",
+      "source_location": "L3004",
       "_origin": "ast",
       "id": "orchestrator_chatboks_update_state",
       "community": 45,
@@ -4937,7 +4937,7 @@
       "label": ".default_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3000",
+      "source_location": "L3008",
       "_origin": "ast",
       "id": "orchestrator_chatboks_default_state",
       "community": 46,
@@ -4947,7 +4947,7 @@
       "label": ".load_config()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3025",
+      "source_location": "L3033",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_config",
       "community": 46,
@@ -4957,7 +4957,7 @@
       "label": ".normalize_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3031",
+      "source_location": "L3039",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_state",
       "community": 46,
@@ -4967,7 +4967,7 @@
       "label": ".is_complete_user_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3065",
+      "source_location": "L3073",
       "_origin": "ast",
       "id": "orchestrator_chatboks_is_complete_user_message",
       "community": 52,
@@ -4977,7 +4977,7 @@
       "label": ".extract_first_line()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3097",
+      "source_location": "L3105",
       "_origin": "ast",
       "id": "orchestrator_chatboks_extract_first_line",
       "community": 45,
@@ -4987,7 +4987,7 @@
       "label": ".normalize_modification()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3105",
+      "source_location": "L3113",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_modification",
       "community": 45,
@@ -4997,7 +4997,7 @@
       "label": ".sender_tag()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3115",
+      "source_location": "L3123",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sender_tag",
       "community": 45,
@@ -5007,17 +5007,17 @@
       "label": ".timestamp()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3122",
+      "source_location": "L3130",
       "_origin": "ast",
       "id": "orchestrator_chatboks_timestamp",
-      "community": 47,
+      "community": 0,
       "norm_label": ".timestamp()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3126",
+      "source_location": "L3134",
       "_origin": "ast",
       "id": "orchestrator_main",
       "community": 52,
@@ -7604,10 +7604,20 @@
       "norm_label": "test_confirmation_mode_returns_failed_check_to_executor_once()"
     },
     {
-      "label": "test_confirmation_mode_blocks_when_repair_budget_is_exhausted()",
+      "label": "test_confirmation_mode_executor_handoff_continues_to_verifier()",
       "file_type": "code",
       "source_file": "tests/test_modes.py",
       "source_location": "L329",
+      "_origin": "ast",
+      "id": "tests_test_modes_test_confirmation_mode_executor_handoff_continues_to_verifier",
+      "community": 10,
+      "norm_label": "test_confirmation_mode_executor_handoff_continues_to_verifier()"
+    },
+    {
+      "label": "test_confirmation_mode_blocks_when_repair_budget_is_exhausted()",
+      "file_type": "code",
+      "source_file": "tests/test_modes.py",
+      "source_location": "L358",
       "_origin": "ast",
       "id": "tests_test_modes_test_confirmation_mode_blocks_when_repair_budget_is_exhausted",
       "community": 10,
@@ -8504,6 +8514,686 @@
       "norm_label": "tests for f3: trusted role-file approval (trust.py).  covers: - first approval:"
     },
     {
+      "label": "test_router.py",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_router",
+      "community": 6,
+      "norm_label": "test_router.py"
+    },
+    {
+      "label": "_config()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "tests_test_router_config",
+      "community": 6,
+      "norm_label": "_config()"
+    },
+    {
+      "label": "_router()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L49",
+      "_origin": "ast",
+      "id": "tests_test_router_router",
+      "community": 6,
+      "norm_label": "_router()"
+    },
+    {
+      "label": "test_routing_decision_defaults()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "tests_test_router_test_routing_decision_defaults",
+      "community": 10,
+      "norm_label": "test_routing_decision_defaults()"
+    },
+    {
+      "label": "test_routing_decision_is_frozen()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L67",
+      "_origin": "ast",
+      "id": "tests_test_router_test_routing_decision_is_frozen",
+      "community": 10,
+      "norm_label": "test_routing_decision_is_frozen()"
+    },
+    {
+      "label": "test_routing_decision_explicit_fields()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L78",
+      "_origin": "ast",
+      "id": "tests_test_router_test_routing_decision_explicit_fields",
+      "community": 10,
+      "norm_label": "test_routing_decision_explicit_fields()"
+    },
+    {
+      "label": "test_primary_returns_configured_primary()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "tests_test_router_test_primary_returns_configured_primary",
+      "community": 6,
+      "norm_label": "test_primary_returns_configured_primary()"
+    },
+    {
+      "label": "test_primary_falls_back_to_first_agent_when_unconfigured()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L96",
+      "_origin": "ast",
+      "id": "tests_test_router_test_primary_falls_back_to_first_agent_when_unconfigured",
+      "community": 6,
+      "norm_label": "test_primary_falls_back_to_first_agent_when_unconfigured()"
+    },
+    {
+      "label": "test_primary_falls_back_when_configured_primary_not_in_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L102",
+      "_origin": "ast",
+      "id": "tests_test_router_test_primary_falls_back_when_configured_primary_not_in_agents",
+      "community": 6,
+      "norm_label": "test_primary_falls_back_when_configured_primary_not_in_agents()"
+    },
+    {
+      "label": "test_after_returns_next_agent()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L112",
+      "_origin": "ast",
+      "id": "tests_test_router_test_after_returns_next_agent",
+      "community": 6,
+      "norm_label": "test_after_returns_next_agent()"
+    },
+    {
+      "label": "test_after_returns_you_at_end_of_list()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L119",
+      "_origin": "ast",
+      "id": "tests_test_router_test_after_returns_you_at_end_of_list",
+      "community": 6,
+      "norm_label": "test_after_returns_you_at_end_of_list()"
+    },
+    {
+      "label": "test_after_unknown_agent_returns_primary()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L125",
+      "_origin": "ast",
+      "id": "tests_test_router_test_after_unknown_agent_returns_primary",
+      "community": 6,
+      "norm_label": "test_after_unknown_agent_returns_primary()"
+    },
+    {
+      "label": "test_normalize_round_agents_filters_nonmembers()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L135",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normalize_round_agents_filters_nonmembers",
+      "community": 6,
+      "norm_label": "test_normalize_round_agents_filters_nonmembers()"
+    },
+    {
+      "label": "test_normalize_round_agents_deduplicates()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L141",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normalize_round_agents_deduplicates",
+      "community": 6,
+      "norm_label": "test_normalize_round_agents_deduplicates()"
+    },
+    {
+      "label": "test_normalize_round_agents_non_list_returns_empty()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L147",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normalize_round_agents_non_list_returns_empty",
+      "community": 6,
+      "norm_label": "test_normalize_round_agents_non_list_returns_empty()"
+    },
+    {
+      "label": "test_normalize_round_agents_preserves_order()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L154",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normalize_round_agents_preserves_order",
+      "community": 6,
+      "norm_label": "test_normalize_round_agents_preserves_order()"
+    },
+    {
+      "label": "test_normal_round_agents_uses_role_routes()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L164",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normal_round_agents_uses_role_routes",
+      "community": 6,
+      "norm_label": "test_normal_round_agents_uses_role_routes()"
+    },
+    {
+      "label": "test_normal_round_agents_falls_back_when_no_role_route()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L170",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normal_round_agents_falls_back_when_no_role_route",
+      "community": 6,
+      "norm_label": "test_normal_round_agents_falls_back_when_no_role_route()"
+    },
+    {
+      "label": "test_normal_round_agents_no_mode_returns_all_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L176",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normal_round_agents_no_mode_returns_all_agents",
+      "community": 6,
+      "norm_label": "test_normal_round_agents_no_mode_returns_all_agents()"
+    },
+    {
+      "label": "test_normal_round_agents_uses_round_agents_config()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L182",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normal_round_agents_uses_round_agents_config",
+      "community": 6,
+      "norm_label": "test_normal_round_agents_uses_round_agents_config()"
+    },
+    {
+      "label": "test_normal_round_agents_uses_default_agents_when_no_round_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L188",
+      "_origin": "ast",
+      "id": "tests_test_router_test_normal_round_agents_uses_default_agents_when_no_round_agents",
+      "community": 6,
+      "norm_label": "test_normal_round_agents_uses_default_agents_when_no_round_agents()"
+    },
+    {
+      "label": "test_route_no_prefix_returns_all_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L198",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_no_prefix_returns_all_agents",
+      "community": 6,
+      "norm_label": "test_route_no_prefix_returns_all_agents()"
+    },
+    {
+      "label": "test_route_no_prefix_preserves_original_text()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L207",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_no_prefix_preserves_original_text",
+      "community": 6,
+      "norm_label": "test_route_no_prefix_preserves_original_text()"
+    },
+    {
+      "label": "test_route_at_all_routes_to_all_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L218",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_all_routes_to_all_agents",
+      "community": 6,
+      "norm_label": "test_route_at_all_routes_to_all_agents()"
+    },
+    {
+      "label": "test_route_at_team_routes_to_all_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L227",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_team_routes_to_all_agents",
+      "community": 6,
+      "norm_label": "test_route_at_team_routes_to_all_agents()"
+    },
+    {
+      "label": "test_route_at_everyone_routes_to_all_agents()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L235",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_everyone_routes_to_all_agents",
+      "community": 6,
+      "norm_label": "test_route_at_everyone_routes_to_all_agents()"
+    },
+    {
+      "label": "test_route_at_all_no_body_falls_back_to_full_text()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L243",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_all_no_body_falls_back_to_full_text",
+      "community": 6,
+      "norm_label": "test_route_at_all_no_body_falls_back_to_full_text()"
+    },
+    {
+      "label": "test_route_at_codex_exclusive()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L254",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_codex_exclusive",
+      "community": 6,
+      "norm_label": "test_route_at_codex_exclusive()"
+    },
+    {
+      "label": "test_route_at_claude_exclusive()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L264",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_claude_exclusive",
+      "community": 6,
+      "norm_label": "test_route_at_claude_exclusive()"
+    },
+    {
+      "label": "test_route_at_direct_agent_exclusive()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L273",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_direct_agent_exclusive",
+      "community": 6,
+      "norm_label": "test_route_at_direct_agent_exclusive()"
+    },
+    {
+      "label": "test_route_at_agent_no_body_uses_full_text()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L283",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_agent_no_body_uses_full_text",
+      "community": 6,
+      "norm_label": "test_route_at_agent_no_body_uses_full_text()"
+    },
+    {
+      "label": "test_route_alias_spark_maps_to_codex_spark()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L295",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_spark_maps_to_codex_spark",
+      "community": 6,
+      "norm_label": "test_route_alias_spark_maps_to_codex_spark()"
+    },
+    {
+      "label": "test_route_alias_zero_maps_to_agent_zero()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L303",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_zero_maps_to_agent_zero",
+      "community": 6,
+      "norm_label": "test_route_alias_zero_maps_to_agent_zero()"
+    },
+    {
+      "label": "test_route_alias_numeric_zero_maps_to_agent_zero()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L311",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_numeric_zero_maps_to_agent_zero",
+      "community": 6,
+      "norm_label": "test_route_alias_numeric_zero_maps_to_agent_zero()"
+    },
+    {
+      "label": "test_route_alias_agent0_maps_to_agent_zero()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L319",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_agent0_maps_to_agent_zero",
+      "community": 6,
+      "norm_label": "test_route_alias_agent0_maps_to_agent_zero()"
+    },
+    {
+      "label": "test_route_alias_az_maps_to_agent_zero()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L327",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_az_maps_to_agent_zero",
+      "community": 6,
+      "norm_label": "test_route_alias_az_maps_to_agent_zero()"
+    },
+    {
+      "label": "test_route_alias_forge_maps_to_agent_zero()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L334",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_forge_maps_to_agent_zero",
+      "community": 6,
+      "norm_label": "test_route_alias_forge_maps_to_agent_zero()"
+    },
+    {
+      "label": "test_route_alias_antigrav_maps_to_antigravity()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L341",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_antigrav_maps_to_antigravity",
+      "community": 6,
+      "norm_label": "test_route_alias_antigrav_maps_to_antigravity()"
+    },
+    {
+      "label": "test_route_alias_agy_maps_to_antigravity()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L349",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_agy_maps_to_antigravity",
+      "community": 6,
+      "norm_label": "test_route_alias_agy_maps_to_antigravity()"
+    },
+    {
+      "label": "test_route_alias_codexspark_maps_to_codex_spark()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L356",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_alias_codexspark_maps_to_codex_spark",
+      "community": 6,
+      "norm_label": "test_route_alias_codexspark_maps_to_codex_spark()"
+    },
+    {
+      "label": "test_route_at_unknown_agent_falls_back_to_round()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L368",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_unknown_agent_falls_back_to_round",
+      "community": 6,
+      "norm_label": "test_route_at_unknown_agent_falls_back_to_round()"
+    },
+    {
+      "label": "test_route_at_agent_not_in_project_falls_back_to_round()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L376",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_at_agent_not_in_project_falls_back_to_round",
+      "community": 6,
+      "norm_label": "test_route_at_agent_not_in_project_falls_back_to_round()"
+    },
+    {
+      "label": "test_route_mode_strategy_no_mode_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L389",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_no_mode_returns_none",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_no_mode_returns_none()"
+    },
+    {
+      "label": "test_route_mode_strategy_solo_codex()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L396",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_solo_codex",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_solo_codex()"
+    },
+    {
+      "label": "test_route_mode_strategy_solo_codex_without_codex_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L406",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_solo_codex_without_codex_returns_none",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_solo_codex_without_codex_returns_none()"
+    },
+    {
+      "label": "test_route_mode_strategy_solo_claude()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L412",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_solo_claude",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_solo_claude()"
+    },
+    {
+      "label": "test_route_mode_strategy_solo_claude_without_claude_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L422",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_solo_claude_without_claude_returns_none",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_solo_claude_without_claude_returns_none()"
+    },
+    {
+      "label": "test_route_mode_strategy_full_round()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L428",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_full_round",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_full_round()"
+    },
+    {
+      "label": "test_route_mode_strategy_confirm_round()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L436",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_confirm_round",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_confirm_round()"
+    },
+    {
+      "label": "test_route_mode_strategy_unknown_strategy_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L446",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_unknown_strategy_returns_none",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_unknown_strategy_returns_none()"
+    },
+    {
+      "label": "test_route_mode_strategy_unlisted_mode_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L452",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_mode_strategy_unlisted_mode_returns_none",
+      "community": 6,
+      "norm_label": "test_route_mode_strategy_unlisted_mode_returns_none()"
+    },
+    {
+      "label": "test_full_round_strategy_respects_role_routes()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L462",
+      "_origin": "ast",
+      "id": "tests_test_router_test_full_round_strategy_respects_role_routes",
+      "community": 6,
+      "norm_label": "test_full_round_strategy_respects_role_routes()"
+    },
+    {
+      "label": "test_auto_route_disabled_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L479",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_disabled_returns_none",
+      "community": 6,
+      "norm_label": "test_auto_route_disabled_returns_none()"
+    },
+    {
+      "label": "test_auto_route_codex_for_implementation_prompt()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L485",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_codex_for_implementation_prompt",
+      "community": 6,
+      "norm_label": "test_auto_route_codex_for_implementation_prompt()"
+    },
+    {
+      "label": "test_auto_route_claude_for_analysis_prompt()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L494",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_claude_for_analysis_prompt",
+      "community": 6,
+      "norm_label": "test_auto_route_claude_for_analysis_prompt()"
+    },
+    {
+      "label": "test_auto_route_empty_prompt_returns_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L503",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_empty_prompt_returns_none",
+      "community": 6,
+      "norm_label": "test_auto_route_empty_prompt_returns_none()"
+    },
+    {
+      "label": "test_auto_route_codex_suppressed_in_brainstorm_mode()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L510",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_codex_suppressed_in_brainstorm_mode",
+      "community": 6,
+      "norm_label": "test_auto_route_codex_suppressed_in_brainstorm_mode()"
+    },
+    {
+      "label": "test_auto_route_codex_suppressed_for_tradeoff_prompts()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L517",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_codex_suppressed_for_tradeoff_prompts",
+      "community": 6,
+      "norm_label": "test_auto_route_codex_suppressed_for_tradeoff_prompts()"
+    },
+    {
+      "label": "test_auto_route_claude_suppressed_when_prompt_contains_implement()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L524",
+      "_origin": "ast",
+      "id": "tests_test_router_test_auto_route_claude_suppressed_when_prompt_contains_implement",
+      "community": 6,
+      "norm_label": "test_auto_route_claude_suppressed_when_prompt_contains_implement()"
+    },
+    {
+      "label": "test_route_user_prompt_returns_tuple()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L535",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_user_prompt_returns_tuple",
+      "community": 6,
+      "norm_label": "test_route_user_prompt_returns_tuple()"
+    },
+    {
+      "label": "test_route_user_prompt_no_exclusive_is_none()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L544",
+      "_origin": "ast",
+      "id": "tests_test_router_test_route_user_prompt_no_exclusive_is_none",
+      "community": 6,
+      "norm_label": "test_route_user_prompt_no_exclusive_is_none()"
+    },
+    {
+      "label": "test_router_normalizes_role_routes_keys_lowercase()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L555",
+      "_origin": "ast",
+      "id": "tests_test_router_test_router_normalizes_role_routes_keys_lowercase",
+      "community": 6,
+      "norm_label": "test_router_normalizes_role_routes_keys_lowercase()"
+    },
+    {
+      "label": "test_router_normalizes_mode_strategies_keys_lowercase()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L562",
+      "_origin": "ast",
+      "id": "tests_test_router_test_router_normalizes_mode_strategies_keys_lowercase",
+      "community": 6,
+      "norm_label": "test_router_normalizes_mode_strategies_keys_lowercase()"
+    },
+    {
+      "label": "test_router_normalizes_mode_strategy_values_lowercase()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L568",
+      "_origin": "ast",
+      "id": "tests_test_router_test_router_normalizes_mode_strategy_values_lowercase",
+      "community": 6,
+      "norm_label": "test_router_normalizes_mode_strategy_values_lowercase()"
+    },
+    {
+      "label": "test_router_routing_intelligence_disabled_by_default()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L577",
+      "_origin": "ast",
+      "id": "tests_test_router_test_router_routing_intelligence_disabled_by_default",
+      "community": 6,
+      "norm_label": "test_router_routing_intelligence_disabled_by_default()"
+    },
+    {
+      "label": "test_router_routing_intelligence_enabled_when_configured()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L583",
+      "_origin": "ast",
+      "id": "tests_test_router_test_router_routing_intelligence_enabled_when_configured",
+      "community": 6,
+      "norm_label": "test_router_routing_intelligence_enabled_when_configured()"
+    },
+    {
+      "label": "test_router_empty_mode_strategies_entry_ignored()",
+      "file_type": "code",
+      "source_file": "tests/test_router.py",
+      "source_location": "L589",
+      "_origin": "ast",
+      "id": "tests_test_router_test_router_empty_mode_strategies_entry_ignored",
+      "community": 6,
+      "norm_label": "test_router_empty_mode_strategies_entry_ignored()"
+    },
+    {
+      "label": "Dedicated unit tests for Router and RoutingDecision.",
+      "file_type": "rationale",
+      "source_file": "tests/test_router.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_router_rationale_1",
+      "community": 6,
+      "norm_label": "dedicated unit tests for router and routingdecision."
+    },
+    {
       "label": "test_security_hardening.py",
       "file_type": "code",
       "source_file": "tests/test_security_hardening.py",
@@ -9140,7 +9830,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_slash_buffering",
-      "community": 11,
+      "community": 42,
       "norm_label": "test_slash_buffering.py"
     },
     {
@@ -9150,7 +9840,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_make_app",
-      "community": 11,
+      "community": 42,
       "norm_label": "_make_app()"
     },
     {
@@ -9160,7 +9850,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_py_path",
-      "community": 11,
+      "community": 42,
       "norm_label": "path"
     },
     {
@@ -9170,7 +9860,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_py_chatboks",
-      "community": 11,
+      "community": 42,
       "norm_label": "chatboks"
     },
     {
@@ -9180,7 +9870,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_slash_commands_bypass_buffer",
-      "community": 11,
+      "community": 42,
       "norm_label": "test_slash_commands_bypass_buffer()"
     },
     {
@@ -9190,7 +9880,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_slash_command_does_not_clear_pending_buffer",
-      "community": 11,
+      "community": 42,
       "norm_label": "test_slash_command_does_not_clear_pending_buffer()"
     },
     {
@@ -9200,7 +9890,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_plain_text_without_punctuation_is_buffered",
-      "community": 11,
+      "community": 42,
       "norm_label": "test_plain_text_without_punctuation_is_buffered()"
     },
     {
@@ -9210,7 +9900,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_handle_user_input_routes_slash_commands_without_buffer",
-      "community": 11,
+      "community": 42,
       "norm_label": "test_handle_user_input_routes_slash_commands_without_buffer()"
     },
     {
@@ -9220,7 +9910,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_1",
-      "community": 11,
+      "community": 42,
       "norm_label": "smoke tests: slash commands bypass buffer_or_complete_input."
     },
     {
@@ -9230,7 +9920,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_42",
-      "community": 11,
+      "community": 42,
       "norm_label": "all known slash commands return immediately without buffering."
     },
     {
@@ -9240,7 +9930,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_66",
-      "community": 11,
+      "community": 42,
       "norm_label": "a slash command typed mid-composition leaves the existing buffer intact."
     },
     {
@@ -9250,7 +9940,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_77",
-      "community": 11,
+      "community": 42,
       "norm_label": "non-slash text without terminal punctuation is buffered as before."
     },
     {
@@ -9260,7 +9950,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_87",
-      "community": 11,
+      "community": 42,
       "norm_label": "handle_user_input executes slash local commands end-to-end."
     },
     {
@@ -9270,7 +9960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_usage_sync",
-      "community": 42,
+      "community": 11,
       "norm_label": "test_usage_sync.py"
     },
     {
@@ -9280,7 +9970,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_usage_sync_make_app",
-      "community": 42,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -9290,7 +9980,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_usage_sync_py_path",
-      "community": 42,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -9300,7 +9990,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_usage_sync_py_chatboks",
-      "community": 42,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -9310,7 +10000,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_usage_show_reports_no_records_yet",
-      "community": 42,
+      "community": 11,
       "norm_label": "test_usage_show_reports_no_records_yet()"
     },
     {
@@ -9320,7 +10010,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_usage_sync_records_playwright_capture_metadata",
-      "community": 42,
+      "community": 11,
       "norm_label": "test_usage_sync_records_playwright_capture_metadata()"
     },
     {
@@ -9330,7 +10020,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_usage_summary_reads_saved_jsonl",
-      "community": 42,
+      "community": 11,
       "norm_label": "test_usage_summary_reads_saved_jsonl()"
     },
     {
@@ -9340,7 +10030,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_extract_usage_highlights_filters_relevant_lines",
-      "community": 42,
+      "community": 11,
       "norm_label": "test_extract_usage_highlights_filters_relevant_lines()"
     },
     {
@@ -9350,7 +10040,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_extract_playwright_value_handles_raw_and_verbose_outputs",
-      "community": 42,
+      "community": 11,
       "norm_label": "test_extract_playwright_value_handles_raw_and_verbose_outputs()"
     },
     {
@@ -9360,7 +10050,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_usage_sync_rationale_1",
-      "community": 42,
+      "community": 11,
       "norm_label": "smoke tests for usage baseline syncing and summaries."
     },
     {
@@ -9530,7 +10220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_stream",
-      "community": 16,
+      "community": 3,
       "norm_label": "stream.py"
     },
     {
@@ -21356,9 +22046,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L166",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_rationale_166",
-      "target": "orchestrator_chatboksfilehandler",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboksfilehandler"
     },
     {
       "relation": "calls",
@@ -22599,9 +23289,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L433",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_handle_test_command",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_handle_test_command"
     },
     {
       "relation": "method",
@@ -24621,9 +25311,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L376",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_handle_local_command",
-      "target": "orchestrator_chatboks_handle_test_command",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_handle_test_command"
     },
     {
       "relation": "calls",
@@ -24687,9 +25377,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L456",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_handle_test_command",
-      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines"
     },
     {
       "relation": "calls",
@@ -24698,9 +25388,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L457",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_handle_test_command",
-      "target": "orchestrator_chatboks_unresolved_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_unresolved_packet_risks"
     },
     {
       "relation": "calls",
@@ -30368,6 +31058,50 @@
       "target": "router_routingdecision"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "router_routingdecision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "tests_test_router_test_routing_decision_defaults",
+      "target": "router_routingdecision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "tests_test_router_test_routing_decision_explicit_fields",
+      "target": "router_routingdecision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "tests_test_router_test_routing_decision_is_frozen",
+      "target": "router_routingdecision",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "router.py",
@@ -30900,6 +31634,39 @@
       "confidence_score": 1.0,
       "source": "tests_test_role_trust_test_router_unapproved_project_role_falls_back_to_installed_role",
       "target": "router_router"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "tests_test_router_router",
+      "target": "router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L593",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_empty_mode_strategies_entry_ignored",
+      "target": "router_router",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -34343,6 +35110,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_modes.py",
+      "source_location": "L329",
+      "weight": 1.0,
+      "source": "tests_test_modes",
+      "target": "tests_test_modes_test_confirmation_mode_executor_handoff_continues_to_verifier",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_modes.py",
       "source_location": "L192",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -34385,9 +35162,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L278",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes",
-      "target": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents"
     },
     {
       "relation": "contains",
@@ -34497,6 +35274,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_modes.py",
+      "source_location": "L331",
+      "weight": 1.0,
+      "source": "tests_test_modes_test_confirmation_mode_executor_handoff_continues_to_verifier",
+      "target": "tests_test_modes_make_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_modes.py",
       "source_location": "L194",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -34543,9 +35331,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L280",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
-      "target": "tests_test_modes_make_app",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_make_app"
     },
     {
       "relation": "calls",
@@ -34607,6 +35395,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_modes.py",
+      "source_location": "L331",
+      "weight": 1.0,
+      "source": "tests_test_modes_test_confirmation_mode_executor_handoff_continues_to_verifier",
+      "target": "tests_test_modes_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_modes.py",
       "source_location": "L194",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -34653,9 +35452,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L280",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
-      "target": "tests_test_modes_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_py_path"
     },
     {
       "relation": "calls",
@@ -36826,6 +37625,1358 @@
       "confidence_score": 1.0,
       "source": "tests_test_role_trust_test_prompt_approval_preview_does_not_emit_raw_escape_sequences",
       "target": "trust_prompt_approval"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_after_returns_next_agent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_after_returns_you_at_end_of_list",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L125",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_after_unknown_agent_returns_primary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L494",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_claude_for_analysis_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L524",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_claude_suppressed_when_prompt_contains_implement",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L485",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_codex_for_implementation_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L517",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_codex_suppressed_for_tradeoff_prompts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L510",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_codex_suppressed_in_brainstorm_mode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L479",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_disabled_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L503",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_auto_route_empty_prompt_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L462",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_full_round_strategy_respects_role_routes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L170",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normal_round_agents_falls_back_when_no_role_route",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normal_round_agents_no_mode_returns_all_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L188",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normal_round_agents_uses_default_agents_when_no_round_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normal_round_agents_uses_role_routes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L182",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normal_round_agents_uses_round_agents_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normalize_round_agents_deduplicates",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normalize_round_agents_filters_nonmembers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normalize_round_agents_non_list_returns_empty",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_normalize_round_agents_preserves_order",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_primary_falls_back_to_first_agent_when_unconfigured",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_primary_falls_back_when_configured_primary_not_in_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_primary_returns_configured_primary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L319",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_agent0_maps_to_agent_zero",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L349",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_agy_maps_to_antigravity",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L341",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_antigrav_maps_to_antigravity",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L327",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_az_maps_to_agent_zero",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L356",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_codexspark_maps_to_codex_spark",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L334",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_forge_maps_to_agent_zero",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L311",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_numeric_zero_maps_to_agent_zero",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L295",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_spark_maps_to_codex_spark",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L303",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_alias_zero_maps_to_agent_zero",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L283",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_agent_no_body_uses_full_text",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L376",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_agent_not_in_project_falls_back_to_round",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L243",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_all_no_body_falls_back_to_full_text",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L218",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_all_routes_to_all_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L264",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_claude_exclusive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L254",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_codex_exclusive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L273",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_direct_agent_exclusive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L235",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_everyone_routes_to_all_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L227",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_team_routes_to_all_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L368",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_at_unknown_agent_falls_back_to_round",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L436",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_confirm_round",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L428",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_full_round",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L389",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_no_mode_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L412",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_solo_claude",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L422",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_solo_claude_without_claude_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L396",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_solo_codex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L406",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_solo_codex_without_codex_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L446",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_unknown_strategy_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L452",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_mode_strategy_unlisted_mode_returns_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L207",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_no_prefix_preserves_original_text",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L198",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_no_prefix_returns_all_agents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L544",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_user_prompt_no_exclusive_is_none",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L535",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_route_user_prompt_returns_tuple",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L589",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_router_empty_mode_strategies_entry_ignored",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L562",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_router_normalizes_mode_strategies_keys_lowercase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L568",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_router_normalizes_mode_strategy_values_lowercase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L555",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_router_normalizes_role_routes_keys_lowercase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L577",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_router_routing_intelligence_disabled_by_default",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L583",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_router_routing_intelligence_enabled_when_configured",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_routing_decision_defaults",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_routing_decision_explicit_fields",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "tests_test_router",
+      "target": "tests_test_router_test_routing_decision_is_frozen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_test_router_rationale_1",
+      "target": "tests_test_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "tests_test_router_router",
+      "target": "tests_test_router_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L591",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_empty_mode_strategies_entry_ignored",
+      "target": "tests_test_router_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "tests_test_router_test_after_returns_next_agent",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "tests_test_router_test_after_returns_you_at_end_of_list",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L126",
+      "weight": 1.0,
+      "source": "tests_test_router_test_after_unknown_agent_returns_primary",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L495",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_claude_for_analysis_prompt",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L525",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_claude_suppressed_when_prompt_contains_implement",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L486",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_codex_for_implementation_prompt",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L518",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_codex_suppressed_for_tradeoff_prompts",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L511",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_codex_suppressed_in_brainstorm_mode",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L480",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_disabled_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L504",
+      "weight": 1.0,
+      "source": "tests_test_router_test_auto_route_empty_prompt_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L463",
+      "weight": 1.0,
+      "source": "tests_test_router_test_full_round_strategy_respects_role_routes",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normal_round_agents_falls_back_when_no_role_route",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normal_round_agents_no_mode_returns_all_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L189",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normal_round_agents_uses_default_agents_when_no_round_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normal_round_agents_uses_role_routes",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L183",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normal_round_agents_uses_round_agents_config",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normalize_round_agents_deduplicates",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normalize_round_agents_filters_nonmembers",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normalize_round_agents_non_list_returns_empty",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L155",
+      "weight": 1.0,
+      "source": "tests_test_router_test_normalize_round_agents_preserves_order",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "tests_test_router_test_primary_falls_back_to_first_agent_when_unconfigured",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "tests_test_router_test_primary_falls_back_when_configured_primary_not_in_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "tests_test_router_test_primary_returns_configured_primary",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L320",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_agent0_maps_to_agent_zero",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L350",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_agy_maps_to_antigravity",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L342",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_antigrav_maps_to_antigravity",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L328",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_az_maps_to_agent_zero",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L357",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_codexspark_maps_to_codex_spark",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L335",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_forge_maps_to_agent_zero",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L312",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_numeric_zero_maps_to_agent_zero",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L296",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_spark_maps_to_codex_spark",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L304",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_alias_zero_maps_to_agent_zero",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L284",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_agent_no_body_uses_full_text",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L378",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_agent_not_in_project_falls_back_to_round",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L244",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_all_no_body_falls_back_to_full_text",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L219",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_all_routes_to_all_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L265",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_claude_exclusive",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L255",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_codex_exclusive",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L274",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_direct_agent_exclusive",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L236",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_everyone_routes_to_all_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L228",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_team_routes_to_all_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L369",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_at_unknown_agent_falls_back_to_round",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L437",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_confirm_round",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L429",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_full_round",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L390",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_no_mode_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L413",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_solo_claude",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L423",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_solo_claude_without_claude_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L397",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_solo_codex",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L407",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_solo_codex_without_codex_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L447",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_unknown_strategy_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L453",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_mode_strategy_unlisted_mode_returns_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L208",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_no_prefix_preserves_original_text",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_no_prefix_returns_all_agents",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L545",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_user_prompt_no_exclusive_is_none",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L536",
+      "weight": 1.0,
+      "source": "tests_test_router_test_route_user_prompt_returns_tuple",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L563",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_normalizes_mode_strategies_keys_lowercase",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L569",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_normalizes_mode_strategy_values_lowercase",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L556",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_normalizes_role_routes_keys_lowercase",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L578",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_routing_intelligence_disabled_by_default",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_router.py",
+      "source_location": "L584",
+      "weight": 1.0,
+      "source": "tests_test_router_test_router_routing_intelligence_enabled_when_configured",
+      "target": "tests_test_router_router",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -40343,5 +42494,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4a37910bd7eb53b45ececdfb4c6485abf028156e"
+  "built_at_commit": "3d6bcccd8d569ac80f13d65d444d94771278d04e"
 }

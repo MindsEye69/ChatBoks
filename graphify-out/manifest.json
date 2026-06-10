@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1781111246.4939077,
-    "ast_hash": "e5f3251187e696251744815cccd56ea5",
+    "mtime": 1781126875.9052994,
+    "ast_hash": "7eb675cb4285cc5e3b61a15a13357c2a",
     "semantic_hash": ""
   },
   "router.py": {
@@ -95,8 +95,8 @@
     "semantic_hash": ""
   },
   "tests/test_modes.py": {
-    "mtime": 1781111260.1642866,
-    "ast_hash": "dc6dfa82ad412e0e1cddc5dacaafa18c",
+    "mtime": 1781126887.6635385,
+    "ast_hash": "4774f0aa16fcdff3f08b3451598c97bb",
     "semantic_hash": ""
   },
   "tests/test_outcomes.py": {
@@ -667,6 +667,11 @@
   "tests/test_packets.py": {
     "mtime": 1781108158.4918096,
     "ast_hash": "f672f0efd078bf7b8952343b1a81049f",
+    "semantic_hash": ""
+  },
+  "tests/test_router.py": {
+    "mtime": 1781126289.0793397,
+    "ast_hash": "2954ebd7eee199b553d4f8daa4c286a8",
     "semantic_hash": ""
   }
 }

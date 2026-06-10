@@ -2195,6 +2195,14 @@ class Chatboks:
                             }
                         )
                         continue
+                    confirmation = self.confirm_completion_if_needed(agent_name, response, initiator, active_agents, intent)
+                    if confirmation == "confirmed":
+                        self.maybe_announce_direct_standby_agents(initiator, active_agents)
+                        self.stream.system("Task complete. Awaiting next instruction.")
+                        self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                        return
+                    if confirmation == "terminal":
+                        return
                     self.handle_agent_handoff(response, agent_name)
                     return
                 if signal in {"TASK_COMPLETE", "TASK COMPLETE"}:
