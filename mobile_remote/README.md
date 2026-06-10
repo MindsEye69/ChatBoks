@@ -39,6 +39,21 @@ tailscale serve --bg localhost:8765
 
 Then use the private `https://<device>.<tailnet>.ts.net` URL inside the Android app and pair with the one-time code.
 
+Tailnet-only fallback while Tailscale Serve is unavailable:
+
+```powershell
+netsh interface portproxy add v4tov4 listenaddress=100.94.205.69 listenport=8765 connectaddress=127.0.0.1 connectport=8765
+netsh advfirewall firewall add rule name="ChatBoks Remote Tailnet" dir=in action=allow protocol=TCP localip=100.94.205.69 localport=8765 remoteip=100.64.0.0/10
+```
+
+Then use `http://100.94.205.69:8765` inside the Android app. Keep the Tailscale VPN connected on the phone. Remove the
+fallback when finished:
+
+```powershell
+netsh interface portproxy delete v4tov4 listenaddress=100.94.205.69 listenport=8765
+netsh advfirewall firewall delete rule name="ChatBoks Remote Tailnet"
+```
+
 ## Android build
 
 From this directory:

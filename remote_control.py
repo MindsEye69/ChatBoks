@@ -10,6 +10,7 @@ The bridge is intentionally conservative:
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import secrets
 import threading
@@ -53,6 +54,28 @@ SHELL_CSP = (
 def is_loopback_host(host: str) -> bool:
     normalized = host.strip().lower()
     return normalized in {"127.0.0.1", "localhost", "::1"}
+
+
+def is_tailnet_ipv4_host(host: str) -> bool:
+    try:
+        address = ipaddress.ip_address(host.strip())
+    except ValueError:
+        return False
+    return address.version == 4 and address in ipaddress.ip_network("100.64.0.0/10")
+
+
+def is_allowed_bind_host(host: str, allow_tailnet_bind: bool = False) -> bool:
+    if is_loopback_host(host):
+        return True
+    return allow_tailnet_bind and is_tailnet_ipv4_host(host)
+
+
+def is_allowed_app_origin(origin: str) -> bool:
+    normalized = origin.strip().lower()
+    if normalized in ALLOWED_APP_ORIGINS:
+        return True
+    parsed = urllib.parse.urlparse(normalized)
+    return parsed.scheme in {"http", "https"} and parsed.hostname in {"localhost", "127.0.0.1"}
 
 
 def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[dict[str, Any]]:
@@ -234,8 +257,12 @@ class RemoteStream(Stream):
 
 class RemoteSession:
     def __init__(self, project: str, config_path: Path | None = None) -> None:
+        self.project = project
+        self.config_path = config_path
         self.app = Chatboks(project, trigger="manual", config_path=config_path)
         self.lock = threading.RLock()
+        self._command_thread: threading.Thread | None = None
+        self._command_text: str | None = None
         self.events = RemoteEventBuffer()
         self.app.stream = RemoteStream(
             self.app.config.get("agents", {}),
@@ -243,6 +270,9 @@ class RemoteSession:
             self.events,
         )
         self.prepare()
+
+    def available_projects(self) -> list[str]:
+        return sorted((self.app.config.get("projects") or {}).keys())
 
     def prepare(self) -> None:
         with self.lock:
@@ -252,6 +282,32 @@ class RemoteSession:
             self.app.stream.ready()
             self.app.refresh_token_usage_display()
 
+    def switch_project(self, project: str) -> dict[str, Any]:
+        target = project.strip()
+        if not target:
+            raise ValueError("Project name cannot be empty.")
+        if target not in self.available_projects():
+            raise ValueError(f"Unknown project '{target}'.")
+        with self.lock:
+            if self.command_running():
+                raise ValueError("Cannot switch project while a command is running.")
+            self.project = target
+            self.app = Chatboks(target, trigger="manual", config_path=self.config_path)
+            self._command_thread = None
+            self._command_text = None
+            self.events = RemoteEventBuffer()
+            self.app.stream = RemoteStream(
+                self.app.config.get("agents", {}),
+                self.app.proj_config["agents"],
+                self.events,
+            )
+            self.prepare()
+            self.events.append("system", "system", f"Switched remote project to {target}.")
+            return self.snapshot(cursor=0)
+
+    def command_running(self) -> bool:
+        return self._command_thread is not None and self._command_thread.is_alive()
+
     def submit(self, text: str) -> dict[str, Any]:
         cleaned = text.strip()
         if not cleaned:
@@ -259,8 +315,27 @@ class RemoteSession:
         if len(cleaned) > COMMAND_MAX_CHARS:
             raise ValueError(f"Command text exceeds {COMMAND_MAX_CHARS} characters.")
         with self.lock:
-            self.app.handle_user_input(cleaned)
+            if self.command_running():
+                raise ValueError("A remote command is already running.")
+            self._command_text = cleaned
+            self.events.append("system", "system", "Command accepted. Waiting for agents.")
+            self._command_thread = threading.Thread(
+                target=self._run_command,
+                args=(cleaned,),
+                daemon=True,
+                name="chatboks-remote-command",
+            )
+            self._command_thread.start()
             return self.snapshot(cursor=0)
+
+    def _run_command(self, text: str) -> None:
+        try:
+            self.app.handle_user_input(text)
+        except Exception as exc:  # noqa: BLE001
+            self.events.append("error", "system", f"Remote command failed: {exc}")
+        finally:
+            with self.lock:
+                self._command_text = None
 
     def snapshot(self, cursor: int = 0, transcript_limit: int = TRANSCRIPT_LIMIT) -> dict[str, Any]:
         with self.lock:
@@ -270,12 +345,15 @@ class RemoteSession:
             token_line = self.app.stream.build_token_usage_line(token_counts, self.app.session_token_budget())
             return {
                 "project": self.app.project,
+                "projects": self.available_projects(),
                 "status": self.app.state.get("status"),
                 "active_task": self.app.state.get("active_task"),
                 "next_agent": self.app.state.get("next_agent"),
                 "last_agent": self.app.state.get("last_agent"),
                 "collaboration_mode": self.app.state.get("collaboration_mode"),
                 "context_mode": self.app.state.get("context_mode"),
+                "command_running": self.command_running(),
+                "command_text": self._command_text,
                 "token_line": token_line,
                 "transcript": parse_chatboks_messages(self.app.chatboks_md, limit=transcript_limit),
                 "events": self.events.since(cursor),
@@ -308,7 +386,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         origin = self.request_origin()
-        if origin and origin not in ALLOWED_APP_ORIGINS:
+        if origin and not is_allowed_app_origin(origin):
             self.respond_error(HTTPStatus.FORBIDDEN, "Origin not allowed")
             return
         self.send_response(HTTPStatus.NO_CONTENT)
@@ -334,6 +412,18 @@ class RemoteHandler(BaseHTTPRequestHandler):
             limit = int(query.get("limit", [str(TRANSCRIPT_LIMIT)])[0] or TRANSCRIPT_LIMIT)
             self.respond_json(self.server.session.snapshot(cursor=cursor, transcript_limit=limit))
             return
+        if parsed.path == "/api/projects":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            self.respond_json(
+                {
+                    "project": self.server.session.snapshot(cursor=0, transcript_limit=0).get("project"),
+                    "projects": self.server.session.available_projects(),
+                }
+            )
+            return
         self.respond_error(HTTPStatus.NOT_FOUND, "Not found")
 
     def do_POST(self) -> None:  # noqa: N802
@@ -353,6 +443,19 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 return
             session_token, ttl = result
             self.respond_json({"session_token": session_token, "ttl_seconds": ttl})
+            return
+        if parsed.path == "/api/project":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                snapshot = self.server.session.switch_project(str(payload.get("project") or ""))
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                return
+            self.respond_json(snapshot)
             return
         if parsed.path != "/api/command":
             self.respond_error(HTTPStatus.NOT_FOUND, "Not found")
@@ -375,7 +478,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
         self.respond_json(snapshot)
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A003
-        return
+        print(f"{self.address_string()} - {format % args}")
 
     def authorized(self) -> bool:
         header = self.headers.get("Authorization", "")
@@ -433,7 +536,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
 
     def origin_allowed(self) -> bool:
         origin = self.request_origin()
-        if origin and origin not in ALLOWED_APP_ORIGINS:
+        if origin and not is_allowed_app_origin(origin):
             self.respond_error(HTTPStatus.FORBIDDEN, "Origin not allowed")
             return False
         return True
@@ -810,10 +913,17 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=8765, help="Loopback port for the bridge (default: 8765)")
     parser.add_argument("--token", help="Admin bearer token for API access. Random if omitted.")
     parser.add_argument("--show-admin-token", action="store_true", help="Print the admin token on startup.")
+    parser.add_argument(
+        "--allow-tailnet-bind",
+        action="store_true",
+        help="Allow binding to a Tailscale 100.64.0.0/10 IPv4 address when Tailscale Serve is unavailable.",
+    )
     args = parser.parse_args()
 
-    if not is_loopback_host(args.host):
-        raise SystemExit("Refusing non-loopback bind. Use 127.0.0.1, localhost, or ::1 only.")
+    if not is_allowed_bind_host(args.host, allow_tailnet_bind=args.allow_tailnet_bind):
+        raise SystemExit(
+            "Refusing unsafe bind. Use loopback, or pass --allow-tailnet-bind with a Tailscale 100.64.0.0/10 IPv4 address."
+        )
 
     session = RemoteSession(args.project, config_path=args.config)
     admin_token = args.token or secrets.token_urlsafe(24)
@@ -824,7 +934,10 @@ def main() -> int:
     print(f"ChatBoks remote bridge for project '{args.project}'")
     print(f"Listening on http://{args.host}:{args.port}/")
     print("Security defaults:")
-    print("- loopback bind only")
+    if is_loopback_host(args.host):
+        print("- loopback bind only")
+    else:
+        print("- Tailscale tailnet bind only")
     print("- one-time pairing code issues short-lived session tokens")
     print("- bearer token required on every API request")
     print("- intended remote path: private tunnel such as Tailscale Serve")

@@ -7,17 +7,30 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from remote_control import RemoteAuth, RemoteBridgeServer, RemoteHandler, parse_chatboks_messages
+from remote_control import (
+    RemoteEventBuffer,
+    RemoteAuth,
+    RemoteBridgeServer,
+    RemoteHandler,
+    RemoteSession,
+    is_allowed_bind_host,
+    is_allowed_app_origin,
+    is_tailnet_ipv4_host,
+    parse_chatboks_messages,
+)
 
 
 class FakeSession:
     def __init__(self) -> None:
         self.commands: list[str] = []
+        self.project = "chatboks"
+        self.projects = ["biosassist", "chatboks"]
 
     def snapshot(self, cursor: int = 0, transcript_limit: int = 120) -> dict[str, object]:
         del transcript_limit
         return {
-            "project": "chatboks",
+            "project": self.project,
+            "projects": self.projects,
             "status": "active",
             "active_task": "test",
             "next_agent": "codex",
@@ -29,6 +42,43 @@ class FakeSession:
     def submit(self, text: str) -> dict[str, object]:
         self.commands.append(text)
         return self.snapshot()
+
+    def available_projects(self) -> list[str]:
+        return self.projects
+
+    def switch_project(self, project: str) -> dict[str, object]:
+        if project not in self.projects:
+            raise ValueError(f"Unknown project '{project}'.")
+        self.project = project
+        return self.snapshot()
+
+
+class BlockingFakeApp:
+    def __init__(self, transcript: Path, started: threading.Event, release: threading.Event) -> None:
+        self.project = "chatboks"
+        self.config = {"projects": {"chatboks": {}}}
+        self.state = {"status": "active", "context": {"token_counts": {"codex": 42}}}
+        self.chatboks_md = transcript
+        self.stream = FakeStream()
+        self.started = started
+        self.release = release
+
+    def handle_user_input(self, text: str) -> None:
+        self.state["active_task"] = text
+        self.started.set()
+        assert self.release.wait(timeout=5)
+        self.chatboks_md.write_text("[YOU] hello\n[CODEX] done\n", encoding="utf-8")
+
+    def load_state(self) -> dict[str, object]:
+        return self.state
+
+    def session_token_budget(self) -> int:
+        return 120_000
+
+
+class FakeStream:
+    def build_token_usage_line(self, token_counts: dict[str, int], session_budget: int) -> str:
+        return f"session tokens: CODEX {token_counts.get('codex', 0)}/{session_budget}"
 
 
 def run_server(session: FakeSession, token: str) -> tuple[RemoteBridgeServer, threading.Thread, str]:
@@ -54,6 +104,34 @@ def test_parse_chatboks_messages_reads_multiline_turns(tmp_path: Path):
         {"id": 2, "sender": "codex", "text": "hi there"},
     ]
     print("PASS: remote transcript parsing keeps multiline turns intact")
+
+
+def test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses():
+    assert is_tailnet_ipv4_host("100.94.205.69") is True
+    assert is_tailnet_ipv4_host("100.127.255.254") is True
+    assert is_tailnet_ipv4_host("100.128.0.1") is False
+    assert is_tailnet_ipv4_host("192.168.1.10") is False
+    assert is_tailnet_ipv4_host("warhammer.tail169679.ts.net") is False
+    print("PASS: tailnet bind guard only accepts Tailscale CGNAT IPv4 hosts")
+
+
+def test_allowed_bind_host_requires_explicit_tailnet_flag():
+    assert is_allowed_bind_host("127.0.0.1") is True
+    assert is_allowed_bind_host("localhost") is True
+    assert is_allowed_bind_host("100.94.205.69") is False
+    assert is_allowed_bind_host("100.94.205.69", allow_tailnet_bind=True) is True
+    assert is_allowed_bind_host("0.0.0.0", allow_tailnet_bind=True) is False
+    print("PASS: non-loopback bind requires explicit safe tailnet flag")
+
+
+def test_allowed_app_origin_accepts_localhost_with_optional_ports():
+    assert is_allowed_app_origin("capacitor://localhost") is True
+    assert is_allowed_app_origin("http://localhost") is True
+    assert is_allowed_app_origin("http://localhost:12345") is True
+    assert is_allowed_app_origin("https://127.0.0.1:54321") is True
+    assert is_allowed_app_origin("http://evil.example") is False
+    assert is_allowed_app_origin("http://warhammer.tail169679.ts.net:8765") is False
+    print("PASS: app origin guard accepts local app origins but rejects remote web origins")
 
 
 def test_remote_bridge_rejects_missing_bearer_token():
@@ -102,6 +180,78 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge accepts an authorized command and forwards it")
+
+
+def test_remote_bridge_lists_projects_for_authorized_client():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/projects",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert payload == {"project": "chatboks", "projects": ["biosassist", "chatboks"]}
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge lists projects for authorized clients")
+
+
+def test_remote_bridge_switches_project_for_authorized_client():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/project",
+            data=json.dumps({"project": "biosassist"}).encode("utf-8"),
+            headers={
+                "Authorization": "Bearer secret-token",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert payload["project"] == "biosassist"
+        assert session.project == "biosassist"
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge switches projects for authorized clients")
+
+
+def test_remote_session_snapshot_returns_while_command_is_running(tmp_path: Path):
+    started = threading.Event()
+    release = threading.Event()
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    session.app = BlockingFakeApp(tmp_path / "chatboks.md", started, release)
+
+    try:
+        payload = session.submit("@codex slow task")
+        assert payload["command_running"] is True
+        assert payload["command_text"] == "@codex slow task"
+        assert started.wait(timeout=1)
+
+        before = time.monotonic()
+        snapshot = session.snapshot()
+        elapsed = time.monotonic() - before
+        assert elapsed < 0.5
+        assert snapshot["command_running"] is True
+        assert snapshot["active_task"] == "@codex slow task"
+    finally:
+        release.set()
+        if session._command_thread is not None:
+            session._command_thread.join(timeout=5)
+    print("PASS: remote session snapshots remain responsive during long commands")
 
 
 def test_remote_bridge_allows_capacitor_origin_preflight():

@@ -3,8 +3,10 @@
   "appName": "ChatBoks Remote",
   "webDir": "www",
   "server": {
-    "cleartext": false,
+    "androidScheme": "http",
+    "cleartext": true,
     "allowNavigation": [
+      "100.94.205.69",
       "*.ts.net"
     ]
   }
