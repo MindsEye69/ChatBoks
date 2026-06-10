@@ -199,8 +199,11 @@ class Stream:
         art = self.center_block(frame, self.console.width)
         status = f"{project.upper()}  relay boot {index:02d}/{total:02d}"
         centered_status = status.center(max(1, min(self.console.width, 96)))
+        height = getattr(self.console.size, "height", 30)
+        leading = "\n" if height >= 28 else ""
+        gap = "\n\n" if height >= 32 else "\n"
         return Text(
-            f"\n\n{title}\n\n\n{art}\n\n\n{centered_status}",
+            f"{leading}{title}{gap}{art}{gap}{centered_status}",
             style="green",
         )
 
@@ -210,13 +213,36 @@ class Stream:
 
     @staticmethod
     def render_glyph_hypercube_frame(frame: int, total: int) -> str:
+        return Stream.render_ascii_cube_blob_frame(frame, total)
+
+    @staticmethod
+    def render_ascii_box_frame(frame: int, total: int) -> str:
+        pulse = ".:-=+*#@"[(frame // max(1, total // 8)) % 8]
+        lid = "-" if pulse in ".:-" else "="
+        rows = [
+            "",
+            f"              +{lid * 24}+",
+            f"             /{' ' * 24}/|",
+            f"            /_{'_' * 23}/ |",
+            "            |    CHATBOKS RELAY     | |",
+            f"            |    shared context {pulse}    | |",
+            "            |    agents in sync     | /",
+            "            |________________________|/",
+            "",
+            "                 [ box mode ]",
+            "",
+            "",
+        ]
+        return "\n".join(rows)
+
+    @staticmethod
+    def render_ascii_cube_blob_frame(frame: int, total: int) -> str:
         width = 46
-        height = 14
+        height = 18
         chars = ".,;:itfLCG08@"
         buffer = [[" " for _ in range(width)] for _ in range(height)]
         depth = [[-999.0 for _ in range(width)] for _ in range(height)]
         theta = (math.tau * frame) / total
-
         points = Stream.cube_surface_points()
 
         for x, y, z in points:
@@ -225,13 +251,294 @@ class Stream:
             x, z = Stream.rotate2(x, z, theta)
             y, z = Stream.rotate2(y, z, theta * 0.35)
 
-            perspective3 = 5.4 / (5.4 - z)
-            sx = int(width / 2 + x * perspective3 * 7.8)
-            sy = int(height / 2 + y * perspective3 * 3.55)
-            brightness = min(len(chars) - 1, max(0, int((perspective3 - 0.55) * 8.5)))
+            perspective = 5.4 / (5.4 - z)
+            sx = int(width / 2 + x * perspective * 7.4)
+            sy = int(height / 2 + y * perspective * 3.0)
+            brightness = min(len(chars) - 1, max(0, int((perspective - 0.55) * 8.5)))
             Stream.plot_glyph(buffer, depth, sx, sy, z, chars[brightness], brightness)
 
-        return "\n".join("".join(row).rstrip() for row in buffer).rstrip()
+        return "\n".join("".join(row).rstrip() for row in buffer)
+
+    @staticmethod
+    def render_ascii_cube_blob_lit_frame(frame: int, total: int) -> str:
+        width = 46
+        height = 18
+        chars = ".,;:itfLCG08@"
+        buffer = [[" " for _ in range(width)] for _ in range(height)]
+        depth = [[-999.0 for _ in range(width)] for _ in range(height)]
+        theta = (math.tau * frame) / total
+        light = (0.18, 0.82, -0.54)
+
+        for x, y, z in Stream.cube_surface_points():
+            nx, ny, nz = x, y, z
+            x, y = Stream.rotate2(x, y, math.radians(45))
+            nx, ny = Stream.rotate2(nx, ny, math.radians(45))
+            y, z = Stream.rotate2(y, z, math.radians(35))
+            ny, nz = Stream.rotate2(ny, nz, math.radians(35))
+            x, z = Stream.rotate2(x, z, theta)
+            nx, nz = Stream.rotate2(nx, nz, theta)
+            y, z = Stream.rotate2(y, z, theta * 0.35)
+            ny, nz = Stream.rotate2(ny, nz, theta * 0.35)
+
+            perspective = 5.4 / (5.4 - z)
+            sx = int(width / 2 + x * perspective * 7.4)
+            sy = int(height / 2 + y * perspective * 3.0)
+            normal_len = math.sqrt(nx * nx + ny * ny + nz * nz) or 1.0
+            luminance = max(0.0, (nx * light[0] + ny * light[1] + nz * light[2]) / normal_len)
+            shade = luminance * 0.72 + min(0.28, max(0.0, perspective - 0.7) * 0.28)
+            brightness = min(len(chars) - 1, max(0, round(shade * (len(chars) - 1))))
+            Stream.plot_glyph(buffer, depth, sx, sy, z, chars[brightness], brightness)
+
+        return "\n".join("".join(row).rstrip() for row in buffer)
+
+    @staticmethod
+    def render_ascii_shaded_cube_frame(frame: int, total: int) -> str:
+        width = 60
+        height = 18
+        chars = ".,-~:;=!*#$@"
+        buffer = [[" " for _ in range(width)] for _ in range(height)]
+        zbuffer = [[0.0 for _ in range(width)] for _ in range(height)]
+        phase = (math.tau * frame) / total
+        angle_x = 0.82 + math.sin(phase) * 0.58
+        angle_y = 0.56 + math.cos(phase) * 0.46
+        cos_x = math.cos(angle_x)
+        sin_x = math.sin(angle_x)
+        cos_y = math.cos(angle_y)
+        sin_y = math.sin(angle_y)
+        light_y = 1 / math.sqrt(2)
+        light_z = -1 / math.sqrt(2)
+        viewer_distance = 5.0
+        projection = 18.0
+        step = 0.045
+
+        def plot(x: float, y: float, z: float, nx: float, ny: float, nz: float) -> None:
+            y1 = y * cos_x - z * sin_x
+            z1 = y * sin_x + z * cos_x
+            x2 = x * cos_y + z1 * sin_y
+            z2 = -x * sin_y + z1 * cos_y
+
+            ny1 = ny * cos_x - nz * sin_x
+            nz1 = ny * sin_x + nz * cos_x
+            nz2 = -nx * sin_y + nz1 * cos_y
+
+            one_over_z = 1 / (z2 + viewer_distance)
+            px = int(width / 2 + 2.0 * projection * one_over_z * x2)
+            py = int(height / 2 - projection * 0.72 * one_over_z * y1)
+            if not (0 < px < width - 1 and 1 < py < height - 2):
+                return
+            if one_over_z <= zbuffer[py][px]:
+                return
+
+            zbuffer[py][px] = one_over_z
+            luminance = ny1 * light_y + nz2 * light_z
+            index = max(0, min(len(chars) - 1, round(max(0.0, luminance) * (len(chars) - 1))))
+            buffer[py][px] = chars[index]
+
+        u = -1.0
+        while u <= 1.0001:
+            v = -1.0
+            while v <= 1.0001:
+                for side in (-1.0, 1.0):
+                    plot(side, u, v, side, 0.0, 0.0)
+                    plot(u, side, v, 0.0, side, 0.0)
+                    plot(u, v, side, 0.0, 0.0, side)
+                v += step
+            u += step
+
+        return "\n".join("".join(row).rstrip() for row in buffer)
+
+    @staticmethod
+    def render_ascii_cube_frame(frame: int, total: int) -> str:
+        points: list[tuple[float, float, float, float, float, float]] = []
+        extent = 1.35
+        steps = 44
+        values = [(-extent + 2 * extent * i / (steps - 1)) for i in range(steps)]
+        for v in values:
+            for a in (-extent, extent):
+                for b in (-extent, extent):
+                    points.extend(
+                        [
+                            (v, a, b, v, a, b),
+                            (a, v, b, a, v, b),
+                            (a, b, v, a, b, v),
+                        ]
+                    )
+        angle = (math.tau * frame) / total
+        return Stream.render_ascii_points(points, angle * 0.65, angle, width=52, height=18)
+
+    @staticmethod
+    def render_projected_edges(
+        projected: list[tuple[float, float, float]],
+        edges: list[tuple[int, int]],
+        *,
+        width: int,
+        height: int,
+    ) -> str:
+        buffer = [[" " for _ in range(width)] for _ in range(height)]
+        zbuffer = [[0.0 for _ in range(width)] for _ in range(height)]
+        min_x = min(point[0] for point in projected)
+        max_x = max(point[0] for point in projected)
+        min_y = min(point[1] for point in projected)
+        max_y = max(point[1] for point in projected)
+        span_x = max(max_x - min_x, 0.01)
+        span_y = max(max_y - min_y, 0.01)
+        padding_x = 4
+        padding_y = 1
+        drawable_width = max(1, width - padding_x * 2 - 1)
+        drawable_height = max(1, height - padding_y * 2 - 1)
+        scale = min(drawable_width / span_x, drawable_height / span_y)
+        offset_x = padding_x + (drawable_width - span_x * scale) / 2
+        offset_y = padding_y + (drawable_height - span_y * scale) / 2
+        screen_points: list[tuple[int, int, float]] = []
+
+        for x, y, depth in projected:
+            px = round(offset_x + (x - min_x) * scale)
+            py = round(offset_y + (max_y - y) * scale)
+            screen_points.append((px, py, depth))
+
+        chars = ":-=+*#@"
+        for start, end in edges:
+            x0, y0, z0 = screen_points[start]
+            x1, y1, z1 = screen_points[end]
+            brightness = max(0, min(len(chars) - 1, int(((z0 + z1) * 0.5 - 0.12) * 55)))
+            Stream.draw_depth_line(buffer, zbuffer, x0, y0, z0, x1, y1, z1, chars[brightness])
+
+        for x, y, depth in screen_points:
+            Stream.plot_vertex(buffer, zbuffer, x, y, depth, "+")
+
+        return "\n".join("".join(row).rstrip() for row in buffer)
+
+    @staticmethod
+    def draw_depth_line(
+        buffer: list[list[str]],
+        zbuffer: list[list[float]],
+        x0: int,
+        y0: int,
+        z0: float,
+        x1: int,
+        y1: int,
+        z1: float,
+        char: str,
+    ) -> None:
+        steps = max(abs(x1 - x0), abs(y1 - y0), 1)
+        for step in range(steps + 1):
+            ratio = step / steps
+            x = round(x0 + (x1 - x0) * ratio)
+            y = round(y0 + (y1 - y0) * ratio)
+            depth = z0 + (z1 - z0) * ratio
+            Stream.plot_vertex(buffer, zbuffer, x, y, depth, char)
+
+    @staticmethod
+    def plot_vertex(
+        buffer: list[list[str]],
+        zbuffer: list[list[float]],
+        x: int,
+        y: int,
+        depth: float,
+        char: str,
+    ) -> None:
+        if 0 <= y < len(buffer) and 0 <= x < len(buffer[y]) and depth >= zbuffer[y][x]:
+            zbuffer[y][x] = depth
+            buffer[y][x] = char
+
+    @staticmethod
+    def render_ascii_torus_frame(frame: int, total: int) -> str:
+        width = 72
+        height = 18
+        chars = ".,-~:;=!*#$@"
+        buffer = [[" " for _ in range(width)] for _ in range(height)]
+        zbuffer = [[0.0 for _ in range(width)] for _ in range(height)]
+        a = (math.tau * frame) / total
+        b = a * 0.55
+        cos_a = math.cos(a)
+        sin_a = math.sin(a)
+        cos_b = math.cos(b)
+        sin_b = math.sin(b)
+        radius_minor = 1.0
+        radius_major = 2.0
+        viewer_distance = 5.0
+        x_scale = width * viewer_distance * 3 / (8 * (radius_major + radius_minor))
+        y_scale = x_scale * 0.5
+
+        # Torus renderer adapted from the classic donut projection: sweep the
+        # tube and ring angles, then Z-buffer lit surface points into ASCII.
+        theta = 0.0
+        while theta < math.tau:
+            cos_theta = math.cos(theta)
+            sin_theta = math.sin(theta)
+            phi = 0.0
+            while phi < math.tau:
+                cos_phi = math.cos(phi)
+                sin_phi = math.sin(phi)
+                circle_x = radius_major + radius_minor * cos_theta
+                circle_y = radius_minor * sin_theta
+
+                x = circle_x * (cos_b * cos_phi + sin_a * sin_b * sin_phi) - circle_y * cos_a * sin_b
+                y = circle_x * (sin_b * cos_phi - sin_a * cos_b * sin_phi) + circle_y * cos_a * cos_b
+                z = viewer_distance + cos_a * circle_x * sin_phi + circle_y * sin_a
+                one_over_z = 1 / z
+
+                px = int(width / 2 + x_scale * one_over_z * x)
+                py = int(height / 2 - y_scale * one_over_z * y)
+                luminance = (
+                    cos_phi * cos_theta * sin_b
+                    - cos_a * cos_theta * sin_phi
+                    - sin_a * sin_theta
+                    + cos_b * (cos_a * sin_theta - cos_theta * sin_a * sin_phi)
+                )
+
+                if luminance > 0 and 0 < px < width - 1 and 0 < py < height - 1 and one_over_z > zbuffer[py][px]:
+                    zbuffer[py][px] = one_over_z
+                    index = max(0, min(len(chars) - 1, int(luminance * 8)))
+                    buffer[py][px] = chars[index]
+                phi += 0.025
+            theta += 0.07
+
+        return "\n".join("".join(row).rstrip() for row in buffer)
+
+    @staticmethod
+    def render_ascii_points(
+        points: list[tuple[float, float, float, float, float, float]],
+        angle_a: float,
+        angle_b: float,
+        *,
+        width: int,
+        height: int,
+    ) -> str:
+        chars = ".,-~:;=!*#$@"
+        buffer = [[" " for _ in range(width)] for _ in range(height)]
+        zbuffer = [[0.0 for _ in range(width)] for _ in range(height)]
+        distance = 5.4
+        scale = min(width * 0.31, height * 0.86)
+        light = (0.25, 0.82, -0.52)
+
+        for x, y, z, nx, ny, nz in points:
+            y, z = Stream.rotate2(y, z, math.radians(28))
+            x, z = Stream.rotate2(x, z, angle_b)
+            y, z = Stream.rotate2(y, z, angle_a)
+            ny, nz = Stream.rotate2(ny, nz, math.radians(28))
+            nx, nz = Stream.rotate2(nx, nz, angle_b)
+            ny, nz = Stream.rotate2(ny, nz, angle_a)
+
+            depth_z = distance + z
+            if depth_z <= 0:
+                continue
+            one_over_z = 1 / depth_z
+            px = int(width / 2 + scale * one_over_z * x)
+            py = int(height / 2 - scale * 0.55 * one_over_z * y)
+            if not (0 < px < width - 1 and 0 < py < height - 1):
+                continue
+
+            normal_len = math.sqrt(nx * nx + ny * ny + nz * nz) or 1.0
+            luminance = 0.36 + max(0.0, (nx * light[0] + ny * light[1] + nz * light[2]) / normal_len) * 0.46
+            depth_boost = min(0.55, one_over_z * 1.9)
+            brightness = min(1.0, luminance + depth_boost)
+            index = max(0, min(len(chars) - 1, int(brightness * (len(chars) - 1))))
+            if one_over_z > zbuffer[py][px]:
+                zbuffer[py][px] = one_over_z
+                buffer[py][px] = chars[index]
+
+        return "\n".join("".join(row).rstrip() for row in buffer)
 
     @staticmethod
     def rotate2(a: float, b: float, theta: float) -> tuple[float, float]:
@@ -243,25 +550,11 @@ class Stream:
     def cube_surface_points() -> list[tuple[float, float, float]]:
         points: list[tuple[float, float, float]] = []
         extent = 1.35
-        steps = 24
+        steps = 42
         values = [(-extent + 2 * extent * i / (steps - 1)) for i in range(steps)]
 
-        for a in values:
-            for b in values:
-                for fixed_axis in range(3):
-                    for side in (-extent, extent):
-                        point = [a, b]
-                        if fixed_axis == 0:
-                            points.append((side, point[0], point[1]))
-                        elif fixed_axis == 1:
-                            points.append((point[0], side, point[1]))
-                        else:
-                            points.append((point[0], point[1], side))
-
-        # Extra-bright edges help the dense face read as a cube, not a blob.
-        edge_steps = 36
-        edge_values = [(-extent + 2 * extent * i / (edge_steps - 1)) for i in range(edge_steps)]
-        for v in edge_values:
+        # Wireframe edges read more clearly in a terminal than dense shaded faces.
+        for v in values:
             for a in (-extent, extent):
                 for b in (-extent, extent):
                     points.extend(
