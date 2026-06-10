@@ -91,6 +91,7 @@ Completed:
 - Thought Packet capture and packet-aware sleep summaries.
 - Confirmation-mode Thought Packets now include context metadata that distinguishes executor output, verifier review, and executor repair packets.
 - Packet-driven confirmation checklists are live: verifier prompts include executor packet facts/risks, and ignored actionable risks trigger a bounded repair instead of silent completion.
+- `/test confirmation-risk` provides a deterministic no-agent smoke for packet checklist and risk-gate behavior.
 
 Remaining:
 

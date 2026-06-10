@@ -275,6 +275,25 @@ def test_confirmation_mode_requires_packet_risks_to_be_addressed():
         print("PASS: confirmation mode requires packet risks to be addressed")
 
 
+def test_confirmation_risk_local_smoke_command_does_not_call_agents():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("/test confirmation-risk")
+
+        app.run_agent_round.assert_not_called()
+        app.stream.system.assert_called_once()
+        message = app.stream.system.call_args.args[0]
+        assert "Confirmation packet-risk local smoke:" in message
+        assert "PASS: packet checklist includes observed fact" in message
+        assert "PASS: bare verifier completion is rejected" in message
+        assert "PASS: explicit verifier acknowledgement is accepted" in message
+        assert "No agents called; no files edited." in message
+        assert ">>> TASK_COMPLETE" in message
+        print("PASS: /test confirmation-risk runs locally")
+
+
 def test_confirmation_mode_returns_failed_check_to_executor_once():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -345,6 +364,7 @@ if __name__ == "__main__":
     test_confirmation_mode_verifies_completed_output()
     test_confirmation_mode_includes_packet_checklist_for_verifier()
     test_confirmation_mode_requires_packet_risks_to_be_addressed()
+    test_confirmation_risk_local_smoke_command_does_not_call_agents()
     test_confirmation_mode_returns_failed_check_to_executor_once()
     test_confirmation_mode_blocks_when_repair_budget_is_exhausted()
     print("\nAll mode smoke tests passed.")

@@ -320,7 +320,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "agents_base_baseagent",
-      "community": 1,
+      "community": 48,
       "norm_label": "baseagent"
     },
     {
@@ -350,7 +350,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "agents_base_py_any",
-      "community": 1,
+      "community": 48,
       "norm_label": "any"
     },
     {
@@ -360,7 +360,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "agents_base_baseagent_initialize",
-      "community": 1,
+      "community": 48,
       "norm_label": ".initialize()"
     },
     {
@@ -370,7 +370,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "agents_base_baseagent_call",
-      "community": 1,
+      "community": 48,
       "norm_label": ".call()"
     },
     {
@@ -380,7 +380,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "agents_base_baseagent_reinitialize",
-      "community": 1,
+      "community": 48,
       "norm_label": ".reinitialize()"
     },
     {
@@ -390,7 +390,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "agents_base_baseagent_execute",
-      "community": 1,
+      "community": 48,
       "norm_label": ".execute()"
     },
     {
@@ -400,7 +400,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "agents_base_baseagent_build_prompt",
-      "community": 1,
+      "community": 48,
       "norm_label": ".build_prompt()"
     },
     {
@@ -410,7 +410,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "agents_base_baseagent_command",
-      "community": 1,
+      "community": 48,
       "norm_label": ".command()"
     },
     {
@@ -420,7 +420,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_args",
-      "community": 1,
+      "community": 48,
       "norm_label": ".adapter_args()"
     },
     {
@@ -430,7 +430,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_run_plan",
-      "community": 1,
+      "community": 48,
       "norm_label": ".adapter_run_plan()"
     },
     {
@@ -440,7 +440,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "agents_base_baseagent_expand_adapter_arg",
-      "community": 1,
+      "community": 48,
       "norm_label": ".expand_adapter_arg()"
     },
     {
@@ -450,7 +450,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli",
-      "community": 1,
+      "community": 48,
       "norm_label": ".run_cli()"
     },
     {
@@ -460,7 +460,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli_once",
-      "community": 1,
+      "community": 48,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -470,7 +470,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "agents_base_baseagent_drain_output",
-      "community": 1,
+      "community": 48,
       "norm_label": ".drain_output()"
     },
     {
@@ -480,7 +480,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "queue",
-      "community": 1,
+      "community": 48,
       "norm_label": "queue"
     },
     {
@@ -490,7 +490,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "popen",
-      "community": 1,
+      "community": 48,
       "norm_label": "popen"
     },
     {
@@ -500,7 +500,7 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "agents_base_baseagent_resolve_timeouts",
-      "community": 1,
+      "community": 48,
       "norm_label": ".resolve_timeouts()"
     },
     {
@@ -510,7 +510,7 @@
       "source_location": "L381",
       "_origin": "ast",
       "id": "agents_base_baseagent_terminate_process",
-      "community": 1,
+      "community": 48,
       "norm_label": ".terminate_process()"
     },
     {
@@ -520,7 +520,7 @@
       "source_location": "L404",
       "_origin": "ast",
       "id": "agents_base_baseagent_short_codegraph_status",
-      "community": 1,
+      "community": 48,
       "norm_label": ".short_codegraph_status()"
     },
     {
@@ -530,7 +530,7 @@
       "source_location": "L411",
       "_origin": "ast",
       "id": "agents_base_baseagent_is_token_exhaustion",
-      "community": 1,
+      "community": 48,
       "norm_label": ".is_token_exhaustion()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "encoding_utils",
-      "community": 3,
+      "community": 16,
       "norm_label": "encoding_utils.py"
     },
     {
@@ -1630,7 +1630,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "encoding_utils_configure_utf8_stdio",
-      "community": 3,
+      "community": 16,
       "norm_label": "configure_utf8_stdio()"
     },
     {
@@ -1650,7 +1650,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "encoding_utils_rationale_8",
-      "community": 3,
+      "community": 16,
       "norm_label": "prefer utf-8 for chatboks console/process i/o on every platform."
     },
     {
@@ -3220,17 +3220,17 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "orchestrator",
-      "community": 3,
+      "community": 11,
       "norm_label": "orchestrator.py"
     },
     {
       "label": "ChatboksFileHandler",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L163",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler",
-      "community": 3,
+      "community": 11,
       "norm_label": "chatboksfilehandler"
     },
     {
@@ -3240,24 +3240,24 @@
       "source_location": "",
       "_origin": "ast",
       "id": "filesystemeventhandler",
-      "community": 3,
+      "community": 11,
       "norm_label": "filesystemeventhandler"
     },
     {
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L166",
+      "source_location": "L168",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler_init",
-      "community": 3,
+      "community": 11,
       "norm_label": ".__init__()"
     },
     {
       "label": ".on_modified()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L170",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler_on_modified",
       "community": 46,
@@ -3267,7 +3267,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L170",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "orchestrator_py_any",
       "community": 0,
@@ -3277,7 +3277,7 @@
       "label": "Chatboks",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L182",
+      "source_location": "L184",
       "_origin": "ast",
       "id": "orchestrator_chatboks",
       "community": 44,
@@ -3287,7 +3287,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L183",
+      "source_location": "L185",
       "_origin": "ast",
       "id": "orchestrator_chatboks_init",
       "community": 46,
@@ -3297,7 +3297,7 @@
       "label": "Path",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L183",
+      "source_location": "L185",
       "_origin": "ast",
       "id": "orchestrator_py_path",
       "community": 46,
@@ -3307,7 +3307,7 @@
       "label": ".start()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L208",
+      "source_location": "L210",
       "_origin": "ast",
       "id": "orchestrator_chatboks_start",
       "community": 52,
@@ -3317,17 +3317,17 @@
       "label": ".initialize_agents()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L230",
+      "source_location": "L232",
       "_origin": "ast",
       "id": "orchestrator_chatboks_initialize_agents",
-      "community": 52,
+      "community": 44,
       "norm_label": ".initialize_agents()"
     },
     {
       "label": ".run_input_loop()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L243",
+      "source_location": "L245",
       "_origin": "ast",
       "id": "orchestrator_chatboks_run_input_loop",
       "community": 52,
@@ -3337,7 +3337,7 @@
       "label": ".run_with_watcher()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L264",
+      "source_location": "L266",
       "_origin": "ast",
       "id": "orchestrator_chatboks_run_with_watcher",
       "community": 52,
@@ -3347,27 +3347,27 @@
       "label": ".handle_user_input()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L276",
+      "source_location": "L278",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_user_input",
-      "community": 6,
+      "community": 45,
       "norm_label": ".handle_user_input()"
     },
     {
       "label": ".handle_local_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L324",
+      "source_location": "L326",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_local_command",
-      "community": 6,
+      "community": 47,
       "norm_label": ".handle_local_command()"
     },
     {
       "label": ".handle_help_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L382",
+      "source_location": "L387",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_help_command",
       "community": 52,
@@ -3377,7 +3377,7 @@
       "label": ".show_prompt_help_pin()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L406",
+      "source_location": "L411",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_prompt_help_pin",
       "community": 52,
@@ -3387,27 +3387,37 @@
       "label": ".handle_model_commands_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L414",
+      "source_location": "L419",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_model_commands_command",
       "community": 6,
       "norm_label": ".handle_model_commands_command()"
     },
     {
+      "label": ".handle_test_command()",
+      "file_type": "code",
+      "source_file": "orchestrator.py",
+      "source_location": "L433",
+      "_origin": "ast",
+      "id": "orchestrator_chatboks_handle_test_command",
+      "community": 53,
+      "norm_label": ".handle_test_command()"
+    },
+    {
       "label": ".handle_model_command_if_present()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L428",
+      "source_location": "L486",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_model_command_if_present",
-      "community": 6,
+      "community": 45,
       "norm_label": ".handle_model_command_if_present()"
     },
     {
       "label": ".model_command_wrong_owner_note()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L476",
+      "source_location": "L534",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_wrong_owner_note",
       "community": 6,
@@ -3417,17 +3427,17 @@
       "label": ".model_command_escape_text()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L496",
+      "source_location": "L554",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_escape_text",
-      "community": 6,
+      "community": 45,
       "norm_label": ".model_command_escape_text()"
     },
     {
       "label": ".find_agent_model_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L504",
+      "source_location": "L562",
       "_origin": "ast",
       "id": "orchestrator_chatboks_find_agent_model_command",
       "community": 6,
@@ -3437,7 +3447,7 @@
       "label": ".model_command_token_and_args()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L514",
+      "source_location": "L572",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_token_and_args",
       "community": 6,
@@ -3447,7 +3457,7 @@
       "label": ".agent_model_commands()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L524",
+      "source_location": "L582",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_model_commands",
       "community": 6,
@@ -3457,7 +3467,7 @@
       "label": ".split_model_command_args()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L551",
+      "source_location": "L609",
       "_origin": "ast",
       "id": "orchestrator_chatboks_split_model_command_args",
       "community": 6,
@@ -3467,7 +3477,7 @@
       "label": ".execute_model_cli_subcommand()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L559",
+      "source_location": "L617",
       "_origin": "ast",
       "id": "orchestrator_chatboks_execute_model_cli_subcommand",
       "community": 0,
@@ -3477,7 +3487,7 @@
       "label": ".model_command_argv()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L571",
+      "source_location": "L629",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_argv",
       "community": 0,
@@ -3487,7 +3497,7 @@
       "label": ".handle_resume_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L585",
+      "source_location": "L643",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_resume_command",
       "community": 44,
@@ -3497,7 +3507,7 @@
       "label": ".resume_project_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L599",
+      "source_location": "L657",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resume_project_lines",
       "community": 44,
@@ -3507,7 +3517,7 @@
       "label": ".resume_git_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L605",
+      "source_location": "L663",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resume_git_lines",
       "community": 44,
@@ -3517,7 +3527,7 @@
       "label": ".sleep_memory_status_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L617",
+      "source_location": "L675",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_memory_status_lines",
       "community": 44,
@@ -3527,17 +3537,17 @@
       "label": ".packet_status_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L640",
+      "source_location": "L698",
       "_origin": "ast",
       "id": "orchestrator_chatboks_packet_status_lines",
-      "community": 11,
+      "community": 44,
       "norm_label": ".packet_status_lines()"
     },
     {
       "label": ".resume_session_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L667",
+      "source_location": "L725",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resume_session_lines",
       "community": 44,
@@ -3547,7 +3557,7 @@
       "label": ".resume_next_action_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L680",
+      "source_location": "L738",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resume_next_action_lines",
       "community": 44,
@@ -3557,7 +3567,7 @@
       "label": ".handle_graph_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L694",
+      "source_location": "L752",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_graph_command",
       "community": 44,
@@ -3567,7 +3577,7 @@
       "label": ".codegraph_status_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L700",
+      "source_location": "L758",
       "_origin": "ast",
       "id": "orchestrator_chatboks_codegraph_status_lines",
       "community": 44,
@@ -3577,7 +3587,7 @@
       "label": ".graphify_status_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L726",
+      "source_location": "L784",
       "_origin": "ast",
       "id": "orchestrator_chatboks_graphify_status_lines",
       "community": 44,
@@ -3587,7 +3597,7 @@
       "label": ".read_graphify_report()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L765",
+      "source_location": "L823",
       "_origin": "ast",
       "id": "orchestrator_chatboks_read_graphify_report",
       "community": 44,
@@ -3597,7 +3607,7 @@
       "label": ".parse_graphify_built_commit()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L772",
+      "source_location": "L830",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_graphify_built_commit",
       "community": 44,
@@ -3607,7 +3617,7 @@
       "label": ".parse_graphify_summary()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L777",
+      "source_location": "L835",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_graphify_summary",
       "community": 44,
@@ -3617,7 +3627,7 @@
       "label": ".latest_source_commit()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L784",
+      "source_location": "L842",
       "_origin": "ast",
       "id": "orchestrator_chatboks_latest_source_commit",
       "community": 44,
@@ -3627,7 +3637,7 @@
       "label": ".source_worktree_dirty()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L800",
+      "source_location": "L858",
       "_origin": "ast",
       "id": "orchestrator_chatboks_source_worktree_dirty",
       "community": 44,
@@ -3637,7 +3647,7 @@
       "label": ".run_git()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L814",
+      "source_location": "L872",
       "_origin": "ast",
       "id": "orchestrator_chatboks_run_git",
       "community": 44,
@@ -3647,17 +3657,17 @@
       "label": "CompletedProcess",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L814",
+      "source_location": "L872",
       "_origin": "ast",
       "id": "orchestrator_py_completedprocess",
-      "community": 44,
+      "community": 3,
       "norm_label": "completedprocess"
     },
     {
       "label": ".commits_match()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L831",
+      "source_location": "L889",
       "_origin": "ast",
       "id": "orchestrator_chatboks_commits_match",
       "community": 44,
@@ -3667,7 +3677,7 @@
       "label": ".short_commit()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L837",
+      "source_location": "L895",
       "_origin": "ast",
       "id": "orchestrator_chatboks_short_commit",
       "community": 44,
@@ -3677,7 +3687,7 @@
       "label": ".handle_skills_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L840",
+      "source_location": "L898",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_skills_command",
       "community": 44,
@@ -3687,7 +3697,7 @@
       "label": ".available_skills()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L869",
+      "source_location": "L927",
       "_origin": "ast",
       "id": "orchestrator_chatboks_available_skills",
       "community": 44,
@@ -3697,7 +3707,7 @@
       "label": ".skill_summary()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L882",
+      "source_location": "L940",
       "_origin": "ast",
       "id": "orchestrator_chatboks_skill_summary",
       "community": 44,
@@ -3707,27 +3717,27 @@
       "label": ".handle_dismiss_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L893",
+      "source_location": "L951",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_dismiss_command",
-      "community": 6,
+      "community": 45,
       "norm_label": ".handle_dismiss_command()"
     },
     {
       "label": ".handle_agent_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L902",
+      "source_location": "L960",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_agent_command",
-      "community": 0,
+      "community": 47,
       "norm_label": ".handle_agent_command()"
     },
     {
       "label": ".show_agent_statuses()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L944",
+      "source_location": "L1002",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_agent_statuses",
       "community": 0,
@@ -3737,7 +3747,7 @@
       "label": ".parse_status_until()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L959",
+      "source_location": "L1017",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_until",
       "community": 10,
@@ -3747,7 +3757,7 @@
       "label": ".parse_status_until_at()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L963",
+      "source_location": "L1021",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_until_at",
       "community": 10,
@@ -3757,7 +3767,7 @@
       "label": "datetime",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L963",
+      "source_location": "L1021",
       "_origin": "ast",
       "id": "datetime",
       "community": 10,
@@ -3767,17 +3777,17 @@
       "label": ".resolve_available_agents()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L984",
+      "source_location": "L1042",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resolve_available_agents",
-      "community": 0,
+      "community": 45,
       "norm_label": ".resolve_available_agents()"
     },
     {
       "label": ".find_agent_fallback()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1019",
+      "source_location": "L1077",
       "_origin": "ast",
       "id": "orchestrator_chatboks_find_agent_fallback",
       "community": 0,
@@ -3787,7 +3797,7 @@
       "label": ".normalize_fallback_candidates()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1042",
+      "source_location": "L1100",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_fallback_candidates",
       "community": 0,
@@ -3797,7 +3807,7 @@
       "label": ".fallback_can_fill_main_seat()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1057",
+      "source_location": "L1115",
       "_origin": "ast",
       "id": "orchestrator_chatboks_fallback_can_fill_main_seat",
       "community": 0,
@@ -3807,7 +3817,7 @@
       "label": ".agent_is_available()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1064",
+      "source_location": "L1122",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_is_available",
       "community": 0,
@@ -3817,37 +3827,37 @@
       "label": ".load_agent_statuses()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1072",
+      "source_location": "L1130",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_agent_statuses",
-      "community": 0,
+      "community": 47,
       "norm_label": ".load_agent_statuses()"
     },
     {
       "label": ".save_agent_statuses()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1100",
+      "source_location": "L1158",
       "_origin": "ast",
       "id": "orchestrator_chatboks_save_agent_statuses",
-      "community": 0,
+      "community": 47,
       "norm_label": ".save_agent_statuses()"
     },
     {
       "label": ".agent_status_path()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1107",
+      "source_location": "L1165",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_status_path",
-      "community": 0,
+      "community": 47,
       "norm_label": ".agent_status_path()"
     },
     {
       "label": ".format_status_until()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1111",
+      "source_location": "L1169",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_status_until",
       "community": 0,
@@ -3857,7 +3867,7 @@
       "label": ".format_remaining_until()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1118",
+      "source_location": "L1176",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_remaining_until",
       "community": 0,
@@ -3867,7 +3877,7 @@
       "label": ".status_until_value()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1132",
+      "source_location": "L1190",
       "_origin": "ast",
       "id": "orchestrator_chatboks_status_until_value",
       "community": 0,
@@ -3877,7 +3887,7 @@
       "label": ".parse_status_datetime()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1136",
+      "source_location": "L1194",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_datetime",
       "community": 0,
@@ -3887,27 +3897,27 @@
       "label": ".handle_mode_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1152",
+      "source_location": "L1210",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_mode_command",
-      "community": 6,
+      "community": 45,
       "norm_label": ".handle_mode_command()"
     },
     {
       "label": ".handle_context_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1176",
+      "source_location": "L1234",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_context_command",
-      "community": 6,
+      "community": 45,
       "norm_label": ".handle_context_command()"
     },
     {
       "label": ".handle_sleep_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1190",
+      "source_location": "L1248",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_sleep_command",
       "community": 44,
@@ -3917,7 +3927,7 @@
       "label": ".sleep_closure_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1215",
+      "source_location": "L1273",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_closure_lines",
       "community": 44,
@@ -3927,7 +3937,7 @@
       "label": ".codegraph_sync_closure_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1230",
+      "source_location": "L1288",
       "_origin": "ast",
       "id": "orchestrator_chatboks_codegraph_sync_closure_lines",
       "community": 44,
@@ -3937,7 +3947,7 @@
       "label": ".graphify_sleep_closure_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1254",
+      "source_location": "L1312",
       "_origin": "ast",
       "id": "orchestrator_chatboks_graphify_sleep_closure_lines",
       "community": 44,
@@ -3947,7 +3957,7 @@
       "label": ".git_sleep_closure_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1260",
+      "source_location": "L1318",
       "_origin": "ast",
       "id": "orchestrator_chatboks_git_sleep_closure_lines",
       "community": 44,
@@ -3957,7 +3967,7 @@
       "label": ".show_sleep_status()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1263",
+      "source_location": "L1321",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_sleep_status",
       "community": 44,
@@ -3967,17 +3977,17 @@
       "label": ".handle_outcome_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1274",
+      "source_location": "L1332",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_command",
-      "community": 6,
+      "community": 47,
       "norm_label": ".handle_outcome_command()"
     },
     {
       "label": ".handle_usage_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1331",
+      "source_location": "L1389",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_usage_command",
       "community": 0,
@@ -3987,7 +3997,7 @@
       "label": ".show_usage_baselines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1359",
+      "source_location": "L1417",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_usage_baselines",
       "community": 0,
@@ -3997,7 +4007,7 @@
       "label": ".sync_usage_provider()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1406",
+      "source_location": "L1464",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sync_usage_provider",
       "community": 0,
@@ -4007,7 +4017,7 @@
       "label": ".resolve_usage_provider()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1430",
+      "source_location": "L1488",
       "_origin": "ast",
       "id": "orchestrator_chatboks_resolve_usage_provider",
       "community": 0,
@@ -4017,7 +4027,7 @@
       "label": ".capture_usage_baseline()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1441",
+      "source_location": "L1499",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_usage_baseline",
       "community": 46,
@@ -4027,7 +4037,7 @@
       "label": ".run_playwright_cli()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1495",
+      "source_location": "L1553",
       "_origin": "ast",
       "id": "orchestrator_chatboks_run_playwright_cli",
       "community": 46,
@@ -4037,7 +4047,7 @@
       "label": ".run_playwright_cli_value()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1533",
+      "source_location": "L1591",
       "_origin": "ast",
       "id": "orchestrator_chatboks_run_playwright_cli_value",
       "community": 46,
@@ -4047,7 +4057,7 @@
       "label": ".close_playwright_usage_session()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1543",
+      "source_location": "L1601",
       "_origin": "ast",
       "id": "orchestrator_chatboks_close_playwright_usage_session",
       "community": 46,
@@ -4057,7 +4067,7 @@
       "label": ".append_usage_baseline()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1549",
+      "source_location": "L1607",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_usage_baseline",
       "community": 0,
@@ -4067,7 +4077,7 @@
       "label": ".load_usage_baselines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1555",
+      "source_location": "L1613",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_usage_baselines",
       "community": 0,
@@ -4077,7 +4087,7 @@
       "label": ".usage_baselines_path()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1571",
+      "source_location": "L1629",
       "_origin": "ast",
       "id": "orchestrator_chatboks_usage_baselines_path",
       "community": 0,
@@ -4087,7 +4097,7 @@
       "label": ".usage_artifact_dir()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1574",
+      "source_location": "L1632",
       "_origin": "ast",
       "id": "orchestrator_chatboks_usage_artifact_dir",
       "community": 46,
@@ -4097,7 +4107,7 @@
       "label": ".usage_login_required()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1579",
+      "source_location": "L1637",
       "_origin": "ast",
       "id": "orchestrator_chatboks_usage_login_required",
       "community": 46,
@@ -4107,7 +4117,7 @@
       "label": ".extract_usage_highlights()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1595",
+      "source_location": "L1653",
       "_origin": "ast",
       "id": "orchestrator_chatboks_extract_usage_highlights",
       "community": 46,
@@ -4117,7 +4127,7 @@
       "label": ".detect_playwright_screenshot()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1610",
+      "source_location": "L1668",
       "_origin": "ast",
       "id": "orchestrator_chatboks_detect_playwright_screenshot",
       "community": 46,
@@ -4127,7 +4137,7 @@
       "label": ".extract_playwright_value()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1623",
+      "source_location": "L1681",
       "_origin": "ast",
       "id": "orchestrator_chatboks_extract_playwright_value",
       "community": 46,
@@ -4137,7 +4147,7 @@
       "label": ".handle_outcome_suggestion_command()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1637",
+      "source_location": "L1695",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_suggestion_command",
       "community": 47,
@@ -4147,7 +4157,7 @@
       "label": ".build_outcome_suggestion_prompt()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1665",
+      "source_location": "L1723",
       "_origin": "ast",
       "id": "orchestrator_chatboks_build_outcome_suggestion_prompt",
       "community": 47,
@@ -4157,7 +4167,7 @@
       "label": ".append_outcome()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1705",
+      "source_location": "L1763",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_outcome",
       "community": 47,
@@ -4167,7 +4177,7 @@
       "label": ".show_outcomes()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1711",
+      "source_location": "L1769",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_outcomes",
       "community": 47,
@@ -4177,7 +4187,7 @@
       "label": ".load_outcomes()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1743",
+      "source_location": "L1801",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_outcomes",
       "community": 47,
@@ -4187,7 +4197,7 @@
       "label": ".outcomes_path()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1759",
+      "source_location": "L1817",
       "_origin": "ast",
       "id": "orchestrator_chatboks_outcomes_path",
       "community": 47,
@@ -4197,7 +4207,7 @@
       "label": ".load_recent_transcript_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1762",
+      "source_location": "L1820",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_recent_transcript_lines",
       "community": 47,
@@ -4207,7 +4217,7 @@
       "label": ".call_agent_zero_direct()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1771",
+      "source_location": "L1829",
       "_origin": "ast",
       "id": "orchestrator_chatboks_call_agent_zero_direct",
       "community": 47,
@@ -4217,7 +4227,7 @@
       "label": ".strip_signal_suffix()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1798",
+      "source_location": "L1856",
       "_origin": "ast",
       "id": "orchestrator_chatboks_strip_signal_suffix",
       "community": 45,
@@ -4227,7 +4237,7 @@
       "label": ".format_counts()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1806",
+      "source_location": "L1864",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_counts",
       "community": 47,
@@ -4237,7 +4247,7 @@
       "label": ".handle_external_update()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1811",
+      "source_location": "L1869",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_external_update",
       "community": 46,
@@ -4247,7 +4257,7 @@
       "label": ".handle_commit_trigger()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1819",
+      "source_location": "L1877",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_commit_trigger",
       "community": 46,
@@ -4257,17 +4267,17 @@
       "label": ".handle_handoff()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1826",
+      "source_location": "L1884",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_handoff",
-      "community": 45,
+      "community": 46,
       "norm_label": ".handle_handoff()"
     },
     {
       "label": ".confirmation_mode_active()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1834",
+      "source_location": "L1892",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_mode_active",
       "community": 45,
@@ -4277,7 +4287,7 @@
       "label": ".confirmation_repair_budget()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1839",
+      "source_location": "L1897",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_repair_budget",
       "community": 45,
@@ -4287,7 +4297,7 @@
       "label": ".select_confirmation_agent()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1845",
+      "source_location": "L1903",
       "_origin": "ast",
       "id": "orchestrator_chatboks_select_confirmation_agent",
       "community": 45,
@@ -4297,7 +4307,7 @@
       "label": ".confirmation_request_text()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1860",
+      "source_location": "L1918",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_request_text",
       "community": 45,
@@ -4307,57 +4317,57 @@
       "label": ".confirmation_packet_checklist_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1895",
+      "source_location": "L1953",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_packet_checklist_lines",
-      "community": 44,
+      "community": 53,
       "norm_label": ".confirmation_packet_checklist_lines()"
     },
     {
       "label": ".actionable_packet_risks()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1915",
+      "source_location": "L1973",
       "_origin": "ast",
       "id": "orchestrator_chatboks_actionable_packet_risks",
-      "community": 44,
+      "community": 53,
       "norm_label": ".actionable_packet_risks()"
     },
     {
       "label": ".unresolved_packet_risks()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1935",
+      "source_location": "L1993",
       "_origin": "ast",
       "id": "orchestrator_chatboks_unresolved_packet_risks",
-      "community": 44,
+      "community": 53,
       "norm_label": ".unresolved_packet_risks()"
     },
     {
       "label": ".verifier_addresses_packet_risks()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1946",
+      "source_location": "L2004",
       "_origin": "ast",
       "id": "orchestrator_chatboks_verifier_addresses_packet_risks",
-      "community": 44,
+      "community": 53,
       "norm_label": ".verifier_addresses_packet_risks()"
     },
     {
       "label": ".risk_anchor()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1964",
+      "source_location": "L2022",
       "_origin": "ast",
       "id": "orchestrator_chatboks_risk_anchor",
-      "community": 44,
+      "community": 53,
       "norm_label": ".risk_anchor()"
     },
     {
       "label": ".confirm_completion_if_needed()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L1969",
+      "source_location": "L2027",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirm_completion_if_needed",
       "community": 45,
@@ -4367,7 +4377,7 @@
       "label": ".handle_confirmation_repair()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2030",
+      "source_location": "L2088",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_confirmation_repair",
       "community": 45,
@@ -4377,7 +4387,7 @@
       "label": ".run_agent_round()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2083",
+      "source_location": "L2141",
       "_origin": "ast",
       "id": "orchestrator_chatboks_run_agent_round",
       "community": 45,
@@ -4387,7 +4397,7 @@
       "label": ".parse_signal()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2189",
+      "source_location": "L2247",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_signal",
       "community": 45,
@@ -4397,47 +4407,47 @@
       "label": ".maybe_announce_direct_standby_agents()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2200",
+      "source_location": "L2258",
       "_origin": "ast",
       "id": "orchestrator_chatboks_maybe_announce_direct_standby_agents",
-      "community": 52,
+      "community": 44,
       "norm_label": ".maybe_announce_direct_standby_agents()"
     },
     {
       "label": ".direct_standby_agents()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2213",
+      "source_location": "L2271",
       "_origin": "ast",
       "id": "orchestrator_chatboks_direct_standby_agents",
-      "community": 52,
+      "community": 44,
       "norm_label": ".direct_standby_agents()"
     },
     {
       "label": ".is_role_call_request()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2222",
+      "source_location": "L2280",
       "_origin": "ast",
       "id": "orchestrator_chatboks_is_role_call_request",
-      "community": 52,
+      "community": 44,
       "norm_label": ".is_role_call_request()"
     },
     {
       "label": ".format_direct_standby_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2228",
+      "source_location": "L2286",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_direct_standby_message",
-      "community": 52,
+      "community": 44,
       "norm_label": ".format_direct_standby_message()"
     },
     {
       "label": ".handle_proposal()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2235",
+      "source_location": "L2293",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_proposal",
       "community": 45,
@@ -4447,7 +4457,7 @@
       "label": ".handle_question()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2256",
+      "source_location": "L2314",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_question",
       "community": 45,
@@ -4457,7 +4467,7 @@
       "label": ".handle_agent_handoff()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2260",
+      "source_location": "L2318",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_agent_handoff",
       "community": 45,
@@ -4467,7 +4477,7 @@
       "label": ".handle_approval()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2272",
+      "source_location": "L2330",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_approval",
       "community": 45,
@@ -4477,7 +4487,7 @@
       "label": ".execute_proposal()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2296",
+      "source_location": "L2354",
       "_origin": "ast",
       "id": "orchestrator_chatboks_execute_proposal",
       "community": 45,
@@ -4487,17 +4497,17 @@
       "label": ".estimate_execution_cost()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2316",
+      "source_location": "L2374",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_cost",
-      "community": 44,
+      "community": 0,
       "norm_label": ".estimate_execution_cost()"
     },
     {
       "label": ".estimate_execution_target()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2348",
+      "source_location": "L2406",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_target",
       "community": 0,
@@ -4507,37 +4517,37 @@
       "label": ".estimate_execution_output_tokens()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2355",
+      "source_location": "L2413",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_output_tokens",
-      "community": 44,
+      "community": 0,
       "norm_label": ".estimate_execution_output_tokens()"
     },
     {
       "label": ".estimate_token_cost()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2362",
+      "source_location": "L2420",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_cost",
-      "community": 44,
+      "community": 0,
       "norm_label": ".estimate_token_cost()"
     },
     {
       "label": ".estimate_token_count()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2375",
+      "source_location": "L2433",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_count",
-      "community": 44,
+      "community": 0,
       "norm_label": ".estimate_token_count()"
     },
     {
       "label": ".format_proposal_gate()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2378",
+      "source_location": "L2436",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_proposal_gate",
       "community": 44,
@@ -4547,7 +4557,7 @@
       "label": ".format_usd()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2404",
+      "source_location": "L2462",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_usd",
       "community": 44,
@@ -4557,7 +4567,7 @@
       "label": ".format_compact_number()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2408",
+      "source_location": "L2466",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_compact_number",
       "community": 44,
@@ -4567,7 +4577,7 @@
       "label": ".call_agent_with_token_recovery()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2417",
+      "source_location": "L2475",
       "_origin": "ast",
       "id": "orchestrator_chatboks_call_agent_with_token_recovery",
       "community": 49,
@@ -4577,7 +4587,7 @@
       "label": ".check_token_limit()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2461",
+      "source_location": "L2519",
       "_origin": "ast",
       "id": "orchestrator_chatboks_check_token_limit",
       "community": 49,
@@ -4587,7 +4597,7 @@
       "label": ".session_token_budget()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2474",
+      "source_location": "L2532",
       "_origin": "ast",
       "id": "orchestrator_chatboks_session_token_budget",
       "community": 52,
@@ -4597,7 +4607,7 @@
       "label": ".total_session_tokens()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2484",
+      "source_location": "L2542",
       "_origin": "ast",
       "id": "orchestrator_chatboks_total_session_tokens",
       "community": 52,
@@ -4607,7 +4617,7 @@
       "label": ".ensure_session_token_budget()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2488",
+      "source_location": "L2546",
       "_origin": "ast",
       "id": "orchestrator_chatboks_ensure_session_token_budget",
       "community": 45,
@@ -4617,7 +4627,7 @@
       "label": ".recover_token_exhaustion()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2525",
+      "source_location": "L2583",
       "_origin": "ast",
       "id": "orchestrator_chatboks_recover_token_exhaustion",
       "community": 49,
@@ -4627,7 +4637,7 @@
       "label": ".append_summary_checkpoint()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2566",
+      "source_location": "L2624",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_summary_checkpoint",
       "community": 49,
@@ -4637,7 +4647,7 @@
       "label": ".write_sleep_memory()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2580",
+      "source_location": "L2638",
       "_origin": "ast",
       "id": "orchestrator_chatboks_write_sleep_memory",
       "community": 44,
@@ -4647,7 +4657,7 @@
       "label": ".sleep_dir()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2621",
+      "source_location": "L2679",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_dir",
       "community": 44,
@@ -4657,7 +4667,7 @@
       "label": ".sleep_latest_path()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2624",
+      "source_location": "L2682",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_latest_path",
       "community": 44,
@@ -4667,7 +4677,7 @@
       "label": ".summary_item_count()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2628",
+      "source_location": "L2686",
       "_origin": "ast",
       "id": "orchestrator_chatboks_summary_item_count",
       "community": 44,
@@ -4677,17 +4687,17 @@
       "label": ".capture_git_diff()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2631",
+      "source_location": "L2689",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_git_diff",
-      "community": 49,
+      "community": 9,
       "norm_label": ".capture_git_diff()"
     },
     {
       "label": ".agent_timeout_is_looping()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2650",
+      "source_location": "L2708",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_timeout_is_looping",
       "community": 49,
@@ -4697,7 +4707,7 @@
       "label": ".diff_changed_lines()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2665",
+      "source_location": "L2723",
       "_origin": "ast",
       "id": "orchestrator_chatboks_diff_changed_lines",
       "community": 49,
@@ -4707,7 +4717,7 @@
       "label": ".recover_agent_timeout()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2674",
+      "source_location": "L2732",
       "_origin": "ast",
       "id": "orchestrator_chatboks_recover_agent_timeout",
       "community": 49,
@@ -4717,7 +4727,7 @@
       "label": "AgentTimeoutError",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2674",
+      "source_location": "L2732",
       "_origin": "ast",
       "id": "agenttimeouterror",
       "community": 48,
@@ -4727,7 +4737,7 @@
       "label": ".token_recovery_blocked()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2714",
+      "source_location": "L2772",
       "_origin": "ast",
       "id": "orchestrator_chatboks_token_recovery_blocked",
       "community": 49,
@@ -4737,7 +4747,7 @@
       "label": ".loop_recovery_blocked()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2725",
+      "source_location": "L2783",
       "_origin": "ast",
       "id": "orchestrator_chatboks_loop_recovery_blocked",
       "community": 49,
@@ -4747,7 +4757,7 @@
       "label": ".timeout_recovery_blocked()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2752",
+      "source_location": "L2810",
       "_origin": "ast",
       "id": "orchestrator_chatboks_timeout_recovery_blocked",
       "community": 49,
@@ -4757,7 +4767,7 @@
       "label": ".truncate_for_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2769",
+      "source_location": "L2827",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_for_state",
       "community": 49,
@@ -4767,7 +4777,7 @@
       "label": ".update_token_count()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2775",
+      "source_location": "L2833",
       "_origin": "ast",
       "id": "orchestrator_chatboks_update_token_count",
       "community": 45,
@@ -4777,7 +4787,7 @@
       "label": ".refresh_token_usage_display()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2783",
+      "source_location": "L2841",
       "_origin": "ast",
       "id": "orchestrator_chatboks_refresh_token_usage_display",
       "community": 52,
@@ -4787,7 +4797,7 @@
       "label": ".mark_agent_completed()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2787",
+      "source_location": "L2845",
       "_origin": "ast",
       "id": "orchestrator_chatboks_mark_agent_completed",
       "community": 45,
@@ -4797,7 +4807,7 @@
       "label": ".all_expected_agents_completed()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2793",
+      "source_location": "L2851",
       "_origin": "ast",
       "id": "orchestrator_chatboks_all_expected_agents_completed",
       "community": 45,
@@ -4807,77 +4817,77 @@
       "label": ".append_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2798",
+      "source_location": "L2856",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_message",
-      "community": 6,
+      "community": 45,
       "norm_label": ".append_message()"
     },
     {
       "label": ".capture_thought_packets()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2813",
+      "source_location": "L2871",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_thought_packets",
-      "community": 44,
+      "community": 56,
       "norm_label": ".capture_thought_packets()"
     },
     {
       "label": ".append_thought_packet()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2820",
+      "source_location": "L2878",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_thought_packet",
-      "community": 44,
+      "community": 56,
       "norm_label": ".append_thought_packet()"
     },
     {
       "label": "ThoughtPacket",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2820",
+      "source_location": "L2878",
       "_origin": "ast",
       "id": "thoughtpacket",
-      "community": 11,
+      "community": 56,
       "norm_label": "thoughtpacket"
     },
     {
       "label": ".thought_packet_context()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2834",
+      "source_location": "L2892",
       "_origin": "ast",
       "id": "orchestrator_chatboks_thought_packet_context",
-      "community": 44,
+      "community": 56,
       "norm_label": ".thought_packet_context()"
     },
     {
       "label": ".confirmation_packet_stage()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2864",
+      "source_location": "L2922",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_packet_stage",
-      "community": 44,
+      "community": 56,
       "norm_label": ".confirmation_packet_stage()"
     },
     {
       "label": ".truncate_context_value()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2881",
+      "source_location": "L2939",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_context_value",
-      "community": 44,
+      "community": 56,
       "norm_label": ".truncate_context_value()"
     },
     {
       "label": ".buffer_or_complete_input()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2884",
+      "source_location": "L2942",
       "_origin": "ast",
       "id": "orchestrator_chatboks_buffer_or_complete_input",
       "community": 52,
@@ -4887,17 +4897,17 @@
       "label": ".ensure_project_files()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2908",
+      "source_location": "L2966",
       "_origin": "ast",
       "id": "orchestrator_chatboks_ensure_project_files",
-      "community": 0,
+      "community": 47,
       "norm_label": ".ensure_project_files()"
     },
     {
       "label": ".load_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2929",
+      "source_location": "L2987",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_state",
       "community": 46,
@@ -4907,7 +4917,7 @@
       "label": ".save_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2934",
+      "source_location": "L2992",
       "_origin": "ast",
       "id": "orchestrator_chatboks_save_state",
       "community": 45,
@@ -4917,7 +4927,7 @@
       "label": ".update_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2938",
+      "source_location": "L2996",
       "_origin": "ast",
       "id": "orchestrator_chatboks_update_state",
       "community": 45,
@@ -4927,7 +4937,7 @@
       "label": ".default_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2942",
+      "source_location": "L3000",
       "_origin": "ast",
       "id": "orchestrator_chatboks_default_state",
       "community": 46,
@@ -4937,7 +4947,7 @@
       "label": ".load_config()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2967",
+      "source_location": "L3025",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_config",
       "community": 46,
@@ -4947,7 +4957,7 @@
       "label": ".normalize_state()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L2973",
+      "source_location": "L3031",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_state",
       "community": 46,
@@ -4957,7 +4967,7 @@
       "label": ".is_complete_user_message()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3007",
+      "source_location": "L3065",
       "_origin": "ast",
       "id": "orchestrator_chatboks_is_complete_user_message",
       "community": 52,
@@ -4967,7 +4977,7 @@
       "label": ".extract_first_line()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3039",
+      "source_location": "L3097",
       "_origin": "ast",
       "id": "orchestrator_chatboks_extract_first_line",
       "community": 45,
@@ -4977,7 +4987,7 @@
       "label": ".normalize_modification()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3047",
+      "source_location": "L3105",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_modification",
       "community": 45,
@@ -4987,40 +4997,40 @@
       "label": ".sender_tag()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3057",
+      "source_location": "L3115",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sender_tag",
-      "community": 6,
+      "community": 45,
       "norm_label": ".sender_tag()"
     },
     {
       "label": ".timestamp()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3064",
+      "source_location": "L3122",
       "_origin": "ast",
       "id": "orchestrator_chatboks_timestamp",
-      "community": 0,
+      "community": 47,
       "norm_label": ".timestamp()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "orchestrator.py",
-      "source_location": "L3068",
+      "source_location": "L3126",
       "_origin": "ast",
       "id": "orchestrator_main",
-      "community": 3,
+      "community": 52,
       "norm_label": "main()"
     },
     {
       "label": "Watch chatboks.md for external handoff changes.",
       "file_type": "rationale",
       "source_file": "orchestrator.py",
-      "source_location": "L164",
+      "source_location": "L166",
       "_origin": "ast",
-      "id": "orchestrator_rationale_164",
-      "community": 3,
+      "id": "orchestrator_rationale_166",
+      "community": 11,
       "norm_label": "watch chatboks.md for external handoff changes."
     },
     {
@@ -5030,7 +5040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "remote_control",
-      "community": 3,
+      "community": 16,
       "norm_label": "remote_control.py"
     },
     {
@@ -5870,7 +5880,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "router_router_get_agent",
-      "community": 4,
+      "community": 1,
       "norm_label": ".get_agent()"
     },
     {
@@ -5880,7 +5890,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "router_router_load_role",
-      "community": 4,
+      "community": 1,
       "norm_label": ".load_role()"
     },
     {
@@ -5890,7 +5900,7 @@
       "source_location": "L363",
       "_origin": "ast",
       "id": "router_router_shared_protocol",
-      "community": 4,
+      "community": 1,
       "norm_label": ".shared_protocol()"
     },
     {
@@ -5900,7 +5910,7 @@
       "source_location": "L370",
       "_origin": "ast",
       "id": "router_router_with_shared_protocol",
-      "community": 4,
+      "community": 1,
       "norm_label": ".with_shared_protocol()"
     },
     {
@@ -6880,7 +6890,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_doctor",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_doctor.py"
     },
     {
@@ -6890,7 +6900,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_doctor_test_find_ollama_command_prefers_existing_explicit_path",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_find_ollama_command_prefers_existing_explicit_path()"
     },
     {
@@ -6900,7 +6910,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "tests_test_doctor_test_find_ollama_command_uses_localappdata_fallback",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_find_ollama_command_uses_localappdata_fallback()"
     },
     {
@@ -6910,7 +6920,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_py_launcher_warns_when_launcher_reports_no_installs",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_check_py_launcher_warns_when_launcher_reports_no_installs()"
     },
     {
@@ -6920,7 +6930,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_py_launcher_accepts_real_listing",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_check_py_launcher_accepts_real_listing()"
     },
     {
@@ -6930,7 +6940,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "tests_test_doctor_test_smoke_agent_zero_includes_think_flag",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_smoke_agent_zero_includes_think_flag()"
     },
     {
@@ -6940,7 +6950,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_project_includes_direct_agents",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_check_project_includes_direct_agents()"
     },
     {
@@ -6950,7 +6960,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "tests_test_doctor_test_parse_graphify_built_commit_reads_report",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_parse_graphify_built_commit_reads_report()"
     },
     {
@@ -6960,7 +6970,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "tests_test_doctor_test_commits_match_accepts_short_or_full_prefixes",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_commits_match_accepts_short_or_full_prefixes()"
     },
     {
@@ -6970,7 +6980,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_graphify_reports_stale_source_commit",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_check_graphify_reports_stale_source_commit()"
     },
     {
@@ -6980,7 +6990,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_graphify_accepts_latest_source_commit",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_check_graphify_accepts_latest_source_commit()"
     },
     {
@@ -6990,7 +7000,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_graphify_warns_when_source_worktree_dirty",
-      "community": 1,
+      "community": 51,
       "norm_label": "test_check_graphify_warns_when_source_worktree_dirty()"
     },
     {
@@ -7290,7 +7300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_model_commands",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_model_commands.py"
     },
     {
@@ -7300,7 +7310,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_model_commands_fakeagent",
-      "community": 48,
+      "community": 13,
       "norm_label": "fakeagent"
     },
     {
@@ -7310,7 +7320,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "tests_test_model_commands_fakeagent_init",
-      "community": 48,
+      "community": 13,
       "norm_label": ".__init__()"
     },
     {
@@ -7320,7 +7330,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "tests_test_model_commands_fakeagent_run_cli_once",
-      "community": 48,
+      "community": 13,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -7330,7 +7340,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "tests_test_model_commands_timeoutagent",
-      "community": 48,
+      "community": 13,
       "norm_label": "timeoutagent"
     },
     {
@@ -7340,7 +7350,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "tests_test_model_commands_timeoutagent_run_cli_once",
-      "community": 48,
+      "community": 13,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -7350,7 +7360,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_model_commands_make_app",
-      "community": 48,
+      "community": 13,
       "norm_label": "_make_app()"
     },
     {
@@ -7360,7 +7370,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_model_commands_py_path",
-      "community": 48,
+      "community": 13,
       "norm_label": "path"
     },
     {
@@ -7370,7 +7380,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_model_commands_py_chatboks",
-      "community": 48,
+      "community": 13,
       "norm_label": "chatboks"
     },
     {
@@ -7380,7 +7390,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_registered_model_command_executes_for_owner",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_registered_model_command_executes_for_owner()"
     },
     {
@@ -7390,7 +7400,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_model_command_timeout_preserves_partial_output",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_model_command_timeout_preserves_partial_output()"
     },
     {
@@ -7400,7 +7410,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_wrong_model_command_owner_gets_hint_and_discussion_round",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_wrong_model_command_owner_gets_hint_and_discussion_round()"
     },
     {
@@ -7410,7 +7420,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_model_command_escape_forces_plain_prompt_text",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_model_command_escape_forces_plain_prompt_text()"
     },
     {
@@ -7420,7 +7430,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_unknown_model_slash_command_is_forwarded_as_text",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_unknown_model_slash_command_is_forwarded_as_text()"
     },
     {
@@ -7430,7 +7440,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_raw_model_slash_command_stays_chatboks_local",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_raw_model_slash_command_stays_chatboks_local()"
     },
     {
@@ -7440,7 +7450,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_model_commands_command_lists_registered_commands",
-      "community": 48,
+      "community": 13,
       "norm_label": "test_model_commands_command_lists_registered_commands()"
     },
     {
@@ -7574,10 +7584,20 @@
       "norm_label": "test_confirmation_mode_requires_packet_risks_to_be_addressed()"
     },
     {
-      "label": "test_confirmation_mode_returns_failed_check_to_executor_once()",
+      "label": "test_confirmation_risk_local_smoke_command_does_not_call_agents()",
       "file_type": "code",
       "source_file": "tests/test_modes.py",
       "source_location": "L278",
+      "_origin": "ast",
+      "id": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
+      "community": 10,
+      "norm_label": "test_confirmation_risk_local_smoke_command_does_not_call_agents()"
+    },
+    {
+      "label": "test_confirmation_mode_returns_failed_check_to_executor_once()",
+      "file_type": "code",
+      "source_file": "tests/test_modes.py",
+      "source_location": "L297",
       "_origin": "ast",
       "id": "tests_test_modes_test_confirmation_mode_returns_failed_check_to_executor_once",
       "community": 10,
@@ -7587,7 +7607,7 @@
       "label": "test_confirmation_mode_blocks_when_repair_budget_is_exhausted()",
       "file_type": "code",
       "source_file": "tests/test_modes.py",
-      "source_location": "L310",
+      "source_location": "L329",
       "_origin": "ast",
       "id": "tests_test_modes_test_confirmation_mode_blocks_when_repair_budget_is_exhausted",
       "community": 10,
@@ -7610,7 +7630,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_outcomes",
-      "community": 3,
+      "community": 11,
       "norm_label": "test_outcomes.py"
     },
     {
@@ -7620,7 +7640,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_make_app",
-      "community": 3,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -7630,7 +7650,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_py_path",
-      "community": 3,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -7640,7 +7660,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_py_chatboks",
-      "community": 3,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -7650,7 +7670,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_win_command_records_jsonl_without_agent_round",
-      "community": 3,
+      "community": 11,
       "norm_label": "test_win_command_records_jsonl_without_agent_round()"
     },
     {
@@ -7660,7 +7680,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_outcomes_summary_reads_jsonl",
-      "community": 3,
+      "community": 11,
       "norm_label": "test_outcomes_summary_reads_jsonl()"
     },
     {
@@ -7670,7 +7690,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_suggest_outcome_uses_agent_zero_without_recording_jsonl",
-      "community": 3,
+      "community": 11,
       "norm_label": "test_suggest_outcome_uses_agent_zero_without_recording_jsonl()"
     },
     {
@@ -7680,7 +7700,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_outcomes_rationale_1",
-      "community": 3,
+      "community": 11,
       "norm_label": "smoke tests for manual collaboration outcome tracking."
     },
     {
@@ -9040,7 +9060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_skills",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_skills.py"
     },
     {
@@ -9050,7 +9070,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_make_app",
-      "community": 51,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -9060,7 +9080,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_py_path",
-      "community": 51,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -9070,7 +9090,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_py_chatboks",
-      "community": 51,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -9080,7 +9100,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_skills_test_skills_command_lists_native_skills_without_agent_round",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_skills_command_lists_native_skills_without_agent_round()"
     },
     {
@@ -9090,7 +9110,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "tests_test_skills_test_skills_command_previews_requested_skill",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_skills_command_previews_requested_skill()"
     },
     {
@@ -9100,7 +9120,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "tests_test_skills_test_skill_summary_prefers_summary_field",
-      "community": 51,
+      "community": 11,
       "norm_label": "test_skill_summary_prefers_summary_field()"
     },
     {
@@ -9110,7 +9130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_skills_rationale_1",
-      "community": 51,
+      "community": 11,
       "norm_label": "smoke tests for native chatboks skill discovery."
     },
     {
@@ -9120,7 +9140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_slash_buffering",
-      "community": 13,
+      "community": 11,
       "norm_label": "test_slash_buffering.py"
     },
     {
@@ -9130,7 +9150,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_make_app",
-      "community": 13,
+      "community": 11,
       "norm_label": "_make_app()"
     },
     {
@@ -9140,7 +9160,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_py_path",
-      "community": 13,
+      "community": 11,
       "norm_label": "path"
     },
     {
@@ -9150,7 +9170,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_py_chatboks",
-      "community": 13,
+      "community": 11,
       "norm_label": "chatboks"
     },
     {
@@ -9160,7 +9180,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_slash_commands_bypass_buffer",
-      "community": 13,
+      "community": 11,
       "norm_label": "test_slash_commands_bypass_buffer()"
     },
     {
@@ -9170,7 +9190,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_slash_command_does_not_clear_pending_buffer",
-      "community": 13,
+      "community": 11,
       "norm_label": "test_slash_command_does_not_clear_pending_buffer()"
     },
     {
@@ -9180,7 +9200,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_plain_text_without_punctuation_is_buffered",
-      "community": 13,
+      "community": 11,
       "norm_label": "test_plain_text_without_punctuation_is_buffered()"
     },
     {
@@ -9190,7 +9210,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_handle_user_input_routes_slash_commands_without_buffer",
-      "community": 13,
+      "community": 11,
       "norm_label": "test_handle_user_input_routes_slash_commands_without_buffer()"
     },
     {
@@ -9200,7 +9220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_1",
-      "community": 13,
+      "community": 11,
       "norm_label": "smoke tests: slash commands bypass buffer_or_complete_input."
     },
     {
@@ -9210,7 +9230,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_42",
-      "community": 13,
+      "community": 11,
       "norm_label": "all known slash commands return immediately without buffering."
     },
     {
@@ -9220,7 +9240,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_66",
-      "community": 13,
+      "community": 11,
       "norm_label": "a slash command typed mid-composition leaves the existing buffer intact."
     },
     {
@@ -9230,7 +9250,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_77",
-      "community": 13,
+      "community": 11,
       "norm_label": "non-slash text without terminal punctuation is buffered as before."
     },
     {
@@ -9240,7 +9260,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_87",
-      "community": 13,
+      "community": 11,
       "norm_label": "handle_user_input executes slash local commands end-to-end."
     },
     {
@@ -9510,7 +9530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_stream",
-      "community": 3,
+      "community": 16,
       "norm_label": "stream.py"
     },
     {
@@ -10507,7 +10527,7 @@
       "label": "Phase 3 - Remote Control",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L102",
+      "source_location": "L103",
       "_origin": "ast",
       "id": "roadmap_phase_3_remote_control",
       "community": 5,
@@ -10517,7 +10537,7 @@
       "label": "Phase 4 - Polish and Public Release",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L133",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "roadmap_phase_4_polish_and_public_release",
       "community": 5,
@@ -10527,7 +10547,7 @@
       "label": "Agent Zero",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L147",
+      "source_location": "L148",
       "_origin": "ast",
       "id": "roadmap_agent_zero",
       "community": 5,
@@ -10537,7 +10557,7 @@
       "label": "Execution Model Improvements",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L190",
+      "source_location": "L191",
       "_origin": "ast",
       "id": "roadmap_execution_model_improvements",
       "community": 5,
@@ -10547,7 +10567,7 @@
       "label": "Memory Lifecycle",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L238",
+      "source_location": "L239",
       "_origin": "ast",
       "id": "roadmap_memory_lifecycle",
       "community": 5,
@@ -10557,7 +10577,7 @@
       "label": "Project Notes",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L265",
+      "source_location": "L266",
       "_origin": "ast",
       "id": "roadmap_project_notes",
       "community": 5,
@@ -10567,7 +10587,7 @@
       "label": "Immediate Next Steps",
       "file_type": "document",
       "source_file": "ROADMAP.md",
-      "source_location": "L293",
+      "source_location": "L294",
       "_origin": "ast",
       "id": "roadmap_immediate_next_steps",
       "community": 5,
@@ -21334,11 +21354,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "orchestrator.py",
-      "source_location": "L164",
+      "source_location": "L166",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "orchestrator_rationale_164",
-      "target": "orchestrator_chatboksfilehandler"
+      "source": "orchestrator_rationale_166",
+      "target": "orchestrator_chatboksfilehandler",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -21769,9 +21789,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1915",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_actionable_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_actionable_packet_risks"
     },
     {
       "relation": "method",
@@ -22029,9 +22049,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1895",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines"
     },
     {
       "relation": "method",
@@ -22577,6 +22597,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "orchestrator.py",
+      "source_location": "L433",
+      "weight": 1.0,
+      "source": "orchestrator_chatboks",
+      "target": "orchestrator_chatboks_handle_test_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
       "source_location": "L778",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -22989,9 +23019,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1964",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_risk_anchor",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_risk_anchor"
     },
     {
       "relation": "method",
@@ -23359,9 +23389,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1935",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_unresolved_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_unresolved_packet_risks"
     },
     {
       "relation": "method",
@@ -23419,9 +23449,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1946",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks",
-      "target": "orchestrator_chatboks_verifier_addresses_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_verifier_addresses_packet_risks"
     },
     {
       "relation": "method",
@@ -24589,6 +24619,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "orchestrator.py",
+      "source_location": "L376",
+      "weight": 1.0,
+      "source": "orchestrator_chatboks_handle_local_command",
+      "target": "orchestrator_chatboks_handle_test_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
       "source_location": "L309",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -24638,6 +24679,28 @@
       "confidence_score": 1.0,
       "source": "orchestrator_chatboks_handle_model_commands_command",
       "target": "orchestrator_chatboks_agent_model_commands"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L456",
+      "weight": 1.0,
+      "source": "orchestrator_chatboks_handle_test_command",
+      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "orchestrator.py",
+      "source_location": "L457",
+      "weight": 1.0,
+      "source": "orchestrator_chatboks_handle_test_command",
+      "target": "orchestrator_chatboks_unresolved_packet_risks",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -26413,9 +26476,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1883",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_confirmation_request_text",
-      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_confirmation_packet_checklist_lines"
     },
     {
       "relation": "calls",
@@ -26424,9 +26487,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1904",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_confirmation_packet_checklist_lines",
-      "target": "orchestrator_chatboks_actionable_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_actionable_packet_risks"
     },
     {
       "relation": "calls",
@@ -26435,9 +26498,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1939",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_unresolved_packet_risks",
-      "target": "orchestrator_chatboks_actionable_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_actionable_packet_risks"
     },
     {
       "relation": "calls",
@@ -26446,9 +26509,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L2009",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_confirm_completion_if_needed",
-      "target": "orchestrator_chatboks_unresolved_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_unresolved_packet_risks"
     },
     {
       "relation": "calls",
@@ -26457,9 +26520,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1942",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_unresolved_packet_risks",
-      "target": "orchestrator_chatboks_verifier_addresses_packet_risks",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_verifier_addresses_packet_risks"
     },
     {
       "relation": "calls",
@@ -26468,9 +26531,9 @@
       "source_file": "orchestrator.py",
       "source_location": "L1962",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "orchestrator_chatboks_verifier_addresses_packet_risks",
-      "target": "orchestrator_chatboks_risk_anchor",
-      "confidence_score": 1.0
+      "target": "orchestrator_chatboks_risk_anchor"
     },
     {
       "relation": "calls",
@@ -34282,9 +34345,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L192",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes",
-      "target": "tests_test_modes_test_confirmation_mode_includes_packet_checklist_for_verifier",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_test_confirmation_mode_includes_packet_checklist_for_verifier"
     },
     {
       "relation": "contains",
@@ -34292,9 +34355,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L234",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes",
-      "target": "tests_test_modes_test_confirmation_mode_requires_packet_risks_to_be_addressed",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_test_confirmation_mode_requires_packet_risks_to_be_addressed"
     },
     {
       "relation": "contains",
@@ -34315,6 +34378,16 @@
       "confidence_score": 1.0,
       "source": "tests_test_modes",
       "target": "tests_test_modes_test_confirmation_mode_verifies_completed_output"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_modes.py",
+      "source_location": "L278",
+      "weight": 1.0,
+      "source": "tests_test_modes",
+      "target": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -34426,9 +34499,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L194",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_mode_includes_packet_checklist_for_verifier",
-      "target": "tests_test_modes_make_app",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_make_app"
     },
     {
       "relation": "calls",
@@ -34437,9 +34510,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L236",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_mode_requires_packet_risks_to_be_addressed",
-      "target": "tests_test_modes_make_app",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_make_app"
     },
     {
       "relation": "calls",
@@ -34462,6 +34535,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_mode_verifies_completed_output",
       "target": "tests_test_modes_make_app"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_modes.py",
+      "source_location": "L280",
+      "weight": 1.0,
+      "source": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
+      "target": "tests_test_modes_make_app",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -34525,9 +34609,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L194",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_mode_includes_packet_checklist_for_verifier",
-      "target": "tests_test_modes_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_py_path"
     },
     {
       "relation": "calls",
@@ -34536,9 +34620,9 @@
       "source_file": "tests/test_modes.py",
       "source_location": "L236",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_mode_requires_packet_risks_to_be_addressed",
-      "target": "tests_test_modes_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_modes_py_path"
     },
     {
       "relation": "calls",
@@ -34561,6 +34645,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_modes_test_confirmation_mode_verifies_completed_output",
       "target": "tests_test_modes_py_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_modes.py",
+      "source_location": "L280",
+      "weight": 1.0,
+      "source": "tests_test_modes_test_confirmation_risk_local_smoke_command_does_not_call_agents",
+      "target": "tests_test_modes_py_path",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -40248,5 +40343,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6a84ed1d37aa03f97105de370f0c6ca0ccce1672"
+  "built_at_commit": "4a37910bd7eb53b45ececdfb4c6485abf028156e"
 }

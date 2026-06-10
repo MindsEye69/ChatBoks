@@ -99,6 +99,7 @@ HELP_COMMANDS = [
     ("/model-commands", "List registered model-specific executable commands."),
     ("/mode", "Show the current collaboration mode and available modes."),
     ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, confirmation, diagnose."),
+    ("/test confirmation-risk", "Run a local no-agent smoke for confirmation packet risk gating."),
     ("/win ...", "Record a collaboration win without calling agents."),
     ("/fail ...", "Record a collaboration failure without calling agents."),
     ("/suggest-outcome [agent]", "Ask Agent Zero for candidate /win or /fail lines from recent work."),
@@ -122,6 +123,7 @@ HELP_PIN_COMMANDS = [
     "/graph",
     "/model-commands",
     "/mode",
+    "/test",
     "/usage",
     "/win",
     "/fail",
@@ -370,12 +372,15 @@ class Chatboks:
         if command in {"/model-commands", "/model-command", "/model-cmds"}:
             self.handle_model_commands_command()
             return True
+        if command in {"/test", "/tests"}:
+            self.handle_test_command(stripped)
+            return True
         if command == "/dismiss":
             self.handle_dismiss_command()
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /agent, /graph, /model-commands, /mode, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -423,6 +428,59 @@ class Chatboks:
                 lines.append(f"- {agent_name}: {command['name']} ({status}); aliases: {aliases}; {description}")
         if not found:
             lines.append("- none")
+        self.stream.system("\n".join(lines))
+
+    def handle_test_command(self, text: str) -> None:
+        parts = text.strip().split()
+        target = parts[1].lower() if len(parts) > 1 else ""
+        if target not in {"confirmation-risk", "packet-risk"}:
+            self.stream.system("Available local tests:\n- /test confirmation-risk")
+            return
+
+        executor_response = "\n".join(
+            [
+                "No-edit local smoke.",
+                ">>> PACKET",
+                "agent: codex",
+                "stance: VERIFY",
+                "observed:",
+                "- no files edited",
+                "risks:",
+                "- missing explicit verifier acknowledgement",
+                "next_action: verifier must acknowledge risk",
+                "signal: TASK_COMPLETE",
+                ">>> PACKET_END",
+                ">>> TASK_COMPLETE",
+            ]
+        )
+        checklist = "\n".join(self.confirmation_packet_checklist_lines(executor_response, "codex"))
+        ignored_risks = self.unresolved_packet_risks(executor_response, "confirmed complete\n>>> TASK_COMPLETE", "codex")
+        addressed_risks = self.unresolved_packet_risks(
+            executor_response,
+            "Risk reviewed and accepted: missing explicit verifier acknowledgement.\n>>> TASK_COMPLETE",
+            "codex",
+        )
+
+        checks = [
+            ("packet checklist includes observed fact", "no files edited" in checklist),
+            (
+                "packet checklist includes actionable risk",
+                "missing explicit verifier acknowledgement" in checklist,
+            ),
+            (
+                "bare verifier completion is rejected",
+                ignored_risks == ["missing explicit verifier acknowledgement"],
+            ),
+            ("explicit verifier acknowledgement is accepted", addressed_risks == []),
+        ]
+        failed = [name for name, passed in checks if not passed]
+        lines = ["Confirmation packet-risk local smoke:"]
+        lines.extend(f"- {'PASS' if passed else 'FAIL'}: {name}" for name, passed in checks)
+        lines.append("- No agents called; no files edited.")
+        if failed:
+            lines.append(">>> BLOCKED")
+        else:
+            lines.append(">>> TASK_COMPLETE")
         self.stream.system("\n".join(lines))
 
     def handle_model_command_if_present(self, agent_name: str, text: str) -> bool:
