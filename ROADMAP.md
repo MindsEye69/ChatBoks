@@ -1,6 +1,6 @@
 # ChatBoks Roadmap
 
-Version: v3 handover baseline, updated June 9, 2026.
+Version: v4 memory/remote baseline, updated June 10, 2026.
 
 Chatboks is a local multi-agent coding orchestration system for Claude, Codex, and eventually Antigravity, with the human user as overseer. Agents collaborate through `chatboks.md`, machine state persists in `.chatboks/state.json`, and CodeGraph provides SQLite-backed codebase context.
 
@@ -20,10 +20,13 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
 - `/help` shows a terminal command deck in a BBS-style box.
 - Transcript compaction now rolls forward from `>>> SUMMARY_CHECKPOINT` boundaries while preserving the latest summary plus fresh tail context.
+- Manual `/sleep` creates durable session memory under `.chatboks/sleep/`, appends a summary checkpoint, and feeds that memory back into future agent context.
+- Thought Packets v1 are supported: valid `>>> PACKET` blocks are captured to `.chatboks/packets.jsonl` and used by `/sleep` as cleaner memory input.
 - Session token usage bars and per-session warning/cap thresholds are live.
 - Proposal approval gates now show rough token and optional USD cost estimates.
 - Role-file trust approval is enforced for project-local role files, with approved hashes stored outside the project tree.
 - Agent Zero is now validated against Ollama's direct REST API with `think: false`, and `gemma3:4b` is the current best local balance between usefulness and desktop impact.
+- Secure mobile remote control works over a private Tailscale path with pairing/session tokens, project switching, compact mobile UI, sticky composer, latest-response/full-transcript views, and nonblocking command submission.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -80,46 +83,47 @@ Completed:
   - `console.anthropic.com/usage`
   - `platform.openai.com/usage`
   - `aistudio.google.com`
+- Manual `/sleep` session-memory consolidation.
+- Thought Packet capture and packet-aware sleep summaries.
 
 Remaining:
 
 - Task auction / classifier refinement so Agent Zero answers more low-cost prompts without devolving into generic or bare-signal responses.
 - Better token accounting from provider-native telemetry instead of response-length estimation alone.
+- `/resume` command for deliberate session rehydration: graph status, sleep memory, packet trace, git status, doctor hints, and stale-state warnings.
+- Automatic light resume check at startup, with manual `/resume` for the full visible report.
+- Optional automatic `/sleep` trigger after long idle periods or high transcript growth, while keeping manual `/sleep` as the explicit break marker.
 
 ## Phase 3 - Remote Control
 
-- Add a websocket server to `orchestrator.py`.
-- Web UI / Progressive Web App installable on Android and iOS.
-- Push notifications for approval requests.
-- Chat bubble UI with model logos as avatars.
-- Large tap targets for APPROVE / MODIFY / REJECT on mobile.
-- Orchestrator runs as a background service.
-- Agents can work while the user is away.
-- Native Android and iOS app later, likely React Native.
+Completed:
 
-Paused snapshot, June 9, 2026:
+- Secure desktop bridge in `remote_control.py` with loopback binding by default, one-time pairing codes, short-lived session tokens, CORS/origin guard, and Tailscale-friendly serving.
+- Android shell scaffolding, debug-build helper, release-signing helper, and install helper.
+- Mobile remote UI supports:
+  - private bridge URL
+  - one-time pairing
+  - saved session token
+  - project picker
+  - compact header
+  - collapsible connection/session/token panels
+  - latest response grouping
+  - full transcript view
+  - copy response
+  - sticky composer
+  - nonblocking command submission and polling
+- Tailscale Serve fallback has been manually used with:
+  - desktop node: `warhammer`
+  - URL: `http://warhammer.tail169679.ts.net:8765`
 
-- The secure desktop bridge in `remote_control.py` is working locally and was manually verified listening on `127.0.0.1:8765`.
-- The Android shell scaffolding, debug-build helper, release-signing helper, and install helper are all implemented.
-- Android APK builds are working on this PC:
-  - debug: `mobile_remote/android/app/build/outputs/apk/debug/app-debug.apk`
-  - release: `mobile_remote/android/app/build/outputs/apk/release/app-release.apk`
-- The APK UI originally exposed the old bearer-token-first flow. The web source now uses the intended pairing flow:
-  - Bridge URL
-  - one-time pairing code
-  - auto-filled session token
-  - explicit `Pair` action before `Connect`
-- That pairing-flow fix was copied into the Capacitor Android assets and rebuilt successfully, but it still needs final installed-APK smoke validation.
-- Tailscale is not installed on the desktop yet. `winget install Tailscale.Tailscale` downloaded the installer but failed with Windows elevation error `0x80070642` / `Failed to elevate`, which means local UAC approval is still required at the PC.
-- Tailscale prerequisite services were checked and were already running: `Dnscache`, `iphlpsvc`, `netprofm`, and `WinHttpAutoProxySvc`.
-- Resume plan when physically back at the PC:
-  1. rerun Tailscale install and approve the UAC prompt
-  2. sign in to Tailscale
-  3. run `tailscale serve --bg localhost:8765`
-  4. launch `python remote_control.py chatboks`
-  5. use the private `https://<device>.<tailnet>.ts.net` URL in the Android app
-  6. pair with a fresh one-time code and validate `Pair` then `Connect`
-  7. follow up on any APK/runtime fixes discovered during the smoke test
+Remaining:
+
+- Make the desktop bridge a background service or tray process.
+- Add push notifications for approval requests.
+- Add approval-specific mobile controls for APPROVE / MODIFY / REJECT.
+- Harden mobile connection recovery and make pairing/connection state clearer.
+- Decide whether to keep the current Capacitor shell or move to a richer native/React Native app later.
+- Fix local Android rebuild toolchain mismatch: Gradle currently sees OpenJDK 26, while Android tooling should use a supported JDK such as 17 or 21.
 
 ## Phase 4 - Polish and Public Release
 
@@ -172,6 +176,11 @@ Open question:
 - Keep Agent Zero routing decisions under 10 seconds on Windows while improving answer quality.
 - Improve Agent Zero role-call, "what's next?", and "what should I test next?" responses so they stay concrete and ChatBoks-native.
 - Reproduce and isolate the intermittent stacked-window glitch in the desktop app path; isolated CLI role calls have not reproduced it so far.
+- Evaluate Gemma 4 QAT as the next Agent Zero model family:
+  - Test `Gemma 4 E4B QAT Q4_0` first as the likely replacement for `gemma3:4b`.
+  - Test `Gemma 4 E2B QAT` as the low-impact fallback if E4B affects desktop responsiveness.
+  - Test `Gemma 4 12B QAT Q4_0` only as an opt-in stronger local review lane, not as the default always-on coordinator.
+  - Measure cold start, first-token time, total response time, RAM/VRAM/CPU impact, desktop responsiveness, and answer quality on ChatBoks-native prompts.
 
 ## Execution Model Improvements
 
@@ -221,6 +230,31 @@ Signals:
 - `>>> BLOCKED`: agent cannot proceed.
 - `>>> SUMMARY_CHECKPOINT`: transcript compaction boundary.
 
+## Memory Lifecycle
+
+Current pieces:
+
+- `chatboks.md`: full readable transcript.
+- `.chatboks/state.json`: live machine state.
+- `.chatboks/outcomes.jsonl`: manual wins/failures.
+- `.chatboks/packets.jsonl`: structured Thought Packets captured from agent responses.
+- `.chatboks/sleep/latest.md`: latest durable sleep memory.
+- `.chatboks/sleep/history.jsonl`: sleep memory history.
+
+Implemented:
+
+- `/sleep` runs deterministic consolidation, writes sleep artifacts, appends a `>>> SUMMARY_CHECKPOINT`, and injects latest sleep memory into future context.
+- Thought Packet blocks are optional but parsed when agents emit them.
+- Packet memory improves `/sleep` by preserving observed facts, risks, next actions, and unresolved signals more cleanly than transcript scraping.
+
+Planned:
+
+- `/resume`: visible rehydration command that checks CodeGraph, Graphify, sleep memory, packet memory, git status, and doctor hints.
+- Startup light resume: automatically check for stale graphs/memory without doing expensive work or flooding the terminal.
+- End-of-session `/sleep`: expand from transcript consolidation into a closure routine that can optionally sync CodeGraph, refresh Graphify, run doctor/tests, and mark a clean break.
+- Packet-driven confirmation: use packet `risks` and `observed` fields as verifier checklists.
+- Mobile remote trace view: optional Agent Trace / Packet Trace panel after backend behavior settles.
+
 ## Project Notes
 
 TaskFish:
@@ -251,10 +285,33 @@ IO Website:
 
 ## Immediate Next Steps
 
-1. Commit and push the current transcript compaction, Agent Zero, trust-hardening, and documentation batch.
-2. Continue refining Agent Zero direct responses for role call, routing-policy, and next-step prompts.
-3. Reproduce the intermittent stacked-window desktop glitch locally while observing the visible app shell.
-4. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
-5. Run a fresh `python doctor.py taskfish` from the real Python environment and then a selective `--smoke-agents` pass when usage is acceptable.
-6. Decide whether Agent Zero should remain direct-only by default or join more routing paths after its response quality improves.
-7. Resume the paused Android remote-control tunnel work from the Phase 3 snapshot once local UAC approval for Tailscale install is available.
+1. Implement `/resume` as the start-of-session readiness report:
+   - CodeGraph status/sync hint
+   - Graphify freshness
+   - latest sleep memory status
+   - packet count/latest packet summary
+   - git branch/dirty state
+   - doctor hint or optional doctor run
+2. Expand `/sleep` into an end-of-session closure command:
+   - consolidate memory
+   - optionally sync CodeGraph
+   - optionally refresh Graphify after source/doc changes
+   - optionally run doctor/focused tests
+   - record the break in `chatboks.md`
+3. Use Thought Packets in confirmation mode:
+   - verifier sees executor `observed` and `risks`
+   - unresolved risks prevent silent completion
+4. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
+5. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
+6. Run an Agent Zero model bake-off with Gemma 4 QAT:
+   - current `gemma3:4b` baseline
+   - `Gemma 4 E4B QAT Q4_0`
+   - `Gemma 4 E2B QAT`
+   - optional `Gemma 4 12B QAT Q4_0` under explicit desktop-impact observation
+7. Reproduce and isolate the intermittent stacked-window desktop glitch if it returns.
+8. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
+9. Improve mobile remote polish:
+   - connection recovery feedback
+   - approval controls
+   - optional Agent Trace / Packet Trace view
+10. Fix Android rebuild JDK selection so APK builds consistently use a supported JDK.
