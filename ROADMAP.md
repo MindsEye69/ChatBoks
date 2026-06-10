@@ -90,6 +90,7 @@ Completed:
 - `/resume` command for deliberate session rehydration: graph status, sleep memory, packet trace, git status, doctor hints, and stale-state warnings.
 - Thought Packet capture and packet-aware sleep summaries.
 - Confirmation-mode Thought Packets now include context metadata that distinguishes executor output, verifier review, and executor repair packets.
+- Packet-driven confirmation checklists are live: verifier prompts include executor packet facts/risks, and ignored actionable risks trigger a bounded repair instead of silent completion.
 
 Remaining:
 
@@ -258,7 +259,7 @@ Planned:
 
 - Startup light resume: automatically check for stale graphs/memory without doing expensive work or flooding the terminal.
 - End-of-session `/sleep`: optional heavier closure modes that can refresh Graphify, run doctor/tests, and mark a clean break.
-- Packet-driven confirmation: use packet `risks` and `observed` fields as verifier checklists, and block silent completion when unresolved risks remain.
+- Packet-driven confirmation can be refined with stricter semantic risk matching after more real-session traces.
 - Mobile remote trace view: optional Agent Trace / Packet Trace panel after backend behavior settles.
 
 ## Project Notes
@@ -292,9 +293,9 @@ IO Website:
 ## Immediate Next Steps
 
 1. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
-2. Use packet `risks` and `observed` fields as active confirmation checklists, including unresolved-risk gating.
-3. Add optional heavier `/sleep` modes for Graphify refresh, doctor, and focused tests.
-4. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
+2. Add optional heavier `/sleep` modes for Graphify refresh, doctor, and focused tests.
+3. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
+4. Refine packet-risk matching from real confirmation-mode traces if the first heuristic is too strict or too loose.
 5. Run an Agent Zero model bake-off with Gemma 4 QAT:
    - current `gemma3:4b` baseline
    - `Gemma 4 E4B QAT Q4_0`

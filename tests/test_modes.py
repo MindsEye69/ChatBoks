@@ -189,6 +189,92 @@ def test_confirmation_mode_verifies_completed_output():
         print("PASS: confirmation mode verifies completed output")
 
 
+def test_confirmation_mode_includes_packet_checklist_for_verifier():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_confirmation_repairs": 1},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["confirmation"]
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                (
+                    "Implemented.\n"
+                    ">>> PACKET\n"
+                    "stance: ADD\n"
+                    "observed:\n"
+                    "- packet fact carried forward\n"
+                    "risks:\n"
+                    "- packet risk needs verifier attention\n"
+                    "next_action: verifier checks risk\n"
+                    "signal: TASK_COMPLETE\n"
+                    ">>> PACKET_END\n"
+                    ">>> TASK_COMPLETE"
+                ),
+                "Risk reviewed and accepted; confirmed complete.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        system_messages = [call.args[1] for call in app.append_message.call_args_list if call.args[0] == "system"]
+        confirmation_prompt = next(message for message in system_messages if "Confirmation mode:" in message)
+        assert "Executor Thought Packet checklist:" in confirmation_prompt
+        assert "packet fact carried forward" in confirmation_prompt
+        assert "packet risk needs verifier attention" in confirmation_prompt
+        assert "verifier checks risk" in confirmation_prompt
+        assert app.state["status"] == "idle"
+        print("PASS: confirmation verifier prompt includes packet checklist")
+
+
+def test_confirmation_mode_requires_packet_risks_to_be_addressed():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_confirmation_repairs": 1},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.state["collaboration_mode"] = "confirmation"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["confirmation"]
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                (
+                    "Implemented.\n"
+                    ">>> PACKET\n"
+                    "stance: ADD\n"
+                    "observed:\n"
+                    "- implementation done\n"
+                    "risks:\n"
+                    "- focused test still missing\n"
+                    "next_action: verifier checks risk\n"
+                    "signal: TASK_COMPLETE\n"
+                    ">>> PACKET_END\n"
+                    ">>> TASK_COMPLETE"
+                ),
+                "Confirmed complete.\n>>> TASK_COMPLETE",
+                "Added the focused test.\n>>> TASK_COMPLETE",
+                "Confirmed after repair.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        called_agents = [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list]
+        assert called_agents == ["codex", "claude", "codex", "claude"]
+        system_messages = [call.args[1] for call in app.append_message.call_args_list if call.args[0] == "system"]
+        assert any("completion without addressing actionable executor packet risks" in message for message in system_messages)
+        assert any("focused test still missing" in message for message in system_messages)
+        assert app.state["confirmation_repairs_used"] == 1
+        assert app.state["status"] == "idle"
+        print("PASS: confirmation mode requires packet risks to be addressed")
+
+
 def test_confirmation_mode_returns_failed_check_to_executor_once():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -257,6 +343,8 @@ if __name__ == "__main__":
     test_handle_user_input_records_mode_strategy_agent_as_next()
     test_router_confirmation_mode_strategy_routes_to_primary()
     test_confirmation_mode_verifies_completed_output()
+    test_confirmation_mode_includes_packet_checklist_for_verifier()
+    test_confirmation_mode_requires_packet_risks_to_be_addressed()
     test_confirmation_mode_returns_failed_check_to_executor_once()
     test_confirmation_mode_blocks_when_repair_budget_is_exhausted()
     print("\nAll mode smoke tests passed.")

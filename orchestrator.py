@@ -1865,24 +1865,106 @@ class Chatboks:
         executor_response: str,
     ) -> str:
         task = initiator or self.state.get("active_task") or "the current task"
-        return "\n".join(
+        lines = [
+            "Confirmation mode:",
+            f"- Responsible agent: {executor}",
+            f"- Verifier: {verifier}",
+            f"- Original request: {task}",
+            "",
+            "Verifier instructions:",
+            "- Do not redo the task or duplicate implementation work.",
+            "- Check whether the responsible agent's claimed outcome is complete, tested, and consistent with the request.",
+            "- If the executor supplied a Thought Packet, use its observed facts and risks as your checklist.",
+            "- Address each actionable packet risk explicitly before replying >>> TASK_COMPLETE.",
+            "- Reply >>> TASK_COMPLETE only if the outcome is confirmed.",
+            "- Reply >>> HANDOFF with specific missing work if the responsible agent should repair it.",
+            "- Reply >>> BLOCKED only if human input or external state is required.",
+        ]
+        packet_lines = self.confirmation_packet_checklist_lines(executor_response, executor)
+        if packet_lines:
+            lines.extend(["", *packet_lines])
+        lines.extend(
             [
-                "Confirmation mode:",
-                f"- Responsible agent: {executor}",
-                f"- Verifier: {verifier}",
-                f"- Original request: {task}",
-                "",
-                "Verifier instructions:",
-                "- Do not redo the task or duplicate implementation work.",
-                "- Check whether the responsible agent's claimed outcome is complete, tested, and consistent with the request.",
-                "- Reply >>> TASK_COMPLETE only if the outcome is confirmed.",
-                "- Reply >>> HANDOFF with specific missing work if the responsible agent should repair it.",
-                "- Reply >>> BLOCKED only if human input or external state is required.",
                 "",
                 "Responsible agent output under review:",
                 self.strip_signal_suffix(executor_response),
             ]
         )
+        return "\n".join(lines)
+
+    def confirmation_packet_checklist_lines(self, executor_response: str, executor: str) -> list[str]:
+        packets = extract_packets(executor_response, fallback_agent=executor)
+        if not packets:
+            return []
+        packet = packets[-1]
+        lines = ["Executor Thought Packet checklist:"]
+        if packet.observed:
+            lines.append("- Observed facts:")
+            lines.extend(f"  - {item}" for item in packet.observed)
+        risks = self.actionable_packet_risks(packet.risks)
+        if risks:
+            lines.append("- Actionable risks to resolve or explicitly accept:")
+            lines.extend(f"  - {item}" for item in risks)
+        elif packet.risks:
+            lines.append("- Packet risks: none actionable.")
+        if packet.next_action:
+            lines.append(f"- Packet next action: {packet.next_action}")
+        lines.append(f"- Packet signal: {packet.signal}")
+        return lines
+
+    def actionable_packet_risks(self, risks: list[str]) -> list[str]:
+        ignored = {
+            "none",
+            "no risk",
+            "no risks",
+            "no known risk",
+            "no known risks",
+            "no remaining risk",
+            "no remaining risks",
+            "n/a",
+            "na",
+        }
+        actionable: list[str] = []
+        for risk in risks:
+            normalized = " ".join(str(risk or "").strip().lower().split())
+            if not normalized or normalized in ignored:
+                continue
+            actionable.append(risk)
+        return actionable
+
+    def unresolved_packet_risks(self, executor_response: str, verifier_response: str, executor: str) -> list[str]:
+        packets = extract_packets(executor_response, fallback_agent=executor)
+        if not packets:
+            return []
+        risks = self.actionable_packet_risks(packets[-1].risks)
+        if not risks:
+            return []
+        if self.verifier_addresses_packet_risks(verifier_response, risks):
+            return []
+        return risks
+
+    def verifier_addresses_packet_risks(self, verifier_response: str, risks: list[str]) -> bool:
+        text = verifier_response.lower()
+        if "risk" not in text and "risks" not in text:
+            return False
+        resolution_words = (
+            "addressed",
+            "accepted",
+            "confirmed",
+            "mitigated",
+            "resolved",
+            "reviewed",
+            "remaining",
+            "unresolved",
+        )
+        if any(word in text for word in resolution_words):
+            return True
+        return any(self.risk_anchor(risk) in text for risk in risks if self.risk_anchor(risk))
+
+    def risk_anchor(self, risk: str) -> str:
+        words = [word.strip(".,:;()[]{}\"'`").lower() for word in risk.split()]
+        words = [word for word in words if len(word) >= 4]
+        return " ".join(words[:4])
 
     def confirm_completion_if_needed(
         self,
@@ -1924,6 +2006,19 @@ class Chatboks:
         self.mark_agent_completed(verifier)
         self.update_state({"last_agent": verifier, "next_agent": "you"})
 
+        unresolved_risks = self.unresolved_packet_risks(executor_response, response, executor)
+        if signal in {"TASK_COMPLETE", "TASK COMPLETE", "SKIP"} and unresolved_risks:
+            risk_lines = "\n".join(f"- {risk}" for risk in unresolved_risks)
+            verifier_gap = "\n".join(
+                [
+                    "Verifier returned completion without addressing actionable executor packet risks.",
+                    "The responsible agent must resolve or explicitly retire these risks:",
+                    risk_lines,
+                    ">>> HANDOFF",
+                ]
+            )
+            self.append_message("system", verifier_gap)
+            return self.handle_confirmation_repair(executor, verifier, verifier_gap, initiator)
         if signal in {"TASK_COMPLETE", "TASK COMPLETE", "SKIP"}:
             self.stream.system(f"Confirmation complete: {verifier} verified {executor}'s output.")
             return "confirmed"
