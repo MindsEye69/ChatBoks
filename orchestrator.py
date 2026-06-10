@@ -25,6 +25,7 @@ from watchdog.observers import Observer
 
 from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
+from context.packets import ThoughtPacket, extract_packets
 from encoding_utils import configure_utf8_stdio, utf8_env
 from router import Router
 from ui.stream import Stream
@@ -194,6 +195,7 @@ class Chatboks:
         self.proj_path = Path(self.proj_config["path"]).expanduser().resolve()
         self.chatboks_md = self.proj_path / "chatboks.md"
         self.state_file = self.proj_path / ".chatboks" / "state.json"
+        self.packet_file = self.proj_path / ".chatboks" / "packets.jsonl"
         self.stream = Stream(self.config.get("agents", {}), self.proj_config["agents"])
         self.router = Router(self.config, project, self.proj_path)
         self.context = ContextBuilder(self.proj_path, self.config)
@@ -2531,6 +2533,7 @@ class Chatboks:
 
     def append_message(self, sender: str, text: str) -> None:
         self.ensure_project_files()
+        self.capture_thought_packets(sender, text)
         tag = self.sender_tag(sender)
         timestamp = time.strftime("%H:%M:%S")
         line = f"\n{tag} {text.strip()}\n"
@@ -2542,6 +2545,26 @@ class Chatboks:
             self._internal_write = False
         if sender.lower() != "you":
             self.stream.message(sender, text, timestamp)
+
+    def capture_thought_packets(self, sender: str, text: str) -> None:
+        if sender.lower() in {"you", "system"}:
+            return
+        packets = extract_packets(text, fallback_agent=sender)
+        for packet in packets:
+            self.append_thought_packet(packet, sender)
+
+    def append_thought_packet(self, packet: ThoughtPacket, sender: str) -> None:
+        packet_file = getattr(self, "packet_file", self.proj_path / ".chatboks" / "packets.jsonl")
+        packet_file.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "timestamp": self.timestamp(),
+            "project": self.project,
+            "sender": sender,
+            "round": self.state.get("round"),
+            "packet": packet.to_record(),
+        }
+        with packet_file.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
 
     def buffer_or_complete_input(self, text: str) -> str | None:
         stripped = text.strip()

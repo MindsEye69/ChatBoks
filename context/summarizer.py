@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
+from context.packets import packet_records_from_jsonl
 from context.transcript import (
     extract_summary_items,
     find_last_summary_checkpoint,
@@ -40,7 +42,7 @@ class Summarizer:
         if not chatboks_md.exists():
             return "[SUMMARY] No prior chatboks log."
         lines = chatboks_md.read_text(encoding="utf-8-sig").splitlines()
-        sections = self.summary_sections(lines)
+        sections = self.summary_sections(lines, packet_path=self.packet_path_for(chatboks_md))
         if not any(sections.values()):
             return "[SUMMARY] No decision lines found."
 
@@ -56,8 +58,9 @@ class Summarizer:
             remaining -= len(selected)
         return "\n".join(out)
 
-    def summary_sections(self, lines: list[str]) -> dict[str, list[str]]:
+    def summary_sections(self, lines: list[str], packet_path: Path | None = None) -> dict[str, list[str]]:
         sections: dict[str, list[str]] = {section: [] for section in self.SECTION_ORDER}
+        self.add_packet_sections(sections, packet_path)
         checkpoint = find_last_summary_checkpoint(lines)
         fresh_lines = lines
         if checkpoint is not None:
@@ -71,6 +74,30 @@ class Summarizer:
         for sender, body in self.parse_turns(fresh_lines):
             self.classify_turn(sections, sender, body)
         return sections
+
+    def add_packet_sections(self, sections: dict[str, list[str]], packet_path: Path | None) -> None:
+        if packet_path is None or not packet_path.exists():
+            return
+        text = packet_path.read_text(encoding="utf-8-sig", errors="replace")
+        for record in packet_records_from_jsonl(text, limit=self.max_items * 2):
+            packet = record.get("packet")
+            if not isinstance(packet, dict):
+                continue
+            self.classify_packet(sections, packet)
+
+    def classify_packet(self, sections: dict[str, list[str]], packet: dict[str, Any]) -> None:
+        agent = self.normalize_item(packet.get("agent") or "agent")
+        stance = self.normalize_item(packet.get("stance") or "").upper()
+        signal = self.normalize_item(packet.get("signal") or "").upper()
+        for item in packet.get("observed") or []:
+            self.add_item(sections, "Verified facts", f"{agent} {stance}: {item}")
+        for item in packet.get("risks") or []:
+            self.add_item(sections, "Open risks", f"{agent} {stance}: {item}")
+        next_action = self.normalize_item(packet.get("next_action") or "")
+        if next_action and next_action.lower() not in {"none", "n/a", "na"}:
+            self.add_item(sections, "Pending tasks", f"{agent}: {next_action}")
+        if signal in {"HANDOFF", "QUESTION", "BLOCKED", "PROPOSAL"}:
+            self.add_item(sections, "Unresolved handoffs/questions", f"{agent} {signal}: {next_action or stance}")
 
     def classify_turn(self, sections: dict[str, list[str]], sender: str, body: str) -> None:
         cleaned = self.clean_body(body)
@@ -134,6 +161,10 @@ class Summarizer:
             if stripped.startswith("[YOU]") or stripped.startswith("[SYSTEM]") or ">>>" in stripped:
                 key_lines.append(stripped)
         return key_lines
+
+    @staticmethod
+    def packet_path_for(chatboks_md: Path) -> Path:
+        return chatboks_md.parent / ".chatboks" / "packets.jsonl"
 
     @staticmethod
     def parse_turns(lines: list[str]) -> list[tuple[str, str]]:

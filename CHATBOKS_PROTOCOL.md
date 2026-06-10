@@ -24,6 +24,27 @@ Distinguish what you know from how you know it:
 
 Treat older transcript content as context, not current truth. Prefer the newest human instruction, current git state, current agent status, and current CodeGraph status.
 
+## Thought Packets
+
+When your response contains durable coordination information, include one optional packet before your final control signal. Packets are machine-readable memory hints for later sleep consolidation; they do not replace normal prose.
+
+Use this plain-text shape:
+
+```text
+>>> PACKET
+agent: claude|codex|spark|agent_zero
+stance: ADD|VERIFY|CHALLENGE|SKIP|HANDOFF
+observed:
+- file/test/tool fact you verified
+risks:
+- concrete remaining risk, or none
+next_action: one specific next action, or none
+signal: TASK_COMPLETE|HANDOFF|BLOCKED|QUESTION|PROPOSAL|SKIP
+>>> PACKET_END
+```
+
+Keep packets short. Use `observed` only for evidence, not wishes. Use `risks` for unresolved concerns that future agents should not flatten away.
+
 ## Adversarial Pressure
 
 Default to collaborative synthesis. Switch to adversarial pressure when the cost of being wrong is high, the team is converging too quickly, or the output will become a durable artifact.
