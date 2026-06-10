@@ -35,13 +35,13 @@
     "semantic_hash": "e7cd77cc85378bbcdb4285dea0d4604e"
   },
   "context/builder.py": {
-    "mtime": 1781009696.4470727,
-    "ast_hash": "8ebf3ad4247b89299e9e744ac30d5676",
+    "mtime": 1781098068.6480792,
+    "ast_hash": "e7e20b987ddeb4be50ab0ffac4c14543",
     "semantic_hash": ""
   },
   "context/summarizer.py": {
-    "mtime": 1781009696.4460726,
-    "ast_hash": "6998247d2cde39a584493296ac217de0",
+    "mtime": 1781099251.4660025,
+    "ast_hash": "c0a649bd004ceb8e07d0d9a44cfce5f5",
     "semantic_hash": ""
   },
   "doctor.py": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1781017427.049095,
-    "ast_hash": "99a08ee9a258e4bfb9834b87e88cb78c",
+    "mtime": 1781098117.6811762,
+    "ast_hash": "c10d1146d9ea9d5fd54a00b3afb863f1",
     "semantic_hash": ""
   },
   "router.py": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "tests/test_context_modes.py": {
-    "mtime": 1780936890.533539,
-    "ast_hash": "9fbd0b32cc51e2e41dca41eacde7feda",
+    "mtime": 1781099156.1974301,
+    "ast_hash": "f7b7e80ca57061df7d4118b62859583e",
     "semantic_hash": ""
   },
   "tests/test_direct_agents.py": {
@@ -95,8 +95,8 @@
     "semantic_hash": ""
   },
   "tests/test_modes.py": {
-    "mtime": 1781017417.4738033,
-    "ast_hash": "754c132c4bb9d4d686feda4b6feadab7",
+    "mtime": 1781022652.8168347,
+    "ast_hash": "b30af62a3a19ac7e71e2c003c99b2701",
     "semantic_hash": ""
   },
   "tests/test_outcomes.py": {
@@ -130,8 +130,8 @@
     "semantic_hash": "29b1aba7030b95dd57dd819a63d8f194"
   },
   "tests/test_slash_buffering.py": {
-    "mtime": 1781016426.9850826,
-    "ast_hash": "bc730bcc88b89f6e03a87fdaa7081cef",
+    "mtime": 1781098105.0780673,
+    "ast_hash": "7ab2b970613cca4d876f612a057ecc74",
     "semantic_hash": ""
   },
   "trust.py": {
@@ -165,13 +165,13 @@
     "semantic_hash": ""
   },
   "ROADMAP.md": {
-    "mtime": 1781011752.3084466,
-    "ast_hash": "b370f69f8ac3aaf9eacb5e961aa9fac5",
+    "mtime": 1781024721.9702497,
+    "ast_hash": "ee96d274ae7d41944595b3d009330057",
     "semantic_hash": ""
   },
   "config.yaml": {
-    "mtime": 1781017322.4935553,
-    "ast_hash": "5eacb3d22214d1a1701d535488a4295b",
+    "mtime": 1781046253.2591267,
+    "ast_hash": "e35cfd988264b33f635dca5a0dee8207",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -225,7 +225,7 @@
     "semantic_hash": ""
   },
   "mobile_remote/android/app/capacitor.build.gradle": {
-    "mtime": 1780995354.293941,
+    "mtime": 1781092505.1969674,
     "ast_hash": "b863e425fbde80251bd3c68ac8ccba02",
     "semantic_hash": ""
   },
@@ -235,27 +235,27 @@
     "semantic_hash": ""
   },
   "mobile_remote/android/app/src/main/assets/capacitor.config.json": {
-    "mtime": 1781001490.011214,
-    "ast_hash": "c65368fe38675417bb84430bfc427590",
+    "mtime": 1781092505.1693158,
+    "ast_hash": "8c0718fb239c73dcd1642e3da3fe1dca",
     "semantic_hash": ""
   },
   "mobile_remote/android/app/src/main/assets/capacitor.plugins.json": {
-    "mtime": 1780995354.2809424,
+    "mtime": 1781092505.1757624,
     "ast_hash": "58e0494c51d30eb3494f7c9198986bb9",
     "semantic_hash": ""
   },
   "mobile_remote/android/app/src/main/assets/public/app.js": {
-    "mtime": 1781001477.6853364,
-    "ast_hash": "61bdea54d48c7426a2a9cc12ca879002",
+    "mtime": 1781089449.3580103,
+    "ast_hash": "7d7924f4ddc57727f452071c6459ddbc",
     "semantic_hash": ""
   },
   "mobile_remote/android/app/src/main/assets/public/cordova.js": {
-    "mtime": 1781001490.0122137,
+    "mtime": 1781092505.194968,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "mobile_remote/android/app/src/main/assets/public/cordova_plugins.js": {
-    "mtime": 1781001490.0132136,
+    "mtime": 1781092505.194968,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
@@ -275,17 +275,17 @@
     "semantic_hash": ""
   },
   "mobile_remote/android/capacitor-cordova-android-plugins/build.gradle": {
-    "mtime": 1780995354.3019402,
+    "mtime": 1781092505.1979678,
     "ast_hash": "56ee1e41ba80b64df15915bd7c40d6df",
     "semantic_hash": ""
   },
   "mobile_remote/android/capacitor-cordova-android-plugins/cordova.variables.gradle": {
-    "mtime": 1780995354.3029423,
+    "mtime": 1781092505.1989672,
     "ast_hash": "8ccd69ac09ef80b05c393964b2f6e349",
     "semantic_hash": ""
   },
   "mobile_remote/android/capacitor.settings.gradle": {
-    "mtime": 1780995354.293941,
+    "mtime": 1781092505.1969674,
     "ast_hash": "455ebb7f9fe84a6974da6bdae43097c2",
     "semantic_hash": ""
   },
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/capacitor.config.json": {
-    "mtime": 1780995276.5808938,
-    "ast_hash": "e514e136a513b6dd1a3d92b49ef50880",
+    "mtime": 1781078811.5138352,
+    "ast_hash": "b817a5050e65ac247978d1710ffff70d",
     "semantic_hash": ""
   },
   "mobile_remote/install-debug.ps1": {
@@ -330,13 +330,13 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781001477.6853364,
-    "ast_hash": "61bdea54d48c7426a2a9cc12ca879002",
+    "mtime": 1781089449.3580103,
+    "ast_hash": "7d7924f4ddc57727f452071c6459ddbc",
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781009696.4670718,
-    "ast_hash": "2893939c6964dc88cc9c14b00d6cebf7",
+    "mtime": 1781083109.2479868,
+    "ast_hash": "0ecfa63da32c7b2783a06935c7a37e62",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1780995657.7929468,
-    "ast_hash": "72f490228a66ced754b3e795eb14e93c",
+    "mtime": 1781083163.190663,
+    "ast_hash": "219ca975f97f4e9d3a57ecaa1ff9fe3b",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -385,18 +385,18 @@
     "semantic_hash": ""
   },
   "mobile_remote/README.md": {
-    "mtime": 1781001049.8633425,
-    "ast_hash": "56bf46e83f2645e2299f0988fccd4c57",
+    "mtime": 1781049127.279481,
+    "ast_hash": "04c4b266994c8e7ddd7169141d7a5a01",
     "semantic_hash": ""
   },
   "mobile_remote/android/app/src/main/assets/public/index.html": {
-    "mtime": 1781001458.593421,
-    "ast_hash": "7908aedfc50e9636b88d2100dc67c18a",
+    "mtime": 1781090059.2010756,
+    "ast_hash": "8baf4dc4ec4a3f22efe03647c7b16b4d",
     "semantic_hash": ""
   },
   "mobile_remote/www/index.html": {
-    "mtime": 1781001458.593421,
-    "ast_hash": "7908aedfc50e9636b88d2100dc67c18a",
+    "mtime": 1781090059.2010756,
+    "ast_hash": "8baf4dc4ec4a3f22efe03647c7b16b4d",
     "semantic_hash": ""
   },
   "output/playwright/usage/smoke-raw/.playwright-cli/page-2026-06-08T16-29-47-279Z.yml": {
@@ -557,6 +557,106 @@
   "tests/test_model_commands.py": {
     "mtime": 1781016650.297378,
     "ast_hash": "321e1c4dfdeaa0bf0ba3a918e6f43127",
+    "semantic_hash": ""
+  },
+  "mobile_remote/setup-tailnet-firewall.ps1": {
+    "mtime": 1781076364.4530437,
+    "ast_hash": "9816df000031dcb185e8c2a7bedb31bd",
+    "semantic_hash": ""
+  },
+  "mobile_remote/setup-tailnet-portproxy.ps1": {
+    "mtime": 1781049384.0780156,
+    "ast_hash": "82887465ae9dcfb832cea0d0d70273b3",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/01a0f6f5-a655-4dcd-9a69-48a9208ee620/1-Photo-1.jpg": {
+    "mtime": 1781082288.6244545,
+    "ast_hash": "cc1c577dec4d97b2f62a4d5353c20da6",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/1294aaf6-b208-45ce-9d1c-e8e0e19b9b62/1-Photo-1.jpg": {
+    "mtime": 1781089393.752143,
+    "ast_hash": "136d6955c03dc3b69d68a2a76512c062",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/1294aaf6-b208-45ce-9d1c-e8e0e19b9b62/2-Photo-2.jpg": {
+    "mtime": 1781089394.0824878,
+    "ast_hash": "909285c69476e80d4069218b62dc7fe6",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/278eb68c-933f-4476-9799-1c8206e80878/1-Photo-1.jpg": {
+    "mtime": 1781090047.504857,
+    "ast_hash": "0dad139f70ebaaa1e8dfa346870991cc",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/2bb2f4fb-bd9f-462e-b2e8-5982b0500aa6/1-Photo-1.jpg": {
+    "mtime": 1781078768.6895697,
+    "ast_hash": "2d69dcb995a69a6b4cae2464fc589318",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/2f134bcf-9264-4910-bfa4-636df1f70cee/1-Photo-1.jpg": {
+    "mtime": 1781086507.7257166,
+    "ast_hash": "0e722ca8a7d1805a8709f79d9e4cf7c2",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/331d29be-7499-425f-875c-c4d17052c850/1-Photo-1.jpg": {
+    "mtime": 1781088013.9905639,
+    "ast_hash": "9e4532c3f249f7212b25f148de7c5184",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/501becee-f411-43d8-acf3-8330b520dc2c/1-Photo-1.jpg": {
+    "mtime": 1781079354.5257065,
+    "ast_hash": "ab235527433bcdfcdc0f19a37958ca93",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/501becee-f411-43d8-acf3-8330b520dc2c/2-Photo-2.jpg": {
+    "mtime": 1781079354.931635,
+    "ast_hash": "74603b0a71d43ff3a7586157467ca27b",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/51b59ba4-9d47-4527-a005-e372bdf704ad/1-Photo-1.jpg": {
+    "mtime": 1781078037.2398083,
+    "ast_hash": "aff0512dd8b9509babb9a9b4733c43f8",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/5b3a35ed-8637-4c2d-ae40-20bef2ac6e20/1-Photo-1.jpg": {
+    "mtime": 1781078399.6851752,
+    "ast_hash": "5c5212a10bf55533b99bbb1e79f7e2fa",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/73410780-b499-4afb-a473-1ab7eb52433c/1-Photo-1.jpg": {
+    "mtime": 1781088832.2968,
+    "ast_hash": "1793a6fb9e39aebcaddca4b72148f132",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/966cfd76-28ff-4baf-81d2-b3f5c6de5e2b/1-Photo-1.jpg": {
+    "mtime": 1781096149.9638798,
+    "ast_hash": "ebb9f64dbb89b97606c8607bd510ab77",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/adb885b6-425c-466d-8732-fbb7a83679a0/1-Photo-1.jpg": {
+    "mtime": 1781078168.9531877,
+    "ast_hash": "930ec38eda797452f198d56ed5fccbe8",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/adb885b6-425c-466d-8732-fbb7a83679a0/2-Photo-2.jpg": {
+    "mtime": 1781078169.1766868,
+    "ast_hash": "2f3620e860f6e0fce6c534f6b5971ace",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/c1e752b4-a8e4-46ba-81ee-6715e49dc4a6/1-Photo-1.jpg": {
+    "mtime": 1781087337.737588,
+    "ast_hash": "74148b1e41d9559e8a43b27b25a3706f",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/c4a2e0ff-434b-4074-ab4d-1d908047cffd/1-Photo-1.jpg": {
+    "mtime": 1781082735.670187,
+    "ast_hash": "2991aa1f769641afbe767baed8bf1172",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019ea459-7839-77d2-858d-39f8b426e03c/e378be2c-3f27-42b8-a540-201f3b9d765f/1-Photo-1.jpg": {
+    "mtime": 1781087735.0646546,
+    "ast_hash": "0a6dd682449da26a91144c1130c7eba0",
     "semantic_hash": ""
   }
 }
