@@ -111,7 +111,7 @@ class AgentZeroAgent(BaseAgent):
         payload = {
             "model": model,
             "think": self.config.get("think", False),
-            "stream": False,
+            "stream": True,
             "messages": [
                 {
                     "role": "system",
@@ -148,12 +148,15 @@ class AgentZeroAgent(BaseAgent):
         try:
             request_timeout = max_timeout if max_timeout is not None else timeout
             with urllib.request.urlopen(request, timeout=request_timeout) as response:
-                raw = response.read().decode("utf-8")
+                content, raw = self.read_ollama_response(response)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
             return f"Ollama call failed for {self.name}: HTTP {exc.code} {detail}\n>>> BLOCKED"
         except (urllib.error.URLError, TimeoutError, socket.timeout) as exc:
             return f"Ollama call failed for {self.name}: {exc}\n>>> BLOCKED"
+
+        if content is not None:
+            return self.normalize_output(content, prompt)
 
         try:
             data = json.loads(raw)
@@ -162,6 +165,49 @@ class AgentZeroAgent(BaseAgent):
 
         content = (data.get("message") or {}).get("content") or data.get("response") or ""
         return self.normalize_output(str(content), prompt)
+
+    def read_ollama_response(self, response: Any) -> tuple[str | None, str]:
+        raw_parts: list[str] = []
+        content_parts: list[str] = []
+        if hasattr(response, "readline"):
+            while True:
+                raw_line = response.readline()
+                if raw_line and not isinstance(raw_line, (bytes, bytearray)):
+                    raw = response.read().decode("utf-8", errors="replace")
+                    return None, raw
+                if not raw_line:
+                    break
+                line = raw_line.decode("utf-8", errors="replace").strip()
+                if not line:
+                    continue
+                raw_parts.append(line)
+                try:
+                    item = json.loads(line)
+                except json.JSONDecodeError:
+                    return None, "\n".join(raw_parts)
+                delta = str((item.get("message") or {}).get("content") or item.get("response") or "")
+                if delta:
+                    content_parts.append(delta)
+                    if self.stdout_callback is not None:
+                        self.stdout_callback(delta)
+            return "".join(content_parts), "\n".join(raw_parts)
+
+        raw = response.read().decode("utf-8", errors="replace")
+        raw_parts.append(raw)
+        lines = [line.strip() for line in raw.splitlines() if line.strip()]
+        if len(lines) <= 1:
+            return None, raw
+        for line in lines:
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                return None, raw
+            delta = str((item.get("message") or {}).get("content") or item.get("response") or "")
+            if delta:
+                content_parts.append(delta)
+                if self.stdout_callback is not None:
+                    self.stdout_callback(delta)
+        return "".join(content_parts), raw
 
     def normalize_output(self, text: str, prompt: str = "") -> str:
         cleaned = text.strip().replace("END_OF_MESSAGE", "").strip()

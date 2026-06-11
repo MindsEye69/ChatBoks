@@ -317,8 +317,50 @@ def test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_b
         assert result.endswith(">>> TASK_COMPLETE")
         assert captured_payload["model"] == "gemma3:4b"
         assert captured_payload["think"] is False
-        assert captured_payload["stream"] is False
+        assert captured_payload["stream"] is True
         print("PASS: Agent Zero payload uses the configured model and disables Ollama thinking")
+
+
+def test_agent_zero_streams_ollama_deltas_to_stdout_callback():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = AgentZeroAgent(
+            Path(tmp),
+            {
+                "cli": "ollama",
+                "endpoint": "http://127.0.0.1:11434/api/chat",
+                "model": "gemma3:4b",
+                "project_name": "chatboks",
+            },
+            "Agent Zero role",
+        )
+        chunks: list[str] = []
+        agent.stdout_callback = chunks.append
+
+        class FakeStreamingResponse:
+            def __init__(self) -> None:
+                self.lines = iter(
+                    [
+                        b'{"message":{"content":"Ready"}}\n',
+                        b'{"message":{"content":".\\n>>> TASK_COMPLETE"}}\n',
+                        b'{"done":true}\n',
+                    ]
+                )
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            def readline(self):
+                return next(self.lines, b"")
+
+        with patch("agents.agent_zero.urllib.request.urlopen", return_value=FakeStreamingResponse()):
+            result = agent.call("check setup")
+
+        assert result == "Ready.\n>>> TASK_COMPLETE"
+        assert chunks == ["Ready", ".\n>>> TASK_COMPLETE"]
+        print("PASS: Agent Zero streams Ollama deltas through stdout callback")
 
 
 def test_agent_zero_prompt_lists_real_local_commands():
@@ -890,6 +932,8 @@ if __name__ == "__main__":
     test_codex_spark_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
     test_agent_zero_call_accepts_base_timeout_keywords()
+    test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_by_default()
+    test_agent_zero_streams_ollama_deltas_to_stdout_callback()
     test_agent_zero_prompt_lists_real_local_commands()
     test_agent_zero_rewrites_model_switch_validation_away_from_context_mode()
     test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action()
