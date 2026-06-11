@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -95,6 +96,40 @@ def test_streaming_run_cli_forces_utf8_child_environment() -> None:
     result = run_script(script, timeout=5)
 
     assert result == "1\nutf-8\n>>> TASK_COMPLETE"
+
+
+def test_streaming_run_cli_records_latency_splits() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        script_path = root / "child.py"
+        script_path.write_text(
+            "import sys, time\n"
+            "sys.stdin.read()\n"
+            "time.sleep(0.02)\n"
+            "print('ok', flush=True)\n"
+            "print('>>> TASK_COMPLETE')\n",
+            encoding="utf-8",
+        )
+        agent = ScriptAgent(script_path, root)
+
+        result = agent.run_cli("hello", timeout=5)
+
+        assert result == "ok\n>>> TASK_COMPLETE"
+        latency_path = root / ".chatboks" / "cli_latency.jsonl"
+        records = [json.loads(line) for line in latency_path.read_text(encoding="utf-8").splitlines()]
+        assert len(records) == 1
+        record = records[0]
+        assert record["agent"] == "script"
+        assert record["cli"] == sys.executable
+        assert record["prompt_chars"] == 5
+        assert record["stdout_chars"] == len("ok\n>>> TASK_COMPLETE\n")
+        assert record["stderr_chars"] == 0
+        assert record["returncode"] == 0
+        assert record["timeout_reason"] is None
+        assert record["spawn_seconds"] >= 0
+        assert record["first_stdout_seconds"] is not None
+        assert record["runtime_seconds"] >= record["first_stdout_seconds"]
+        assert record["total_seconds"] >= record["runtime_seconds"]
 
 
 def test_streaming_run_cli_idle_timeout_resets_on_output() -> None:
@@ -210,6 +245,8 @@ def test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion(
 if __name__ == "__main__":
     tests = [
         test_streaming_run_cli_returns_successful_stdout,
+        test_streaming_run_cli_forces_utf8_child_environment,
+        test_streaming_run_cli_records_latency_splits,
         test_streaming_run_cli_idle_timeout_resets_on_output,
         test_streaming_run_cli_enforces_absolute_max_timeout,
         test_dynamic_idle_timeout_scales_with_prompt_size,

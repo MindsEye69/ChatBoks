@@ -7,7 +7,7 @@ import subprocess
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from encoding_utils import utf8_env
 
@@ -205,6 +205,8 @@ class BaseAgent:
             extra["startupinfo"] = si
             extra["creationflags"] = subprocess.CREATE_NO_WINDOW
 
+        latency_wall_started_at = time.time()
+        launch_started_at = time.monotonic()
         process = subprocess.Popen(
             run_command,
             stdin=subprocess.PIPE,
@@ -218,7 +220,8 @@ class BaseAgent:
             env=env,
             **extra,
         )
-        output_queue: queue.Queue[tuple[str, str]] = queue.Queue()
+        process_started_at = time.monotonic()
+        output_queue: queue.Queue[tuple[str, str, float]] = queue.Queue()
 
         def read_stream(name: str, stream: Any) -> None:
             try:
@@ -226,7 +229,7 @@ class BaseAgent:
                     chunk = stream.read(1)
                     if not chunk:
                         break
-                    output_queue.put((name, chunk))
+                    output_queue.put((name, chunk, time.monotonic()))
             finally:
                 stream.close()
 
@@ -240,19 +243,33 @@ class BaseAgent:
         assert process.stdin is not None
         process.stdin.write(prompt)
         process.stdin.close()
+        prompt_sent_at = time.monotonic()
 
         stdout_parts: list[str] = []
         stderr_parts: list[str] = []
         started_at = time.monotonic()
         last_output_at = started_at
+        first_output_at: float | None = None
+        first_stdout_at: float | None = None
+        first_stderr_at: float | None = None
         timeout_reason: str | None = None
+
+        def remember_output(stream_name: str, received_at: float) -> None:
+            nonlocal first_output_at, first_stdout_at, first_stderr_at
+            if first_output_at is None:
+                first_output_at = received_at
+            if stream_name == "stdout" and first_stdout_at is None:
+                first_stdout_at = received_at
+            if stream_name == "stderr" and first_stderr_at is None:
+                first_stderr_at = received_at
 
         while True:
             received_output = False
             try:
                 while True:
-                    stream_name, chunk = output_queue.get_nowait()
+                    stream_name, chunk, received_at = output_queue.get_nowait()
                     received_output = True
+                    remember_output(stream_name, received_at)
                     if stream_name == "stdout":
                         stdout_parts.append(chunk)
                     else:
@@ -281,11 +298,28 @@ class BaseAgent:
                 if part.strip()
             )
             self.terminate_process(process)
-            self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.5)
+            self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.5, remember_output)
+            ended_at = time.monotonic()
             combined_output = "\n".join(
                 part.strip()
                 for part in ("".join(stderr_parts), "".join(stdout_parts))
                 if part.strip()
+            )
+            self.record_cli_latency(
+                command=command,
+                prompt_chars=len(prompt),
+                wall_started_at=latency_wall_started_at,
+                launch_started_at=launch_started_at,
+                process_started_at=process_started_at,
+                prompt_sent_at=prompt_sent_at,
+                first_output_at=first_output_at,
+                first_stdout_at=first_stdout_at,
+                first_stderr_at=first_stderr_at,
+                ended_at=ended_at,
+                returncode=process.returncode,
+                timeout_reason=timeout_reason,
+                stdout_chars=len("".join(stdout_parts)),
+                stderr_chars=len("".join(stderr_parts)),
             )
             if self.is_token_exhaustion(combined_output):
                 raise TokenExhaustionError(
@@ -302,10 +336,27 @@ class BaseAgent:
         returncode = process.wait()
         for reader in readers:
             reader.join(timeout=0.2)
-        self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.2)
+        self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.2, remember_output)
+        ended_at = time.monotonic()
 
         stdout = "".join(stdout_parts)
         stderr = "".join(stderr_parts)
+        self.record_cli_latency(
+            command=command,
+            prompt_chars=len(prompt),
+            wall_started_at=latency_wall_started_at,
+            launch_started_at=launch_started_at,
+            process_started_at=process_started_at,
+            prompt_sent_at=prompt_sent_at,
+            first_output_at=first_output_at,
+            first_stdout_at=first_stdout_at,
+            first_stderr_at=first_stderr_at,
+            ended_at=ended_at,
+            returncode=returncode,
+            timeout_reason=None,
+            stdout_chars=len(stdout),
+            stderr_chars=len(stderr),
+        )
         if returncode != 0:
             combined_output = "\n".join(
                 part.strip() for part in (stderr, stdout) if part.strip()
@@ -323,19 +374,22 @@ class BaseAgent:
 
     @staticmethod
     def drain_output(
-        output_queue: queue.Queue[tuple[str, str]],
+        output_queue: queue.Queue[tuple[str, str, float]],
         stdout_parts: list[str],
         stderr_parts: list[str],
         process: subprocess.Popen[str],
         timeout: float,
+        on_chunk: Callable[[str, float], None] | None = None,
     ) -> None:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             drained = False
             try:
                 while True:
-                    stream_name, chunk = output_queue.get_nowait()
+                    stream_name, chunk, received_at = output_queue.get_nowait()
                     drained = True
+                    if on_chunk is not None:
+                        on_chunk(stream_name, received_at)
                     if stream_name == "stdout":
                         stdout_parts.append(chunk)
                     else:
@@ -346,6 +400,59 @@ class BaseAgent:
                 break
             if not drained:
                 time.sleep(0.01)
+
+    def record_cli_latency(
+        self,
+        *,
+        command: list[str],
+        prompt_chars: int,
+        wall_started_at: float,
+        launch_started_at: float,
+        process_started_at: float,
+        prompt_sent_at: float,
+        first_output_at: float | None,
+        first_stdout_at: float | None,
+        first_stderr_at: float | None,
+        ended_at: float,
+        returncode: int | None,
+        timeout_reason: str | None,
+        stdout_chars: int,
+        stderr_chars: int,
+    ) -> None:
+        def elapsed(timestamp: float | None, start: float = process_started_at) -> float | None:
+            if timestamp is None:
+                return None
+            return round(max(0.0, timestamp - start), 6)
+
+        record = {
+            "schema": 1,
+            "timestamp": time.strftime(
+                "%Y-%m-%dT%H:%M:%SZ",
+                time.gmtime(wall_started_at),
+            ),
+            "agent": self.name,
+            "cli": command[0] if command else "",
+            "adapter_profile": self.last_adapter_profile_used,
+            "prompt_chars": prompt_chars,
+            "stdout_chars": stdout_chars,
+            "stderr_chars": stderr_chars,
+            "returncode": returncode,
+            "timeout_reason": timeout_reason,
+            "spawn_seconds": elapsed(process_started_at, launch_started_at),
+            "prompt_send_seconds": elapsed(prompt_sent_at),
+            "first_output_seconds": elapsed(first_output_at),
+            "first_stdout_seconds": elapsed(first_stdout_at),
+            "first_stderr_seconds": elapsed(first_stderr_at),
+            "runtime_seconds": elapsed(ended_at),
+            "total_seconds": elapsed(ended_at, launch_started_at),
+        }
+        try:
+            telemetry_dir = self.project_path / ".chatboks"
+            telemetry_dir.mkdir(parents=True, exist_ok=True)
+            with (telemetry_dir / "cli_latency.jsonl").open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(record, sort_keys=True) + "\n")
+        except OSError:
+            pass
 
     def resolve_timeouts(
         self,
