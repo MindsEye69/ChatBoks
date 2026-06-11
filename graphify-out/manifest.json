@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "context/summarizer.py": {
-    "mtime": 1781099790.8092766,
-    "ast_hash": "2f610be5f6db1c02e98e3146b73903d4",
+    "mtime": 1781137080.6772847,
+    "ast_hash": "b6eb3ee5c3f15170d154230cea9e24eb",
     "semantic_hash": ""
   },
   "doctor.py": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1781126875.9052994,
-    "ast_hash": "7eb675cb4285cc5e3b61a15a13357c2a",
+    "mtime": 1781137335.1638794,
+    "ast_hash": "41828ddbae0158992c9be0fc697d6cb8",
     "semantic_hash": ""
   },
   "router.py": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "tests/test_context_modes.py": {
-    "mtime": 1781106129.7101426,
-    "ast_hash": "1b3bcfc3b40aebd39a66f6f93b4566c5",
+    "mtime": 1781137116.8861842,
+    "ast_hash": "b85946bff93810bae2251aa3accf6916",
     "semantic_hash": ""
   },
   "tests/test_direct_agents.py": {
@@ -95,8 +95,8 @@
     "semantic_hash": ""
   },
   "tests/test_modes.py": {
-    "mtime": 1781126887.6635385,
-    "ast_hash": "4774f0aa16fcdff3f08b3451598c97bb",
+    "mtime": 1781137335.273727,
+    "ast_hash": "b802b1a3d1a51e215e325f951e9f0421",
     "semantic_hash": ""
   },
   "tests/test_outcomes.py": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "context/transcript.py": {
-    "mtime": 1780936744.210715,
-    "ast_hash": "49b149af2f751e3024d4c1f4312a59d1",
+    "mtime": 1781137080.569509,
+    "ast_hash": "7021633ddf62a44cafc71668855f3542",
     "semantic_hash": ""
   },
   "encoding_utils.py": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781104114.7546723,
-    "ast_hash": "f8818e16a5348075f399377ae3913651",
+    "mtime": 1781136829.1741078,
+    "ast_hash": "25be23a26fb913d6247fcbe644fff769",
     "semantic_hash": ""
   },
   "remote_control.py": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/index.html": {
-    "mtime": 1781134793.6163845,
-    "ast_hash": "41a4d5dba1f3ba0825141cb6d57863e8",
+    "mtime": 1781136661.6287997,
+    "ast_hash": "2b1209f6362733b68f521fade2ef6a90",
     "semantic_hash": ""
   },
   "output/playwright/usage/smoke-raw/.playwright-cli/page-2026-06-08T16-29-47-279Z.yml": {
@@ -677,6 +677,11 @@
   "tests/test_stream_intro.py": {
     "mtime": 1781133509.87239,
     "ast_hash": "c61476e5dfa736ba80ad2a5d25fdcb21",
+    "semantic_hash": ""
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1781135283.985942,
+    "ast_hash": "273b45247b8fb3fd743e776bafe55603",
     "semantic_hash": ""
   }
 }

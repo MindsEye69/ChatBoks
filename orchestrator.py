@@ -2003,21 +2003,29 @@ class Chatboks:
 
     def verifier_addresses_packet_risks(self, verifier_response: str, risks: list[str]) -> bool:
         text = verifier_response.lower()
-        if "risk" not in text and "risks" not in text:
+        anchors = [anchor for risk in risks if (anchor := self.risk_anchor(risk))]
+        if "risk" not in text and "risks" not in text and not any(anchor in text for anchor in anchors):
             return False
         resolution_words = (
             "addressed",
+            "acknowledge",
+            "acknowledged",
             "accepted",
             "confirmed",
             "mitigated",
             "resolved",
             "reviewed",
-            "remaining",
-            "unresolved",
         )
-        if any(word in text for word in resolution_words):
+        negative_words = ("remaining", "unresolved")
+        strong_resolution_words = tuple(word for word in resolution_words if word != "confirmed")
+        if (
+            any(re.search(rf"\b{re.escape(word)}\b", text) for word in negative_words)
+            and not any(re.search(rf"\b{re.escape(word)}\b", text) for word in strong_resolution_words)
+        ):
+            return False
+        if any(re.search(rf"\b{re.escape(word)}\b", text) for word in resolution_words):
             return True
-        return any(self.risk_anchor(risk) in text for risk in risks if self.risk_anchor(risk))
+        return False
 
     def risk_anchor(self, risk: str) -> str:
         words = [word.strip(".,:;()[]{}\"'`").lower() for word in risk.split()]

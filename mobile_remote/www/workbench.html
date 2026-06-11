@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ChatBoks Workbench</title>
+  <link rel="stylesheet" href="./workbench.css">
+</head>
+<body>
+  <div class="workbench-shell">
+    <aside class="left-rail" aria-label="Workspace navigation">
+      <header class="brand-row">
+        <div class="brand-mark">CB</div>
+        <div>
+          <h1>ChatBoks</h1>
+          <p>multi-agent workbench</p>
+        </div>
+        <button class="icon-button" type="button" aria-label="Collapse projects pane" title="Collapse projects pane">||</button>
+      </header>
+
+      <button class="new-task-button" type="button">
+        <span>+</span>
+        <span>New Task</span>
+        <kbd>Ctrl+N</kbd>
+      </button>
+
+      <nav class="rail-section" aria-label="Projects">
+        <div class="section-label">Projects</div>
+        <a class="rail-item active" href="#">
+          <span class="folder-icon"></span>
+          <span>chatboks</span>
+          <span class="rail-menu">...</span>
+        </a>
+        <a class="rail-item" href="#">
+          <span class="folder-icon"></span>
+          <span>gracious-eagle-otel</span>
+        </a>
+        <a class="rail-item" href="#">
+          <span class="folder-icon"></span>
+          <span>romantic-otter-otel-7</span>
+        </a>
+        <a class="rail-item" href="#">
+          <span class="folder-icon"></span>
+          <span>chatboks_2.0</span>
+        </a>
+        <a class="rail-item subdued" href="#">
+          <span>+</span>
+          <span>Add Project</span>
+        </a>
+      </nav>
+
+      <nav class="rail-section" aria-label="Recent sessions">
+        <div class="section-label">Recent Sessions</div>
+        <a class="rail-item active" href="#">
+          <span class="folder-icon"></span>
+          <span>multi-agent-refactor</span>
+          <time>2m ago</time>
+        </a>
+        <a class="rail-item" href="#">
+          <span class="folder-icon"></span>
+          <span>remote-control-impl</span>
+          <time>15m ago</time>
+        </a>
+        <a class="rail-item" href="#">
+          <span class="folder-icon"></span>
+          <span>io-tools-integration</span>
+          <time>1h ago</time>
+        </a>
+        <a class="rail-item" href="#">
+          <span class="folder-icon"></span>
+          <span>graphify-phase5</span>
+          <time>1d ago</time>
+        </a>
+      </nav>
+
+      <section class="token-card" aria-label="Token balances">
+        <div class="section-label">Token Balances</div>
+        <div class="token-row claude">
+          <span class="agent-glyph">CL</span>
+          <span>Claude</span>
+          <span>42%</span>
+          <div class="meter"><span style="width: 42%"></span></div>
+        </div>
+        <div class="token-row codex">
+          <span class="agent-glyph">CX</span>
+          <span>Codex</span>
+          <span>26%</span>
+          <div class="meter"><span style="width: 26%"></span></div>
+        </div>
+        <div class="token-row gemini">
+          <span class="agent-glyph">GM</span>
+          <span>Gemini</span>
+          <span>86%</span>
+          <div class="meter"><span style="width: 86%"></span></div>
+        </div>
+      </section>
+
+      <footer class="rail-footer">
+        <button class="ghost-button" type="button">Settings</button>
+        <div class="system-strip">
+          <span>CPU 8%</span>
+          <span>RAM 42%</span>
+        </div>
+      </footer>
+    </aside>
+
+    <main class="work-area">
+      <header class="workspace-topbar">
+        <div class="session-title">
+          <span class="eyebrow">Project</span>
+          <strong>chatboks</strong>
+          <span class="dot"></span>
+          <span class="eyebrow">Session</span>
+          <strong>multi-agent-refactor</strong>
+          <span class="status-pill">Active</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="status-button" type="button"><span class="live-dot"></span> Live</button>
+          <button class="ghost-button" type="button">Session</button>
+          <button class="ghost-button" type="button">Connection v</button>
+          <button id="themeToggle" class="ghost-button" type="button">Light</button>
+        </div>
+      </header>
+
+      <div class="center-grid">
+        <section class="agent-lanes" aria-label="Agent lanes">
+          <article class="agent-pane claude-pane">
+            <header class="agent-header">
+              <div class="agent-logo claude-logo">CL</div>
+              <div>
+                <h2>Claude</h2>
+                <p><span class="live-dot"></span> Online</p>
+              </div>
+              <button class="icon-button menu-button" type="button" aria-label="Claude menu">...</button>
+            </header>
+            <div class="agent-stream">
+              <div class="event-meta"><time>12:02:31</time><span>Claude</span></div>
+              <section class="message-card">
+                <h3>Claude - Architecture, Security, and Synthesis</h3>
+                <p>Present and indexed. CodeGraph shows 46 files, 1055 nodes, 1032 edges - healthy.</p>
+                <p>Current branch: <code>main</code>. Pending uncommitted changes across tests and mobile remote.</p>
+              </section>
+              <section class="message-card info-card">
+                <span class="card-kicker">Add</span>
+                <p>Focus areas: architecture, risk analysis, synthesis, and coordination.</p>
+              </section>
+              <section class="handoff-card">
+                <span>-></span>
+                <strong>HANDOFF >> Codex</strong>
+                <time>12:05:18</time>
+              </section>
+            </div>
+          </article>
+
+          <article class="agent-pane codex-pane">
+            <header class="agent-header">
+              <div class="agent-logo codex-logo">CX</div>
+              <div>
+                <h2>Codex</h2>
+                <p><span class="live-dot"></span> Online</p>
+              </div>
+              <button class="icon-button menu-button" type="button" aria-label="Codex menu">...</button>
+            </header>
+            <div class="agent-stream">
+              <div class="event-meta"><time>12:05:19</time><span>Codex</span></div>
+              <section class="message-card">
+                <p>Received handoff from Claude. Starting implementation tasks.</p>
+                <ul>
+                  <li>Added tailnet fallback build</li>
+                  <li>Fixed minor import paths</li>
+                  <li>Added tests for remote control</li>
+                  <li>Updated docs and README</li>
+                </ul>
+              </section>
+              <section class="message-card verify-card">
+                <span class="card-kicker">Verify</span>
+                <p>Changes applied and tests added.</p>
+                <time>12:08:44</time>
+              </section>
+              <section class="message-card">
+                <p>Implementation complete. All tests passing locally.</p>
+              </section>
+              <section class="handoff-card">
+                <span>-></span>
+                <strong>HANDOFF >> Gemini</strong>
+                <time>12:06:18</time>
+              </section>
+            </div>
+          </article>
+
+          <article class="agent-pane gemini-pane">
+            <header class="agent-header">
+              <div class="agent-logo gemini-logo">GM</div>
+              <div>
+                <h2>Gemini</h2>
+                <p><span class="live-dot"></span> Online</p>
+              </div>
+              <button class="icon-button menu-button" type="button" aria-label="Gemini menu">...</button>
+            </header>
+            <div class="agent-stream">
+              <div class="event-meta"><time>12:08:49</time><span>Gemini</span></div>
+              <section class="message-card">
+                <p>Received handoff from Codex. Running verification and integration checks.</p>
+                <ul>
+                  <li>Verified remote control flows</li>
+                  <li>Graph status consistent</li>
+                  <li>Sleep memory features intact</li>
+                  <li>No regressions detected</li>
+                </ul>
+              </section>
+              <section class="message-card verify-card">
+                <p>All checks passed.</p>
+                <time>12:12:03</time>
+              </section>
+              <section class="message-card">
+                <p>Integration verified. Ready for final report.</p>
+              </section>
+              <section class="complete-card">
+                <span>FLAG</span>
+                <strong>>>> TASK_COMPLETE</strong>
+                <time>12:12:05</time>
+              </section>
+            </div>
+          </article>
+        </section>
+
+        <section class="coordinator-card" aria-label="Agent Zero coordinator">
+          <header class="coordinator-header">
+            <div class="agent-logo zero-logo">AZ</div>
+            <div class="coordinator-title">
+              <h2>Agent Zero <span>(Coordinator)</span></h2>
+              <p><span class="live-dot"></span> Online</p>
+            </div>
+            <div class="coordinator-actions">
+              <button class="ghost-button" type="button">Run Summary</button>
+              <button class="ghost-button" type="button">Logs</button>
+            </div>
+          </header>
+          <div class="summary-grid">
+            <div class="summary-copy">
+              <div class="event-meta"><time>12:12:06</time><span>Summary Packet</span></div>
+              <p>Summary: Refactor and integration tasks completed across agents.</p>
+              <ul>
+                <li>Scope: remote control implementation, tests, docs, and verification</li>
+                <li>Results: all tests passing, no regressions, CodeGraph healthy</li>
+                <li>Next: monitor for any issues, then consider committing changes</li>
+              </ul>
+            </div>
+            <dl class="summary-stats">
+              <div><dt>Handoffs</dt><dd>2</dd></div>
+              <div><dt>Duration</dt><dd>9m 47s</dd></div>
+              <div><dt>Agents</dt><dd>3 / 3 online</dd></div>
+              <div><dt>Status</dt><dd><span class="status-pill">Complete</span></dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <section class="composer-card" aria-label="Prompt composer">
+          <div class="composer-input">
+            <label for="workbenchPrompt">YOU &gt;</label>
+            <textarea id="workbenchPrompt" rows="2" placeholder="Ask a question or give an instruction..."></textarea>
+          </div>
+          <div class="composer-toolbar">
+            <button class="ghost-button" type="button">Upload</button>
+            <button class="ghost-button" type="button">Auto v</button>
+            <span>Uses best available model</span>
+            <button class="icon-button mic-button" type="button" aria-label="Voice input">mic</button>
+            <button class="send-button" type="button">Send</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="right-rail" aria-label="Environment and monitor">
+      <section class="side-card environment-card">
+        <header>
+          <h2>Environment</h2>
+          <button class="icon-button" type="button" aria-label="Environment settings">gear</button>
+        </header>
+        <dl class="detail-list">
+          <div><dt>Branch</dt><dd>main</dd></div>
+          <div><dt>Local</dt><dd><span class="live-dot"></span> Clean</dd></div>
+          <div><dt>Changes</dt><dd>0 staged, 0 unstaged</dd></div>
+          <div><dt>Last Commit</dt><dd>a1b2c3d <span>2h ago</span></dd></div>
+        </dl>
+      </section>
+
+      <section class="side-card">
+        <h2>Progress</h2>
+        <ol class="progress-list">
+          <li>Inspect response handling and signal parsing</li>
+          <li>Add packet parser / storage</li>
+          <li>Feed packets into deep summarizer</li>
+          <li>Add focused tests</li>
+          <li>Run tests, sync graphs / status</li>
+        </ol>
+        <div class="progress-footer">
+          <span>5 / 5 complete</span>
+          <span class="status-pill">100%</span>
+        </div>
+      </section>
+
+      <section class="side-card">
+        <h2>Graph Status</h2>
+        <dl class="detail-list compact-list">
+          <div><dt>CodeGraph</dt><dd><span class="live-dot"></span> Healthy</dd></div>
+          <div><dt>Files</dt><dd>46</dd></div>
+          <div><dt>Nodes</dt><dd>1,055</dd></div>
+          <div><dt>Edges</dt><dd>1,032</dd></div>
+          <div><dt>Last Indexed</dt><dd>12:01:17</dd></div>
+        </dl>
+      </section>
+
+      <section class="side-card monitor-card">
+        <h2>Monitor</h2>
+        <div class="monitor-grid">
+          <div class="monitor-metric">
+            <span>Tailscale</span>
+            <strong>100.94.205.69</strong>
+          </div>
+          <div class="monitor-metric">
+            <span>CPU</span>
+            <strong>8%</strong>
+            <div class="sparkline"></div>
+          </div>
+          <div class="monitor-metric">
+            <span>RAM</span>
+            <strong>42%</strong>
+            <div class="sparkline alt"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="terminal-card">
+        <header>
+          <h2>Terminal</h2>
+          <div>
+            <span class="status-pill">cube on</span>
+            <span class="status-pill muted-pill">logs</span>
+          </div>
+        </header>
+        <button id="terminalFocus" class="terminal-screen" type="button" aria-label="Focus mini terminal">
+          <span class="terminal-caption">terminal idle - click to focus</span>
+          <span class="cube-art" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </span>
+          <span class="terminal-prompt">YOU &gt;</span>
+        </button>
+      </section>
+    </aside>
+  </div>
+
+  <script src="./workbench.js"></script>
+</body>
+</html>

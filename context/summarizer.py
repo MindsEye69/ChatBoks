@@ -13,7 +13,7 @@ from context.transcript import (
 )
 
 
-TURN_RE = re.compile(r"^\[(YOU|CLAUDE|CODEX|AGENT_ZERO|ANTIGRAVITY|ANTIGRAV|SYSTEM)\]\s*(.*)$", re.I)
+TURN_RE = re.compile(r"^\[(YOU|CLAUDE|CODEX|CODEX_SPARK|AGENT_ZERO|ANTIGRAVITY|ANTIGRAV|SYSTEM)\]\s*(.*)$", re.I)
 CONTROL_RE = re.compile(r"^>>>\s+(TASK_COMPLETE|HANDOFF|QUESTION|BLOCKED|PROPOSAL)\b", re.I)
 
 

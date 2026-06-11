@@ -1,11 +1,12 @@
 const storageKey = "chatboks-mobile-remote";
-const defaultBridgeUrl = "http://warhammer.tail169679.ts.net:8765";
+const defaultBridgeUrl = "";
 const state = {
   eventCursor: 0,
   pollTimer: null,
   eventItems: [],
   commandEvents: [],
   commandActive: false,
+  currentProject: "",
 };
 
 const els = {
@@ -26,6 +27,7 @@ const els = {
   nextAgent: document.getElementById("nextAgentValue"),
   task: document.getElementById("taskValue"),
   tokenLine: document.getElementById("tokenLine"),
+  flowChain: document.getElementById("flowChain"),
   latestResponse: document.getElementById("latestResponse"),
   prompt: document.getElementById("promptInput"),
   transcript: document.getElementById("transcriptList"),
@@ -117,7 +119,8 @@ function updateKeyboardOffset() {
 function describeNetworkError(error) {
   const message = error && error.message ? error.message : String(error);
   if (message === "Failed to fetch" || error instanceof TypeError) {
-    return `Failed to fetch ${currentBaseUrl()}. Check that Tailscale is connected on the phone and the bridge URL is exactly ${defaultBridgeUrl}.`;
+    const url = els.baseUrl.value.trim() || "the bridge URL";
+    return `Failed to fetch ${url}. Check that Tailscale is connected on the phone and the bridge URL is correct.`;
   }
   return message;
 }
@@ -257,6 +260,7 @@ function renderLatestResponse(items) {
 
 function renderProjects(projects = [], currentProject = "") {
   const selected = currentProject || els.project.value;
+  state.currentProject = selected;
   els.project.innerHTML = "";
   for (const project of projects) {
     const option = document.createElement("option");
@@ -271,6 +275,40 @@ function renderProjects(projects = [], currentProject = "") {
     option.textContent = selected;
     option.selected = true;
     els.project.appendChild(option);
+  }
+}
+
+function flowSteps(data) {
+  const status = data.status || "unknown";
+  const nextAgent = data.next_agent || "you";
+  const activeTask = data.active_task || "";
+  const mode = data.collaboration_mode || data.mode || "default";
+  const commandRunning = Boolean(data.command_running);
+  const idle = ["idle", "awaiting_input"].includes(status);
+  const blocked = ["blocked", "question", "proposal"].includes(status);
+  return [
+    { label: "input", value: activeTask ? "prompt" : "ready", state: activeTask ? "done" : "active" },
+    { label: "router", value: mode, state: activeTask ? "done" : "" },
+    { label: "agent", value: nextAgent, state: commandRunning ? "active" : idle ? "" : "active" },
+    { label: "signal", value: blocked ? status : commandRunning ? "working" : idle ? "complete" : status, state: blocked ? "blocked" : idle ? "done" : "active" },
+    { label: "output", value: idle ? "shown" : "pending", state: idle ? "done" : "" },
+  ];
+}
+
+function renderFlow(data) {
+  els.flowChain.innerHTML = "";
+  for (const step of flowSteps(data)) {
+    const root = document.createElement("div");
+    root.className = `flow-step ${step.state || ""}`.trim();
+    const label = document.createElement("div");
+    label.className = "flow-label";
+    label.textContent = step.label;
+    const value = document.createElement("div");
+    value.className = "flow-value";
+    value.textContent = step.value || "-";
+    root.appendChild(label);
+    root.appendChild(value);
+    els.flowChain.appendChild(root);
   }
 }
 
@@ -314,18 +352,15 @@ async function copyLatestResponse() {
 
 function applySession(data, { scrollLatest = false } = {}) {
   els.status.textContent = data.status || "-";
-  if (data.status) {
-    setConnectionCollapsed(true);
-    setSessionCollapsed(true);
-  }
   renderProjects(data.projects || [], data.project || "");
   els.nextAgent.textContent = data.next_agent || "-";
   els.task.textContent = data.active_task || "-";
   els.tokenLine.textContent = data.token_line || "";
+  renderFlow(data);
   const transcript = data.transcript || [];
   renderLatestResponse(transcript);
   renderList(els.transcript, transcript);
-  const events = data.events || [];
+  const events = (data.events || []).filter((item) => Number(item.id || 0) > state.eventCursor);
   if (events.length) {
     state.eventCursor = events[events.length - 1].id;
     state.eventItems.push(...events);
@@ -367,6 +402,7 @@ async function switchProject(project) {
   if (!project) {
     return;
   }
+  const previousProject = state.currentProject || els.project.value;
   setSendState(true, `Switching to ${project}...`);
   try {
     state.eventCursor = 0;
@@ -382,6 +418,7 @@ async function switchProject(project) {
     clearSendStatusSoon();
   } catch (error) {
     setSendState(false, "Project switch failed.");
+    renderProjects(Array.from(els.project.options).map((option) => option.value), previousProject);
     showError(describeNetworkError(error));
   }
 }
@@ -393,6 +430,9 @@ async function refreshSession(options = {}) {
     showError("");
   } catch (error) {
     showError(error.message || String(error));
+    if (state.commandActive) {
+      scheduleRefreshPoll();
+    }
   }
 }
 
@@ -450,6 +490,9 @@ els.connect.addEventListener("click", async () => {
       await pairDevice();
     }
     state.eventCursor = 0;
+    state.eventItems = [];
+    state.commandEvents = [];
+    state.commandActive = false;
     await refreshSession();
     setConnectionCollapsed(true);
   } catch (error) {

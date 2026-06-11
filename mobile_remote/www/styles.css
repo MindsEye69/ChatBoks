@@ -221,8 +221,53 @@ button.compact {
 .response-panel,
 .transcript-panel,
 .events-panel,
+.flow-panel,
 .rail-panel {
   min-width: 0;
+}
+
+.flow-chain {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.flow-step {
+  flex: 0 0 auto;
+  min-width: 92px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #101216;
+  padding: 8px 10px;
+}
+
+.flow-step.active {
+  border-color: rgba(249, 115, 22, 0.8);
+  background: rgba(249, 115, 22, 0.14);
+}
+
+.flow-step.done {
+  border-color: rgba(34, 197, 94, 0.55);
+}
+
+.flow-step.blocked {
+  border-color: rgba(248, 113, 113, 0.65);
+  background: rgba(127, 29, 29, 0.22);
+}
+
+.flow-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.flow-value {
+  margin-top: 4px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 @media (max-width: 520px) {
@@ -368,6 +413,7 @@ button.compact {
   .layout {
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, 340px);
     grid-template-areas:
+      "left flow right"
       "left main right"
       "left transcript right";
     align-items: start;
@@ -394,6 +440,10 @@ button.compact {
   .response-panel {
     grid-area: main;
     min-height: min(54vh, 560px);
+  }
+
+  .flow-panel {
+    grid-area: flow;
   }
 
   .response-panel .latest-response {

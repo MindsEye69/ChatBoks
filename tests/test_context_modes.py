@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from context.builder import ContextBuilder
 from context.summarizer import Summarizer
+from context.transcript import is_transcript_turn
 from orchestrator import Chatboks
 
 
@@ -66,6 +67,14 @@ def test_lean_context_omits_broad_codegraph_dumps():
         assert "build_massive_context" not in payload
         assert "[CLAUDE] turn two" in payload
         assert "[YOU] turn one" not in payload
+
+
+def test_transcript_turns_include_direct_agent_aliases():
+    assert is_transcript_turn("[ANTIGRAV] challenge noted") is True
+    assert is_transcript_turn("[ANTIGRAVITY] challenge noted") is True
+    assert is_transcript_turn("[CODEX_SPARK] quick lane noted") is True
+    assert is_transcript_turn("[SPARK] should not be a stored transcript tag") is False
+    print("PASS: transcript parser recognizes direct agent aliases")
 
 
 def test_full_context_includes_broad_codegraph_dumps():
@@ -356,6 +365,7 @@ def test_sleep_closure_reports_graphify_warning_and_git_state():
 
 if __name__ == "__main__":
     test_lean_context_omits_broad_codegraph_dumps()
+    test_transcript_turns_include_direct_agent_aliases()
     test_full_context_includes_broad_codegraph_dumps()
     test_normal_context_preserves_checkpoint_summary_and_recent_tail()
     test_lean_context_keeps_checkpoint_summary_with_recent_turns()

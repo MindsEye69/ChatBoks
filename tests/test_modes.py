@@ -275,6 +275,39 @@ def test_confirmation_mode_requires_packet_risks_to_be_addressed():
         print("PASS: confirmation mode requires packet risks to be addressed")
 
 
+def test_confirmation_mode_unresolved_risk_words_do_not_count_as_resolution():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        executor_response = (
+            "Implemented.\n"
+            ">>> PACKET\n"
+            "stance: ADD\n"
+            "observed:\n"
+            "- implementation done\n"
+            "risks:\n"
+            "- focused test still missing\n"
+            "next_action: verifier checks risk\n"
+            "signal: TASK_COMPLETE\n"
+            ">>> PACKET_END\n"
+            ">>> TASK_COMPLETE"
+        )
+
+        unresolved = app.unresolved_packet_risks(
+            executor_response,
+            "Confirmed complete, but the focused test still missing risk remains unresolved.\n>>> TASK_COMPLETE",
+            "codex",
+        )
+        accepted = app.unresolved_packet_risks(
+            executor_response,
+            "The focused test still missing risk is explicitly acknowledged and accepted.\n>>> TASK_COMPLETE",
+            "codex",
+        )
+
+        assert unresolved == ["focused test still missing"]
+        assert accepted == []
+        print("PASS: unresolved risk wording does not satisfy packet-risk gate")
+
+
 def test_confirmation_risk_local_smoke_command_does_not_call_agents():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -393,6 +426,7 @@ if __name__ == "__main__":
     test_confirmation_mode_verifies_completed_output()
     test_confirmation_mode_includes_packet_checklist_for_verifier()
     test_confirmation_mode_requires_packet_risks_to_be_addressed()
+    test_confirmation_mode_unresolved_risk_words_do_not_count_as_resolution()
     test_confirmation_risk_local_smoke_command_does_not_call_agents()
     test_confirmation_mode_returns_failed_check_to_executor_once()
     test_confirmation_mode_blocks_when_repair_budget_is_exhausted()
