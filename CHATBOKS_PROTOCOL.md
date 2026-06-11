@@ -43,7 +43,7 @@ signal: TASK_COMPLETE|HANDOFF|BLOCKED|QUESTION|PROPOSAL|SKIP
 >>> PACKET_END
 ```
 
-Keep packets short. Use `observed` only for evidence, not wishes. Use `risks` for unresolved concerns that future agents should not flatten away.
+Keep packets short. Use `observed` only for evidence, not wishes. Attach a source anchor to every observed item when it should survive as durable verified memory, such as `(source: path/to/file.py:42)` or a tool-call reference. Unanchored observed items may be downgraded during memory consolidation. Use `risks` for unresolved concerns that future agents should not flatten away.
 
 ## Adversarial Pressure
 
@@ -68,7 +68,7 @@ End every response with exactly one valid ChatBoks signal:
 - `>>> TASK_COMPLETE`: your part is complete.
 - `>>> PROPOSAL`: approval is needed before work proceeds.
 - `>>> QUESTION`: a specific human decision is needed.
-- `>>> HANDOFF`: another agent or action should continue.
+- `>>> HANDOFF`: another named agent or action should continue. Name the intended next agent and the concrete action in the response body.
 - `>>> SKIP`: you cannot materially improve the prior answer.
 - `>>> BLOCKED`: you cannot proceed after trying.
 

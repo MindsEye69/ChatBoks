@@ -100,8 +100,35 @@ signal: TASK_COMPLETE
         assert records[0]["context"]["intent"] == "respond"
         assert records[0]["context"]["mode"] == "default"
         assert records[0]["packet"]["agent"] == "codex"
-        assert records[0]["packet"]["observed"] == ["parser stores packets"]
+        assert records[0]["packet"]["observed"] == []
+        assert records[0]["packet"]["downgraded"] == ["parser stores packets"]
+        assert records[0]["packet"]["evidence"] == "none"
         assert ">>> PACKET" in app.chatboks_md.read_text(encoding="utf-8")
+
+
+def test_append_message_preserves_anchored_packet_observations():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        app = _make_app(root)
+        response = """Implemented.
+>>> PACKET
+stance: ADD
+observed:
+- parser stores packets (source: tests/test_packets.py:100)
+risks:
+- none
+next_action: none
+signal: TASK_COMPLETE
+>>> PACKET_END
+>>> TASK_COMPLETE
+"""
+
+        app.append_message("codex", response)
+
+        records = [json.loads(line) for line in app.packet_file.read_text(encoding="utf-8").splitlines()]
+        assert records[0]["packet"]["observed"] == ["parser stores packets (source: tests/test_packets.py:100)"]
+        assert "downgraded" not in records[0]["packet"]
+        assert records[0]["packet"]["evidence"] == "anchored"
 
 
 def test_confirmation_packet_context_marks_executor_output():
@@ -235,8 +262,9 @@ def test_summarizer_prefers_packet_memory():
 
         summary = Summarizer(max_items=8).summarize(chat)
 
-        assert "Verified facts:" in summary
+        assert "Downgraded observations:" in summary
         assert "sleep memory includes packet facts" in summary
+        assert "Verified facts:" not in summary
         assert "Open risks:" in summary
         assert "packet schema still optional" in summary
         assert "Pending tasks:" in summary
@@ -248,5 +276,6 @@ if __name__ == "__main__":
     test_extract_packets_parses_valid_block()
     test_extract_packets_ignores_malformed_block()
     test_append_message_persists_packet_jsonl()
+    test_append_message_preserves_anchored_packet_observations()
     test_summarizer_prefers_packet_memory()
     print("\nAll packet smoke tests passed.")

@@ -337,6 +337,7 @@ class ContextBuilder:
                 f"Expected agents: {', '.join(state.get('expected_agents') or []) or 'unknown'}",
                 f"Completed agents: {', '.join(state.get('completed_agents') or []) or 'none'}",
                 f"Next agent: {state.get('next_agent') or 'unknown'}",
+                f"Handoff depth: {state.get('handoff_depth', 0)}",
             ]
         )
 

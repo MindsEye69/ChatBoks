@@ -12,10 +12,13 @@ from __future__ import annotations
 import argparse
 import ipaddress
 import json
+import os
 import secrets
 import threading
 import time
+import urllib.error
 import urllib.parse
+import urllib.request
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -32,6 +35,7 @@ COMMAND_MAX_CHARS = 6000
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
+OPERATOR_STATUS_FILENAME = "remote_bridge.json"
 ALLOWED_APP_ORIGINS = {
     "capacitor://localhost",
     "http://localhost",
@@ -188,6 +192,9 @@ class RemoteAuth:
             self._prune_expired_sessions(now)
             expires_at = self._session_tokens.get(token)
             return expires_at is not None and expires_at > now
+
+    def authorize_admin(self, token: str) -> bool:
+        return bool(token) and secrets.compare_digest(token, self.admin_token)
 
     def _refresh_pair_code_if_needed(self) -> None:
         now = time.time()
@@ -386,10 +393,42 @@ class RemoteBridgeServer(ThreadingHTTPServer):
         handler: type[BaseHTTPRequestHandler],
         session: RemoteSession,
         auth: RemoteAuth,
+        operator_status_path: Path | None = None,
     ) -> None:
         super().__init__(address, handler)
         self.session = session
         self.auth = auth
+        self.operator_status_path = operator_status_path
+
+    def write_operator_status(self) -> None:
+        if self.operator_status_path is None:
+            return
+        pair_code, pair_ttl = self.auth.current_pair_code()
+        expires_at = int(time.time() + pair_ttl)
+        app = getattr(self.session, "app", None)
+        project = getattr(app, "project", getattr(self.session, "project", "unknown"))
+        payload = {
+            "project": project,
+            "host": self.server_address[0],
+            "port": self.server_address[1],
+            "base_url": f"http://{self.server_address[0]}:{self.server_address[1]}",
+            "admin_token": self.auth.admin_token,
+            "pair_code": pair_code,
+            "pair_code_ttl_seconds": pair_ttl,
+            "pair_code_expires_at": expires_at,
+            "session_token_ttl_seconds": SESSION_TOKEN_TTL_SECONDS,
+            "pid": os.getpid(),
+            "updated_at": int(time.time()),
+        }
+        self.operator_status_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = self.operator_status_path.with_suffix(self.operator_status_path.suffix + ".tmp")
+        tmp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        tmp_path.replace(self.operator_status_path)
+
+    def rotate_pair_code_for_operator(self) -> tuple[str, int]:
+        pair_code, pair_ttl = self.auth.rotate_pair_code()
+        self.write_operator_status()
+        return pair_code, pair_ttl
 
 
 class RemoteHandler(BaseHTTPRequestHandler):
@@ -444,6 +483,20 @@ class RemoteHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/api/admin/pair-code":
+            if not self.origin_allowed():
+                return
+            if not self.admin_authorized():
+                return
+            pair_code, ttl = self.server.rotate_pair_code_for_operator()
+            self.respond_json(
+                {
+                    "pair_code": pair_code,
+                    "ttl_seconds": ttl,
+                    "expires_at": int(time.time() + ttl),
+                }
+            )
+            return
         if parsed.path == "/api/pair":
             if not self.origin_allowed():
                 return
@@ -507,6 +560,20 @@ class RemoteHandler(BaseHTTPRequestHandler):
         provided = header.removeprefix("Bearer ").strip()
         if not self.server.auth.authorize(provided):
             self.respond_error(HTTPStatus.FORBIDDEN, "Invalid token")
+            return False
+        return True
+
+    def admin_authorized(self) -> bool:
+        header = self.headers.get("Authorization", "")
+        if not header.startswith("Bearer "):
+            self.send_response(HTTPStatus.UNAUTHORIZED)
+            self.write_cors_headers(self.request_origin())
+            self.send_header("WWW-Authenticate", 'Bearer realm="ChatBoks Remote Admin"')
+            self.end_headers()
+            return False
+        provided = header.removeprefix("Bearer ").strip()
+        if not self.server.auth.authorize_admin(provided):
+            self.respond_error(HTTPStatus.FORBIDDEN, "Invalid admin token")
             return False
         return True
 
@@ -920,21 +987,83 @@ def build_mobile_shell(project: str) -> str:
 """
 
 
+def default_operator_status_path() -> Path:
+    return Path.cwd() / ".chatboks" / OPERATOR_STATUS_FILENAME
+
+
+def rotate_pair_code_from_operator_file(path: Path) -> int:
+    if not path.exists():
+        print(f"No remote bridge operator file found: {path}")
+        print("Start the bridge first, or pass --operator-file with the active bridge file.")
+        return 2
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"Could not read remote bridge operator file: {exc}")
+        return 2
+    base_url = str(payload.get("base_url") or "").rstrip("/")
+    admin_token = str(payload.get("admin_token") or "")
+    if not base_url or not admin_token:
+        print(f"Operator file is missing base_url/admin_token: {path}")
+        return 2
+    request = urllib.request.Request(
+        f"{base_url}/api/admin/pair-code",
+        data=b"{}",
+        headers={
+            "Authorization": f"Bearer {admin_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=5) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        print(f"Bridge rejected pair-code rotation: HTTP {exc.code}")
+        return 1
+    except OSError as exc:
+        print(f"Could not reach running bridge at {base_url}: {exc}")
+        return 1
+    pair_code = result.get("pair_code")
+    ttl = result.get("ttl_seconds")
+    print(f"Pairing code: {pair_code} (expires in {ttl} seconds)")
+    print(f"Bridge URL: {base_url}")
+    return 0
+
+
 def main() -> int:
     configure_utf8_stdio()
     parser = argparse.ArgumentParser(description="Secure remote bridge for ChatBoks")
-    parser.add_argument("project", help="Project name from config.yaml")
+    parser.add_argument("project", nargs="?", help="Project name from config.yaml")
     parser.add_argument("--config", type=Path, default=None, help="Optional path to ChatBoks config.yaml")
     parser.add_argument("--host", default="127.0.0.1", help="Loopback bind address (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8765, help="Loopback port for the bridge (default: 8765)")
     parser.add_argument("--token", help="Admin bearer token for API access. Random if omitted.")
     parser.add_argument("--show-admin-token", action="store_true", help="Print the admin token on startup.")
     parser.add_argument(
+        "--operator-file",
+        type=Path,
+        default=None,
+        help=f"Runtime operator file path (default: .chatboks/{OPERATOR_STATUS_FILENAME})",
+    )
+    parser.add_argument(
+        "--rotate-pair-code",
+        action="store_true",
+        help="Ask the running bridge for a new pairing code using the local operator file.",
+    )
+    parser.add_argument(
         "--allow-tailnet-bind",
         action="store_true",
         help="Allow binding to a Tailscale 100.64.0.0/10 IPv4 address when Tailscale Serve is unavailable.",
     )
     args = parser.parse_args()
+    operator_status_path = (args.operator_file or default_operator_status_path()).expanduser().resolve()
+
+    if args.rotate_pair_code:
+        return rotate_pair_code_from_operator_file(operator_status_path)
+
+    if not args.project:
+        parser.error("project is required unless --rotate-pair-code is used")
 
     if not is_allowed_bind_host(args.host, allow_tailnet_bind=args.allow_tailnet_bind):
         raise SystemExit(
@@ -944,7 +1073,8 @@ def main() -> int:
     session = RemoteSession(args.project, config_path=args.config)
     admin_token = args.token or secrets.token_urlsafe(24)
     auth = RemoteAuth(admin_token)
-    server = RemoteBridgeServer((args.host, args.port), RemoteHandler, session, auth)
+    server = RemoteBridgeServer((args.host, args.port), RemoteHandler, session, auth, operator_status_path)
+    server.write_operator_status()
     pair_code, pair_ttl = auth.current_pair_code()
 
     print(f"ChatBoks remote bridge for project '{args.project}'")
@@ -959,6 +1089,8 @@ def main() -> int:
     print("- intended remote path: private tunnel such as Tailscale Serve")
     print("")
     print(f"Pairing code: {pair_code} (expires in {pair_ttl} seconds)")
+    print(f"Operator file: {operator_status_path}")
+    print("New code command: python remote_control.py --rotate-pair-code")
     print(f"Session token lifetime: {SESSION_TOKEN_TTL_SECONDS} seconds")
     if args.show_admin_token:
         print(f"Admin token: {admin_token}")

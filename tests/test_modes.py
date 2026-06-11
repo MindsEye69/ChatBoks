@@ -388,6 +388,59 @@ def test_confirmation_mode_executor_handoff_continues_to_verifier():
         print("PASS: confirmation executor handoff continues to verifier")
 
 
+def test_general_handoff_auto_continues_to_next_agent():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_handoff_depth": 3},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Implemented and handing to control.\n>>> HANDOFF",
+                "Verified.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        called_agents = [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list]
+        assert called_agents == ["codex", "claude"]
+        assert app.state["status"] == "idle"
+        assert app.state["handoff_depth"] == 0
+        app.stream.system.assert_any_call("Handoff queued for claude (depth 1/3).")
+        print("PASS: general handoff auto-continues to the next agent")
+
+
+def test_handoff_depth_limit_blocks_cycles():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"claude": {}, "codex": {}},
+            "rounds": {"max_before_escalate": 3, "max_handoff_depth": 2},
+        }
+        app.proj_config = {"agents": ["claude", "codex"], "primary": "codex"}
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "Need control.\n>>> HANDOFF",
+                "Returning for repair.\n>>> HANDOFF",
+            ]
+        )
+
+        app.run_agent_round(initiator="implement the thing", agents=["codex"])
+
+        called_agents = [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list]
+        assert called_agents == ["codex", "claude"]
+        assert app.state["status"] == "blocked"
+        assert app.state["blocked_reason"] == "handoff_deadlock"
+        assert app.state["handoff_depth"] == 2
+        app.stream.system.assert_any_call("Handoff deadlock: depth 2 reached without completion. Your input needed.")
+        print("PASS: handoff depth limit blocks cycles")
+
+
 def test_confirmation_mode_blocks_when_repair_budget_is_exhausted():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -430,4 +483,6 @@ if __name__ == "__main__":
     test_confirmation_risk_local_smoke_command_does_not_call_agents()
     test_confirmation_mode_returns_failed_check_to_executor_once()
     test_confirmation_mode_blocks_when_repair_budget_is_exhausted()
+    test_general_handoff_auto_continues_to_next_agent()
+    test_handoff_depth_limit_blocks_cycles()
     print("\nAll mode smoke tests passed.")

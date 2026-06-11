@@ -8,6 +8,10 @@ from typing import Any
 
 PACKET_START_RE = re.compile(r"^\s*>>>\s+PACKET\s*$", re.I)
 PACKET_END_RE = re.compile(r"^\s*>>>\s+PACKET_END\s*$", re.I)
+SOURCE_ANCHOR_RE = re.compile(
+    r"(\bsource:\s*[^)]+|[A-Za-z0-9_./\\-]+\.[A-Za-z0-9]+:\d+|\btool(?:\s+call)?\s*[:#]\s*[\w.-]+)",
+    re.I,
+)
 VALID_STANCES = {"ADD", "VERIFY", "CHALLENGE", "SKIP", "HANDOFF"}
 VALID_SIGNALS = {"TASK_COMPLETE", "HANDOFF", "BLOCKED", "QUESTION", "PROPOSAL", "SKIP"}
 
@@ -114,6 +118,21 @@ def clean_list(values: Any) -> list[str]:
         if normalized and normalized not in cleaned:
             cleaned.append(normalized)
     return cleaned
+
+
+def has_source_anchor(value: str) -> bool:
+    return bool(SOURCE_ANCHOR_RE.search(normalize_value(value)))
+
+
+def split_observed_by_anchor(values: list[str]) -> tuple[list[str], list[str]]:
+    anchored: list[str] = []
+    downgraded: list[str] = []
+    for value in values:
+        if has_source_anchor(value):
+            anchored.append(value)
+        else:
+            downgraded.append(value)
+    return anchored, downgraded
 
 
 def packet_records_from_jsonl(text: str, limit: int | None = None) -> list[dict[str, Any]]:

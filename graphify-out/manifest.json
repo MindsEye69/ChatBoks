@@ -5,8 +5,8 @@
     "semantic_hash": "9bb6e60adbe6703f58f10c138b459653"
   },
   "agents/agent_zero.py": {
-    "mtime": 1781004128.1633558,
-    "ast_hash": "88e34480202eddacffc08b65f4279b6b",
+    "mtime": 1781165019.939067,
+    "ast_hash": "90533489e46378627653640eea42a86b",
     "semantic_hash": ""
   },
   "agents/antigravity.py": {
@@ -15,8 +15,8 @@
     "semantic_hash": "a9f891c2127461346afd818f6d925bfc"
   },
   "agents/base.py": {
-    "mtime": 1781009696.445073,
-    "ast_hash": "02456f6ddb6eb2e8cd310ad6e5bbed45",
+    "mtime": 1781164503.5812712,
+    "ast_hash": "94646413f428ecd6a5ec3de324aa0b63",
     "semantic_hash": ""
   },
   "agents/claude.py": {
@@ -35,8 +35,8 @@
     "semantic_hash": "e7cd77cc85378bbcdb4285dea0d4604e"
   },
   "context/builder.py": {
-    "mtime": 1781098068.6480792,
-    "ast_hash": "e7e20b987ddeb4be50ab0ffac4c14543",
+    "mtime": 1781164517.74322,
+    "ast_hash": "4526841c318c8e9e55cbaf31937fb61d",
     "semantic_hash": ""
   },
   "context/summarizer.py": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1781137335.1638794,
-    "ast_hash": "41828ddbae0158992c9be0fc697d6cb8",
+    "mtime": 1781164171.1471035,
+    "ast_hash": "4b33ba4f8d67dac6b7863542da4c6989",
     "semantic_hash": ""
   },
   "router.py": {
@@ -75,18 +75,18 @@
     "semantic_hash": ""
   },
   "tests/test_base_agent_streaming.py": {
-    "mtime": 1781009738.1999903,
-    "ast_hash": "e0365c650087de53406be4f8a1e9cacd",
+    "mtime": 1781164137.2018104,
+    "ast_hash": "beb9075e9a47344b35a58052efb00578",
     "semantic_hash": ""
   },
   "tests/test_context_modes.py": {
-    "mtime": 1781137116.8861842,
-    "ast_hash": "b85946bff93810bae2251aa3accf6916",
+    "mtime": 1781164532.655784,
+    "ast_hash": "b207efb9145384b1fc5f4ac7d8c8222a",
     "semantic_hash": ""
   },
   "tests/test_direct_agents.py": {
-    "mtime": 1781014387.969218,
-    "ast_hash": "871b3ba95d323c689451fc618257f727",
+    "mtime": 1781165000.7651489,
+    "ast_hash": "fb096fe452dccd12390a23cadcd0b237",
     "semantic_hash": ""
   },
   "tests/test_help.py": {
@@ -120,8 +120,8 @@
     "semantic_hash": ""
   },
   "tests/test_signal_state.py": {
-    "mtime": 1780936826.215451,
-    "ast_hash": "0a0850813af6e946f13e3bc494cd09ca",
+    "mtime": 1781164152.275053,
+    "ast_hash": "d854975724d7d30c23b1d81a1716f2dd",
     "semantic_hash": ""
   },
   "tests/test_skills.py": {
@@ -145,8 +145,8 @@
     "semantic_hash": "b2cd4d8c4d3ff8e25b412c4cf7550a30"
   },
   "ui/stream.py": {
-    "mtime": 1781133910.3576705,
-    "ast_hash": "7471e6d4e903fb18f8b7a217c844300a",
+    "mtime": 1781164095.721915,
+    "ast_hash": "557bcd5e3944c0c6cceebdd18283ab72",
     "semantic_hash": ""
   },
   "AGENT_ZERO.md": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781083109.2479868,
-    "ast_hash": "0ecfa63da32c7b2783a06935c7a37e62",
+    "mtime": 1781167760.9857614,
+    "ast_hash": "94cc6dd25b2700879b12bb345c771a7e",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781083163.190663,
-    "ast_hash": "219ca975f97f4e9d3a57ecaa1ff9fe3b",
+    "mtime": 1781168514.5672832,
+    "ast_hash": "f1e6ac54b044d3dad006f31cf55d0c4d",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -680,8 +680,28 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1781135283.985942,
-    "ast_hash": "273b45247b8fb3fd743e776bafe55603",
+    "mtime": 1781138662.2157185,
+    "ast_hash": "6dc2aa3272e92fedb1ee952d9ff7dd0e",
+    "semantic_hash": ""
+  },
+  "mobile_remote/www/workbench.js": {
+    "mtime": 1781138285.1875405,
+    "ast_hash": "9ca208f84ce6d8d2978e05cc2dc3932b",
+    "semantic_hash": ""
+  },
+  "INTERFACE_HANDOFF.md": {
+    "mtime": 1781137703.400846,
+    "ast_hash": "b86567e4fff534082fdc31e8b6728d8f",
+    "semantic_hash": ""
+  },
+  "MOBILE_REMOTE_PAIRING_RUNBOOK.md": {
+    "mtime": 1781168457.712505,
+    "ast_hash": "ede101cd1b7f5d6f8b34ebc553ad284e",
+    "semantic_hash": ""
+  },
+  "mobile_remote/www/workbench.html": {
+    "mtime": 1781139068.2901955,
+    "ast_hash": "fb4c12fc2b455b38c349191b25f300a5",
     "semantic_hash": ""
   }
 }

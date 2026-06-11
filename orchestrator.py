@@ -25,7 +25,7 @@ from watchdog.observers import Observer
 
 from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
-from context.packets import ThoughtPacket, extract_packets, packet_records_from_jsonl
+from context.packets import ThoughtPacket, extract_packets, packet_records_from_jsonl, split_observed_by_anchor
 from encoding_utils import configure_utf8_stdio, utf8_env
 from router import Router
 from ui.stream import Stream
@@ -322,6 +322,7 @@ class Chatboks:
                 "active_task": routed_text,
                 "agent_status": self.load_agent_statuses(),
                 "confirmation_repairs_used": 0,
+                "handoff_depth": 0,
             }
         )
         self.run_agent_round(initiator=routed_text, agents=agents)
@@ -1995,6 +1996,56 @@ class Chatboks:
         self.update_state({"status": "active", "next_agent": handoff_to})
         self.run_agent_round(agents=[handoff_to])
 
+    def max_handoff_depth(self) -> int:
+        raw_depth = self.config.get("rounds", {}).get("max_handoff_depth")
+        if raw_depth is None:
+            return 3
+        return max(1, int(raw_depth))
+
+    def select_handoff_target(self, agent_name: str) -> str:
+        after = self.router.after(agent_name)
+        if after and after != "you" and after != agent_name and after in self.proj_config["agents"]:
+            return after
+        for candidate in self.proj_config.get("agents") or []:
+            if candidate != agent_name:
+                return candidate
+        return self.router.primary()
+
+    def prepare_handoff(
+        self,
+        response: str,
+        agent_name: str,
+        *,
+        target: str | None = None,
+        status: str = "handoff",
+    ) -> bool:
+        handoff_to = target or self.select_handoff_target(agent_name)
+        depth = int(self.state.get("handoff_depth", 0) or 0) + 1
+        max_depth = self.max_handoff_depth()
+        updates = {
+            "handoff_depth": depth,
+            "handoff_to": handoff_to,
+            "handoff_reason": self.extract_first_line(response),
+            "handoff_context": response,
+            "next_agent": handoff_to,
+        }
+        if depth >= max_depth:
+            self.update_state(
+                {
+                    **updates,
+                    "status": "blocked",
+                    "next_agent": "you",
+                    "blocked_reason": "handoff_deadlock",
+                }
+            )
+            self.stream.system(
+                f"Handoff deadlock: depth {depth} reached without completion. Your input needed."
+            )
+            return False
+        self.update_state({**updates, "status": status})
+        self.stream.system(f"Handoff queued for {handoff_to} (depth {depth}/{max_depth}).")
+        return True
+
     def confirmation_mode_active(self, intent: str) -> bool:
         if intent == "confirm":
             return False
@@ -2300,20 +2351,15 @@ class Chatboks:
                     return
                 if signal == "HANDOFF":
                     if not is_last_agent:
-                        self.update_state(
-                            {
-                                "status": "active",
-                                "handoff_to": next_agent,
-                                "handoff_reason": self.extract_first_line(response),
-                                "handoff_context": response,
-                            }
-                        )
+                        if not self.prepare_handoff(response, agent_name, target=next_agent, status="active"):
+                            return
                         continue
                     confirmation = self.confirm_completion_if_needed(agent_name, response, initiator, active_agents, intent)
                     if confirmation == "confirmed":
                         self.maybe_announce_direct_standby_agents(initiator, active_agents)
                         self.stream.system("Task complete. Awaiting next instruction.")
                         self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                        self.update_state({"handoff_depth": 0})
                         return
                     if confirmation == "terminal":
                         return
@@ -2328,12 +2374,14 @@ class Chatboks:
                         self.maybe_announce_direct_standby_agents(initiator, active_agents)
                         self.stream.system("Task complete. Awaiting next instruction.")
                         self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                        self.update_state({"handoff_depth": 0})
                         return
                     if confirmation == "terminal":
                         return
                     self.maybe_announce_direct_standby_agents(initiator, active_agents)
                     self.stream.system("Task complete. Awaiting next instruction.")
                     self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                    self.update_state({"handoff_depth": 0})
                     return
                 if signal == "BLOCKED":
                     if completed_agent is not None:
@@ -2345,6 +2393,7 @@ class Chatboks:
                         self.maybe_announce_direct_standby_agents(initiator, active_agents)
                         self.stream.system("Task complete. Awaiting next instruction.")
                         self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                        self.update_state({"handoff_depth": 0})
                         return
                     if not is_last_agent:
                         self.stream.system(f"{agent_name} blocked. Continuing to {next_agent}.")
@@ -2438,16 +2487,8 @@ class Chatboks:
         self.stream.system("Question raised. Your input is needed.")
 
     def handle_agent_handoff(self, response: str, agent_name: str) -> None:
-        target = self.router.after(agent_name) or self.router.primary()
-        self.update_state(
-            {
-                "status": "handoff",
-                "handoff_to": target,
-                "handoff_reason": self.extract_first_line(response),
-                "handoff_context": response,
-            }
-        )
-        self.stream.system(f"Handoff flagged for {target}.")
+        if self.prepare_handoff(response, agent_name):
+            self.handle_handoff()
 
     def handle_approval(self, text: str) -> None:
         verdict = text.strip().upper()
@@ -3036,10 +3077,19 @@ class Chatboks:
             "sender": sender,
             "round": self.state.get("round"),
             "context": self.thought_packet_context(sender),
-            "packet": packet.to_record(),
+            "packet": self.packet_record_for_memory(packet),
         }
         with packet_file.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
+
+    def packet_record_for_memory(self, packet: ThoughtPacket) -> dict[str, Any]:
+        record = packet.to_record()
+        anchored, downgraded = split_observed_by_anchor(packet.observed)
+        record["observed"] = anchored
+        record["evidence"] = "anchored" if anchored else "none"
+        if downgraded:
+            record["downgraded"] = downgraded
+        return record
 
     def thought_packet_context(self, sender: str) -> dict[str, Any]:
         intent = str(self.state.get("round_intent") or "respond")
@@ -3166,6 +3216,7 @@ class Chatboks:
             "handoff_to": None,
             "handoff_reason": None,
             "handoff_context": None,
+            "handoff_depth": 0,
             "context": {
                 "codegraph_snapshot": "codegraph.db",
                 "token_counts": {},
@@ -3196,6 +3247,7 @@ class Chatboks:
         state.setdefault("expected_agents", [])
         state.setdefault("completed_agents", [])
         state.setdefault("handoff_to", None)
+        state["handoff_depth"] = max(0, int(state.get("handoff_depth", 0) or 0))
         state.setdefault("help_pin", True)
 
         # Sanitize untrusted free-text fields that come from agent output or state.json.

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from context.packets import packet_records_from_jsonl
+from context.packets import has_source_anchor, packet_records_from_jsonl
 from context.transcript import (
     extract_summary_items,
     find_last_summary_checkpoint,
@@ -29,6 +29,7 @@ class Summarizer:
         "Open risks",
         "Pending tasks",
         "Verified facts",
+        "Downgraded observations",
         "Tests and commits",
         "Unresolved handoffs/questions",
         "Recent user requests",
@@ -89,8 +90,18 @@ class Summarizer:
         agent = self.normalize_item(packet.get("agent") or "agent")
         stance = self.normalize_item(packet.get("stance") or "").upper()
         signal = self.normalize_item(packet.get("signal") or "").upper()
+        downgraded_observed: list[str] = []
         for item in packet.get("observed") or []:
-            self.add_item(sections, "Verified facts", f"{agent} {stance}: {item}")
+            if has_source_anchor(str(item)):
+                self.add_item(sections, "Verified facts", f"{agent} {stance}: {item}")
+            else:
+                downgraded_observed.append(str(item))
+        for item in packet.get("downgraded") or []:
+            downgraded_observed.append(str(item))
+        for item in downgraded_observed:
+            self.add_item(sections, "Downgraded observations", f"{agent} {stance}: {item}")
+        if packet.get("evidence") == "none" and downgraded_observed:
+            self.add_item(sections, "Downgraded observations", f"{agent} {stance}: evidence: none")
         for item in packet.get("risks") or []:
             self.add_item(sections, "Open risks", f"{agent} {stance}: {item}")
         next_action = self.normalize_item(packet.get("next_action") or "")
