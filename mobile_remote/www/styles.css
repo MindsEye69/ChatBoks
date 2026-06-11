@@ -6,6 +6,11 @@
   --text: #f3f4f6;
   --muted: #a1a1aa;
   --accent: #f97316;
+  --codex: #22c55e;
+  --claude: #38bdf8;
+  --spark: #a78bfa;
+  --zero: #facc15;
+  --antigravity: #f59e0b;
   --danger: #fca5a5;
   --danger-bg: rgba(127, 29, 29, 0.4);
   --keyboard-offset: 0px;
@@ -212,10 +217,35 @@ button.compact {
 .latest-response {
   max-height: 220px;
   overflow: auto;
+  display: grid;
+  gap: 12px;
+  color: var(--text);
+}
+
+.response-block {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--muted);
+  border-radius: 8px;
+  background: #111419;
+  padding: 10px 12px;
+}
+
+.response-block + .response-block {
+  margin-top: 2px;
+}
+
+.response-sender {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.response-text {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.45;
-  color: var(--text);
 }
 
 .response-panel,
@@ -297,6 +327,7 @@ button.compact {
 
 .item {
   border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
   border-radius: 8px;
   background: #13161a;
   padding: 10px;
@@ -313,6 +344,57 @@ button.compact {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.4;
+}
+
+.sender-codex,
+.sender-codex_spark {
+  border-left-color: var(--codex);
+}
+
+.sender-claude {
+  border-left-color: var(--claude);
+}
+
+.sender-spark {
+  border-left-color: var(--spark);
+}
+
+.sender-agent_zero,
+.sender-zero {
+  border-left-color: var(--zero);
+}
+
+.sender-antigravity {
+  border-left-color: var(--antigravity);
+}
+
+.sender-codex .item-sender,
+.sender-codex_spark .item-sender,
+.sender-codex .response-sender,
+.sender-codex_spark .response-sender {
+  color: var(--codex);
+}
+
+.sender-claude .item-sender,
+.sender-claude .response-sender {
+  color: var(--claude);
+}
+
+.sender-spark .item-sender,
+.sender-spark .response-sender {
+  color: var(--spark);
+}
+
+.sender-agent_zero .item-sender,
+.sender-zero .item-sender,
+.sender-agent_zero .response-sender,
+.sender-zero .response-sender {
+  color: var(--zero);
+}
+
+.sender-antigravity .item-sender,
+.sender-antigravity .response-sender {
+  color: var(--antigravity);
 }
 
 .composer {

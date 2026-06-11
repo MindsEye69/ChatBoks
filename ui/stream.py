@@ -77,8 +77,7 @@ class Stream:
             return
         self.agent_activity_finish(agent_name, mode, 0.0)
         color = self.colors.get(agent_name.lower(), "white")
-        label = f"[{color}][{agent_name.upper()}][/{color}]"
-        self.console.print(f"{label} [dim]streaming {mode} output[/dim]")
+        self.console.print(Rule(f"[{color}]{agent_name.upper()} {mode} answer[/{color}]", style=color))
         self._agent_output_active = agent_name
         self._agent_output_needs_newline = False
 
@@ -95,6 +94,8 @@ class Stream:
             return
         if self._agent_output_needs_newline:
             self.console.print()
+        color = self.colors.get(agent_name.lower(), "white")
+        self.console.print(Rule(style=color))
         self._agent_output_active = None
         self._agent_output_needs_newline = False
 
@@ -134,6 +135,11 @@ class Stream:
     def message(self, sender: str, text: str, timestamp: str) -> None:
         color = self.colors.get(sender.lower(), "white")
         label = f"[{color}][{sender.upper()}][/{color}]"
+        if sender.lower() not in {"system", "you"}:
+            self.console.print(Rule(f"[{color}]{sender.upper()} answer[/{color}]", style=color))
+            self.console.print(text.strip(), style=color if sender.lower() in self.colors else None)
+            self.console.print(Rule(style=color))
+            return
         self.console.print(f"{label} [dim]{timestamp}[/dim]\n{text.strip()}")
 
     def standby(self, agent_name: str, text: str) -> None:

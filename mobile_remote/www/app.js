@@ -200,7 +200,7 @@ function renderList(container, items) {
   container.innerHTML = "";
   for (const item of items) {
     const root = document.createElement("div");
-    root.className = "item";
+    root.className = `item ${senderClass(item.sender)}`.trim();
     const sender = document.createElement("div");
     sender.className = "item-sender";
     sender.textContent = item.sender || "unknown";
@@ -211,6 +211,11 @@ function renderList(container, items) {
     root.appendChild(text);
     container.appendChild(root);
   }
+}
+
+function senderClass(sender) {
+  const normalized = (sender || "unknown").toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+  return `sender-${normalized}`;
 }
 
 function isTokenUsageMessage(item) {
@@ -318,13 +323,24 @@ function latestResponseGroup(items) {
 function renderLatestResponse(items) {
   const commandEvents = visibleCommandEvents(state.commandEvents);
   const group = commandEvents.length ? commandEvents : latestResponseGroup(items);
+  els.latestResponse.innerHTML = "";
   if (!group.length) {
     els.latestResponse.textContent = "-";
     return;
   }
-  els.latestResponse.textContent = group
-    .map((item) => `${(item.sender || "unknown").toUpperCase()}\n${item.text || ""}`.trim())
-    .join("\n\n");
+  for (const item of group) {
+    const root = document.createElement("div");
+    root.className = `response-block ${senderClass(item.sender)}`.trim();
+    const sender = document.createElement("div");
+    sender.className = "response-sender";
+    sender.textContent = item.sender || "unknown";
+    const text = document.createElement("div");
+    text.className = "response-text";
+    text.textContent = item.text || "";
+    root.appendChild(sender);
+    root.appendChild(text);
+    els.latestResponse.appendChild(root);
+  }
   els.latestResponse.scrollTop = els.latestResponse.scrollHeight;
 }
 
