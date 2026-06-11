@@ -74,6 +74,25 @@ signal: WHEE
     assert extract_packets(response, fallback_agent="codex") == []
 
 
+def test_extract_packets_accepts_criteria_pending_signal():
+    response = """>>> PACKET
+agent: claude
+stance: CHALLENGE
+observed:
+- broad task lacks acceptance criteria (source: CHATBOKS_PROTOCOL.md:35)
+risks:
+- ambiguous completion
+next_action: human approves criteria
+signal: CRITERIA_PENDING
+>>> PACKET_END
+"""
+
+    packets = extract_packets(response, fallback_agent="claude")
+
+    assert len(packets) == 1
+    assert packets[0].signal == "CRITERIA_PENDING"
+
+
 def test_append_message_persists_packet_jsonl():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -275,6 +294,7 @@ def test_summarizer_prefers_packet_memory():
 if __name__ == "__main__":
     test_extract_packets_parses_valid_block()
     test_extract_packets_ignores_malformed_block()
+    test_extract_packets_accepts_criteria_pending_signal()
     test_append_message_persists_packet_jsonl()
     test_append_message_preserves_anchored_packet_observations()
     test_summarizer_prefers_packet_memory()

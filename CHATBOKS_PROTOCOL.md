@@ -67,6 +67,7 @@ End every response with exactly one valid ChatBoks signal:
 
 - `>>> TASK_COMPLETE`: your part is complete.
 - `>>> PROPOSAL`: approval is needed before work proceeds.
+- `>>> CRITERIA_PENDING`: acceptance criteria are needed before broad, multi-agent, durable, security-sensitive, or ambiguous work proceeds.
 - `>>> QUESTION`: a specific human decision is needed.
 - `>>> HANDOFF`: another named agent or action should continue. Name the intended next agent and the concrete action in the response body.
 - `>>> SKIP`: you cannot materially improve the prior answer.

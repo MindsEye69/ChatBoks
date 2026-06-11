@@ -27,7 +27,7 @@ from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
 from context.packets import ThoughtPacket, extract_packets, packet_records_from_jsonl, split_observed_by_anchor
 from encoding_utils import configure_utf8_stdio, utf8_env
-from router import Router
+from router import Router, RoutingDecision
 from ui.stream import Stream
 
 
@@ -39,6 +39,7 @@ SIGNALS = [
     "TASK COMPLETE",
     "BLOCKED",
     "SKIP",
+    "CRITERIA_PENDING",
 ]
 
 
@@ -69,6 +70,14 @@ COLLABORATION_MODES = {
         "Diagnose mode. Establish the root cause with the smallest useful probes. Recommend concrete commands "
         "or narrow fixes before broad implementation."
     ),
+}
+
+CRITERIA_GATE_REASONS = {
+    "broad": "broad task",
+    "multi_agent": "multi-agent coordination",
+    "durable": "durable protocol/memory change",
+    "security": "security or remote-access sensitive",
+    "ambiguous": "ambiguous completion target",
 }
 
 AGENT_STATUSES = {"available", "low", "exhausted", "blocked"}
@@ -290,6 +299,9 @@ class Chatboks:
         if prior_status == "awaiting_approval":
             self.handle_approval(text)
             return
+        if prior_status == "awaiting_criteria":
+            self.handle_criteria_response(text)
+            return
 
         decision = self.router.route_user_prompt_details(
             text,
@@ -314,6 +326,17 @@ class Chatboks:
         agents = self.resolve_available_agents(agents, exclusive_agent)
         if not agents:
             return
+        if self.should_gate_acceptance_criteria(text, agents, decision):
+            self.handle_criteria_pending(text, routed_text, agents, exclusive_agent, decision)
+            return
+        self.start_routed_agent_round(routed_text, agents, exclusive_agent)
+
+    def start_routed_agent_round(
+        self,
+        routed_text: str,
+        agents: list[str],
+        exclusive_agent: str | None = None,
+    ) -> None:
         next_agent = exclusive_agent or agents[0]
         self.update_state(
             {
@@ -323,9 +346,220 @@ class Chatboks:
                 "agent_status": self.load_agent_statuses(),
                 "confirmation_repairs_used": 0,
                 "handoff_depth": 0,
+                "criteria_gate": None,
             }
         )
         self.run_agent_round(initiator=routed_text, agents=agents)
+
+    def should_gate_acceptance_criteria(
+        self,
+        text: str,
+        agents: list[str],
+        decision: RoutingDecision,
+    ) -> bool:
+        if not self.criteria_gate_enabled():
+            return False
+        if decision.exclusive_agent:
+            return False
+        return bool(self.criteria_gate_reasons(text, agents, decision))
+
+    def criteria_gate_enabled(self) -> bool:
+        gate_config = self.config.get("criteria_gate", {})
+        if isinstance(gate_config, dict) and gate_config.get("enabled") is False:
+            return False
+        return True
+
+    def criteria_gate_reasons(
+        self,
+        text: str,
+        agents: list[str],
+        decision: RoutingDecision,
+    ) -> list[str]:
+        del decision
+        lowered = " ".join(text.lower().split())
+        if not lowered:
+            return []
+        reasons: list[str] = []
+        if len(agents) > 1 and self.contains_any(
+            lowered,
+            (
+                "all agents",
+                "everyone",
+                "team",
+                "round",
+                "rounds",
+                "debate",
+                "converge",
+                "consensus",
+                "top improvement",
+                "top improvements",
+            ),
+        ):
+            reasons.append("multi_agent")
+        if len(lowered) > 240 or self.contains_any(
+            lowered,
+            (
+                "roadmap",
+                "architecture",
+                "design",
+                "overhaul",
+                "broad",
+                "strategy",
+                "plan",
+                "speed things up",
+                "top improvement",
+                "top improvements",
+            ),
+        ):
+            reasons.append("broad")
+        if self.contains_any(
+            lowered,
+            (
+                "protocol",
+                "memory",
+                "sleep",
+                "summar",
+                "packet",
+                "handoff",
+                "routing",
+                "mode",
+                "runbook",
+                "docs",
+                "documentation",
+            ),
+        ):
+            reasons.append("durable")
+        if self.contains_any(
+            lowered,
+            (
+                "security",
+                "auth",
+                "token",
+                "secret",
+                "password",
+                "remote",
+                "pairing",
+                "tailscale",
+                "firewall",
+                "serve",
+                "network",
+                "shell",
+                "execute",
+            ),
+        ):
+            reasons.append("security")
+        if self.contains_any(
+            lowered,
+            (
+                "make it better",
+                "improve it",
+                "whatever is next",
+                "what's next",
+                "whats next",
+                "proceed as planned",
+                "their plan",
+            ),
+        ):
+            reasons.append("ambiguous")
+        return list(dict.fromkeys(reasons))
+
+    @staticmethod
+    def contains_any(text: str, needles: tuple[str, ...]) -> bool:
+        return any(needle in text for needle in needles)
+
+    def handle_criteria_pending(
+        self,
+        original_text: str,
+        routed_text: str,
+        agents: list[str],
+        exclusive_agent: str | None,
+        decision: RoutingDecision,
+    ) -> None:
+        reasons = self.criteria_gate_reasons(original_text, agents, decision)
+        gate = {
+            "id": f"criteria_{int(time.time())}",
+            "original_text": original_text,
+            "routed_text": routed_text,
+            "agents": agents,
+            "exclusive_agent": exclusive_agent,
+            "strategy": decision.strategy,
+            "mode": self.state.get("collaboration_mode", "default"),
+            "reasons": reasons,
+        }
+        self.update_state(
+            {
+                "status": "awaiting_criteria",
+                "next_agent": "you",
+                "active_task": routed_text,
+                "criteria_gate": gate,
+            }
+        )
+        message = self.format_criteria_gate(gate)
+        self.append_message("system", f"{message}\n>>> CRITERIA_PENDING")
+        self.stream.proposal(message)
+        self.stream.system("Type APPROVE to run, MODIFY <criteria> to add detail, or REJECT to cancel.")
+
+    def handle_criteria_response(self, text: str) -> None:
+        gate = self.state.get("criteria_gate")
+        if not isinstance(gate, dict):
+            self.stream.system("No pending criteria gate. Treating input as a new prompt.")
+            self.update_state({"status": "idle", "criteria_gate": None})
+            self.handle_user_input(text)
+            return
+
+        verdict = text.strip().upper()
+        if verdict in {"APPROVE", "YES", "Y", "OK", "GO"}:
+            agents = [str(agent) for agent in gate.get("agents") or []]
+            if not agents:
+                self.stream.system("Criteria gate lost its routed agents. Please resend the prompt.")
+                self.update_state({"status": "blocked", "next_agent": "you", "criteria_gate": None})
+                return
+            self.stream.system("Criteria approved. Running agents...")
+            self.start_routed_agent_round(
+                str(gate.get("routed_text") or gate.get("original_text") or ""),
+                agents,
+                str(gate.get("exclusive_agent") or "") or None,
+            )
+            return
+        if verdict == "REJECT":
+            self.stream.system("Criteria gate rejected. Awaiting next instruction.")
+            self.update_state({"status": "idle", "active_task": None, "criteria_gate": None, "next_agent": "you"})
+            return
+
+        modification = self.normalize_modification(text)
+        gate["routed_text"] = "\n".join(
+            [
+                str(gate.get("routed_text") or gate.get("original_text") or ""),
+                "",
+                "[ACCEPTANCE CRITERIA]",
+                modification,
+            ]
+        )
+        self.update_state({"criteria_gate": gate})
+        self.stream.proposal(self.format_criteria_gate(gate))
+        self.stream.system("Criteria updated. Type APPROVE to run or REJECT to cancel.")
+
+    def format_criteria_gate(self, gate: dict[str, Any]) -> str:
+        reasons = [
+            CRITERIA_GATE_REASONS.get(str(reason), str(reason))
+            for reason in gate.get("reasons", [])
+        ]
+        agents = ", ".join(str(agent) for agent in gate.get("agents", [])) or "unknown"
+        lines = [
+            "CRITERIA_PENDING",
+            "Acceptance criteria gate triggered before agent execution.",
+            f"Triggers: {', '.join(reasons) or 'unspecified'}",
+            f"Mode: {gate.get('mode') or 'default'}",
+            f"Routing: {gate.get('strategy') or 'default'} -> {agents}",
+            "Minimum acceptance criteria:",
+            "- Desired outcome is explicit enough that agents can verify completion.",
+            "- Safety, auth, remote access, or durable memory impact is named when relevant.",
+            "- Verification evidence is expected before TASK_COMPLETE.",
+        ]
+        routed_text = str(gate.get("routed_text") or "")
+        if "[ACCEPTANCE CRITERIA]" in routed_text:
+            lines.append("User criteria appended to the prompt.")
+        return "\n".join(lines)
 
     def handle_local_command(self, text: str) -> bool:
         stripped = text.strip()
@@ -3213,6 +3447,7 @@ class Chatboks:
             "expected_agents": [],
             "completed_agents": [],
             "proposal": None,
+            "criteria_gate": None,
             "handoff_to": None,
             "handoff_reason": None,
             "handoff_context": None,
@@ -3246,6 +3481,8 @@ class Chatboks:
 
         state.setdefault("expected_agents", [])
         state.setdefault("completed_agents", [])
+        if not isinstance(state.get("criteria_gate"), dict):
+            state["criteria_gate"] = None
         state.setdefault("handoff_to", None)
         state["handoff_depth"] = max(0, int(state.get("handoff_depth", 0) or 0))
         state.setdefault("help_pin", True)

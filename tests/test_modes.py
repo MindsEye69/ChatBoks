@@ -134,6 +134,75 @@ def test_handle_user_input_records_mode_strategy_agent_as_next():
         print("PASS: mode strategy rounds store the routed solo agent as next")
 
 
+def test_broad_multi_agent_prompt_triggers_criteria_gate():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.router.route_user_prompt_details.return_value = RoutingDecision(
+            ["claude", "codex"],
+            "all agents give your top improvements, do three rounds",
+            strategy="explicit_all",
+        )
+        app.resolve_available_agents = MagicMock(return_value=["claude", "codex"])
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("@all give your top improvements, do three rounds")
+
+        assert app.state["status"] == "awaiting_criteria"
+        assert app.state["next_agent"] == "you"
+        assert app.state["criteria_gate"]["agents"] == ["claude", "codex"]
+        assert "multi_agent" in app.state["criteria_gate"]["reasons"]
+        assert "broad" in app.state["criteria_gate"]["reasons"]
+        app.stream.proposal.assert_called_once()
+        app.run_agent_round.assert_not_called()
+        print("PASS: broad multi-agent prompts pause for criteria")
+
+
+def test_criteria_approval_resumes_routed_prompt_without_rerouting():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.router.route_user_prompt_details.return_value = RoutingDecision(
+            ["claude", "codex"],
+            "all agents give your top improvements, do three rounds",
+            strategy="explicit_all",
+        )
+        app.resolve_available_agents = MagicMock(return_value=["claude", "codex"])
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("@all give your top improvements, do three rounds")
+        app.handle_user_input("APPROVE")
+
+        app.router.route_user_prompt_details.assert_called_once()
+        assert app.state["status"] == "active"
+        assert app.state["criteria_gate"] is None
+        app.run_agent_round.assert_called_once_with(
+            initiator="all agents give your top improvements, do three rounds",
+            agents=["claude", "codex"],
+        )
+        print("PASS: criteria approval resumes the pending routed prompt")
+
+
+def test_narrow_fix_prompt_bypasses_criteria_gate():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.router.route_user_prompt_details.return_value = RoutingDecision(
+            ["codex"],
+            "fix the typo in help text",
+            strategy="single_agent_codex",
+        )
+        app.resolve_available_agents = MagicMock(return_value=["codex"])
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("fix the typo in help text")
+
+        assert app.state["status"] == "active"
+        assert app.state.get("criteria_gate") is None
+        app.run_agent_round.assert_called_once_with(
+            initiator="fix the typo in help text",
+            agents=["codex"],
+        )
+        print("PASS: narrow fixes bypass the criteria gate")
+
+
 def test_router_confirmation_mode_strategy_routes_to_primary():
     with tempfile.TemporaryDirectory() as tmp:
         config = {
@@ -475,6 +544,9 @@ if __name__ == "__main__":
     test_round_context_includes_mode_instruction()
     test_handle_user_input_records_first_role_routed_agent_as_next()
     test_handle_user_input_records_mode_strategy_agent_as_next()
+    test_broad_multi_agent_prompt_triggers_criteria_gate()
+    test_criteria_approval_resumes_routed_prompt_without_rerouting()
+    test_narrow_fix_prompt_bypasses_criteria_gate()
     test_router_confirmation_mode_strategy_routes_to_primary()
     test_confirmation_mode_verifies_completed_output()
     test_confirmation_mode_includes_packet_checklist_for_verifier()
