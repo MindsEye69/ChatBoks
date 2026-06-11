@@ -65,12 +65,13 @@ def test_latency_summary_reads_recent_jsonl_records():
                             "agent": "claude",
                             "mode": "respond",
                             "adapter_profile": "claude_cli_v1",
-                            "duration_seconds": 12.0,
+                            "total_seconds": 12.0,
                             "spawn_seconds": 0.5,
+                            "first_output_seconds": 2.0,
                             "first_stdout_seconds": 2.4,
-                            "process_runtime_seconds": 11.4,
-                            "stdout_bytes": 1200,
-                            "stderr_bytes": 0,
+                            "runtime_seconds": 11.4,
+                            "stdout_chars": 1200,
+                            "stderr_chars": 0,
                         }
                     ),
                     "not json",
@@ -80,12 +81,13 @@ def test_latency_summary_reads_recent_jsonl_records():
                             "agent": "codex",
                             "mode": "execute",
                             "adapter_profile": "codex_exec_v1",
-                            "duration_seconds": 8.0,
+                            "total_seconds": 8.0,
                             "spawn_seconds": 0.3,
+                            "first_output_seconds": 0.6,
                             "first_stdout_seconds": 1.2,
-                            "process_runtime_seconds": 7.7,
-                            "stdout_bytes": 800,
-                            "stderr_bytes": 12,
+                            "runtime_seconds": 7.7,
+                            "stdout_chars": 800,
+                            "stderr_chars": 120000,
                             "timeout_reason": "idle",
                         }
                     ),
@@ -101,14 +103,43 @@ def test_latency_summary_reads_recent_jsonl_records():
         assert "CLI latency: 2 recent calls" in message
         assert "claude/respond profile=claude_cli_v1" in message
         assert "codex/execute profile=codex_exec_v1" in message
+        assert "first_output=0.600s" in message
         assert "first_stdout=1.200s" in message
+        assert "err=120k" in message
         assert "timeout=idle" in message
-        assert "Averages: total=10.000s spawn=0.400s first_stdout=1.800s runtime=9.550s" in message
+        assert "Averages: total=10.000s spawn=0.400s first_output=1.300s first_stdout=1.800s runtime=9.550s" in message
+        assert "Stderr-heavy runs: codex err=120k" in message
         app.run_agent_round.assert_not_called()
         print("PASS: /latency summarizes recent latency JSONL records")
+
+
+def test_latency_summary_keeps_backward_compatible_field_aliases():
+    lines = Chatboks.format_cli_latency_lines(
+        [
+            {
+                "timestamp": "2026-06-11T10:02:00",
+                "agent": "codex",
+                "adapter_profile": "legacy",
+                "duration_seconds": 3.0,
+                "spawn_seconds": 0.1,
+                "first_stdout_seconds": 1.0,
+                "process_runtime_seconds": 2.9,
+                "stdout_bytes": 123,
+                "stderr_bytes": 0,
+            }
+        ]
+    )
+
+    message = "\n".join(lines)
+    assert "total=3.000s" in message
+    assert "first_output=1.000s" in message
+    assert "runtime=2.900s" in message
+    assert "out=123c err=0c" in message
+    print("PASS: /latency keeps legacy field aliases")
 
 
 if __name__ == "__main__":
     test_latency_reports_no_records_yet()
     test_latency_summary_reads_recent_jsonl_records()
+    test_latency_summary_keeps_backward_compatible_field_aliases()
     print("\nAll latency smoke tests passed.")

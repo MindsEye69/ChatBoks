@@ -1756,13 +1756,16 @@ class Chatboks:
             timestamp = record.get("timestamp") or "timestamp?"
             timeout_reason = record.get("timeout_reason")
             timeout_suffix = f" timeout={timeout_reason}" if timeout_reason else ""
+            stdout_chars = cls.latency_count(record, "stdout_chars", "stdout_bytes")
+            stderr_chars = cls.latency_count(record, "stderr_chars", "stderr_bytes")
             lines.append(
                 f"- {timestamp} {agent}/{mode} profile={profile} "
-                f"total={cls.format_latency_seconds(record.get('duration_seconds'))} "
-                f"spawn={cls.format_latency_seconds(record.get('spawn_seconds'))} "
-                f"first_stdout={cls.format_latency_seconds(record.get('first_stdout_seconds'))} "
-                f"runtime={cls.format_latency_seconds(record.get('process_runtime_seconds'))} "
-                f"out={record.get('stdout_bytes', 0)} err={record.get('stderr_bytes', 0)}"
+                f"total={cls.format_latency_seconds(cls.latency_value(record, 'total_seconds', 'duration_seconds'))} "
+                f"spawn={cls.format_latency_seconds(cls.latency_value(record, 'spawn_seconds'))} "
+                f"first_output={cls.format_latency_seconds(cls.latency_value(record, 'first_output_seconds', 'first_stdout_seconds'))} "
+                f"first_stdout={cls.format_latency_seconds(cls.latency_value(record, 'first_stdout_seconds'))} "
+                f"runtime={cls.format_latency_seconds(cls.latency_value(record, 'runtime_seconds', 'process_runtime_seconds'))} "
+                f"out={cls.format_compact_number(stdout_chars)}c err={cls.format_compact_number(stderr_chars)}c"
                 f"{timeout_suffix}"
             )
 
@@ -1770,31 +1773,78 @@ class Chatboks:
         if averages:
             lines.append(
                 "Averages: "
-                f"total={cls.format_latency_seconds(averages.get('duration_seconds'))} "
+                f"total={cls.format_latency_seconds(averages.get('total'))} "
                 f"spawn={cls.format_latency_seconds(averages.get('spawn_seconds'))} "
+                f"first_output={cls.format_latency_seconds(averages.get('first_output'))} "
                 f"first_stdout={cls.format_latency_seconds(averages.get('first_stdout_seconds'))} "
-                f"runtime={cls.format_latency_seconds(averages.get('process_runtime_seconds'))}"
+                f"runtime={cls.format_latency_seconds(averages.get('runtime'))}"
+            )
+        noisy = cls.stderr_heavy_latency_records(records)
+        if noisy:
+            lines.append(
+                "Stderr-heavy runs: "
+                + "; ".join(
+                    (
+                        f"{record.get('agent') or 'unknown'} "
+                        f"err={cls.format_compact_number(cls.latency_count(record, 'stderr_chars', 'stderr_bytes'))}c "
+                        f"total={cls.format_latency_seconds(cls.latency_value(record, 'total_seconds', 'duration_seconds'))}"
+                    )
+                    for record in noisy[:3]
+                )
             )
         return lines
 
-    @staticmethod
-    def average_latency_fields(records: list[dict[str, Any]]) -> dict[str, float]:
+    @classmethod
+    def average_latency_fields(cls, records: list[dict[str, Any]]) -> dict[str, float]:
         averages: dict[str, float] = {}
-        fields = (
-            "duration_seconds",
-            "spawn_seconds",
-            "first_stdout_seconds",
-            "process_runtime_seconds",
-        )
-        for field in fields:
+        fields = {
+            "total": ("total_seconds", "duration_seconds"),
+            "spawn_seconds": ("spawn_seconds",),
+            "first_output": ("first_output_seconds", "first_stdout_seconds"),
+            "first_stdout_seconds": ("first_stdout_seconds",),
+            "runtime": ("runtime_seconds", "process_runtime_seconds"),
+        }
+        for label, aliases in fields.items():
             values = [
-                float(record[field])
+                float(value)
                 for record in records
-                if isinstance(record.get(field), (int, float))
+                if isinstance((value := cls.latency_value(record, *aliases)), (int, float))
             ]
             if values:
-                averages[field] = sum(values) / len(values)
+                averages[label] = sum(values) / len(values)
         return averages
+
+    @staticmethod
+    def latency_value(record: dict[str, Any], *fields: str) -> float | int | None:
+        for field in fields:
+            value = record.get(field)
+            if isinstance(value, (int, float)):
+                return value
+        return None
+
+    @classmethod
+    def latency_count(cls, record: dict[str, Any], *fields: str) -> int:
+        value = cls.latency_value(record, *fields)
+        if value is None:
+            return 0
+        return max(0, int(value))
+
+    @classmethod
+    def stderr_heavy_latency_records(
+        cls,
+        records: list[dict[str, Any]],
+        threshold_chars: int = 50_000,
+    ) -> list[dict[str, Any]]:
+        noisy = [
+            record
+            for record in records
+            if cls.latency_count(record, "stderr_chars", "stderr_bytes") >= threshold_chars
+        ]
+        return sorted(
+            noisy,
+            key=lambda record: cls.latency_count(record, "stderr_chars", "stderr_bytes"),
+            reverse=True,
+        )
 
     @staticmethod
     def format_latency_seconds(value: Any) -> str:
