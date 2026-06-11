@@ -106,6 +106,7 @@ HELP_COMMANDS = [
     ("/outcomes", "Show recent wins and failures."),
     ("/usage", "Show saved provider usage baselines and available sync targets."),
     ("/usage sync <provider>", "Open a provider usage dashboard, capture a screenshot, and save a baseline."),
+    ("/latency", "Show recent agent CLI latency splits."),
     ("@claude / @codex / @spark / @zero", "Route the next prompt exclusively to one agent."),
     ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
@@ -125,6 +126,7 @@ HELP_PIN_COMMANDS = [
     "/mode",
     "/test",
     "/usage",
+    "/latency",
     "/win",
     "/fail",
     "/outcomes",
@@ -342,6 +344,9 @@ class Chatboks:
         if command == "/usage":
             self.handle_usage_command(stripped)
             return True
+        if command == "/latency":
+            self.handle_latency_command(stripped)
+            return True
         if command in {"/suggest-outcome", "/suggest-outcomes"}:
             self.handle_outcome_suggestion_command(stripped)
             return True
@@ -381,7 +386,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -1461,6 +1466,106 @@ class Chatboks:
                 f"{summary}"
             )
         self.stream.system("\n".join(lines))
+
+    def handle_latency_command(self, text: str = "/latency") -> None:
+        try:
+            parts = shlex.split(text)
+        except ValueError as exc:
+            self.stream.system(f"Could not parse latency command: {exc}")
+            return
+
+        limit = 10
+        if len(parts) > 1:
+            try:
+                limit = max(1, min(50, int(parts[1])))
+            except ValueError:
+                self.stream.system("Usage: /latency [recent-count]")
+                return
+
+        records = self.load_cli_latency_records(limit=limit)
+        if not records:
+            self.stream.system(
+                "No CLI latency records yet.\n"
+                "Run a real agent turn, then try /latency again."
+            )
+            return
+
+        self.stream.system("\n".join(self.format_cli_latency_lines(records)))
+
+    def load_cli_latency_records(self, limit: int | None = None) -> list[dict[str, Any]]:
+        path = self.cli_latency_path()
+        if not path.exists():
+            return []
+        records: list[dict[str, Any]] = []
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
+            if not line.strip():
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(data, dict):
+                records.append(data)
+        return records[-limit:] if limit else records
+
+    def cli_latency_path(self) -> Path:
+        return self.state_file.parent / "cli_latency.jsonl"
+
+    @classmethod
+    def format_cli_latency_lines(cls, records: list[dict[str, Any]]) -> list[str]:
+        lines = [f"CLI latency: {len(records)} recent call{'s' if len(records) != 1 else ''}"]
+        for record in records:
+            agent = record.get("agent") or "unknown"
+            mode = record.get("mode") or "?"
+            profile = record.get("adapter_profile") or "profile?"
+            timestamp = record.get("timestamp") or "timestamp?"
+            timeout_reason = record.get("timeout_reason")
+            timeout_suffix = f" timeout={timeout_reason}" if timeout_reason else ""
+            lines.append(
+                f"- {timestamp} {agent}/{mode} profile={profile} "
+                f"total={cls.format_latency_seconds(record.get('duration_seconds'))} "
+                f"spawn={cls.format_latency_seconds(record.get('spawn_seconds'))} "
+                f"first_stdout={cls.format_latency_seconds(record.get('first_stdout_seconds'))} "
+                f"runtime={cls.format_latency_seconds(record.get('process_runtime_seconds'))} "
+                f"out={record.get('stdout_bytes', 0)} err={record.get('stderr_bytes', 0)}"
+                f"{timeout_suffix}"
+            )
+
+        averages = cls.average_latency_fields(records)
+        if averages:
+            lines.append(
+                "Averages: "
+                f"total={cls.format_latency_seconds(averages.get('duration_seconds'))} "
+                f"spawn={cls.format_latency_seconds(averages.get('spawn_seconds'))} "
+                f"first_stdout={cls.format_latency_seconds(averages.get('first_stdout_seconds'))} "
+                f"runtime={cls.format_latency_seconds(averages.get('process_runtime_seconds'))}"
+            )
+        return lines
+
+    @staticmethod
+    def average_latency_fields(records: list[dict[str, Any]]) -> dict[str, float]:
+        averages: dict[str, float] = {}
+        fields = (
+            "duration_seconds",
+            "spawn_seconds",
+            "first_stdout_seconds",
+            "process_runtime_seconds",
+        )
+        for field in fields:
+            values = [
+                float(record[field])
+                for record in records
+                if isinstance(record.get(field), (int, float))
+            ]
+            if values:
+                averages[field] = sum(values) / len(values)
+        return averages
+
+    @staticmethod
+    def format_latency_seconds(value: Any) -> str:
+        if not isinstance(value, (int, float)):
+            return "-"
+        return f"{value:.3f}s"
 
     def sync_usage_provider(self, provider: str) -> dict[str, Any] | None:
         provider_config = self.resolve_usage_provider(provider)

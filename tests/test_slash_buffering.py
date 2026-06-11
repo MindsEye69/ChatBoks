@@ -49,6 +49,7 @@ def test_slash_commands_bypass_buffer():
         "/graph",
         "/model-commands",
         "/usage",
+        "/latency",
         "/suggest-outcome codex",
         "/wins",
         "/unknowncommand",
@@ -104,6 +105,12 @@ def test_handle_user_input_routes_slash_commands_without_buffer():
         app.handle_usage_command = MagicMock()
         app.handle_user_input("/usage")
         app.handle_usage_command.assert_called_once_with("/usage")
+        app.run_agent_round.assert_not_called()
+
+        # /latency should stay local and not trigger a round
+        app.handle_latency_command = MagicMock()
+        app.handle_user_input("/latency")
+        app.handle_latency_command.assert_called_once_with("/latency")
         app.run_agent_round.assert_not_called()
 
         # /graph should stay local and not trigger a round
