@@ -2499,8 +2499,10 @@ class Chatboks:
 
         while token_attempt <= retries:
             self.check_token_limit(agent_name)
-            context_pkg = self.context.build(self.state, self.chatboks_md)
+            activity_started_at = time.monotonic()
+            self.stream.agent_activity_start(agent_name, mode)
             try:
+                context_pkg = self.context.build(self.state, self.chatboks_md)
                 if mode == "execute":
                     return agent.execute(context_pkg)
                 return agent.call(context_pkg)
@@ -2529,6 +2531,12 @@ class Chatboks:
                     retries,
                 ):
                     return self.token_recovery_blocked(agent_name, str(exc), token_attempt)
+            finally:
+                self.stream.agent_activity_finish(
+                    agent_name,
+                    mode,
+                    time.monotonic() - activity_started_at,
+                )
 
         return self.token_recovery_blocked(agent_name, "Retry budget exhausted.", retries)
 

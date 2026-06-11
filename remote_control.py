@@ -251,6 +251,12 @@ class RemoteStream(Stream):
     ) -> None:
         self.events.append("usage", "system", self.build_token_usage_line(token_counts, session_budget))
 
+    def agent_activity_start(self, agent_name: str, mode: str) -> None:
+        self.events.append("activity", agent_name.lower(), f"started {mode}")
+
+    def agent_activity_finish(self, agent_name: str, mode: str, elapsed_seconds: float) -> None:
+        self.events.append("activity", agent_name.lower(), f"finished {mode} in {elapsed_seconds:.1f}s")
+
     def prompt(self, label: str = "You > ") -> str:
         raise RuntimeError(f"Remote stream is non-interactive: {label}")
 

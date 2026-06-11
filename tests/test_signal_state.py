@@ -212,6 +212,29 @@ def test_agent_zero_strips_prefixed_signal_lines_from_body():
     assert normalized == "What target?\n>>> QUESTION"
 
 
+def test_agent_call_shows_activity_until_response_returns():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_warning": 100_000}},
+            "context": {"max_token_recovery_retries": 0, "max_timeout_recovery_retries": 0},
+        }
+        app.state["context"]["token_counts"]["codex"] = 0
+        app.context.build.return_value = "context"
+
+        agent = MagicMock()
+        agent.call.return_value = "Done.\n>>> TASK_COMPLETE"
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("codex", mode="respond")
+
+        assert response == "Done.\n>>> TASK_COMPLETE"
+        app.stream.agent_activity_start.assert_called_once_with("codex", "respond")
+        finish_call = app.stream.agent_activity_finish.call_args
+        assert finish_call.args[:2] == ("codex", "respond")
+        assert finish_call.args[2] >= 0
+
+
 def test_agent_timeout_recovery_checkpoints_partial_output_and_retries():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -233,6 +256,8 @@ def test_agent_timeout_recovery_checkpoints_partial_output_and_retries():
 
         assert response == "Recovered.\n>>> TASK_COMPLETE"
         assert agent.call.call_count == 2
+        assert app.stream.agent_activity_start.call_count == 2
+        assert app.stream.agent_activity_finish.call_count == 2
         transcript = app.chatboks_md.read_text(encoding="utf-8")
         assert ">>> TIMEOUT_CHECKPOINT" in transcript
         assert "draft patch notes" in transcript
@@ -366,6 +391,7 @@ if __name__ == "__main__":
     test_dismiss_command_clears_active_proposal_without_agent_round()
     test_load_state_accepts_utf8_bom()
     test_agent_zero_strips_prefixed_signal_lines_from_body()
+    test_agent_call_shows_activity_until_response_returns()
     test_agent_timeout_recovery_checkpoints_partial_output_and_retries()
     test_recover_token_exhaustion_writes_bounded_summary_checkpoint()
     test_agent_timeout_recovery_blocks_after_retry_budget()

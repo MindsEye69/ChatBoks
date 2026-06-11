@@ -33,6 +33,7 @@ class Stream:
         for name, config in agent_config.items():
             if "color" in config:
                 self.colors[name] = config["color"]
+        self._agent_activity_status: Any | None = None
 
     def banner(self, project: str) -> None:
         self.console.print(Rule(f"[bold]CHATBOKS - {project.upper()}[/bold]"))
@@ -46,6 +47,28 @@ class Stream:
         session_budget: dict[str, int] | None = None,
     ) -> None:
         self.console.print(f"[dim]{self.build_token_usage_line(token_counts, session_budget)}[/dim]")
+
+    def agent_activity_start(self, agent_name: str, mode: str) -> None:
+        color = self.colors.get(agent_name.lower(), "white")
+        label = f"[{color}]{agent_name.upper()}[/{color}]"
+        message = f"{label} [dim]working in {mode} mode...[/dim]"
+        if self.console.is_terminal:
+            self.agent_activity_finish(agent_name, mode, 0.0)
+            self._agent_activity_status = self.console.status(message, spinner="dots")
+            self._agent_activity_status.start()
+            return
+        self.console.print(message)
+
+    def agent_activity_finish(self, agent_name: str, mode: str, elapsed_seconds: float) -> None:
+        status = self._agent_activity_status
+        if status is not None:
+            status.stop()
+            self._agent_activity_status = None
+        if elapsed_seconds <= 0:
+            return
+        color = self.colors.get(agent_name.lower(), "white")
+        label = f"[{color}]{agent_name.upper()}[/{color}]"
+        self.console.print(f"{label} [dim]finished {mode} in {elapsed_seconds:.1f}s[/dim]")
 
     def intro(self, project: str) -> None:
         if not self.console.is_terminal:
