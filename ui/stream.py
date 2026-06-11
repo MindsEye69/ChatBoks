@@ -34,6 +34,8 @@ class Stream:
             if "color" in config:
                 self.colors[name] = config["color"]
         self._agent_activity_status: Any | None = None
+        self._agent_output_active: str | None = None
+        self._agent_output_needs_newline = False
 
     def banner(self, project: str) -> None:
         self.console.print(Rule(f"[bold]CHATBOKS - {project.upper()}[/bold]"))
@@ -69,6 +71,32 @@ class Stream:
         color = self.colors.get(agent_name.lower(), "white")
         label = f"[{color}]{agent_name.upper()}[/{color}]"
         self.console.print(f"{label} [dim]finished {mode} in {elapsed_seconds:.1f}s[/dim]")
+
+    def agent_output_start(self, agent_name: str, mode: str) -> None:
+        if self._agent_output_active == agent_name:
+            return
+        self.agent_activity_finish(agent_name, mode, 0.0)
+        color = self.colors.get(agent_name.lower(), "white")
+        label = f"[{color}][{agent_name.upper()}][/{color}]"
+        self.console.print(f"{label} [dim]streaming {mode} output[/dim]")
+        self._agent_output_active = agent_name
+        self._agent_output_needs_newline = False
+
+    def agent_output_delta(self, agent_name: str, text: str) -> None:
+        if not text:
+            return
+        if self._agent_output_active != agent_name:
+            self.agent_output_start(agent_name, "respond")
+        self.console.print(text, end="", markup=False, highlight=False, soft_wrap=True)
+        self._agent_output_needs_newline = not text.endswith(("\n", "\r"))
+
+    def agent_output_finish(self, agent_name: str) -> None:
+        if self._agent_output_active != agent_name:
+            return
+        if self._agent_output_needs_newline:
+            self.console.print()
+        self._agent_output_active = None
+        self._agent_output_needs_newline = False
 
     def intro(self, project: str) -> None:
         if not self.console.is_terminal:

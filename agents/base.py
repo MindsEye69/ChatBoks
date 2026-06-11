@@ -65,6 +65,7 @@ class BaseAgent:
         self.cli = config["cli"]
         self.last_adapter_profile_used = str(config.get("adapter_profile") or self.default_adapter_profile)
         self.last_adapter_fallback_used = False
+        self.stdout_callback: Callable[[str], None] | None = None
 
     def initialize(self, codegraph: str) -> str:
         return f"Codegraph loaded. Ready.\n\n{self.short_codegraph_status(codegraph)}"
@@ -272,6 +273,8 @@ class BaseAgent:
                     remember_output(stream_name, received_at)
                     if stream_name == "stdout":
                         stdout_parts.append(chunk)
+                        if self.stdout_callback is not None:
+                            self.stdout_callback(chunk)
                     else:
                         stderr_parts.append(chunk)
             except queue.Empty:
@@ -298,7 +301,15 @@ class BaseAgent:
                 if part.strip()
             )
             self.terminate_process(process)
-            self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.5, remember_output)
+            self.drain_output(
+                output_queue,
+                stdout_parts,
+                stderr_parts,
+                process,
+                0.5,
+                remember_output,
+                self.stdout_callback,
+            )
             ended_at = time.monotonic()
             combined_output = "\n".join(
                 part.strip()
@@ -336,7 +347,15 @@ class BaseAgent:
         returncode = process.wait()
         for reader in readers:
             reader.join(timeout=0.2)
-        self.drain_output(output_queue, stdout_parts, stderr_parts, process, 0.2, remember_output)
+        self.drain_output(
+            output_queue,
+            stdout_parts,
+            stderr_parts,
+            process,
+            0.2,
+            remember_output,
+            self.stdout_callback,
+        )
         ended_at = time.monotonic()
 
         stdout = "".join(stdout_parts)
@@ -380,6 +399,7 @@ class BaseAgent:
         process: subprocess.Popen[str],
         timeout: float,
         on_chunk: Callable[[str, float], None] | None = None,
+        stdout_callback: Callable[[str], None] | None = None,
     ) -> None:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
@@ -392,6 +412,8 @@ class BaseAgent:
                         on_chunk(stream_name, received_at)
                     if stream_name == "stdout":
                         stdout_parts.append(chunk)
+                        if stdout_callback is not None:
+                            stdout_callback(chunk)
                     else:
                         stderr_parts.append(chunk)
             except queue.Empty:

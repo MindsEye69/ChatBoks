@@ -257,6 +257,16 @@ class RemoteStream(Stream):
     def agent_activity_finish(self, agent_name: str, mode: str, elapsed_seconds: float) -> None:
         self.events.append("activity", agent_name.lower(), f"finished {mode} in {elapsed_seconds:.1f}s")
 
+    def agent_output_start(self, agent_name: str, mode: str) -> None:
+        self.events.append("message_stream_start", agent_name.lower(), mode)
+
+    def agent_output_delta(self, agent_name: str, text: str) -> None:
+        if text:
+            self.events.append("message_delta", agent_name.lower(), text)
+
+    def agent_output_finish(self, agent_name: str) -> None:
+        self.events.append("message_stream_finish", agent_name.lower(), "")
+
     def prompt(self, label: str = "You > ") -> str:
         raise RuntimeError(f"Remote stream is non-interactive: {label}")
 

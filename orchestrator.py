@@ -206,6 +206,7 @@ class Chatboks:
         self.state = self.normalize_state(self.load_state())
         self._internal_write = False
         self.input_buffer: list[str] = []
+        self._streamed_agent_responses: dict[str, str] = {}
 
     def start(self, watch: bool = False, once: bool = False) -> None:
         self.ensure_project_files()
@@ -2501,11 +2502,28 @@ class Chatboks:
             self.check_token_limit(agent_name)
             activity_started_at = time.monotonic()
             self.stream.agent_activity_start(agent_name, mode)
+            streamed_output_parts: list[str] = []
+            previous_stdout_callback = getattr(agent, "stdout_callback", None)
+
+            def stream_stdout_chunk(chunk: str) -> None:
+                if not streamed_output_parts:
+                    self.stream.agent_output_start(agent_name, mode)
+                streamed_output_parts.append(chunk)
+                self.stream.agent_output_delta(agent_name, chunk)
+
+            if hasattr(agent, "stdout_callback"):
+                agent.stdout_callback = stream_stdout_chunk
             try:
                 context_pkg = self.context.build(self.state, self.chatboks_md)
                 if mode == "execute":
-                    return agent.execute(context_pkg)
-                return agent.call(context_pkg)
+                    response = agent.execute(context_pkg)
+                else:
+                    response = agent.call(context_pkg)
+                if streamed_output_parts and response.strip() == "".join(streamed_output_parts).strip():
+                    if not hasattr(self, "_streamed_agent_responses"):
+                        self._streamed_agent_responses = {}
+                    self._streamed_agent_responses[agent_name.lower()] = response.strip()
+                return response
             except AgentTimeoutError as exc:
                 timeout_attempts += 1
                 current_diff = self.capture_git_diff()
@@ -2532,6 +2550,9 @@ class Chatboks:
                 ):
                     return self.token_recovery_blocked(agent_name, str(exc), token_attempt)
             finally:
+                if hasattr(agent, "stdout_callback"):
+                    agent.stdout_callback = previous_stdout_callback
+                self.stream.agent_output_finish(agent_name)
                 self.stream.agent_activity_finish(
                     agent_name,
                     mode,
@@ -2890,7 +2911,9 @@ class Chatboks:
         finally:
             self._internal_write = False
         if sender.lower() != "you":
-            self.stream.message(sender, text, timestamp)
+            streamed_response = getattr(self, "_streamed_agent_responses", {}).pop(sender.lower(), None)
+            if streamed_response != text.strip():
+                self.stream.message(sender, text, timestamp)
 
     def capture_thought_packets(self, sender: str, text: str) -> None:
         if sender.lower() in {"you", "system"}:

@@ -235,6 +235,37 @@ def test_agent_call_shows_activity_until_response_returns():
         assert finish_call.args[2] >= 0
 
 
+def test_streamed_agent_response_is_persisted_without_duplicate_render():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_warning": 100_000}},
+            "context": {"max_token_recovery_retries": 0, "max_timeout_recovery_retries": 0},
+        }
+        app.state["context"]["token_counts"]["codex"] = 0
+        app.context.build.return_value = "context"
+
+        agent = MagicMock()
+
+        def fake_call(_context: str) -> str:
+            agent.stdout_callback("Live ")
+            agent.stdout_callback("answer\n>>> TASK_COMPLETE\n")
+            return "Live answer\n>>> TASK_COMPLETE"
+
+        agent.stdout_callback = None
+        agent.call.side_effect = fake_call
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("codex", mode="respond")
+        app.append_message("codex", response)
+
+        assert "Live answer" in app.chatboks_md.read_text(encoding="utf-8")
+        app.stream.agent_output_start.assert_called_once_with("codex", "respond")
+        assert app.stream.agent_output_delta.call_count == 2
+        app.stream.agent_output_finish.assert_called_once_with("codex")
+        app.stream.message.assert_not_called()
+
+
 def test_agent_timeout_recovery_checkpoints_partial_output_and_retries():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -392,6 +423,7 @@ if __name__ == "__main__":
     test_load_state_accepts_utf8_bom()
     test_agent_zero_strips_prefixed_signal_lines_from_body()
     test_agent_call_shows_activity_until_response_returns()
+    test_streamed_agent_response_is_persisted_without_duplicate_render()
     test_agent_timeout_recovery_checkpoints_partial_output_and_retries()
     test_recover_token_exhaustion_writes_bounded_summary_checkpoint()
     test_agent_timeout_recovery_blocks_after_retry_budget()

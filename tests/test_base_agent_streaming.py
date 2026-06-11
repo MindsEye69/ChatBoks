@@ -132,6 +132,28 @@ def test_streaming_run_cli_records_latency_splits() -> None:
         assert record["total_seconds"] >= record["runtime_seconds"]
 
 
+def test_streaming_run_cli_invokes_stdout_callback() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        script_path = root / "child.py"
+        script_path.write_text(
+            "import sys, time\n"
+            "sys.stdin.read()\n"
+            "print('first', flush=True)\n"
+            "time.sleep(0.02)\n"
+            "print('second', flush=True)\n",
+            encoding="utf-8",
+        )
+        agent = ScriptAgent(script_path, root)
+        chunks: list[str] = []
+        agent.stdout_callback = chunks.append
+
+        result = agent.run_cli("hello", timeout=5)
+
+        assert result == "first\nsecond"
+        assert "".join(chunks) == "first\nsecond\n"
+
+
 def test_streaming_run_cli_idle_timeout_resets_on_output() -> None:
     script = (
         "import sys, time\n"
@@ -247,6 +269,7 @@ if __name__ == "__main__":
         test_streaming_run_cli_returns_successful_stdout,
         test_streaming_run_cli_forces_utf8_child_environment,
         test_streaming_run_cli_records_latency_splits,
+        test_streaming_run_cli_invokes_stdout_callback,
         test_streaming_run_cli_idle_timeout_resets_on_output,
         test_streaming_run_cli_enforces_absolute_max_timeout,
         test_dynamic_idle_timeout_scales_with_prompt_size,
