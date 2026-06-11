@@ -125,11 +125,12 @@ class RemoteEventBuffer:
         self._lock = threading.Lock()
 
     def append(self, kind: str, sender: str, text: str) -> None:
+        event_text = text if kind == "message_delta" else text.strip()
         payload = {
             "id": self._next_id,
             "kind": kind,
             "sender": sender,
-            "text": text.strip(),
+            "text": event_text,
             "timestamp": time.strftime("%H:%M:%S"),
         }
         with self._lock:

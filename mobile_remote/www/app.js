@@ -4,6 +4,7 @@ const state = {
   eventCursor: 0,
   pollTimer: null,
   eventItems: [],
+  systemItems: [],
   commandEvents: [],
   commandActive: false,
   currentProject: "",
@@ -34,8 +35,13 @@ const els = {
   prompt: document.getElementById("promptInput"),
   transcript: document.getElementById("transcriptList"),
   transcriptPanel: document.getElementById("transcriptPanel"),
+  systemFeed: document.getElementById("systemList"),
+  systemPanel: document.getElementById("systemPanel"),
+  systemCollapse: document.getElementById("systemCollapseButton"),
+  systemToast: document.getElementById("systemToast"),
   events: document.getElementById("eventsList"),
   sendStatus: document.getElementById("sendStatus"),
+  systemFeedButton: document.getElementById("systemFeedButton"),
   fullTranscript: document.getElementById("fullTranscriptButton"),
   copyLatest: document.getElementById("copyLatestButton"),
   refresh: document.getElementById("refreshButton"),
@@ -83,6 +89,11 @@ function setSessionCollapsed(collapsed) {
 function setTokenCollapsed(collapsed) {
   els.tokenPanel.classList.toggle("hidden", collapsed);
   els.tokenToggle.classList.toggle("active", !collapsed);
+}
+
+function setSystemPanelCollapsed(collapsed) {
+  els.systemPanel.classList.toggle("hidden", collapsed);
+  els.systemFeedButton.classList.toggle("active", !collapsed);
 }
 
 function setSendState(isSending, message = "") {
@@ -222,9 +233,21 @@ function isTokenUsageMessage(item) {
   return (item.sender || "").toLowerCase() === "system" && (item.text || "").trim().startsWith("session tokens:");
 }
 
+function isSystemMessage(item) {
+  return (item.sender || "").toLowerCase() === "system";
+}
+
+function isSystemFeedMessage(item) {
+  const kind = item.kind || "";
+  return isSystemMessage(item) && !isTokenUsageMessage(item) && !kind.startsWith("message_");
+}
+
 function visibleEvents(items) {
   return items.filter((item) => {
     if (isTokenUsageMessage(item)) {
+      return false;
+    }
+    if (isSystemMessage(item)) {
       return false;
     }
     if ((item.kind || "") === "message_stream" && !(item.text || "")) {
@@ -304,20 +327,54 @@ function ingestEvents(events, target, activeStreams, limit) {
   }
 }
 
+function ingestSystemEvents(events) {
+  for (const event of events) {
+    if (isSystemFeedMessage(event)) {
+      state.systemItems.push(event);
+    }
+  }
+  if (state.systemItems.length > 80) {
+    state.systemItems.splice(0, state.systemItems.length - 80);
+  }
+}
+
 function latestResponseGroup(items) {
   const lastUserIndex = items.reduce((latest, item, index) => {
     return (item.sender || "").toLowerCase() === "you" ? index : latest;
   }, -1);
   const candidates = lastUserIndex >= 0 ? items.slice(lastUserIndex + 1) : items;
-  const group = candidates.filter((item) => item.sender && !isTokenUsageMessage(item));
+  const group = candidates.filter((item) => item.sender && !isTokenUsageMessage(item) && !isSystemMessage(item));
   if (group.length) {
     return group;
   }
   return [...items]
     .reverse()
-    .filter((item) => item.sender && (item.sender || "").toLowerCase() !== "you" && !isTokenUsageMessage(item))
+    .filter(
+      (item) =>
+        item.sender &&
+        (item.sender || "").toLowerCase() !== "you" &&
+        !isTokenUsageMessage(item) &&
+        !isSystemMessage(item),
+    )
     .slice(0, 1)
     .reverse();
+}
+
+function renderSystemToast() {
+  const latest = state.systemItems[state.systemItems.length - 1];
+  els.systemToast.innerHTML = "";
+  els.systemToast.classList.toggle("hidden", !latest);
+  if (!latest) {
+    return;
+  }
+  const meta = document.createElement("div");
+  meta.className = "system-toast-meta";
+  meta.textContent = latest.timestamp ? `System ${latest.timestamp}` : "System";
+  const text = document.createElement("div");
+  text.className = "system-toast-text";
+  text.textContent = latest.text || "";
+  els.systemToast.appendChild(meta);
+  els.systemToast.appendChild(text);
 }
 
 function renderLatestResponse(items) {
@@ -450,11 +507,14 @@ function applySession(data, { scrollLatest = false } = {}) {
   if (events.length) {
     state.eventCursor = events[events.length - 1].id;
     ingestEvents(events, state.eventItems, state.eventStreams, 80);
+    ingestSystemEvents(events);
     if (state.commandActive || data.command_running) {
       ingestEvents(events, state.commandEvents, state.commandStreams, 40);
     }
   }
   renderList(els.events, visibleEvents(state.eventItems));
+  renderList(els.systemFeed, state.systemItems);
+  renderSystemToast();
   renderLatestResponse(transcript);
   if (scrollLatest) {
     window.requestAnimationFrame(scrollLatestResponseIntoView);
@@ -495,6 +555,7 @@ async function switchProject(project) {
     state.commandActive = false;
     state.eventItems = [];
     state.eventStreams = {};
+    state.systemItems = [];
     const data = await apiFetch("/api/project", {
       method: "POST",
       body: JSON.stringify({ project }),
@@ -579,6 +640,7 @@ els.connect.addEventListener("click", async () => {
     state.eventCursor = 0;
     state.eventItems = [];
     state.eventStreams = {};
+    state.systemItems = [];
     state.commandEvents = [];
     state.commandStreams = {};
     state.commandActive = false;
@@ -604,6 +666,12 @@ els.sessionCollapse.addEventListener("click", () => {
 });
 els.tokenToggle.addEventListener("click", () => {
   setTokenCollapsed(!els.tokenPanel.classList.contains("hidden"));
+});
+els.systemFeedButton.addEventListener("click", () => {
+  setSystemPanelCollapsed(!els.systemPanel.classList.contains("hidden"));
+});
+els.systemCollapse.addEventListener("click", () => {
+  setSystemPanelCollapsed(true);
 });
 els.copyLatest.addEventListener("click", copyLatestResponse);
 els.fullTranscript.addEventListener("click", () => {

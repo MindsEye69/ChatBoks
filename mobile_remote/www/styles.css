@@ -250,6 +250,7 @@ button.compact {
 
 .response-panel,
 .transcript-panel,
+.system-panel,
 .events-panel,
 .flow-panel,
 .rail-panel {
@@ -446,6 +447,37 @@ button.compact {
   font-size: 12px;
 }
 
+.system-toast {
+  display: grid;
+  gap: 4px;
+  max-height: 74px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: 8px;
+  background: #101216;
+  padding: 8px 10px;
+}
+
+.system-toast.hidden {
+  display: none;
+}
+
+.system-toast-meta {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.system-toast-text {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .composer textarea {
   min-height: 58px;
   max-height: 120px;
@@ -497,6 +529,7 @@ button.compact {
     grid-template-areas:
       "left flow right"
       "left main right"
+      "left system right"
       "left transcript right";
     align-items: start;
     gap: 14px;
@@ -534,6 +567,10 @@ button.compact {
 
   .transcript-panel {
     grid-area: transcript;
+  }
+
+  .system-panel {
+    grid-area: system;
   }
 
   .events-panel {

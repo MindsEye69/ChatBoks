@@ -88,6 +88,14 @@
       <div id="transcriptList" class="stack"></div>
     </section>
 
+    <section id="systemPanel" class="panel system-panel hidden">
+      <div class="section-head">
+        <h2>System</h2>
+        <button id="systemCollapseButton" class="ghost compact" type="button">Hide</button>
+      </div>
+      <div id="systemList" class="stack"></div>
+    </section>
+
     <section class="panel events-panel">
       <h2>Bridge events</h2>
       <div id="eventsList" class="stack"></div>
@@ -95,10 +103,12 @@
   </main>
 
   <section class="composer" aria-label="Send prompt">
+    <div id="systemToast" class="system-toast hidden" aria-live="polite"></div>
     <label class="composer-field">
       <span class="composer-label-row">
         <span>Prompt</span>
         <span class="composer-label-actions">
+          <button id="systemFeedButton" class="ghost compact inline-copy" type="button">System</button>
           <button id="fullTranscriptButton" class="ghost compact inline-copy" type="button">Full transcript</button>
           <button id="copyLatestButton" class="ghost compact inline-copy" type="button">Copy response</button>
         </span>

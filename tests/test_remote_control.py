@@ -111,6 +111,21 @@ def test_parse_chatboks_messages_reads_multiline_turns(tmp_path: Path):
     print("PASS: remote transcript parsing keeps multiline turns intact")
 
 
+def test_remote_event_buffer_preserves_stream_delta_whitespace():
+    buffer = RemoteEventBuffer()
+
+    buffer.append("message_delta", "claude", "Short")
+    buffer.append("message_delta", "claude", " ")
+    buffer.append("message_delta", "claude", "answer")
+    buffer.append("system", "system", "  done  ")
+
+    events = buffer.since(0)
+
+    assert [event["text"] for event in events[:3]] == ["Short", " ", "answer"]
+    assert events[3]["text"] == "done"
+    print("PASS: streamed deltas preserve whitespace while normal events stay trimmed")
+
+
 def test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses():
     assert is_tailnet_ipv4_host("100.64.0.1") is True
     assert is_tailnet_ipv4_host("100.127.255.254") is True
