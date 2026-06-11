@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from context.builder import ContextBuilder
 from context.summarizer import Summarizer
 from context.transcript import is_transcript_turn
+from agents.base import BaseAgent
 from orchestrator import Chatboks
 
 
@@ -39,6 +40,13 @@ def _state(mode: str) -> dict:
         "next_agent": "claude",
         "context": {"token_counts": {}},
     }
+
+
+class PromptAgent(BaseAgent):
+    name = "prompt"
+
+    def __init__(self, root: Path) -> None:
+        super().__init__(root, {"cli": "prompt-cli"}, "Stable role text.")
 
 
 def test_lean_context_omits_broad_codegraph_dumps():
@@ -182,6 +190,34 @@ def test_context_includes_sleep_memory_artifact():
         assert "[SLEEP MEMORY - READ-ONLY CONSOLIDATED CONTEXT]" in payload
         assert "- [YOU] preserved sleep decision" in payload
         assert "[YOU] fresh ask" in payload
+
+
+def test_lean_context_keeps_stable_prefix_before_transcript_tail():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        _make_codegraph(root)
+        chat = root / "chatboks.md"
+        chat.write_text("[YOU] first volatile request\n", encoding="utf-8")
+        builder = ContextBuilder(root, {})
+        state = _state("lean")
+
+        first_payload = builder.build(state, chat)
+        chat.write_text("[YOU] second volatile request\n", encoding="utf-8")
+        second_payload = builder.build(state, chat)
+
+        marker = "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]"
+        assert first_payload.split(marker, 1)[0] == second_payload.split(marker, 1)[0]
+        assert first_payload.index("[OUTCOMES]") < first_payload.index(marker)
+
+
+def test_agent_prompt_places_turn_instruction_before_volatile_context():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        agent = PromptAgent(Path(tmp))
+
+        prompt = agent.build_prompt("[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n[YOU] volatile", mode="respond")
+
+        assert prompt.startswith("Stable role text.\n\n[AGENT TURN INSTRUCTION]\n")
+        assert prompt.index("[AGENT TURN INSTRUCTION]") < prompt.index("[CHATBOKS RECENT")
 
 
 def test_summarizer_rolls_forward_checkpoint_without_repeating_markers():
@@ -370,6 +406,8 @@ if __name__ == "__main__":
     test_normal_context_preserves_checkpoint_summary_and_recent_tail()
     test_lean_context_keeps_checkpoint_summary_with_recent_turns()
     test_context_includes_sleep_memory_artifact()
+    test_lean_context_keeps_stable_prefix_before_transcript_tail()
+    test_agent_prompt_places_turn_instruction_before_volatile_context()
     test_summarizer_rolls_forward_checkpoint_without_repeating_markers()
     test_summarizer_filters_role_call_and_groups_durable_items()
     test_context_command_updates_state_without_agent_round()

@@ -27,8 +27,8 @@ class ContextBuilder:
                 [
                     self.load_codegraph_status(),
                     self.load_sleep_memory(),
-                    self.load_recent_chatboks(chatboks_md, turns=3),
                     self.load_outcome_summary(),
+                    self.load_recent_chatboks(chatboks_md, turns=3),
                     self.load_round_context(state),
                     self.load_active_task(state),
                     self.load_handoff(state),

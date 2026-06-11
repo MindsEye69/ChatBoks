@@ -51,7 +51,7 @@ class AgentZeroAgent(BaseAgent):
             "instead of pretending to do it. End with exactly one ChatBoks signal: "
             ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
         )
-        return f"{self.role}\n\n{context}\n\n{instruction}\n"
+        return f"{self.role}\n\n[AGENT TURN INSTRUCTION]\n{instruction}\n\n{context}\n"
 
     def command(self) -> list[str]:
         return [str(self.config.get("cli", "ollama"))]

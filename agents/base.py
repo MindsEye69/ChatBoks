@@ -107,7 +107,7 @@ class BaseAgent:
                 "to add, end with >>> SKIP. If complete, end with >>> TASK_COMPLETE. "
                 "If blocked, end with >>> BLOCKED."
             )
-        return f"{self.role}\n\n{context}\n\n{instruction}\n"
+        return f"{self.role}\n\n[AGENT TURN INSTRUCTION]\n{instruction}\n\n{context}\n"
 
     def command(self, adapter_override: dict[str, Any] | None = None) -> list[str]:
         return [self.cli, *self.adapter_args(adapter_override)]
