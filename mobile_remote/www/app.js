@@ -120,6 +120,7 @@ function stopPolling() {
 function updateKeyboardOffset() {
   if (!window.visualViewport) {
     document.documentElement.style.setProperty("--keyboard-offset", "0px");
+    updateComposerReservedHeight();
     return;
   }
   const hiddenByKeyboard = Math.max(
@@ -127,6 +128,16 @@ function updateKeyboardOffset() {
     window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop,
   );
   document.documentElement.style.setProperty("--keyboard-offset", `${Math.round(hiddenByKeyboard)}px`);
+  updateComposerReservedHeight();
+}
+
+function updateComposerReservedHeight() {
+  const composer = document.querySelector(".composer");
+  if (!composer) {
+    return;
+  }
+  const height = Math.ceil(composer.getBoundingClientRect().height);
+  document.documentElement.style.setProperty("--composer-reserved-height", `${height}px`);
 }
 
 function describeNetworkError(error) {
@@ -365,6 +376,7 @@ function renderSystemToast() {
   els.systemToast.innerHTML = "";
   els.systemToast.classList.toggle("hidden", !latest);
   if (!latest) {
+    updateComposerReservedHeight();
     return;
   }
   const meta = document.createElement("div");
@@ -375,6 +387,7 @@ function renderSystemToast() {
   text.textContent = latest.text || "";
   els.systemToast.appendChild(meta);
   els.systemToast.appendChild(text);
+  updateComposerReservedHeight();
 }
 
 function renderLatestResponse(items) {
@@ -695,6 +708,13 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
 }
 window.addEventListener("resize", updateKeyboardOffset);
+if ("ResizeObserver" in window) {
+  const composerObserver = new ResizeObserver(updateComposerReservedHeight);
+  const composer = document.querySelector(".composer");
+  if (composer) {
+    composerObserver.observe(composer);
+  }
+}
 updateKeyboardOffset();
 
 loadSettings();

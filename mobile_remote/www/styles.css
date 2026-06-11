@@ -14,6 +14,7 @@
   --danger: #fca5a5;
   --danger-bg: rgba(127, 29, 29, 0.4);
   --keyboard-offset: 0px;
+  --composer-reserved-height: 168px;
 }
 
 * {
@@ -23,7 +24,7 @@
 body {
   margin: 0;
   overflow-x: hidden;
-  padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--composer-reserved-height) + var(--keyboard-offset) + 16px);
   background: var(--bg);
   color: var(--text);
   font-family: Inter, system-ui, sans-serif;
@@ -508,10 +509,6 @@ button.compact {
 }
 
 @media (min-width: 900px) {
-  body {
-    padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px));
-  }
-
   .topbar {
     grid-template-columns: minmax(180px, auto) minmax(0, 1fr);
     padding: 12px 20px;
