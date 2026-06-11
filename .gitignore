@@ -105,3 +105,6 @@ tempCodeRunnerFile.py
 
 # Local Serena MCP workspace
 .serena/
+
+# Local Claude agent workspace
+.claude/
