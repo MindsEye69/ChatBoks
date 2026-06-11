@@ -7,6 +7,8 @@ const state = {
   commandEvents: [],
   commandActive: false,
   currentProject: "",
+  eventStreams: {},
+  commandStreams: {},
 };
 
 const els = {
@@ -216,7 +218,15 @@ function isTokenUsageMessage(item) {
 }
 
 function visibleEvents(items) {
-  return items.filter((item) => !isTokenUsageMessage(item));
+  return items.filter((item) => {
+    if (isTokenUsageMessage(item)) {
+      return false;
+    }
+    if ((item.kind || "") === "message_stream" && !(item.text || "")) {
+      return false;
+    }
+    return !["message_stream_start", "message_delta", "message_stream_finish"].includes(item.kind || "");
+  });
 }
 
 function isCommandProgressEvent(item) {
@@ -227,6 +237,66 @@ function isCommandProgressEvent(item) {
 
 function visibleCommandEvents(items) {
   return visibleEvents(items).filter((item) => !isCommandProgressEvent(item));
+}
+
+function streamKey(item) {
+  return (item.sender || "unknown").toLowerCase();
+}
+
+function appendStreamText(target, event, activeStreams) {
+  const key = streamKey(event);
+  let active = activeStreams[key];
+  if (!active) {
+    active = {
+      id: event.id,
+      kind: "message_stream",
+      sender: event.sender || "unknown",
+      text: "",
+      streaming: true,
+    };
+    target.push(active);
+    activeStreams[key] = active;
+  }
+  active.id = event.id;
+  active.text += event.text || "";
+}
+
+function applyEventToList(target, event, activeStreams) {
+  const kind = event.kind || "";
+  const key = streamKey(event);
+  if (kind === "message_stream_start") {
+    activeStreams[key] = {
+      id: event.id,
+      kind: "message_stream",
+      sender: event.sender || "unknown",
+      text: "",
+      streaming: true,
+    };
+    target.push(activeStreams[key]);
+    return;
+  }
+  if (kind === "message_delta") {
+    appendStreamText(target, event, activeStreams);
+    return;
+  }
+  if (kind === "message_stream_finish") {
+    if (activeStreams[key]) {
+      activeStreams[key].id = event.id;
+      activeStreams[key].streaming = false;
+      delete activeStreams[key];
+    }
+    return;
+  }
+  target.push(event);
+}
+
+function ingestEvents(events, target, activeStreams, limit) {
+  for (const event of events) {
+    applyEventToList(target, event, activeStreams);
+  }
+  if (target.length > limit) {
+    target.splice(0, target.length - limit);
+  }
 }
 
 function latestResponseGroup(items) {
@@ -363,11 +433,9 @@ function applySession(data, { scrollLatest = false } = {}) {
   const events = (data.events || []).filter((item) => Number(item.id || 0) > state.eventCursor);
   if (events.length) {
     state.eventCursor = events[events.length - 1].id;
-    state.eventItems.push(...events);
-    state.eventItems = state.eventItems.slice(-80);
+    ingestEvents(events, state.eventItems, state.eventStreams, 80);
     if (state.commandActive || data.command_running) {
-      state.commandEvents.push(...events);
-      state.commandEvents = state.commandEvents.slice(-40);
+      ingestEvents(events, state.commandEvents, state.commandStreams, 40);
     }
   }
   renderList(els.events, visibleEvents(state.eventItems));
@@ -407,8 +475,10 @@ async function switchProject(project) {
   try {
     state.eventCursor = 0;
     state.commandEvents = [];
+    state.commandStreams = {};
     state.commandActive = false;
     state.eventItems = [];
+    state.eventStreams = {};
     const data = await apiFetch("/api/project", {
       method: "POST",
       body: JSON.stringify({ project }),
@@ -443,6 +513,7 @@ async function sendPrompt(text) {
   }
   setSendState(true, "Sending to ChatBoks...");
   state.commandEvents = [];
+  state.commandStreams = {};
   state.commandActive = true;
   try {
     const data = await apiFetch("/api/command", {
@@ -491,7 +562,9 @@ els.connect.addEventListener("click", async () => {
     }
     state.eventCursor = 0;
     state.eventItems = [];
+    state.eventStreams = {};
     state.commandEvents = [];
+    state.commandStreams = {};
     state.commandActive = false;
     await refreshSession();
     setConnectionCollapsed(true);
