@@ -27,6 +27,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from context.packets import packet_records_from_jsonl
 from context.transcript import is_transcript_turn
 from encoding_utils import configure_utf8_stdio
 from orchestrator import Chatboks
@@ -36,6 +37,7 @@ from ui.stream import Stream
 TRANSCRIPT_LIMIT = 120
 COMMAND_MAX_CHARS = 6000
 REMOTE_PROPOSAL_RAW_LIMIT = 4000
+TRACE_SUMMARY_LIMIT = 140
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
@@ -175,6 +177,92 @@ def proposal_snapshot(proposal: Any) -> dict[str, Any] | None:
         "raw": raw[:REMOTE_PROPOSAL_RAW_LIMIT],
         "raw_truncated": len(raw) > REMOTE_PROPOSAL_RAW_LIMIT,
         "execution_estimate": proposal.get("execution_estimate"),
+    }
+
+
+def compact_summary(text: str, limit: int = TRACE_SUMMARY_LIMIT) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith(">>>"):
+            return stripped[:limit]
+    return ""
+
+
+def signal_from_line(line: str) -> tuple[str, str | None] | None:
+    stripped = line.strip()
+    if not stripped.startswith(">>>"):
+        return None
+    body = stripped[3:].strip()
+    upper = body.upper()
+    for signal in ("TASK_COMPLETE", "TASK COMPLETE", "HANDOFF", "QUESTION", "PROPOSAL", "BLOCKED", "SKIP"):
+        if upper == signal or upper.startswith(f"{signal} ") or upper.startswith(f"{signal} >>"):
+            normalized = "TASK_COMPLETE" if signal == "TASK COMPLETE" else signal
+            target = None
+            if normalized == "HANDOFF" and ">>" in body:
+                target = body.rsplit(">>", 1)[1].strip() or None
+            return normalized, target
+    return None
+
+
+def agent_trace_from_transcript(messages: list[dict[str, Any]], limit: int = 12) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for message in messages:
+        sender = str(message.get("sender") or "unknown")
+        text = str(message.get("text") or "")
+        for line in text.splitlines():
+            parsed = signal_from_line(line)
+            if parsed is None:
+                continue
+            signal, target = parsed
+            items.append(
+                {
+                    "message_id": message.get("id"),
+                    "agent": sender,
+                    "signal": signal,
+                    "target": target,
+                    "summary": compact_summary(text),
+                }
+            )
+    return items[-limit:]
+
+
+def packet_trace_from_file(packet_path: Path | None, limit: int = 8) -> list[dict[str, Any]]:
+    if packet_path is None or not packet_path.exists():
+        return []
+    try:
+        records = packet_records_from_jsonl(packet_path.read_text(encoding="utf-8-sig"), limit=limit)
+    except OSError:
+        return []
+    items: list[dict[str, Any]] = []
+    for record in records:
+        packet = record.get("packet") if isinstance(record, dict) else {}
+        packet = packet if isinstance(packet, dict) else {}
+        context = record.get("context") if isinstance(record, dict) else {}
+        context = context if isinstance(context, dict) else {}
+        observed = packet.get("observed") if isinstance(packet.get("observed"), list) else []
+        risks = packet.get("risks") if isinstance(packet.get("risks"), list) else []
+        items.append(
+            {
+                "timestamp": record.get("timestamp"),
+                "agent": packet.get("agent") or record.get("sender") or "unknown",
+                "stance": packet.get("stance") or "UNKNOWN",
+                "signal": packet.get("signal") or "UNKNOWN",
+                "next_action": packet.get("next_action") or "",
+                "observed_count": len(observed),
+                "risk_count": len(risks),
+                "round": record.get("round"),
+                "stage": context.get("confirmation", {}).get("stage")
+                if isinstance(context.get("confirmation"), dict)
+                else None,
+            }
+        )
+    return items
+
+
+def trace_snapshot(messages: list[dict[str, Any]], packet_path: Path | None) -> dict[str, Any]:
+    return {
+        "agent": agent_trace_from_transcript(messages),
+        "packets": packet_trace_from_file(packet_path),
     }
 
 
@@ -567,6 +655,8 @@ class RemoteSession:
             agent_config = (app_config.get("agents") if isinstance(app_config, dict) else None) or {}
             proj_config = getattr(self.app, "proj_config", None) or {}
             main_agents = list(proj_config.get("agents") or [])
+            transcript = parse_chatboks_messages(self.app.chatboks_md, limit=transcript_limit)
+            packet_path = getattr(self.app, "packet_file", None)
             return {
                 "project": self.app.project,
                 "projects": self.available_projects(),
@@ -588,7 +678,8 @@ class RemoteSession:
                 "token_line": token_line,
                 "token_usage": build_token_usage(token_counts, agent_config, main_agents),
                 "session_budget": session_budget if isinstance(session_budget, dict) else None,
-                "transcript": parse_chatboks_messages(self.app.chatboks_md, limit=transcript_limit),
+                "transcript": transcript,
+                "trace": trace_snapshot(transcript, packet_path if isinstance(packet_path, Path) else None),
                 "events": self.events.since(cursor),
             }
 

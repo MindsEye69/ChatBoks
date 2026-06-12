@@ -13,6 +13,7 @@ from remote_control import (
     RemoteBridgeServer,
     RemoteHandler,
     RemoteSession,
+    agent_trace_from_transcript,
     build_token_usage,
     codegraph_stats,
     git_environment,
@@ -20,8 +21,10 @@ from remote_control import (
     is_allowed_app_origin,
     is_tailnet_ipv4_host,
     parse_chatboks_messages,
+    packet_trace_from_file,
     proposal_snapshot,
     rotate_pair_code_from_operator_file,
+    trace_snapshot,
 )
 
 
@@ -73,6 +76,7 @@ class BlockingFakeApp:
         self.config = {"projects": {"chatboks": {}}}
         self.state = {"status": "active", "context": {"token_counts": {"codex": 42}}}
         self.chatboks_md = transcript
+        self.packet_file = transcript.parent / "packets.jsonl"
         self.stream = FakeStream()
         self.started = started
         self.release = release
@@ -122,6 +126,81 @@ def test_parse_chatboks_messages_reads_multiline_turns(tmp_path: Path):
         {"id": 2, "sender": "codex", "text": "hi there"},
     ]
     print("PASS: remote transcript parsing keeps multiline turns intact")
+
+
+def test_agent_trace_extracts_signals_and_handoff_targets():
+    messages = [
+        {
+            "id": 3,
+            "sender": "claude",
+            "text": "Architecture pass complete.\n>>> HANDOFF >> Codex",
+        },
+        {
+            "id": 4,
+            "sender": "codex",
+            "text": "Implementation verified.\n>>> TASK_COMPLETE",
+        },
+    ]
+
+    trace = agent_trace_from_transcript(messages)
+
+    assert trace == [
+        {
+            "message_id": 3,
+            "agent": "claude",
+            "signal": "HANDOFF",
+            "target": "Codex",
+            "summary": "Architecture pass complete.",
+        },
+        {
+            "message_id": 4,
+            "agent": "codex",
+            "signal": "TASK_COMPLETE",
+            "target": None,
+            "summary": "Implementation verified.",
+        },
+    ]
+    print("PASS: agent trace extracts transcript signals and handoff targets")
+
+
+def test_packet_trace_reads_compact_packet_records(tmp_path: Path):
+    packet_file = tmp_path / "packets.jsonl"
+    packet_file.write_text(
+        json.dumps(
+            {
+                "timestamp": "2026-06-12T09:00:00",
+                "round": 7,
+                "context": {"confirmation": {"stage": "executor"}},
+                "packet": {
+                    "agent": "codex",
+                    "stance": "VERIFY",
+                    "observed": ["tests pass", "ui checked"],
+                    "risks": ["needs browser pass"],
+                    "next_action": "Run UI check",
+                    "signal": "TASK_COMPLETE",
+                },
+            }
+        )
+        + "\nnot-json\n",
+        encoding="utf-8",
+    )
+
+    trace = packet_trace_from_file(packet_file)
+
+    assert trace == [
+        {
+            "timestamp": "2026-06-12T09:00:00",
+            "agent": "codex",
+            "stance": "VERIFY",
+            "signal": "TASK_COMPLETE",
+            "next_action": "Run UI check",
+            "observed_count": 2,
+            "risk_count": 1,
+            "round": 7,
+            "stage": "executor",
+        }
+    ]
+    print("PASS: packet trace reads compact packet records")
 
 
 def test_remote_event_buffer_preserves_stream_delta_whitespace():
@@ -312,6 +391,46 @@ def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):
     assert payload["proposal"]["proposed_by"] == "codex"
     assert payload["proposal"]["execution_estimate"] == {"total_tokens": 1200}
     print("PASS: remote session snapshots include compact proposal metadata")
+
+
+def test_remote_session_snapshot_includes_trace_payload(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", threading.Event(), threading.Event())
+    app.chatboks_md.write_text("[CLAUDE] Ready.\n>>> HANDOFF >> Codex\n", encoding="utf-8")
+    app.packet_file.write_text(
+        json.dumps(
+            {
+                "timestamp": "2026-06-12T09:30:00",
+                "round": 2,
+                "context": {},
+                "packet": {
+                    "agent": "claude",
+                    "stance": "ADD",
+                    "observed": ["handoff queued"],
+                    "risks": [],
+                    "next_action": "Codex implements",
+                    "signal": "HANDOFF",
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    session.app = app
+
+    payload = session.snapshot()
+
+    assert payload["trace"]["agent"][0]["signal"] == "HANDOFF"
+    assert payload["trace"]["agent"][0]["target"] == "Codex"
+    assert payload["trace"]["packets"][0]["agent"] == "claude"
+    assert payload["trace"]["packets"][0]["observed_count"] == 1
+    print("PASS: remote session snapshots include agent and packet trace payloads")
 
 
 def test_proposal_snapshot_truncates_large_raw_text():

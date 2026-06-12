@@ -73,6 +73,16 @@ const previewSession = {
   events: [
     { id: 1, sender: "system", kind: "summary_packet", timestamp: "12:12:06", text: "Summary: Refactor and integration tasks completed across agents." },
   ],
+  trace: {
+    agent: [
+      { message_id: 1, agent: "claude", signal: "HANDOFF", target: "Codex", summary: "Architecture and security pass complete." },
+      { message_id: 2, agent: "codex", signal: "HANDOFF", target: "Gemini", summary: "Implementation complete; tests passing locally." },
+      { message_id: 3, agent: "gemini", signal: "TASK_COMPLETE", target: null, summary: "Integration verified." },
+    ],
+    packets: [
+      { agent: "codex", stance: "VERIFY", signal: "TASK_COMPLETE", observed_count: 3, risk_count: 0, next_action: "Ready for final report." },
+    ],
+  },
 };
 
 const els = {};
@@ -85,8 +95,9 @@ for (const id of [
   "agentLanes", "coordDot", "coordState", "roleCallButton", "logsButton",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalModification", "approveButton", "modifyButton", "rejectButton",
-  "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
-  "workbenchPrompt", "sendStatus", "sendButton",
+    "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
+    "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
+    "workbenchPrompt", "sendStatus", "sendButton",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
   "progressList", "progressCount", "progressPercent",
   "graphDot", "graphHealth", "graphFiles", "graphNodes", "graphEdges", "graphIndexed",
@@ -779,6 +790,57 @@ function renderProgress(data) {
   els.progressPercent.textContent = `${Math.round((done * 100) / expected.length)}%`;
 }
 
+function traceSignalLabel(item) {
+  const signal = String(item.signal || "UNKNOWN").replace("_", " ");
+  const target = item.target ? ` -> ${agentDisplayName(String(item.target))}` : "";
+  return `${signal}${target}`;
+}
+
+function renderTraceList(container, items, emptyText, rowBuilder) {
+  container.innerHTML = "";
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "lane-empty";
+    empty.textContent = emptyText;
+    container.appendChild(empty);
+    return;
+  }
+  for (const item of items.slice(-6)) {
+    const row = document.createElement("div");
+    row.className = "trace-row";
+    rowBuilder(row, item);
+    container.appendChild(row);
+  }
+}
+
+function appendTraceText(row, className, text) {
+  const node = document.createElement("div");
+  node.className = className;
+  node.textContent = text || "-";
+  row.appendChild(node);
+}
+
+function renderTrace(trace = {}) {
+  const agents = trace.agent || [];
+  const packets = trace.packets || [];
+  els.traceAgentCount.textContent = String(agents.length);
+  els.tracePacketCount.textContent = String(packets.length);
+  renderTraceList(els.traceAgentList, agents, "No handoffs or terminal signals yet.", (row, item) => {
+    appendTraceText(row, "trace-kicker", agentDisplayName(String(item.agent || "unknown")));
+    appendTraceText(row, "trace-title", traceSignalLabel(item));
+    appendTraceText(row, "trace-summary", item.summary || `message #${item.message_id ?? "-"}`);
+  });
+  renderTraceList(els.tracePacketList, packets, "No thought packets captured yet.", (row, item) => {
+    appendTraceText(row, "trace-kicker", `${agentDisplayName(String(item.agent || "unknown"))} ${item.stance || ""}`.trim());
+    appendTraceText(row, "trace-title", String(item.signal || "UNKNOWN").replace("_", " "));
+    appendTraceText(
+      row,
+      "trace-summary",
+      `${item.observed_count || 0} observed / ${item.risk_count || 0} risks${item.next_action ? ` - ${item.next_action}` : ""}`,
+    );
+  });
+}
+
 /* ---------- session apply ---------- */
 
 function applySession(data) {
@@ -811,6 +873,7 @@ function applySession(data) {
   renderCoordinator(data);
   renderApproval(data);
   renderProgress(data);
+  renderTrace(data.trace || {});
 
   els.statRound.textContent = data.round === null || data.round === undefined ? "-" : String(data.round);
   els.statMode.textContent = data.collaboration_mode || "-";

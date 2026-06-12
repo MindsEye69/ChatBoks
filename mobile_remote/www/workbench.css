@@ -685,6 +685,73 @@ kbd {
   padding-top: 12px;
 }
 
+.trace-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.trace-head h3 {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.trace-head span {
+  min-width: 24px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.trace-list {
+  display: grid;
+  gap: 8px;
+  max-height: 180px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.trace-row {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(5, 12, 16, 0.24);
+}
+
+.trace-kicker {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.trace-title {
+  font-weight: 800;
+}
+
+.trace-summary {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .summary-copy p {
   margin: 8px 0;
 }
@@ -1242,6 +1309,7 @@ dd {
 
   .agent-lanes,
   .approval-panel,
+  .trace-panel,
   .summary-grid,
   .right-rail {
     grid-template-columns: 1fr;

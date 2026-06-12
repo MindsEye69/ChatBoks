@@ -25,6 +25,10 @@ const els = {
   sessionCollapse: document.getElementById("sessionCollapseButton"),
   tokenPanel: document.getElementById("tokenPanel"),
   tokenToggle: document.getElementById("tokenToggleButton"),
+  traceAgentCount: document.getElementById("traceAgentCount"),
+  traceAgentList: document.getElementById("traceAgentList"),
+  tracePacketCount: document.getElementById("tracePacketCount"),
+  tracePacketList: document.getElementById("tracePacketList"),
   project: document.getElementById("projectSelect"),
   status: document.getElementById("statusValue"),
   nextAgent: document.getElementById("nextAgentValue"),
@@ -246,6 +250,7 @@ function forgetSessionToken() {
   els.tokenLine.textContent = "";
   els.project.innerHTML = "";
   renderApproval({ status: "idle", proposal: null });
+  renderTrace({});
   renderLatestResponse([]);
   renderList(els.transcript, []);
   renderList(els.systemFeed, []);
@@ -505,12 +510,63 @@ function renderFlow(data) {
   }
 }
 
+function traceSignalLabel(item) {
+  const signal = String(item.signal || "UNKNOWN").replace("_", " ");
+  const target = item.target ? ` -> ${agentDisplayName(String(item.target))}` : "";
+  return `${signal}${target}`;
+}
+
 function agentDisplayName(agent) {
   return String(agent || "")
     .split(/[_-]/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ") || "Agent";
+}
+
+function appendTraceText(row, className, text) {
+  const node = document.createElement("div");
+  node.className = className;
+  node.textContent = text || "-";
+  row.appendChild(node);
+}
+
+function renderTraceList(container, items, emptyText, rowBuilder) {
+  container.innerHTML = "";
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "trace-empty";
+    empty.textContent = emptyText;
+    container.appendChild(empty);
+    return;
+  }
+  for (const item of items.slice(-5)) {
+    const row = document.createElement("div");
+    row.className = "trace-row";
+    rowBuilder(row, item);
+    container.appendChild(row);
+  }
+}
+
+function renderTrace(trace = {}) {
+  const agents = trace.agent || [];
+  const packets = trace.packets || [];
+  els.traceAgentCount.textContent = String(agents.length);
+  els.tracePacketCount.textContent = String(packets.length);
+  renderTraceList(els.traceAgentList, agents, "No handoffs or terminal signals yet.", (row, item) => {
+    appendTraceText(row, "trace-kicker", agentDisplayName(String(item.agent || "unknown")));
+    appendTraceText(row, "trace-title", traceSignalLabel(item));
+    appendTraceText(row, "trace-summary", item.summary || `message #${item.message_id ?? "-"}`);
+  });
+  renderTraceList(els.tracePacketList, packets, "No thought packets captured yet.", (row, item) => {
+    appendTraceText(row, "trace-kicker", `${agentDisplayName(String(item.agent || "unknown"))} ${item.stance || ""}`.trim());
+    appendTraceText(row, "trace-title", String(item.signal || "UNKNOWN").replace("_", " "));
+    appendTraceText(
+      row,
+      "trace-summary",
+      `${item.observed_count || 0} observed / ${item.risk_count || 0} risks${item.next_action ? ` - ${item.next_action}` : ""}`,
+    );
+  });
 }
 
 function formatExecutionEstimate(estimate) {
@@ -592,6 +648,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   els.tokenLine.textContent = data.token_line || "";
   renderFlow(data);
   renderApproval(data);
+  renderTrace(data.trace || {});
   const transcript = data.transcript || [];
   renderLatestResponse(transcript);
   renderList(els.transcript, transcript);

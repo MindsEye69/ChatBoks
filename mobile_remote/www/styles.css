@@ -281,6 +281,7 @@ button.compact {
 
 .response-panel,
 .approval-panel,
+.trace-panel,
 .transcript-panel,
 .system-panel,
 .events-panel,
@@ -320,6 +321,75 @@ button.compact {
 
 .approval-actions {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trace-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.trace-group {
+  display: grid;
+  gap: 8px;
+}
+
+.trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.trace-head h3 {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.trace-head span {
+  min-width: 24px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.trace-list {
+  display: grid;
+  gap: 8px;
+}
+
+.trace-row,
+.trace-empty {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #101216;
+  padding: 9px 10px;
+}
+
+.trace-row {
+  display: grid;
+  gap: 3px;
+}
+
+.trace-empty,
+.trace-summary {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.trace-kicker {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.trace-title {
+  font-weight: 800;
 }
 
 .flow-chain {
@@ -594,6 +664,7 @@ button.compact {
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, 340px);
     grid-template-areas:
       "left flow right"
+      "left trace right"
       "left main right"
       "left approval right"
       "left system right"
@@ -626,6 +697,10 @@ button.compact {
 
   .flow-panel {
     grid-area: flow;
+  }
+
+  .trace-panel {
+    grid-area: trace;
   }
 
   .approval-panel {
