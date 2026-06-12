@@ -12,6 +12,9 @@ const state = {
   commandStreams: {},
   connectionFailures: 0,
   authBlocked: false,
+  approvalActive: false,
+  approvalProposalId: "",
+  approvalSubmitting: false,
 };
 
 const els = {
@@ -43,7 +46,9 @@ const els = {
   approvalMeta: document.getElementById("approvalMeta"),
   approvalSummary: document.getElementById("approvalSummary"),
   approvalEstimate: document.getElementById("approvalEstimate"),
+  approvalRaw: document.getElementById("approvalRaw"),
   approvalModification: document.getElementById("approvalModification"),
+  approvalStatus: document.getElementById("approvalStatus"),
   approve: document.getElementById("approveButton"),
   modify: document.getElementById("modifyButton"),
   reject: document.getElementById("rejectButton"),
@@ -611,16 +616,52 @@ function formatExecutionEstimate(estimate) {
   return parts.length ? parts.join(" · ") : "Execution estimate unavailable.";
 }
 
+function setApprovalStatus(message, tone = "muted") {
+  els.approvalStatus.textContent = message || "";
+  els.approvalStatus.classList.toggle("success", tone === "success");
+  els.approvalStatus.classList.toggle("warning", tone === "warning");
+  els.approvalStatus.classList.toggle("error-state", tone === "error");
+}
+
+function setApprovalControls(disabled) {
+  state.approvalSubmitting = disabled;
+  els.approve.disabled = disabled;
+  els.modify.disabled = disabled;
+  els.reject.disabled = disabled;
+  els.approvalModification.disabled = disabled;
+}
+
+function proposalRawText(proposal) {
+  const raw = String(proposal.raw || "").trim();
+  if (!raw) {
+    return "No detailed proposal text was included in the session snapshot.";
+  }
+  return proposal.raw_truncated ? `${raw}\n\n[truncated]` : raw;
+}
+
 function renderApproval(data) {
   const proposal = data.proposal || null;
   const awaitingApproval = data.status === "awaiting_approval" && proposal;
   els.approvalPanel.classList.toggle("hidden", !awaitingApproval);
   if (!awaitingApproval) {
+    state.approvalActive = false;
+    state.approvalProposalId = "";
+    setApprovalControls(false);
+    setApprovalStatus("");
     return;
   }
+  const proposalId = String(proposal.id || `${proposal.proposed_by || "agent"}:${proposal.summary || ""}`);
+  if (state.approvalProposalId !== proposalId) {
+    els.approvalModification.value = "";
+    setApprovalStatus("Choose an approval action.");
+  }
+  state.approvalActive = true;
+  state.approvalProposalId = proposalId;
   els.approvalMeta.textContent = `${agentDisplayName(proposal.proposed_by)} proposal`;
   els.approvalSummary.textContent = proposal.summary || "Review proposal";
   els.approvalEstimate.textContent = formatExecutionEstimate(proposal.execution_estimate);
+  els.approvalRaw.textContent = proposalRawText(proposal);
+  setApprovalControls(false);
 }
 
 function scrollLatestResponseIntoView() {
@@ -775,7 +816,7 @@ async function refreshSession(options = {}) {
 async function sendPrompt(text) {
   const cleaned = text.trim();
   if (!cleaned || els.send.disabled) {
-    return;
+    return false;
   }
   setSendState(true, "Sending to ChatBoks...");
   state.commandEvents = [];
@@ -794,6 +835,7 @@ async function sendPrompt(text) {
       setSendState(false, "Sent. Latest response updated.");
       clearSendStatusSoon();
     }
+    return true;
   } catch (error) {
     const detail = describeNetworkError(error);
     setSendState(false, `Send failed: ${detail}`);
@@ -802,6 +844,31 @@ async function sendPrompt(text) {
     if (isAuthError(error)) {
       setConnectionCollapsed(false);
     }
+    return false;
+  }
+}
+
+async function submitApproval(action) {
+  if (!state.approvalActive) {
+    setApprovalStatus("No active proposal is waiting for approval.", "error");
+    return;
+  }
+  const note = els.approvalModification.value.trim();
+  if (action === "MODIFY" && !note) {
+    setApprovalStatus("Add a modification note before sending MODIFY.", "warning");
+    els.approvalModification.focus();
+    return;
+  }
+  const command = action === "MODIFY" ? `MODIFY ${note}` : action;
+  const label = action === "APPROVE" ? "Approval" : action === "REJECT" ? "Rejection" : "Modification";
+  setApprovalControls(true);
+  setApprovalStatus(`${label} sent. Waiting for ChatBoks...`, "warning");
+  const sent = await sendPrompt(command);
+  if (sent) {
+    setApprovalStatus(`${label} accepted by the bridge. Waiting for session update...`, "success");
+  } else {
+    setApprovalStatus(`${label} did not send. Check the connection message above.`, "error");
+    setApprovalControls(false);
   }
 }
 
@@ -897,16 +964,15 @@ els.send.addEventListener("click", () => {
 });
 
 els.approve.addEventListener("click", () => {
-  sendPrompt("APPROVE");
+  submitApproval("APPROVE");
 });
 
 els.reject.addEventListener("click", () => {
-  sendPrompt("REJECT");
+  submitApproval("REJECT");
 });
 
 els.modify.addEventListener("click", () => {
-  const note = els.approvalModification.value.trim();
-  sendPrompt(note ? `MODIFY ${note}` : "MODIFY");
+  submitApproval("MODIFY");
 });
 
 if (window.visualViewport) {

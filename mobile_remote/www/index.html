@@ -112,7 +112,12 @@
       <div class="approval-meta" id="approvalMeta">Proposal</div>
       <div class="approval-summary" id="approvalSummary">Awaiting approval</div>
       <div class="approval-estimate" id="approvalEstimate"></div>
+      <details class="approval-details">
+        <summary>Proposal details</summary>
+        <pre id="approvalRaw"></pre>
+      </details>
       <textarea id="approvalModification" rows="2" placeholder="Modification note..."></textarea>
+      <div id="approvalStatus" class="approval-status" aria-live="polite"></div>
       <div class="button-row approval-actions">
         <button id="approveButton" type="button">Approve</button>
         <button id="modifyButton" class="ghost" type="button">Modify</button>

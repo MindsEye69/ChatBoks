@@ -347,13 +347,63 @@ button.compact {
   font-size: 12px;
 }
 
+.approval-details {
+  margin: 8px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.approval-details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.approval-details pre {
+  max-height: 180px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 10px;
+  border: 1px solid rgba(249, 115, 22, 0.24);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .approval-panel textarea {
   min-height: 58px;
   margin-bottom: 10px;
 }
 
+.approval-status {
+  min-height: 20px;
+  margin: -2px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.approval-status.success {
+  color: var(--ok);
+}
+
+.approval-status.warning {
+  color: #fde68a;
+}
+
+.approval-status.error-state {
+  color: var(--danger);
+}
+
 .approval-actions {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.approval-actions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
 }
 
 .trace-panel {

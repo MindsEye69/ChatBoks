@@ -28,6 +28,9 @@ const state = {
   lastActivity: "",
   connectionFailures: 0,
   authBlocked: false,
+  approvalActive: false,
+  approvalProposalId: "",
+  approvalSubmitting: false,
 };
 
 const previewSession = {
@@ -96,7 +99,7 @@ for (const id of [
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState",
   "agentLanes", "coordDot", "coordState", "roleCallButton", "logsButton",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
-  "approvalModification", "approveButton", "modifyButton", "rejectButton",
+  "approvalRaw", "approvalModification", "approvalStatus", "approveButton", "modifyButton", "rejectButton",
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
     "workbenchPrompt", "sendStatus", "sendButton",
@@ -610,17 +613,53 @@ function formatExecutionEstimate(estimate) {
   return parts.length ? parts.join(" · ") : "Execution estimate unavailable.";
 }
 
+function setApprovalStatus(message, tone = "muted") {
+  els.approvalStatus.textContent = message || "";
+  els.approvalStatus.classList.toggle("success", tone === "success");
+  els.approvalStatus.classList.toggle("warning", tone === "warning");
+  els.approvalStatus.classList.toggle("error-state", tone === "error");
+}
+
+function setApprovalControls(disabled) {
+  state.approvalSubmitting = disabled;
+  els.approveButton.disabled = disabled;
+  els.modifyButton.disabled = disabled;
+  els.rejectButton.disabled = disabled;
+  els.approvalModification.disabled = disabled;
+}
+
+function proposalRawText(proposal) {
+  const raw = String(proposal.raw || "").trim();
+  if (!raw) {
+    return "No detailed proposal text was included in the session snapshot.";
+  }
+  return proposal.raw_truncated ? `${raw}\n\n[truncated]` : raw;
+}
+
 function renderApproval(data) {
   const proposal = data.proposal || null;
   const awaitingApproval = data.status === "awaiting_approval" && proposal;
   els.approvalPanel.classList.toggle("hidden", !awaitingApproval);
   if (!awaitingApproval) {
+    state.approvalActive = false;
+    state.approvalProposalId = "";
+    setApprovalControls(false);
+    setApprovalStatus("");
     return;
   }
+  const proposalId = String(proposal.id || `${proposal.proposed_by || "agent"}:${proposal.summary || ""}`);
+  if (state.approvalProposalId !== proposalId) {
+    els.approvalModification.value = "";
+    setApprovalStatus("Choose an approval action.");
+  }
+  state.approvalActive = true;
+  state.approvalProposalId = proposalId;
   const proposer = proposal.proposed_by ? agentDisplayName(proposal.proposed_by) : "Agent";
   els.approvalMeta.textContent = `${proposer} proposal`;
   els.approvalSummary.textContent = proposal.summary || "Review proposal";
   els.approvalEstimate.textContent = formatExecutionEstimate(proposal.execution_estimate);
+  els.approvalRaw.textContent = proposalRawText(proposal);
+  setApprovalControls(false);
 }
 
 /* ---------- left rail ---------- */
@@ -948,7 +987,7 @@ function setSendState(sending, message) {
 async function sendPrompt(text) {
   const cleaned = text.trim();
   if (!cleaned || els.sendButton.disabled) {
-    return;
+    return false;
   }
   setSendState(true, "Sending to ChatBoks...");
   try {
@@ -959,6 +998,7 @@ async function sendPrompt(text) {
     els.workbenchPrompt.value = "";
     applySession(data);
     scheduleSessionPoll();
+    return true;
   } catch (error) {
     const detail = friendlyFetchError(error);
     setSendState(false, `Send failed: ${detail}`);
@@ -966,6 +1006,31 @@ async function sendPrompt(text) {
     if (isAuthError(error)) {
       setConnectionPanel(true);
     }
+    return false;
+  }
+}
+
+async function submitApproval(action) {
+  if (!state.approvalActive) {
+    setApprovalStatus("No active proposal is waiting for approval.", "error");
+    return;
+  }
+  const note = els.approvalModification.value.trim();
+  if (action === "MODIFY" && !note) {
+    setApprovalStatus("Add a modification note before sending MODIFY.", "warning");
+    els.approvalModification.focus();
+    return;
+  }
+  const command = action === "MODIFY" ? `MODIFY ${note}` : action;
+  const label = action === "APPROVE" ? "Approval" : action === "REJECT" ? "Rejection" : "Modification";
+  setApprovalControls(true);
+  setApprovalStatus(`${label} sent. Waiting for ChatBoks...`, "warning");
+  const sent = await sendPrompt(command);
+  if (sent) {
+    setApprovalStatus(`${label} accepted by the bridge. Waiting for session update...`, "success");
+  } else {
+    setApprovalStatus(`${label} did not send. Check the connection message above.`, "error");
+    setApprovalControls(false);
   }
 }
 
@@ -1066,12 +1131,9 @@ els.terminalFocus.addEventListener("click", () => {
 });
 
 els.roleCallButton.addEventListener("click", () => sendPrompt("@coordinator role call"));
-els.approveButton.addEventListener("click", () => sendPrompt("APPROVE"));
-els.rejectButton.addEventListener("click", () => sendPrompt("REJECT"));
-els.modifyButton.addEventListener("click", () => {
-  const note = els.approvalModification.value.trim();
-  sendPrompt(note ? `MODIFY ${note}` : "MODIFY");
-});
+els.approveButton.addEventListener("click", () => submitApproval("APPROVE"));
+els.rejectButton.addEventListener("click", () => submitApproval("REJECT"));
+els.modifyButton.addEventListener("click", () => submitApproval("MODIFY"));
 els.logsButton.addEventListener("click", () => {
   state.coordExpanded = !state.coordExpanded;
   els.logsButton.textContent = state.coordExpanded ? "Less" : "Logs";

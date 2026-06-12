@@ -632,6 +632,31 @@ kbd {
   font-size: 12px;
 }
 
+.approval-details {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.approval-details pre {
+  max-height: 120px;
+  overflow: auto;
+  margin: 7px 0 0;
+  padding: 8px;
+  border: 1px solid rgba(255, 173, 69, 0.25);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--text);
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .approval-panel textarea {
   width: 100%;
   min-height: 52px;
@@ -652,6 +677,26 @@ kbd {
   gap: 8px;
 }
 
+.approval-status {
+  min-height: 18px;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.approval-status.success {
+  color: var(--green);
+}
+
+.approval-status.warning {
+  color: var(--accent);
+}
+
+.approval-status.error-state {
+  color: #fca5a5;
+}
+
 .approval-button {
   min-height: 34px;
   border: 1px solid var(--border);
@@ -660,6 +705,11 @@ kbd {
   color: var(--text);
   background: rgba(255, 255, 255, 0.03);
   font-weight: 700;
+}
+
+.approval-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .approve-action {
