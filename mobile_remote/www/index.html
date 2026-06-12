@@ -45,7 +45,8 @@
           <button id="connectButton" class="ghost" type="button">Connect</button>
           <button id="forgetButton" class="ghost" type="button">Forget token</button>
         </div>
-      <p class="hint">Use a private Tailscale Serve URL, or the tailnet fallback URL shown by the desktop bridge. Pair with the one-time desktop code first.</p>
+      <div id="connectionState" class="connection-state muted">Not connected.</div>
+      <p class="hint">Use the bridge URL and fresh one-time code shown by the desktop bridge. Codes expire quickly and can only be used once.</p>
       <div id="errorBox" class="error hidden"></div>
     </section>
 

@@ -1103,6 +1103,38 @@ dd {
   gap: 10px;
 }
 
+.connection-state {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.connection-state.muted {
+  color: var(--muted);
+}
+
+.connection-state.success {
+  border-color: rgba(82, 211, 128, 0.4);
+  background: rgba(82, 211, 128, 0.1);
+  color: var(--green);
+}
+
+.connection-state.warning {
+  border-color: rgba(255, 173, 69, 0.45);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.connection-state.error-state {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fda4a4;
+}
+
 .error-box {
   padding: 10px 12px;
   border: 1px solid rgba(239, 68, 68, 0.45);

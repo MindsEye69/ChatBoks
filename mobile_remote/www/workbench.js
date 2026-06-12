@@ -26,6 +26,8 @@ const state = {
   coordExpanded: false,
   currentProject: "",
   lastActivity: "",
+  connectionFailures: 0,
+  authBlocked: false,
 };
 
 const previewSession = {
@@ -91,7 +93,7 @@ for (const id of [
   "tokenBalances", "settingsButton", "stripCpu", "stripRam",
   "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
-  "bridgeUrl", "connectButton", "forgetButton", "errorBox",
+  "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState",
   "agentLanes", "coordDot", "coordState", "roleCallButton", "logsButton",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalModification", "approveButton", "modifyButton", "rejectButton",
@@ -145,6 +147,14 @@ function showError(message, tone = "error") {
   }
 }
 
+function setConnectionState(message, tone = "muted") {
+  els.connectionState.textContent = message;
+  els.connectionState.classList.toggle("muted", tone === "muted");
+  els.connectionState.classList.toggle("success", tone === "success");
+  els.connectionState.classList.toggle("warning", tone === "warning");
+  els.connectionState.classList.toggle("error-state", tone === "error");
+}
+
 function setConnectionPanel(visible) {
   els.connectionPanel.classList.toggle("hidden", !visible);
 }
@@ -183,9 +193,15 @@ function friendlyFetchError(error) {
   if (error && error.status === 0) {
     return error.message;
   }
+  if (error && /pair with/i.test(error.message || "")) {
+    return error.message;
+  }
+  if (isAuthError(error)) {
+    return "Session token was rejected or expired. Use Forget token, then pair with a fresh desktop code.";
+  }
   if (error instanceof TypeError && /fetch/i.test(error.message || "")) {
     const target = (els.bridgeUrl.value || state.bridgeUrl || window.location.origin || "the bridge").trim();
-    return `Could not reach the bridge at ${target}. Confirm remote_control.py is running and use the bridge URL shown in its console.`;
+    return `Could not reach the bridge at ${target}. Confirm remote_control.py is running, Tailscale is connected if needed, and use the bridge URL shown in its console.`;
   }
   return error && error.message ? error.message : String(error);
 }
@@ -220,6 +236,7 @@ async function pairDevice() {
   if (!code) {
     throw new Error("Enter the one-time pairing code from the desktop bridge console.");
   }
+  setConnectionState("Pairing with desktop bridge...", "warning");
   const response = await fetch(apiUrl("/api/pair"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -232,21 +249,30 @@ async function pairDevice() {
   state.token = body.session_token || "";
   els.token.value = state.token;
   els.pairCode.value = "";
+  state.connectionFailures = 0;
+  state.authBlocked = false;
+  setConnectionState("Paired. Connecting to session...", "success");
   saveSettings();
 }
 
 async function connect() {
   state.bridgeUrl = els.bridgeUrl.value.trim();
   state.token = els.token.value.trim() || state.token;
+  state.connectionFailures = 0;
+  state.authBlocked = false;
+  setConnectionState("Connecting to bridge...", "warning");
   if (!state.token && els.pairCode.value.trim()) {
     await pairDevice();
   }
   saveSettings();
   resetSessionState();
-  await refreshSession();
-  await refreshWorkbench();
-  setConnectionPanel(false);
-  startPolling();
+  const connected = await refreshSession();
+  if (connected) {
+    await refreshWorkbench();
+    setConnectionPanel(false);
+    startPolling();
+  }
+  return connected;
 }
 
 function resetSessionState() {
@@ -281,6 +307,10 @@ function stopPolling() {
 function scheduleSessionPoll() {
   if (state.sessionTimer) {
     window.clearTimeout(state.sessionTimer);
+    state.sessionTimer = null;
+  }
+  if (state.authBlocked) {
+    return;
   }
   const delay = state.commandRunning ? SESSION_POLL_BUSY_MS : SESSION_POLL_MS;
   state.sessionTimer = window.setTimeout(async () => {
@@ -290,7 +320,7 @@ function scheduleSessionPoll() {
     } catch {
       /* refreshSession reports its own errors */
     }
-    if (state.connected || state.token) {
+    if (!state.authBlocked && (state.connected || state.token)) {
       scheduleSessionPoll();
     }
   }, delay);
@@ -300,15 +330,26 @@ async function refreshSession() {
   try {
     const data = await apiFetch(`/api/session?cursor=${state.eventCursor}`);
     applySession(data);
+    state.connectionFailures = 0;
+    state.authBlocked = false;
     setConnected(true);
+    setConnectionState("Connected to bridge.", "success");
     showError("");
+    return true;
   } catch (error) {
+    state.connectionFailures += 1;
     setConnected(false);
-    showError(friendlyFetchError(error));
+    const detail = friendlyFetchError(error);
+    showError(detail);
     if (isAuthError(error)) {
+      state.authBlocked = true;
+      stopPolling();
       setConnectionPanel(true);
+      setConnectionState("Session token rejected. Pair again with a fresh code.", "error");
+      return false;
     }
-    throw error;
+    setConnectionState(`Bridge unreachable. Retrying (${state.connectionFailures})...`, "warning");
+    return false;
   }
 }
 
@@ -919,7 +960,9 @@ async function sendPrompt(text) {
     applySession(data);
     scheduleSessionPoll();
   } catch (error) {
-    setSendState(false, `Send failed: ${friendlyFetchError(error)}`);
+    const detail = friendlyFetchError(error);
+    setSendState(false, `Send failed: ${detail}`);
+    setConnectionState(detail, isAuthError(error) ? "error" : "warning");
     if (isAuthError(error)) {
       setConnectionPanel(true);
     }
@@ -943,8 +986,10 @@ async function switchProject(project) {
     setSendState(false, `Project switched to ${project}.`);
     showError("");
   } catch (error) {
+    const detail = friendlyFetchError(error);
     setSendState(false, "Project switch failed.");
-    showError(friendlyFetchError(error));
+    setConnectionState(detail, isAuthError(error) ? "error" : "warning");
+    showError(detail);
   }
 }
 
@@ -961,21 +1006,27 @@ els.settingsButton.addEventListener("click", () => setConnectionPanel(true));
 els.pairButton.addEventListener("click", async () => {
   try {
     await pairDevice();
-    await connect();
-    showError("Paired and connected. Session token saved in this browser.", "success");
-    setSendState(false, "Paired and connected.");
+    if (await connect()) {
+      showError("Paired and connected. Session token saved in this browser.", "success");
+      setSendState(false, "Paired and connected.");
+    }
   } catch (error) {
-    showError(friendlyFetchError(error));
+    const detail = friendlyFetchError(error);
+    setConnectionState(detail, "error");
+    showError(detail);
   }
 });
 
 els.connectButton.addEventListener("click", async () => {
   try {
-    await connect();
-    showError("Connected to the bridge.", "success");
-    setSendState(false, "Connected to bridge.");
+    if (await connect()) {
+      showError("Connected to the bridge.", "success");
+      setSendState(false, "Connected to bridge.");
+    }
   } catch (error) {
-    showError(friendlyFetchError(error));
+    const detail = friendlyFetchError(error);
+    setConnectionState(detail, "error");
+    showError(detail);
   }
 });
 
@@ -989,6 +1040,9 @@ els.forgetButton.addEventListener("click", () => {
   resetSessionState();
   renderOfflineWorkbench();
   setConnectionPanel(true);
+  state.connectionFailures = 0;
+  state.authBlocked = false;
+  setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
   setSendState(false, "Session token forgotten.");
   showError("Session token forgotten. Pair again with a fresh desktop code before reconnecting.", "success");
 });
@@ -1034,8 +1088,10 @@ els.liveButton.addEventListener("click", () => {
 loadSettings();
 setTheme(state.theme);
 if (state.token) {
+  setConnectionState("Saved session token found. Verifying bridge connection...", "muted");
   connect().catch(() => setConnectionPanel(true));
 } else {
   renderOfflineWorkbench();
   setConnectionPanel(false);
+  setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
 }

@@ -320,13 +320,13 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781264073.0921834,
-    "ast_hash": "c03b5949bb86df21405ea3fcfcf8d5fb",
+    "mtime": 1781270407.991108,
+    "ast_hash": "13820e77a09a6fc38b6e3e11259bb166",
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781269419.532646,
-    "ast_hash": "73f40a5361dd67e75f28a758a6409c08",
+    "mtime": 1781269638.579781,
+    "ast_hash": "72f8429b02d463c4082d7cf98e3192e5",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/index.html": {
-    "mtime": 1781264020.2796032,
-    "ast_hash": "989092ac7b7751eae4c66e16c99d31bc",
+    "mtime": 1781270157.9430456,
+    "ast_hash": "c98b8f35ac8d7245024b484b01d3eed0",
     "semantic_hash": ""
   },
   "output/playwright/usage/smoke-raw/.playwright-cli/page-2026-06-08T16-29-47-279Z.yml": {
@@ -675,8 +675,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.js": {
-    "mtime": 1781267562.179605,
-    "ast_hash": "43900b1d041808264b157f7496356f2c",
+    "mtime": 1781270407.991108,
+    "ast_hash": "b4a7828098369a991011b17850bec96c",
     "semantic_hash": ""
   },
   "INTERFACE_HANDOFF.md": {
@@ -690,8 +690,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.html": {
-    "mtime": 1781267661.207351,
-    "ast_hash": "20ca65f0897b36d45a7171f75681edcc",
+    "mtime": 1781270776.4104068,
+    "ast_hash": "1b89ac9a95cd648217b4dfc981f82bcf",
     "semantic_hash": ""
   },
   ".claude/launch.json": {
@@ -802,6 +802,31 @@
   "COORDINATOR.md": {
     "mtime": 1781267562.1680968,
     "ast_hash": "331ef80133459860afa8783b6675b86e",
+    "semantic_hash": ""
+  },
+  ".playwright-cli/page-2026-06-12T13-25-17-173Z.yml": {
+    "mtime": 1781270717.1725698,
+    "ast_hash": "dde19fa0b86fc0db4d873abf7b621a79",
+    "semantic_hash": ""
+  },
+  ".playwright-cli/page-2026-06-12T13-25-37-371Z.yml": {
+    "mtime": 1781270737.3721335,
+    "ast_hash": "16533e49fe80063dd88568903b917d5d",
+    "semantic_hash": ""
+  },
+  ".playwright-cli/page-2026-06-12T13-26-27-596Z.yml": {
+    "mtime": 1781270787.5959117,
+    "ast_hash": "16533e49fe80063dd88568903b917d5d",
+    "semantic_hash": ""
+  },
+  ".playwright-cli/page-2026-06-12T13-27-17-300Z.yml": {
+    "mtime": 1781270837.3004632,
+    "ast_hash": "16533e49fe80063dd88568903b917d5d",
+    "semantic_hash": ""
+  },
+  ".playwright-cli/page-2026-06-12T13-27-20-661Z.yml": {
+    "mtime": 1781270840.661762,
+    "ast_hash": "dde19fa0b86fc0db4d873abf7b621a79",
     "semantic_hash": ""
   }
 }

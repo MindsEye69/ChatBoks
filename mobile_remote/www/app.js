@@ -10,6 +10,8 @@ const state = {
   currentProject: "",
   eventStreams: {},
   commandStreams: {},
+  connectionFailures: 0,
+  authBlocked: false,
 };
 
 const els = {
@@ -17,6 +19,7 @@ const els = {
   pairCode: document.getElementById("pairCode"),
   token: document.getElementById("token"),
   errorBox: document.getElementById("errorBox"),
+  connectionState: document.getElementById("connectionState"),
   connectionPanel: document.getElementById("connectionPanel"),
   connectionToggle: document.getElementById("connectionToggleButton"),
   connectionCollapse: document.getElementById("connectionCollapseButton"),
@@ -90,6 +93,14 @@ function showError(message, tone = "error") {
   els.errorBox.classList.toggle("success", Boolean(message) && tone === "success");
 }
 
+function setConnectionState(message, tone = "muted") {
+  els.connectionState.textContent = message;
+  els.connectionState.classList.toggle("muted", tone === "muted");
+  els.connectionState.classList.toggle("success", tone === "success");
+  els.connectionState.classList.toggle("warning", tone === "warning");
+  els.connectionState.classList.toggle("error-state", tone === "error");
+}
+
 function setConnectionCollapsed(collapsed) {
   els.connectionPanel.classList.toggle("hidden", collapsed);
   els.connectionToggle.classList.toggle("active", !collapsed);
@@ -156,9 +167,12 @@ function updateComposerReservedHeight() {
 
 function describeNetworkError(error) {
   const message = error && error.message ? error.message : String(error);
+  if (isAuthError(error)) {
+    return "Session token was rejected or expired. Use Forget token, then pair with a fresh desktop code.";
+  }
   if (message === "Failed to fetch" || error instanceof TypeError) {
     const url = els.baseUrl.value.trim() || "the bridge URL";
-    return `Failed to fetch ${url}. Check that Tailscale is connected on the phone and the bridge URL is correct.`;
+    return `Could not reach the bridge at ${url}. Confirm the bridge is running, Tailscale is connected, and the URL matches the desktop bridge console.`;
   }
   return message;
 }
@@ -215,6 +229,7 @@ function isAuthError(error) {
 async function pairDevice() {
   const baseUrl = currentBaseUrl();
   const pairCode = currentPairCode();
+  setConnectionState("Pairing with desktop bridge...", "warning");
   const response = await fetch(baseUrl + "/api/pair", {
     method: "POST",
     headers: {
@@ -228,6 +243,9 @@ async function pairDevice() {
   }
   els.token.value = body.session_token || "";
   els.pairCode.value = "";
+  state.connectionFailures = 0;
+  state.authBlocked = false;
+  setConnectionState("Paired. Connecting to session...", "success");
   saveSettings();
   return body;
 }
@@ -244,6 +262,8 @@ function forgetSessionToken() {
   state.commandEvents = [];
   state.commandStreams = {};
   state.commandActive = false;
+  state.connectionFailures = 0;
+  state.authBlocked = false;
   els.status.textContent = "offline";
   els.nextAgent.textContent = "-";
   els.task.textContent = "-";
@@ -257,6 +277,7 @@ function forgetSessionToken() {
   renderList(els.events, []);
   setSendState(false, "Session token forgotten.");
   setConnectionCollapsed(false);
+  setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
   showError("Session token forgotten. Pair again with a fresh desktop code before reconnecting.", "success");
 }
 
@@ -684,7 +705,7 @@ function applySession(data, { scrollLatest = false } = {}) {
 }
 
 function scheduleRefreshPoll() {
-  if (state.pollTimer) {
+  if (state.pollTimer || state.authBlocked) {
     return;
   }
   state.pollTimer = window.setTimeout(async () => {
@@ -717,20 +738,37 @@ async function switchProject(project) {
   } catch (error) {
     setSendState(false, "Project switch failed.");
     renderProjects(Array.from(els.project.options).map((option) => option.value), previousProject);
-    showError(describeNetworkError(error));
+    const detail = describeNetworkError(error);
+    setConnectionState(detail, isAuthError(error) ? "error" : "warning");
+    showError(detail);
   }
 }
 
 async function refreshSession(options = {}) {
   try {
     const data = await apiFetch(`/api/session?cursor=${state.eventCursor}`);
+    state.connectionFailures = 0;
+    state.authBlocked = false;
     applySession(data, options);
+    setConnectionState("Connected to bridge.", "success");
     showError("");
+    return true;
   } catch (error) {
-    showError(error.message || String(error));
-    if (state.commandActive) {
+    state.connectionFailures += 1;
+    const detail = describeNetworkError(error);
+    showError(detail);
+    if (isAuthError(error)) {
+      state.authBlocked = true;
+      stopPolling();
+      setConnectionCollapsed(false);
+      setConnectionState("Session token rejected. Pair again with a fresh code.", "error");
+      return false;
+    }
+    setConnectionState(`Bridge unreachable. Retrying (${state.connectionFailures})...`, "warning");
+    if (state.commandActive || els.token.value.trim()) {
       scheduleRefreshPoll();
     }
+    return false;
   }
 }
 
@@ -759,6 +797,7 @@ async function sendPrompt(text) {
   } catch (error) {
     const detail = describeNetworkError(error);
     setSendState(false, `Send failed: ${detail}`);
+    setConnectionState(detail, isAuthError(error) ? "error" : "warning");
     showError(detail);
     if (isAuthError(error)) {
       setConnectionCollapsed(false);
@@ -768,6 +807,10 @@ async function sendPrompt(text) {
 
 els.save.addEventListener("click", () => {
   saveSettings();
+  setConnectionState(
+    els.token.value.trim() ? "Saved. Tap Connect to verify the session." : "Bridge URL saved. Pair with a fresh desktop code.",
+    "muted",
+  );
   showError("");
 });
 
@@ -776,9 +819,13 @@ els.pair.addEventListener("click", async () => {
     saveSettings();
     const data = await pairDevice();
     showError(`Paired successfully. Session token valid for ${data.ttl_seconds || "a limited time"} seconds.`, "success");
-    setConnectionCollapsed(true);
+    if (await refreshSession()) {
+      setConnectionCollapsed(true);
+    }
   } catch (error) {
-    showError(describeNetworkError(error));
+    const detail = describeNetworkError(error);
+    setConnectionState(detail, "error");
+    showError(detail);
   }
 });
 
@@ -795,10 +842,16 @@ els.connect.addEventListener("click", async () => {
     state.commandEvents = [];
     state.commandStreams = {};
     state.commandActive = false;
-    await refreshSession();
-    setConnectionCollapsed(true);
+    state.connectionFailures = 0;
+    state.authBlocked = false;
+    setConnectionState("Connecting to bridge...", "warning");
+    if (await refreshSession()) {
+      setConnectionCollapsed(true);
+    }
   } catch (error) {
-    showError(describeNetworkError(error));
+    const detail = describeNetworkError(error);
+    setConnectionState(detail, "error");
+    showError(detail);
   }
 });
 
@@ -871,3 +924,8 @@ if ("ResizeObserver" in window) {
 updateKeyboardOffset();
 
 loadSettings();
+if (els.token.value.trim()) {
+  setConnectionState("Saved session token found. Tap Connect to verify it.", "muted");
+} else {
+  setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
+}
