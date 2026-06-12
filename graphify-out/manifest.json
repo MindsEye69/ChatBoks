@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "tests/test_direct_agents.py": {
-    "mtime": 1781267562.1786056,
-    "ast_hash": "c46f49f94c78c6d24de2bec6ddfde3e2",
+    "mtime": 1781294870.9181,
+    "ast_hash": "1a214ee34a1aea43d4f39e9e5744550c",
     "semantic_hash": ""
   },
   "tests/test_help.py": {
@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "agents/coordinator.py": {
-    "mtime": 1781267562.1670923,
-    "ast_hash": "4028dd302274cabaadd9b60c203e9304",
+    "mtime": 1781294860.3609345,
+    "ast_hash": "5f6aa8687fb772a0a96a194b965ad8d5",
     "semantic_hash": ""
   },
   "COORDINATOR.md": {

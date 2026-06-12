@@ -478,6 +478,56 @@ def test_coordinator_ignores_unknown_directive_lines_from_model():
         print("PASS: Coordinator ignores unknown directive lines from the local model")
 
 
+def test_coordinator_preserves_body_after_leading_signal():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Coordinator role",
+        )
+
+        result = agent.normalize_output(
+            ">>> QUESTION\nWhat is the next concrete diagnostic command I should run?",
+            "join in",
+        )
+
+        assert "What is the next concrete diagnostic command" in result
+        assert result.endswith(">>> QUESTION")
+        assert "bare control signal" not in result
+        print("PASS: Coordinator preserves useful body text after a leading control signal")
+
+
+def test_coordinator_join_in_short_circuits_to_useful_response():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Coordinator role",
+        )
+
+        result = agent.call("[ACTIVE TASK]\njoin in")
+
+        assert "Coordinator is in." in result
+        assert "what's next for ChatBoks" in result
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Coordinator join-in requests short-circuit to a useful response")
+
+
+def test_coordinator_join_in_fallback_handles_bare_signal():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
+            "Coordinator role",
+        )
+
+        result = agent.normalize_output(">>> TASK_COMPLETE", "[ACTIVE TASK]\njoin in")
+
+        assert "Coordinator is in." in result
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Coordinator join-in fallback handles bare local-model signals")
+
+
 def test_coordinator_diagnostic_fallback_uses_active_task_only():
     with tempfile.TemporaryDirectory() as tmp:
         agent = CoordinatorAgent(

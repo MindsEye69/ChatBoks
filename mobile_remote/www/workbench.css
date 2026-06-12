@@ -50,6 +50,7 @@ body {
   background: var(--bg);
   color: var(--text);
   overflow: hidden;
+  user-select: none;
 }
 
 [data-theme="light"] body {
@@ -61,6 +62,20 @@ body {
 button,
 textarea {
   font: inherit;
+}
+
+input,
+textarea,
+pre,
+code,
+.msg-text,
+.message-card,
+.handoff-card,
+.complete-card,
+.approval-details,
+.trace-summary,
+.summary-copy {
+  user-select: text;
 }
 
 button {

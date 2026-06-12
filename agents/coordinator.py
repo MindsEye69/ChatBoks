@@ -17,6 +17,7 @@ class CoordinatorAgent(BaseAgent):
     name = "coordinator"
     signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
     role_call_requests = {"role call", "roll call", "rolecall", "rollcall"}
+    join_requests = {"join", "join in", "jump in", "step in", "come in"}
     next_step_markers = ("what's next", "whats next", "what is next", "next step", "what should i test next")
 
     @property
@@ -61,6 +62,8 @@ class CoordinatorAgent(BaseAgent):
         lowered_request = current_request.lower()
         if self.is_role_call_request(current_request):
             return self.role_call_response()
+        if self.is_join_request(current_request):
+            return self.join_response()
         if self.is_next_step_request(lowered_request):
             return self.next_step_response(lowered_request)
         return super().call(context_package)
@@ -101,6 +104,8 @@ class CoordinatorAgent(BaseAgent):
         current_request = self.extract_current_request(prompt)
         if self.is_role_call_request(current_request):
             return self.role_call_response()
+        if self.is_join_request(current_request):
+            return self.join_response()
         endpoint = self.endpoint()
         if not self._is_loopback_endpoint(endpoint):
             return (
@@ -225,11 +230,11 @@ class CoordinatorAgent(BaseAgent):
         ]
         signal = max(signal_positions)[1] if signal_positions else None
         if signal:
-            before_signal, _, _ = cleaned.rpartition(f">>> {signal}")
+            before_signal, _, after_signal = cleaned.rpartition(f">>> {signal}")
             signal_lines = {f">>> {candidate}" for candidate in self.signals}
             body_lines = [
                 line.strip()
-                for line in before_signal.splitlines()
+                for line in f"{before_signal}\n{after_signal}".splitlines()
                 if line.strip() and line.strip() not in signal_lines and not line.strip().startswith(">>>")
             ]
             body = self.rewrite_guidance("\n".join(body_lines).strip(), prompt)
@@ -266,6 +271,8 @@ class CoordinatorAgent(BaseAgent):
         lowered = current_request.lower()
         if self.is_role_call_request(current_request):
             return self.role_call_response()
+        if self.is_join_request(current_request):
+            return self.join_response()
         if self.is_model_switch_validation_request(lowered):
             return (
                 "Next check: run @coordinator role call once and confirm Coordinator answers promptly "
@@ -342,6 +349,10 @@ class CoordinatorAgent(BaseAgent):
         normalized = " ".join(request.strip().lower().split())
         return normalized in self.role_call_requests
 
+    def is_join_request(self, request: str) -> bool:
+        normalized = " ".join(request.strip().lower().split())
+        return normalized in self.join_requests
+
     def next_step_response(self, lowered_request: str) -> str:
         if self.is_model_switch_validation_request(lowered_request):
             return (
@@ -365,6 +376,13 @@ class CoordinatorAgent(BaseAgent):
         return (
             "Next step: pick one scoped validation or diagnostic, keep Coordinator on status/routing, "
             "and route implementation or repo edits to Codex. Run /agent first if availability is unclear.\n"
+            ">>> TASK_COMPLETE"
+        )
+
+    def join_response(self) -> str:
+        return (
+            "Coordinator is in. I can handle lightweight routing, setup checks, summaries, and small diagnostics. "
+            "For a useful next check, ask @coordinator what's next for ChatBoks? or run /agent to inspect availability.\n"
             ">>> TASK_COMPLETE"
         )
 
