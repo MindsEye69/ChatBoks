@@ -44,6 +44,7 @@ PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
 OPERATOR_STATUS_FILENAME = "remote_bridge.json"
+OPERATOR_PROBE_TIMEOUT_SECONDS = 2.0
 WORKBENCH_STATUS_CACHE_SECONDS = 5.0
 WORKBENCH_WWW_ROOT = Path(__file__).resolve().parent / "mobile_remote" / "www"
 # Exact-match allowlist: request paths never touch the filesystem directly,
@@ -739,19 +740,17 @@ class RemoteBridgeServer(ThreadingHTTPServer):
         self.auth = auth
         self.operator_status_path = operator_status_path
 
-    def write_operator_status(self) -> None:
-        if self.operator_status_path is None:
-            return
+    def operator_status_payload(self, *, include_admin_token: bool = True) -> dict[str, Any]:
         pair_code, pair_ttl = self.auth.current_pair_code()
         expires_at = int(time.time() + pair_ttl)
         app = getattr(self.session, "app", None)
         project = getattr(app, "project", getattr(self.session, "project", "unknown"))
         payload = {
+            "status": "running",
             "project": project,
             "host": self.server_address[0],
             "port": self.server_address[1],
             "base_url": f"http://{self.server_address[0]}:{self.server_address[1]}",
-            "admin_token": self.auth.admin_token,
             "pair_code": pair_code,
             "pair_code_ttl_seconds": pair_ttl,
             "pair_code_expires_at": expires_at,
@@ -759,6 +758,14 @@ class RemoteBridgeServer(ThreadingHTTPServer):
             "pid": os.getpid(),
             "updated_at": int(time.time()),
         }
+        if include_admin_token:
+            payload["admin_token"] = self.auth.admin_token
+        return payload
+
+    def write_operator_status(self) -> None:
+        if self.operator_status_path is None:
+            return
+        payload = self.operator_status_payload()
         self.operator_status_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = self.operator_status_path.with_suffix(self.operator_status_path.suffix + ".tmp")
         tmp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -796,6 +803,14 @@ class RemoteHandler(BaseHTTPRequestHandler):
         if parsed.path in WORKBENCH_STATIC_ROUTES:
             relative_path, content_type = WORKBENCH_STATIC_ROUTES[parsed.path]
             self.respond_static(relative_path, content_type)
+            return
+        if parsed.path == "/api/admin/status":
+            if not self.origin_allowed():
+                return
+            if not self.admin_authorized():
+                return
+            self.server.write_operator_status()
+            self.respond_json(self.server.operator_status_payload(include_admin_token=False))
             return
         if parsed.path == "/api/workbench":
             if not self.origin_allowed():
@@ -1013,20 +1028,103 @@ class RemoteHandler(BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         if include_csp:
             self.send_header("Content-Security-Policy", SHELL_CSP)
+
+
 def default_operator_status_path() -> Path:
     return Path.cwd() / ".chatboks" / OPERATOR_STATUS_FILENAME
 
 
-def rotate_pair_code_from_operator_file(path: Path) -> int:
+def read_operator_status_payload(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     if not path.exists():
-        print(f"No remote bridge operator file found: {path}")
-        print("Start the bridge first, or pass --operator-file with the active bridge file.")
-        return 2
+        return None, "missing"
     try:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as exc:
-        print(f"Could not read remote bridge operator file: {exc}")
+        return None, f"could not read operator file: {exc}"
+    if not isinstance(payload, dict):
+        return None, "operator file is not a JSON object"
+    return payload, None
+
+
+def probe_operator_bridge(
+    payload: dict[str, Any],
+    *,
+    timeout: float = OPERATOR_PROBE_TIMEOUT_SECONDS,
+) -> tuple[bool, str]:
+    base_url = str(payload.get("base_url") or "").rstrip("/")
+    admin_token = str(payload.get("admin_token") or "")
+    if not base_url or not admin_token:
+        return False, "operator file is missing base_url/admin_token"
+
+    def request_json(path: str) -> dict[str, Any] | None:
+        request = urllib.request.Request(
+            f"{base_url}{path}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            method="GET",
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = response.read().decode("utf-8")
+        try:
+            decoded = json.loads(body or "{}")
+        except json.JSONDecodeError:
+            return None
+        return decoded if isinstance(decoded, dict) else None
+
+    try:
+        status = request_json("/api/admin/status")
+        if status is not None:
+            pid = status.get("pid")
+            return True, f"active bridge answered at {base_url} (pid {pid})"
+        return True, f"active bridge answered at {base_url}"
+    except urllib.error.HTTPError as exc:
+        if exc.code == HTTPStatus.NOT_FOUND:
+            try:
+                request_json("/api/workbench")
+                return True, f"active legacy bridge answered at {base_url}"
+            except urllib.error.HTTPError as fallback_exc:
+                if fallback_exc.code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+                    return False, f"bridge at {base_url} rejected the operator credentials"
+                return False, f"bridge at {base_url} returned HTTP {fallback_exc.code}"
+            except OSError as fallback_exc:
+                return False, f"no bridge answered at {base_url}: {fallback_exc}"
+        if exc.code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+            return False, f"bridge at {base_url} rejected the operator credentials"
+        return False, f"bridge at {base_url} returned HTTP {exc.code}"
+    except OSError as exc:
+        return False, f"no bridge answered at {base_url}: {exc}"
+
+
+def ensure_operator_file_available(path: Path) -> None:
+    payload, error = read_operator_status_payload(path)
+    if error == "missing":
+        return
+    if payload is None:
+        print(f"Ignoring stale remote bridge operator file: {error}")
+        return
+    active, detail = probe_operator_bridge(payload)
+    if not active:
+        print(f"Ignoring stale remote bridge operator file: {detail}")
+        return
+    raise RuntimeError(
+        f"An active ChatBoks remote bridge already owns {path}: {detail}. "
+        "Stop that bridge first, or pass a different --operator-file."
+    )
+
+
+def rotate_pair_code_from_operator_file(path: Path) -> int:
+    payload, error = read_operator_status_payload(path)
+    if error == "missing":
+        print(f"No remote bridge operator file found: {path}")
+        print("Start the bridge first, or pass --operator-file with the active bridge file.")
         return 2
+    if payload is None:
+        print(f"Could not read remote bridge operator file: {error}")
+        return 2
+    active, detail = probe_operator_bridge(payload)
+    if not active:
+        print(f"Stale remote bridge operator file: {detail}")
+        print("Start the bridge again, or delete the stale operator file.")
+        return 1
     base_url = str(payload.get("base_url") or "").rstrip("/")
     admin_token = str(payload.get("admin_token") or "")
     if not base_url or not admin_token:
@@ -1095,6 +1193,10 @@ def main() -> int:
         raise SystemExit(
             "Refusing unsafe bind. Use loopback, or pass --allow-tailnet-bind with a Tailscale 100.64.0.0/10 IPv4 address."
         )
+    try:
+        ensure_operator_file_available(operator_status_path)
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
 
     session = RemoteSession(args.project, config_path=args.config)
     admin_token = args.token or secrets.token_urlsafe(24)

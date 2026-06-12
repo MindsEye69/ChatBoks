@@ -18,6 +18,7 @@ from remote_control import (
     agent_trace_from_transcript,
     build_token_usage,
     codegraph_stats,
+    ensure_operator_file_available,
     git_environment,
     is_allowed_bind_host,
     is_allowed_app_origin,
@@ -704,6 +705,66 @@ def test_remote_bridge_pair_exchange_updates_operator_file(tmp_path: Path):
     print("PASS: remote bridge updates the operator file after pairing")
 
 
+def test_remote_bridge_admin_status_reports_running_bridge(tmp_path: Path):
+    operator_file = tmp_path / "remote_bridge.json"
+    server, thread, base = run_server(FakeSession(), "admin-token", operator_file)
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/admin/status",
+            headers={"Authorization": "Bearer admin-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload["status"] == "running"
+        assert payload["base_url"] == base
+        assert payload["project"] == "chatboks"
+        assert payload["pid"]
+        assert "pair_code" in payload
+        assert "admin_token" not in payload
+        stored = json.loads(operator_file.read_text(encoding="utf-8"))
+        assert stored["base_url"] == base
+        assert stored["admin_token"] == "admin-token"
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge admin status reports the running bridge")
+
+
+def test_operator_file_guard_rejects_active_bridge(tmp_path: Path):
+    operator_file = tmp_path / "remote_bridge.json"
+    server, thread, _base = run_server(FakeSession(), "admin-token", operator_file)
+    try:
+        server.write_operator_status()
+        try:
+            ensure_operator_file_available(operator_file)
+            assert False, "expected active bridge guard failure"
+        except RuntimeError as exc:
+            assert "already owns" in str(exc)
+            assert str(operator_file) in str(exc)
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: operator file guard rejects a live bridge owner")
+
+
+def test_operator_file_guard_ignores_stale_operator_file(tmp_path: Path, capsys):
+    operator_file = tmp_path / "remote_bridge.json"
+    operator_file.write_text(
+        json.dumps({"base_url": "http://127.0.0.1:1", "admin_token": "stale-token"}),
+        encoding="utf-8",
+    )
+
+    ensure_operator_file_available(operator_file)
+
+    output = capsys.readouterr().out
+    assert "Ignoring stale remote bridge operator file" in output
+    assert "no bridge answered" in output
+    print("PASS: operator file guard ignores unreachable stale metadata")
+
+
 def test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file(tmp_path: Path):
     operator_file = tmp_path / "remote_bridge.json"
     server, thread, base = run_server(FakeSession(), "admin-token", operator_file)
@@ -940,3 +1001,19 @@ def test_rotate_pair_code_helper_uses_operator_file(tmp_path: Path, capsys):
         thread.join(timeout=5)
         server.server_close()
     print("PASS: rotate-pair-code helper uses the operator file")
+
+
+def test_rotate_pair_code_helper_reports_stale_operator_file(tmp_path: Path, capsys):
+    operator_file = tmp_path / "remote_bridge.json"
+    operator_file.write_text(
+        json.dumps({"base_url": "http://127.0.0.1:1", "admin_token": "stale-token"}),
+        encoding="utf-8",
+    )
+
+    result = rotate_pair_code_from_operator_file(operator_file)
+
+    output = capsys.readouterr().out
+    assert result == 1
+    assert "Stale remote bridge operator file" in output
+    assert "Start the bridge again" in output
+    print("PASS: rotate-pair-code helper reports stale operator files clearly")

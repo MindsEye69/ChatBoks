@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781266332.0892484,
-    "ast_hash": "7c6f884f8763fd48db349738e289e29d",
+    "mtime": 1781269419.532646,
+    "ast_hash": "73f40a5361dd67e75f28a758a6409c08",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781267562.2196279,
-    "ast_hash": "ebcd7938f7defca59f20decb27f48d5c",
+    "mtime": 1781269469.220667,
+    "ast_hash": "e0838250325eb65fc43c8aa108b084c4",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
