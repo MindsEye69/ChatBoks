@@ -56,6 +56,7 @@ const els = {
   save: document.getElementById("saveButton"),
   pair: document.getElementById("pairButton"),
   connect: document.getElementById("connectButton"),
+  forget: document.getElementById("forgetButton"),
   send: document.getElementById("sendButton"),
 };
 
@@ -79,9 +80,10 @@ function saveSettings() {
   );
 }
 
-function showError(message) {
+function showError(message, tone = "error") {
   els.errorBox.textContent = message || "";
   els.errorBox.classList.toggle("hidden", !message);
+  els.errorBox.classList.toggle("success", Boolean(message) && tone === "success");
 }
 
 function setConnectionCollapsed(collapsed) {
@@ -224,6 +226,33 @@ async function pairDevice() {
   els.pairCode.value = "";
   saveSettings();
   return body;
+}
+
+function forgetSessionToken() {
+  els.token.value = "";
+  els.pairCode.value = "";
+  saveSettings();
+  stopPolling();
+  state.eventCursor = 0;
+  state.eventItems = [];
+  state.eventStreams = {};
+  state.systemItems = [];
+  state.commandEvents = [];
+  state.commandStreams = {};
+  state.commandActive = false;
+  els.status.textContent = "offline";
+  els.nextAgent.textContent = "-";
+  els.task.textContent = "-";
+  els.tokenLine.textContent = "";
+  els.project.innerHTML = "";
+  renderApproval({ status: "idle", proposal: null });
+  renderLatestResponse([]);
+  renderList(els.transcript, []);
+  renderList(els.systemFeed, []);
+  renderList(els.events, []);
+  setSendState(false, "Session token forgotten.");
+  setConnectionCollapsed(false);
+  showError("Session token forgotten. Pair again with a fresh desktop code before reconnecting.", "success");
 }
 
 function renderList(container, items) {
@@ -689,7 +718,7 @@ els.pair.addEventListener("click", async () => {
   try {
     saveSettings();
     const data = await pairDevice();
-    showError(`Paired successfully. Session token valid for ${data.ttl_seconds || "a limited time"} seconds.`);
+    showError(`Paired successfully. Session token valid for ${data.ttl_seconds || "a limited time"} seconds.`, "success");
     setConnectionCollapsed(true);
   } catch (error) {
     showError(describeNetworkError(error));
@@ -715,6 +744,8 @@ els.connect.addEventListener("click", async () => {
     showError(describeNetworkError(error));
   }
 });
+
+els.forget.addEventListener("click", forgetSessionToken);
 
 els.refresh.addEventListener("click", refreshSession);
 els.connectionToggle.addEventListener("click", () => {

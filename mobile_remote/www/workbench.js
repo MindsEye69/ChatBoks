@@ -125,9 +125,10 @@ function setTheme(theme) {
 
 /* ---------- connection ---------- */
 
-function showError(message) {
+function showError(message, tone = "error") {
   els.errorBox.textContent = message || "";
   els.errorBox.classList.toggle("hidden", !message);
+  els.errorBox.classList.toggle("success", Boolean(message) && tone === "success");
   if (message) {
     els.connectionPanel.classList.remove("hidden");
   }
@@ -172,7 +173,8 @@ function friendlyFetchError(error) {
     return error.message;
   }
   if (error instanceof TypeError && /fetch/i.test(error.message || "")) {
-    return "Could not reach the bridge. Confirm remote_control.py is running and use the bridge URL shown in its console.";
+    const target = (els.bridgeUrl.value || state.bridgeUrl || window.location.origin || "the bridge").trim();
+    return `Could not reach the bridge at ${target}. Confirm remote_control.py is running and use the bridge URL shown in its console.`;
   }
   return error && error.message ? error.message : String(error);
 }
@@ -896,9 +898,9 @@ els.settingsButton.addEventListener("click", () => setConnectionPanel(true));
 els.pairButton.addEventListener("click", async () => {
   try {
     await pairDevice();
-    showError("");
-    els.errorBox.classList.add("hidden");
     await connect();
+    showError("Paired and connected. Session token saved in this browser.", "success");
+    setSendState(false, "Paired and connected.");
   } catch (error) {
     showError(friendlyFetchError(error));
   }
@@ -907,6 +909,8 @@ els.pairButton.addEventListener("click", async () => {
 els.connectButton.addEventListener("click", async () => {
   try {
     await connect();
+    showError("Connected to the bridge.", "success");
+    setSendState(false, "Connected to bridge.");
   } catch (error) {
     showError(friendlyFetchError(error));
   }
@@ -915,6 +919,7 @@ els.connectButton.addEventListener("click", async () => {
 els.forgetButton.addEventListener("click", () => {
   state.token = "";
   els.token.value = "";
+  els.pairCode.value = "";
   saveSettings();
   stopPolling();
   setConnected(false);
@@ -922,7 +927,7 @@ els.forgetButton.addEventListener("click", () => {
   renderOfflineWorkbench();
   setConnectionPanel(true);
   setSendState(false, "Session token forgotten.");
-  showError("");
+  showError("Session token forgotten. Pair again with a fresh desktop code before reconnecting.", "success");
 });
 
 els.sendButton.addEventListener("click", () => sendPrompt(els.workbenchPrompt.value));

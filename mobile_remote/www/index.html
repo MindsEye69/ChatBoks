@@ -39,11 +39,12 @@
         <span>Session token</span>
         <input id="token" type="password" placeholder="Filled after pairing; optional to save">
       </label>
-      <div class="button-row">
-        <button id="saveButton" type="button">Save</button>
-        <button id="pairButton" class="ghost" type="button">Pair</button>
-        <button id="connectButton" class="ghost" type="button">Connect</button>
-      </div>
+        <div class="button-row">
+          <button id="saveButton" type="button">Save</button>
+          <button id="pairButton" class="ghost" type="button">Pair</button>
+          <button id="connectButton" class="ghost" type="button">Connect</button>
+          <button id="forgetButton" class="ghost" type="button">Forget token</button>
+        </div>
       <p class="hint">Use a private Tailscale Serve URL, or the tailnet fallback URL shown by the desktop bridge. Pair with the one-time desktop code first.</p>
       <div id="errorBox" class="error hidden"></div>
     </section>

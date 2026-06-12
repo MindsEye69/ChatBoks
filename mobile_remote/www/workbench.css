@@ -1046,8 +1046,18 @@ dd {
   line-height: 1.4;
 }
 
+.error-box.success {
+  border-color: rgba(82, 211, 128, 0.45);
+  background: rgba(82, 211, 128, 0.12);
+  color: var(--ok);
+}
+
 [data-theme="light"] .error-box {
   color: #b91c1c;
+}
+
+[data-theme="light"] .error-box.success {
+  color: #15803d;
 }
 
 .live-dot.offline {

@@ -548,6 +548,10 @@ def test_remote_bridge_serves_static_ui_files():
             assert response.status == 200
             assert response.headers["Content-Type"].startswith("text/css")
 
+        with urllib.request.urlopen(f"{base}/favicon.ico", timeout=5) as response:
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("image/png")
+
         with urllib.request.urlopen(f"{base}/workbench", timeout=5) as response:
             body = response.read().decode("utf-8")
             assert response.status == 200
