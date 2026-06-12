@@ -1,16 +1,16 @@
 # Graph Report - chatboks  (2026-06-12)
 
 ## Corpus Check
-- 92 files · ~308,982 words
+- 92 files · ~309,942 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1413 nodes · 3605 edges · 72 communities (59 shown, 13 thin omitted)
+- 1433 nodes · 3681 edges · 71 communities (60 shown, 11 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 261 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `32a09c73`
+- Built from commit: `9d6ebd5e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -50,9 +50,6 @@
 - [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
 - [[_COMMUNITY_Community 51|Community 51]]
-- [[_COMMUNITY_Community 52|Community 52]]
-- [[_COMMUNITY_Community 56|Community 56]]
-- [[_COMMUNITY_Community 58|Community 58]]
 - [[_COMMUNITY_Community 59|Community 59]]
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 62|Community 62]]
@@ -95,26 +92,26 @@
 - 1-file cycle: `orchestrator.py -> orchestrator.py`
 - 1-file cycle: `tests/test_direct_agents.py -> tests/test_direct_agents.py`
 
-## Communities (72 total, 13 thin omitted)
+## Communities (71 total, 11 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.26
 Nodes (12): FakeAgent, _make_app(), Chatboks, Path, test_model_command_escape_forces_plain_prompt_text(), test_model_command_timeout_preserves_partial_output(), test_model_commands_command_lists_registered_commands(), test_raw_model_slash_command_stays_chatboks_local() (+4 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.11
+Cohesion: 0.10
 Nodes (45): AntigravityAgent, ClaudeAgent, CodexAgent, CodexSparkAgent, Antigravity's Role - ChatBoks, Boundaries, Collaboration Duties, Primary Lane (+37 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.07
-Nodes (34): Connection, ContextBuilder, Any, Path, Any, Path, Small deterministic fallback summarizer.      The design allows this to become a, Summarizer (+26 more)
+Cohesion: 0.05
+Nodes (54): Connection, ContextBuilder, Any, Path, clean_list(), extract_packets(), has_source_anchor(), normalize_value() (+46 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.05
 Nodes (23): _make_app(), Chatboks, Path, Smoke tests for the local /help command., test_codegraph_status_lines_reads_sqlite_counts(), test_graph_command_renders_without_agent_round(), test_graphify_status_lines_reports_fresh_graph(), test_graphify_status_lines_reports_stale_graph() (+15 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.06
+Cohesion: 0.07
 Nodes (45): CoordinatorAgent, Any, Path, Return the agents that should handle a user prompt.          A leading @agent pr, Router, FakeJsonResponse, _make_router(), Path (+37 more)
 
 ### Community 5 - "Community 5"
@@ -134,8 +131,8 @@ Cohesion: 0.12
 Nodes (24): ContextBuilder, CoordinatorAgent, _make_app(), _make_builder(), _make_coordinator(), Chatboks, Path, Smoke tests for security hardening pass 1.  Covers: - chatboks.md history marked (+16 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.12
-Nodes (33): configure_utf8_stdio(), Return an environment that makes Python children speak UTF-8., Prefer UTF-8 for ChatBoks console/process I/O on every platform., utf8_env(), append_commit_message(), git_output(), load_state(), main() (+25 more)
+Cohesion: 0.05
+Nodes (60): configure_utf8_stdio(), Return an environment that makes Python children speak UTF-8., Prefer UTF-8 for ChatBoks console/process I/O on every platform., utf8_env(), append_commit_message(), git_output(), load_state(), main() (+52 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.11
@@ -146,8 +143,8 @@ Cohesion: 0.23
 Nodes (11): _make_app(), Smoke test: PROPOSAL from non-last agent is buffered; all agents run before user, Return a Chatboks instance with all I/O mocked out., QUESTION from second agent returns immediately, abandoning buffered PROPOSAL., A weak trailing agent must not override a prior completed result., First agent PROPOSAL must not short-circuit; second agent must still run., Single-agent project: PROPOSAL fires in post-loop handler (unchanged behavior)., test_blocked_after_prior_completion_is_warning_not_terminal_block() (+3 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.17
-Nodes (12): Event, RemoteEventBuffer, BlockingFakeApp, FakeStream, Path, test_codegraph_stats_reads_counts_from_database(), test_git_environment_returns_none_for_non_repo(), test_parse_chatboks_messages_reads_multiline_turns() (+4 more)
+Cohesion: 0.20
+Nodes (8): Event, RemoteEventBuffer, BlockingFakeApp, FakeStream, test_remote_event_buffer_preserves_stream_delta_whitespace(), test_remote_session_snapshot_includes_compact_proposal(), test_remote_session_snapshot_includes_trace_payload(), test_remote_session_snapshot_returns_while_command_is_running()
 
 ### Community 14 - "Community 14"
 Cohesion: 0.33
@@ -158,8 +155,8 @@ Cohesion: 0.60
 Nodes (5): Bugsearch Mode, Context Priming, Escalation Triggers, Quality Gate, Workflow
 
 ### Community 16 - "Community 16"
-Cohesion: 0.19
-Nodes (24): FakeSession, run_server(), test_operator_file_guard_rejects_active_bridge(), test_remote_bridge_accepts_token_and_forwards_commands(), test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file(), test_remote_bridge_admin_status_reports_running_bridge(), test_remote_bridge_allows_capacitor_origin_preflight(), test_remote_bridge_clamps_session_transcript_limit() (+16 more)
+Cohesion: 0.14
+Nodes (33): is_tailnet_ipv4_host(), FakeSession, Path, run_server(), test_codegraph_stats_reads_counts_from_database(), test_git_environment_returns_none_for_non_repo(), test_operator_file_guard_ignores_stale_operator_file(), test_operator_file_guard_rejects_active_bridge() (+25 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.14
@@ -171,7 +168,7 @@ Nodes (42): apiFetch(), appendStreamText(), applyEventToList(), applySession(), 
 
 ### Community 19 - "Community 19"
 Cohesion: 0.08
-Nodes (54): agentDisplayName(), apiFetch(), appendStreamText(), applyEventToList(), applySession(), clearSendStatusSoon(), copyLatestResponse(), currentBaseUrl() (+46 more)
+Nodes (55): agentDisplayName(), apiFetch(), appendStreamText(), applyEventToList(), applySession(), canonicalAgent(), clearSendStatusSoon(), copyLatestResponse() (+47 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.25
@@ -194,28 +191,24 @@ Cohesion: 0.33
 Nodes (5): Boundaries, Codex's Role - ChatBoks, Collaboration Duties, Primary Lane, Tooling Safety
 
 ### Community 42 - "Community 42"
-Cohesion: 0.06
-Nodes (49): clean_list(), extract_packets(), has_source_anchor(), normalize_value(), packet_records_from_jsonl(), parse_packet_body(), Any, split_observed_by_anchor() (+41 more)
+Cohesion: 0.26
+Nodes (12): _make_app(), Chatboks, Path, Smoke tests: slash commands bypass buffer_or_complete_input., All known slash commands return immediately without buffering., A slash command typed mid-composition leaves the existing buffer intact., Non-slash text without terminal punctuation is buffered as before., handle_user_input executes slash local commands end-to-end. (+4 more)
 
 ### Community 43 - "Community 43"
 Cohesion: 0.40
 Nodes (4): CodeGraph, Freshness Checks, Graph Workflow, Graphify
 
 ### Community 48 - "Community 48"
-Cohesion: 0.07
-Nodes (49): AgentTimeoutError, BaseAgent, Any, Path, Raised when an agent CLI rejects a prompt because the context is too large., Raised when an agent CLI exceeds its idle or wall-clock timeout., TokenExhaustionError, AgentTimeoutError (+41 more)
+Cohesion: 0.06
+Nodes (53): AgentTimeoutError, BaseAgent, Any, Path, Raised when an agent CLI rejects a prompt because the context is too large., Raised when an agent CLI exceeds its idle or wall-clock timeout., TokenExhaustionError, AgentTimeoutError (+45 more)
 
 ### Community 50 - "Community 50"
 Cohesion: 0.33
 Nodes (5): Boundaries, Codex Spark's Role - ChatBoks, Collaboration Duties, Primary Lane, Tooling Safety
 
 ### Community 51 - "Community 51"
-Cohesion: 0.32
-Nodes (4): HTTPStatus, is_allowed_app_origin(), RemoteHandler, test_allowed_app_origin_accepts_localhost_with_optional_ports()
-
-### Community 58 - "Community 58"
-Cohesion: 0.26
-Nodes (12): _make_app(), Chatboks, Path, Smoke tests: slash commands bypass buffer_or_complete_input., All known slash commands return immediately without buffering., A slash command typed mid-composition leaves the existing buffer intact., Non-slash text without terminal punctuation is buffered as before., handle_user_input executes slash local commands end-to-end. (+4 more)
+Cohesion: 0.29
+Nodes (5): HTTPStatus, is_allowed_app_origin(), parse_query_int(), RemoteHandler, test_allowed_app_origin_accepts_localhost_with_optional_ports()
 
 ### Community 59 - "Community 59"
 Cohesion: 0.18
@@ -227,11 +220,11 @@ Nodes (9): ChatBoks Mobile Remote Pairing Runbook, Generate A New Pairing Code, 
 
 ### Community 63 - "Community 63"
 Cohesion: 0.08
-Nodes (57): agentDisplayName(), agentGlyph(), apiFetch(), apiUrl(), applySession(), connect(), DEFAULT_AGENTS, els (+49 more)
+Nodes (64): AGENT_GLYPHS, AGENT_LABELS, agentDisplayName(), agentGlyph(), agentIsLive(), agentStatusValue(), apiFetch(), apiUrl() (+56 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.11
-Nodes (34): agent_trace_from_transcript(), build_token_usage(), codegraph_stats(), compact_summary(), default_operator_status_path(), detect_tailnet_ip(), ensure_operator_file_available(), git_environment() (+26 more)
+Cohesion: 0.15
+Nodes (34): agent_can_fill_lane(), agent_is_live(), agent_status_value(), agent_trace_from_transcript(), append_lane_agent(), build_lane_agents(), build_token_usage(), canonical_agent_config() (+26 more)
 
 ### Community 68 - "Community 68"
 Cohesion: 0.33
@@ -246,23 +239,23 @@ Cohesion: 0.50
 Nodes (3): Coordinator's Role - ChatBoks, Output Rules, Scope
 
 ### Community 73 - "Community 73"
-Cohesion: 0.17
-Nodes (6): BaseHTTPRequestHandler, RemoteAuth, RemoteBridgeServer, RemoteBridgeServer, Thread, ThreadingHTTPServer
+Cohesion: 0.14
+Nodes (11): BaseHTTPRequestHandler, default_operator_status_path(), is_allowed_bind_host(), is_loopback_host(), main(), RemoteAuth, RemoteBridgeServer, RemoteBridgeServer (+3 more)
 
 ## Knowledge Gaps
-- **130 isolated node(s):** `version`, `configurations`, `allow`, `Path`, `Any` (+125 more)
+- **132 isolated node(s):** `version`, `configurations`, `allow`, `Path`, `Any` (+127 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Chatboks` connect `Community 44` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 8`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 42`, `Community 45`, `Community 46`, `Community 48`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 58`, `Community 61`, `Community 65`, `Community 67`, `Community 73`, `Community 79`?**
-  _High betweenness centrality (0.296) - this node is a cross-community bridge._
-- **Why does `Router` connect `Community 4` to `Community 0`, `Community 1`, `Community 67`, `Community 6`, `Community 7`, `Community 10`, `Community 42`, `Community 44`, `Community 46`, `Community 79`, `Community 48`, `Community 56`?**
-  _High betweenness centrality (0.115) - this node is a cross-community bridge._
+- **Why does `Chatboks` connect `Community 44` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 42`, `Community 45`, `Community 46`, `Community 48`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 61`, `Community 65`, `Community 67`, `Community 73`, `Community 79`?**
+  _High betweenness centrality (0.302) - this node is a cross-community bridge._
+- **Why does `Router` connect `Community 4` to `Community 0`, `Community 1`, `Community 67`, `Community 6`, `Community 7`, `Community 9`, `Community 10`, `Community 44`, `Community 46`, `Community 79`, `Community 48`?**
+  _High betweenness centrality (0.117) - this node is a cross-community bridge._
 - **Why does `CoordinatorAgent` connect `Community 4` to `Community 48`, `Community 1`, `Community 10`, `Community 8`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._
 - **Are the 47 inferred relationships involving `Chatboks` (e.g. with `BaseHTTPRequestHandler` and `ContextBuilder`) actually correct?**
   _`Chatboks` has 47 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 21 inferred relationships involving `Stream` (e.g. with `AgentTimeoutError` and `BaseHTTPRequestHandler`) actually correct?**

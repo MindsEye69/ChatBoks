@@ -30,7 +30,7 @@ from typing import Any
 from context.packets import packet_records_from_jsonl
 from context.transcript import is_transcript_turn
 from encoding_utils import configure_utf8_stdio
-from orchestrator import Chatboks
+from orchestrator import DEFAULT_AGENT_FALLBACKS, Chatboks
 from ui.stream import Stream
 
 
@@ -39,6 +39,7 @@ MAX_TRANSCRIPT_LIMIT = TRANSCRIPT_LIMIT
 COMMAND_MAX_CHARS = 6000
 REMOTE_PROPOSAL_RAW_LIMIT = 4000
 TRACE_SUMMARY_LIMIT = 140
+LANE_AGENT_LIMIT = 3
 MAX_JSON_BODY_BYTES = 64 * 1024
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
@@ -66,6 +67,11 @@ ALLOWED_APP_ORIGINS = {
     "https://localhost",
     "http://127.0.0.1",
     "https://127.0.0.1",
+}
+AGENT_ALIASES = {
+    "agent_zero": "coordinator",
+    "agentzero": "coordinator",
+    "az": "coordinator",
 }
 SHELL_CSP = (
     "default-src 'self'; "
@@ -128,7 +134,7 @@ def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[d
             continue
         if is_transcript_turn(line):
             tag, _, remainder = line.partition("]")
-            sender = tag.lstrip("[").strip().lower()
+            sender = canonical_agent_name(tag.lstrip("[").strip())
             current = {"sender": sender, "text": remainder.strip()}
             messages.append(current)
             continue
@@ -141,19 +147,54 @@ def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[d
     return trimmed
 
 
+def canonical_agent_name(agent: Any) -> str:
+    normalized = str(agent or "").strip().lower().replace("-", "_").replace(" ", "_")
+    return AGENT_ALIASES.get(normalized, normalized)
+
+
+def canonical_agent_list(agents: Any) -> list[str]:
+    if not isinstance(agents, list):
+        return []
+    normalized: list[str] = []
+    for agent in agents:
+        name = canonical_agent_name(agent)
+        if name and name not in normalized:
+            normalized.append(name)
+    return normalized
+
+
+def canonical_agent_config(agent_config: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    for agent, config in agent_config.items():
+        normalized.setdefault(canonical_agent_name(agent), config)
+    return normalized
+
+
+def canonical_agent_statuses(agent_statuses: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    for agent, status in agent_statuses.items():
+        normalized[canonical_agent_name(agent)] = status
+    return normalized
+
+
 def build_token_usage(
     token_counts: dict[str, int],
     agent_config: dict[str, Any],
     main_agents: list[str],
 ) -> list[dict[str, Any]]:
-    ordered = list(main_agents)
-    for agent_name in token_counts:
+    agent_config = canonical_agent_config(agent_config)
+    canonical_counts: dict[str, int] = {}
+    for agent_name, count in token_counts.items():
+        canonical = canonical_agent_name(agent_name)
+        canonical_counts[canonical] = canonical_counts.get(canonical, 0) + int(count or 0)
+    ordered = canonical_agent_list(main_agents)
+    for agent_name in canonical_counts:
         if agent_name not in ordered:
             ordered.append(agent_name)
     usage: list[dict[str, Any]] = []
     for agent_name in ordered:
         config = agent_config.get(agent_name) or {}
-        used = int(token_counts.get(agent_name, 0))
+        used = int(canonical_counts.get(agent_name, 0))
         limit = int(config.get("token_limit", 0) or 0)
         warning = int(config.get("token_warning", 0) or 0)
         percent = round(used * 100.0 / limit, 1) if limit > 0 else None
@@ -167,6 +208,142 @@ def build_token_usage(
             }
         )
     return usage
+
+
+def agent_status_value(record: Any) -> str:
+    if isinstance(record, dict):
+        return str(record.get("status", "available")).lower()
+    if isinstance(record, str):
+        return record.lower()
+    return "available"
+
+
+def agent_is_live(agent: str, agent_statuses: dict[str, Any]) -> bool:
+    return agent_status_value(agent_statuses.get(canonical_agent_name(agent))) in {"available", "low"}
+
+
+def normalize_fallback_candidates(candidates: Any) -> list[tuple[str, bool]]:
+    if isinstance(candidates, dict):
+        candidates = candidates.get("candidates", [])
+    if not isinstance(candidates, list):
+        return []
+    normalized: list[tuple[str, bool]] = []
+    for item in candidates:
+        if isinstance(item, str):
+            normalized.append((canonical_agent_name(item), False))
+            continue
+        if isinstance(item, dict):
+            name = str(item.get("name") or item.get("agent") or "").strip()
+            if name:
+                normalized.append((canonical_agent_name(name), bool(item.get("can_fill_main_seat"))))
+    return normalized
+
+
+def agent_can_fill_lane(
+    agent: str,
+    *,
+    agent_config: dict[str, Any],
+    main_agents: list[str],
+    direct_agents: list[str],
+    fallback_candidate: bool = False,
+    fallback_allows_fill: bool = False,
+    active_candidate: bool = False,
+) -> bool:
+    config = agent_config.get(agent) or {}
+    if agent in main_agents:
+        return True
+    if "can_fill_main_seat" in config:
+        return bool(config.get("can_fill_main_seat"))
+    if fallback_allows_fill:
+        return True
+    return active_candidate and fallback_candidate and agent in direct_agents
+
+
+def append_lane_agent(selected: list[str], agent: str, agent_statuses: dict[str, Any]) -> bool:
+    if not agent or agent in selected or not agent_is_live(agent, agent_statuses):
+        return False
+    selected.append(agent)
+    return len(selected) >= LANE_AGENT_LIMIT
+
+
+def build_lane_agents(
+    main_agents: list[str],
+    direct_agents: list[str],
+    agent_config: dict[str, Any],
+    agent_statuses: dict[str, Any],
+    fallback_config: dict[str, Any] | None = None,
+    active_agents: list[str] | None = None,
+) -> list[str]:
+    selected: list[str] = []
+    main_agents = canonical_agent_list(main_agents)
+    direct_agents = canonical_agent_list(direct_agents)
+    agent_config = canonical_agent_config(agent_config)
+    agent_statuses = canonical_agent_statuses(agent_statuses)
+    fallback_config = fallback_config or {}
+    active_agents = canonical_agent_list(active_agents or [])
+
+    def consider(
+        agent: str,
+        *,
+        fallback_candidate: bool = False,
+        fallback_allows_fill: bool = False,
+        active_candidate: bool = False,
+    ) -> bool:
+        agent = canonical_agent_name(agent)
+        if agent in main_agents and agent not in selected and agent_is_live(agent, agent_statuses):
+            return False
+        if agent not in agent_config:
+            return False
+        if not agent_can_fill_lane(
+            agent,
+            agent_config=agent_config,
+            main_agents=main_agents,
+            direct_agents=direct_agents,
+            fallback_candidate=fallback_candidate,
+            fallback_allows_fill=fallback_allows_fill,
+            active_candidate=active_candidate,
+        ):
+            return False
+        return append_lane_agent(selected, agent, agent_statuses)
+
+    for agent in main_agents:
+        if append_lane_agent(selected, agent, agent_statuses):
+            return selected
+        if agent_is_live(agent, agent_statuses):
+            continue
+
+        filled_slot = False
+        before_count = len(selected)
+        for candidate in active_agents:
+            if consider(candidate, fallback_candidate=True, active_candidate=True):
+                return selected
+            if len(selected) > before_count:
+                filled_slot = True
+                break
+        if filled_slot:
+            continue
+
+        fallback_candidates = normalize_fallback_candidates(
+            fallback_config.get(agent, DEFAULT_AGENT_FALLBACKS.get(agent, []))
+        )
+        before_count = len(selected)
+        for candidate, allows_fill in fallback_candidates:
+            if consider(candidate, fallback_candidate=True, fallback_allows_fill=allows_fill):
+                return selected
+            if len(selected) > before_count:
+                filled_slot = True
+                break
+        if filled_slot:
+            continue
+
+        before_count = len(selected)
+        for candidate in direct_agents:
+            if consider(candidate, fallback_candidate=True):
+                return selected
+            if len(selected) > before_count:
+                break
+
+    return selected[:LANE_AGENT_LIMIT]
 
 
 def proposal_snapshot(proposal: Any) -> dict[str, Any] | None:
@@ -675,9 +852,34 @@ class RemoteSession:
             session_budget = self.app.session_token_budget()
             token_line = self.app.stream.build_token_usage_line(token_counts, session_budget)
             app_config = getattr(self.app, "config", None)
-            agent_config = (app_config.get("agents") if isinstance(app_config, dict) else None) or {}
+            agent_config = canonical_agent_config(
+                (app_config.get("agents") if isinstance(app_config, dict) else None) or {}
+            )
+            fallback_config = (app_config.get("agent_fallbacks") if isinstance(app_config, dict) else None) or {}
             proj_config = getattr(self.app, "proj_config", None) or {}
-            main_agents = list(proj_config.get("agents") or [])
+            main_agents = canonical_agent_list(list(proj_config.get("agents") or []))
+            direct_agents = sorted(canonical_agent_list(list(proj_config.get("direct_agents") or [])))
+            try:
+                agent_statuses = canonical_agent_statuses(self.app.load_agent_statuses())
+            except (AttributeError, OSError, ValueError, TypeError):
+                agent_statuses = {}
+            active_agents = canonical_agent_list([
+                str(agent)
+                for agent in [
+                    self.app.state.get("next_agent"),
+                    self.app.state.get("last_agent"),
+                    *list(self.app.state.get("expected_agents") or []),
+                ]
+                if agent
+            ])
+            lane_agents = build_lane_agents(
+                main_agents,
+                direct_agents,
+                agent_config,
+                agent_statuses,
+                fallback_config,
+                active_agents,
+            )
             transcript = parse_chatboks_messages(self.app.chatboks_md, limit=transcript_limit)
             packet_path = getattr(self.app, "packet_file", None)
             return {
@@ -697,7 +899,9 @@ class RemoteSession:
                 "command_running": self.command_running(),
                 "command_text": self._command_text,
                 "agents": main_agents,
-                "direct_agents": sorted(proj_config.get("direct_agents") or []),
+                "direct_agents": direct_agents,
+                "agent_statuses": agent_statuses,
+                "lane_agents": lane_agents,
                 "token_line": token_line,
                 "token_usage": build_token_usage(token_counts, agent_config, main_agents),
                 "session_budget": session_budget if isinstance(session_budget, dict) else None,

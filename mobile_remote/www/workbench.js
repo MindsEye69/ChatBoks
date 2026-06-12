@@ -3,11 +3,20 @@ const SESSION_POLL_MS = 2500;
 const SESSION_POLL_BUSY_MS = 1500;
 const WORKBENCH_POLL_MS = 10000;
 const LANE_MESSAGE_LIMIT = 10;
+const LANE_AGENT_LIMIT = 3;
 const COORD_FEED_LIMIT = 6;
 const COORD_FEED_EXPANDED_LIMIT = 40;
 const DEFAULT_AGENTS = ["claude", "codex", "gemini"];
 
 const KNOWN_AGENT_STYLES = new Set(["claude", "codex", "gemini", "antigravity", "codex_spark", "coordinator"]);
+const AGENT_LABELS = {
+  codex_spark: "Codex Spark",
+  coordinator: "Coordinator",
+};
+const AGENT_GLYPHS = {
+  codex_spark: "SX",
+  coordinator: "CO",
+};
 
 const state = {
   token: "",
@@ -54,6 +63,8 @@ const previewSession = {
   command_running: false,
   command_text: "",
   agents: DEFAULT_AGENTS,
+  lane_agents: DEFAULT_AGENTS,
+  agent_statuses: {},
   direct_agents: ["coordinator"],
   token_usage: [
     { agent: "claude", used: 42, limit: 100, warning: 80, percent: 42 },
@@ -414,23 +425,100 @@ function messageCard(text, { streaming = false, timestamp = "" } = {}) {
 /* ---------- agent lanes ---------- */
 
 function agentDisplayName(agent) {
-  return agent.split(/[_-]/).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+  const canonical = canonicalAgent(agent);
+  if (AGENT_LABELS[canonical]) {
+    return AGENT_LABELS[canonical];
+  }
+  return canonical.split(/[_-]/).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
 }
 
 function agentGlyph(agent) {
-  const parts = agent.split(/[_-]/);
+  const canonical = canonicalAgent(agent);
+  if (AGENT_GLYPHS[canonical]) {
+    return AGENT_GLYPHS[canonical];
+  }
+  const parts = canonical.split(/[_-]/);
   if (parts.length > 1) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
-  return agent.slice(0, 2).toUpperCase();
+  return canonical.slice(0, 2).toUpperCase();
 }
 
 function laneStyleClass(agent) {
-  return KNOWN_AGENT_STYLES.has(agent) ? agent : "generic";
+  const canonical = canonicalAgent(agent);
+  return KNOWN_AGENT_STYLES.has(canonical) ? canonical : "generic";
+}
+
+function canonicalAgent(agent) {
+  const normalized = String(agent || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[-\s]+/g, "_");
+  if (normalized === "agent_zero" || normalized === "agentzero" || normalized === "az") {
+    return "coordinator";
+  }
+  return normalized;
+}
+
+function uniqueAgents(agents) {
+  const seen = new Set();
+  const unique = [];
+  for (const agent of agents || []) {
+    const canonical = canonicalAgent(agent);
+    if (!canonical || seen.has(canonical)) {
+      continue;
+    }
+    seen.add(canonical);
+    unique.push(canonical);
+  }
+  return unique;
+}
+
+function agentStatusValue(agent, statuses = {}) {
+  const canonical = canonicalAgent(agent);
+  const record = statuses[canonical] || statuses[agent] || {};
+  if (typeof record === "string") {
+    return record.toLowerCase();
+  }
+  return String(record.status || "available").toLowerCase();
+}
+
+function agentIsLive(agent, statuses = {}) {
+  return ["available", "low"].includes(agentStatusValue(agent, statuses));
+}
+
+function deriveLaneAgents(data) {
+  const statuses = data.agent_statuses || {};
+  const serverLanes = uniqueAgents(data.lane_agents || []).filter((agent) => agentIsLive(agent, statuses));
+  if (serverLanes.length) {
+    return serverLanes.slice(0, LANE_AGENT_LIMIT);
+  }
+  const mainAgents = uniqueAgents(data.agents || DEFAULT_AGENTS);
+  const directAgents = uniqueAgents(data.direct_agents || []);
+  const activeAgents = uniqueAgents([
+    data.next_agent,
+    data.last_agent,
+    ...(data.expected_agents || []),
+  ]);
+  const lanes = [];
+  for (const agent of mainAgents) {
+    if (agentIsLive(agent, statuses)) {
+      lanes.push(agent);
+    }
+  }
+  for (const agent of [...activeAgents, ...directAgents]) {
+    if (lanes.length >= LANE_AGENT_LIMIT) {
+      break;
+    }
+    if (!lanes.includes(agent) && agentIsLive(agent, statuses)) {
+      lanes.push(agent);
+    }
+  }
+  return (lanes.length ? lanes : mainAgents).slice(0, LANE_AGENT_LIMIT);
 }
 
 function ensureLanes(agents) {
-  const roster = agents.length ? agents : Object.keys(state.lanes);
+  const roster = uniqueAgents(agents.length ? agents : Object.keys(state.lanes));
   if (JSON.stringify(roster) === JSON.stringify(Object.keys(state.lanes))) {
     return;
   }
@@ -481,7 +569,7 @@ function renderLanes(transcript) {
   for (const [agent, lane] of Object.entries(state.lanes)) {
     const nearBottom = lane.stream.scrollHeight - lane.stream.scrollTop - lane.stream.clientHeight < 60;
     lane.stream.innerHTML = "";
-    const messages = transcript.filter((item) => (item.sender || "").toLowerCase() === agent);
+    const messages = transcript.filter((item) => canonicalAgent(item.sender) === agent);
     const recent = messages.slice(-LANE_MESSAGE_LIMIT);
     if (!recent.length && !state.streams[agent]) {
       const empty = document.createElement("p");
@@ -514,7 +602,7 @@ function renderLanes(transcript) {
 
 function updateLaneActivity(data) {
   for (const [agent, lane] of Object.entries(state.lanes)) {
-    const busy = Boolean(state.streams[agent]) || (data.command_running && (data.next_agent || "").toLowerCase() === agent);
+    const busy = Boolean(state.streams[agent]) || (data.command_running && canonicalAgent(data.next_agent) === agent);
     lane.statusDot.classList.toggle("offline", !state.connected);
     lane.statusDot.classList.toggle("busy", busy);
     lane.statusLabel.textContent = state.connected ? (busy ? " Working" : " Online") : " Offline";
@@ -526,7 +614,7 @@ function updateLaneActivity(data) {
 function ingestEvents(events) {
   for (const event of events) {
     const kind = event.kind || "";
-    const sender = (event.sender || "").toLowerCase();
+    const sender = canonicalAgent(event.sender);
     if (kind === "message_stream_start") {
       state.streams[sender] = { text: "", timestamp: event.timestamp || "" };
       continue;
@@ -543,7 +631,7 @@ function ingestEvents(events) {
       continue;
     }
     if (kind === "activity") {
-      state.lastActivity = `${sender.toUpperCase()} ${event.text || ""}`;
+      state.lastActivity = `${agentDisplayName(sender)} ${event.text || ""}`;
       continue;
     }
     if (kind === "usage" || kind === "banner") {
@@ -574,7 +662,7 @@ function renderCoordinator(data) {
     root.className = "coord-item";
     const meta = document.createElement("div");
     meta.className = "coord-meta";
-    meta.textContent = `${item.sender || "system"} ${item.timestamp || ""} ${item.kind || ""}`.trim();
+    meta.textContent = `${agentDisplayName(item.sender || "system")} ${item.timestamp || ""} ${item.kind || ""}`.trim();
     const text = document.createElement("div");
     text.className = "msg-text";
     text.textContent = item.text || "";
@@ -842,8 +930,8 @@ function renderOfflineWorkbench() {
 }
 
 function renderProgress(data) {
-  const expected = data.expected_agents || [];
-  const completed = new Set(data.completed_agents || []);
+  const expected = uniqueAgents(data.expected_agents || []);
+  const completed = new Set(uniqueAgents(data.completed_agents || []));
   els.progressList.innerHTML = "";
   if (!expected.length) {
     const item = document.createElement("li");
@@ -857,7 +945,7 @@ function renderProgress(data) {
   let done = 0;
   for (const agent of expected) {
     const item = document.createElement("li");
-    const isDone = completed.has(agent);
+    const isDone = completed.has(canonicalAgent(agent));
     if (isDone) {
       done += 1;
     } else {
@@ -933,8 +1021,8 @@ function applySession(data) {
   els.sessionButton.textContent = awaitingApproval ? "Approval" : data.command_running ? "Working" : "Session";
 
   state.commandRunning = Boolean(data.command_running);
-  state.agents = data.agents || [];
-  state.directAgents = data.direct_agents || [];
+  state.agents = deriveLaneAgents(data);
+  state.directAgents = uniqueAgents(data.direct_agents || []);
   els.roleCallButton.classList.toggle("hidden", !state.directAgents.includes("coordinator"));
 
   ensureLanes(state.agents);
@@ -957,7 +1045,7 @@ function applySession(data) {
 
   els.statRound.textContent = data.round === null || data.round === undefined ? "-" : String(data.round);
   els.statMode.textContent = data.collaboration_mode || "-";
-  els.statNext.textContent = data.next_agent || "-";
+  els.statNext.textContent = data.next_agent ? agentDisplayName(data.next_agent) : "-";
   els.statStatus.textContent = statusText;
   els.statStatus.classList.toggle("muted-pill", statusText !== "idle" && !data.command_running && !awaitingApproval);
 

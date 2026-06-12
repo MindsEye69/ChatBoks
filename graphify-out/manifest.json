@@ -160,8 +160,8 @@
     "semantic_hash": ""
   },
   "config.yaml": {
-    "mtime": 1781267562.1555903,
-    "ast_hash": "11d6275d8aa4666df6a470922848961c",
+    "mtime": 1781289316.3168705,
+    "ast_hash": "332306d302bb025b3f86f1dd6e330a15",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -320,13 +320,13 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781271447.1820676,
-    "ast_hash": "de8f66c4ad6b76e578a41f31acb9cb36",
+    "mtime": 1781289398.895542,
+    "ast_hash": "fa7d41703aa859cf3181511d0142d314",
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781269638.579781,
-    "ast_hash": "72f8429b02d463c4082d7cf98e3192e5",
+    "mtime": 1781289751.498848,
+    "ast_hash": "33ab7560f47372a19c48a08d4252adb4",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781269469.220667,
-    "ast_hash": "e0838250325eb65fc43c8aa108b084c4",
+    "mtime": 1781289432.5968368,
+    "ast_hash": "419c6d81a48d68aa75eafc4135e60536",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -675,8 +675,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.js": {
-    "mtime": 1781271493.9121327,
-    "ast_hash": "94e9f60f257e05e64dda8fa6c3671433",
+    "mtime": 1781289390.9783971,
+    "ast_hash": "7c87fde2a3579009cfcacfdc445dbc82",
     "semantic_hash": ""
   },
   "INTERFACE_HANDOFF.md": {

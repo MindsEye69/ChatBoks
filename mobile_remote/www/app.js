@@ -543,11 +543,29 @@ function traceSignalLabel(item) {
 }
 
 function agentDisplayName(agent) {
-  return String(agent || "")
+  const canonical = canonicalAgent(agent);
+  if (canonical === "coordinator") {
+    return "Coordinator";
+  }
+  if (canonical === "codex_spark") {
+    return "Codex Spark";
+  }
+  return canonical
     .split(/[_-]/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ") || "Agent";
+}
+
+function canonicalAgent(agent) {
+  const normalized = String(agent || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[-\s]+/g, "_");
+  if (normalized === "agent_zero" || normalized === "agentzero" || normalized === "az") {
+    return "coordinator";
+  }
+  return normalized;
 }
 
 function appendTraceText(row, className, text) {

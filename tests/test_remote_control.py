@@ -16,6 +16,7 @@ from remote_control import (
     RemoteHandler,
     RemoteSession,
     agent_trace_from_transcript,
+    build_lane_agents,
     build_token_usage,
     codegraph_stats,
     ensure_operator_file_available,
@@ -220,6 +221,44 @@ def test_remote_event_buffer_preserves_stream_delta_whitespace():
     assert [event["text"] for event in events[:3]] == ["Short", " ", "answer"]
     assert events[3]["text"] == "done"
     print("PASS: streamed deltas preserve whitespace while normal events stay trimmed")
+
+
+def test_lane_agents_replace_exhausted_main_agent_with_active_fill_agent():
+    lane_agents = build_lane_agents(
+        ["claude", "codex"],
+        ["coordinator", "codex_spark"],
+        {
+            "claude": {},
+            "codex": {},
+            "coordinator": {"can_fill_main_seat": True},
+            "codex_spark": {"can_fill_main_seat": True},
+        },
+        {"claude": {"status": "exhausted"}, "codex": {"status": "available"}},
+        {},
+        ["codex_spark"],
+    )
+
+    assert lane_agents == ["codex_spark", "codex"]
+    print("PASS: lane roster promotes active fill agent when a main agent is exhausted")
+
+
+def test_lane_agents_restore_available_main_agent_over_fill_agent():
+    lane_agents = build_lane_agents(
+        ["claude", "codex"],
+        ["coordinator", "codex_spark"],
+        {
+            "claude": {},
+            "codex": {},
+            "coordinator": {"can_fill_main_seat": True},
+            "codex_spark": {"can_fill_main_seat": True},
+        },
+        {"claude": {"status": "available"}, "codex": {"status": "available"}},
+        {},
+        ["codex_spark"],
+    )
+
+    assert lane_agents == ["claude", "codex"]
+    print("PASS: lane roster restores the main agent when it becomes available again")
 
 
 def test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses():

@@ -95,6 +95,7 @@ agents:
     adapter_profile: codex_spark_exec_v1
     token_limit: 128000
     token_warning: 100000
+    can_fill_main_seat: true
     color: bright_green
     role_file: CODEX_SPARK.md
   antigravity:
