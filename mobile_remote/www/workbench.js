@@ -17,6 +17,12 @@ const AGENT_GLYPHS = {
   codex_spark: "SX",
   coordinator: "CO",
 };
+const LANE_LABELS = {
+  coordinator: "Gemma",
+};
+const LANE_GLYPHS = {
+  coordinator: "GM",
+};
 
 const state = {
   token: "",
@@ -444,6 +450,23 @@ function agentGlyph(agent) {
   return canonical.slice(0, 2).toUpperCase();
 }
 
+function laneDisplayName(agent) {
+  const canonical = canonicalAgent(agent);
+  return LANE_LABELS[canonical] || agentDisplayName(canonical);
+}
+
+function laneGlyph(agent) {
+  const canonical = canonicalAgent(agent);
+  return LANE_GLYPHS[canonical] || agentGlyph(canonical);
+}
+
+function laneEmptyText(agent) {
+  if (canonicalAgent(agent) === "coordinator") {
+    return "Gemma is ready. Direct @coordinator replies appear here.";
+  }
+  return "No messages this session yet.";
+}
+
 function laneStyleClass(agent) {
   const canonical = canonicalAgent(agent);
   return KNOWN_AGENT_STYLES.has(canonical) ? canonical : "generic";
@@ -534,10 +557,10 @@ function ensureLanes(agents) {
     header.className = "agent-header";
     const logo = document.createElement("div");
     logo.className = `agent-logo ${laneStyleClass(agent)}-logo`;
-    logo.textContent = agentGlyph(agent);
+    logo.textContent = laneGlyph(agent);
     const title = document.createElement("div");
     const name = document.createElement("h2");
-    name.textContent = agentDisplayName(agent);
+    name.textContent = laneDisplayName(agent);
     const status = document.createElement("p");
     const dot = document.createElement("span");
     dot.className = "live-dot";
@@ -552,8 +575,8 @@ function ensureLanes(agents) {
     const menu = document.createElement("button");
     menu.className = "icon-button menu-button";
     menu.type = "button";
-    menu.setAttribute("aria-label", `${agentDisplayName(agent)} options`);
-    menu.title = `${agentDisplayName(agent)} options`;
+    menu.setAttribute("aria-label", `${laneDisplayName(agent)} options`);
+    menu.title = `${laneDisplayName(agent)} options`;
     menu.textContent = "...";
     header.appendChild(menu);
 
@@ -576,7 +599,7 @@ function renderLanes(transcript) {
     if (!recent.length && !state.streams[agent]) {
       const empty = document.createElement("p");
       empty.className = "lane-empty";
-      empty.textContent = "No messages this session yet.";
+      empty.textContent = laneEmptyText(agent);
       lane.stream.appendChild(empty);
       continue;
     }

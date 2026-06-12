@@ -343,6 +343,10 @@ def build_lane_agents(
             if len(selected) > before_count:
                 break
 
+    for candidate in direct_agents:
+        if consider(candidate, fallback_candidate=True):
+            return selected
+
     return selected[:LANE_AGENT_LIMIT]
 
 

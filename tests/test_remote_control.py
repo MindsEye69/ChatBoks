@@ -238,11 +238,11 @@ def test_lane_agents_replace_exhausted_main_agent_with_active_fill_agent():
         ["codex_spark"],
     )
 
-    assert lane_agents == ["codex_spark", "codex"]
-    print("PASS: lane roster promotes active fill agent when a main agent is exhausted")
+    assert lane_agents == ["codex_spark", "codex", "coordinator"]
+    print("PASS: lane roster promotes active fill agents when a main agent is exhausted")
 
 
-def test_lane_agents_restore_available_main_agent_over_fill_agent():
+def test_lane_agents_restore_available_main_agent_and_keep_gemma_lane():
     lane_agents = build_lane_agents(
         ["claude", "codex"],
         ["coordinator", "codex_spark"],
@@ -257,8 +257,8 @@ def test_lane_agents_restore_available_main_agent_over_fill_agent():
         ["codex_spark"],
     )
 
-    assert lane_agents == ["claude", "codex"]
-    print("PASS: lane roster restores the main agent when it becomes available again")
+    assert lane_agents == ["claude", "codex", "coordinator"]
+    print("PASS: lane roster restores the main agent while keeping Gemma visible")
 
 
 def test_lane_agents_prefer_direct_fill_agent_when_no_direct_command_is_active():
@@ -276,8 +276,8 @@ def test_lane_agents_prefer_direct_fill_agent_when_no_direct_command_is_active()
         [],
     )
 
-    assert lane_agents == ["codex_spark", "codex"]
-    print("PASS: idle lane roster uses Spark as the fill agent instead of stale Coordinator state")
+    assert lane_agents == ["codex_spark", "codex", "coordinator"]
+    print("PASS: idle lane roster keeps Spark and Gemma visible when Claude is exhausted")
 
 
 def test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses():
