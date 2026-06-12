@@ -261,6 +261,25 @@ def test_lane_agents_restore_available_main_agent_over_fill_agent():
     print("PASS: lane roster restores the main agent when it becomes available again")
 
 
+def test_lane_agents_prefer_direct_fill_agent_when_no_direct_command_is_active():
+    lane_agents = build_lane_agents(
+        ["claude", "codex"],
+        ["codex_spark", "coordinator"],
+        {
+            "claude": {},
+            "codex": {},
+            "coordinator": {"can_fill_main_seat": True},
+            "codex_spark": {"can_fill_main_seat": True},
+        },
+        {"claude": {"status": "exhausted"}, "codex": {"status": "available"}},
+        {},
+        [],
+    )
+
+    assert lane_agents == ["codex_spark", "codex"]
+    print("PASS: idle lane roster uses Spark as the fill agent instead of stale Coordinator state")
+
+
 def test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses():
     assert is_tailnet_ipv4_host("100.64.0.1") is True
     assert is_tailnet_ipv4_host("100.127.255.254") is True

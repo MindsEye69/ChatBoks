@@ -495,11 +495,13 @@ function deriveLaneAgents(data) {
   }
   const mainAgents = uniqueAgents(data.agents || DEFAULT_AGENTS);
   const directAgents = uniqueAgents(data.direct_agents || []);
-  const activeAgents = uniqueAgents([
-    data.next_agent,
-    data.last_agent,
-    ...(data.expected_agents || []),
-  ]);
+  const activeAgents = data.command_running || !["idle", "blocked", "awaiting_approval"].includes(data.status)
+    ? uniqueAgents([
+      data.next_agent,
+      data.last_agent,
+      ...(data.expected_agents || []),
+    ])
+    : [];
   const lanes = [];
   for (const agent of mainAgents) {
     if (agentIsLive(agent, statuses)) {

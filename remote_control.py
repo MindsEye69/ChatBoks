@@ -323,12 +323,9 @@ def build_lane_agents(
         if filled_slot:
             continue
 
-        fallback_candidates = normalize_fallback_candidates(
-            fallback_config.get(agent, DEFAULT_AGENT_FALLBACKS.get(agent, []))
-        )
         before_count = len(selected)
-        for candidate, allows_fill in fallback_candidates:
-            if consider(candidate, fallback_candidate=True, fallback_allows_fill=allows_fill):
+        for candidate in direct_agents:
+            if consider(candidate, fallback_candidate=True):
                 return selected
             if len(selected) > before_count:
                 filled_slot = True
@@ -336,9 +333,12 @@ def build_lane_agents(
         if filled_slot:
             continue
 
+        fallback_candidates = normalize_fallback_candidates(
+            fallback_config.get(agent, DEFAULT_AGENT_FALLBACKS.get(agent, []))
+        )
         before_count = len(selected)
-        for candidate in direct_agents:
-            if consider(candidate, fallback_candidate=True):
+        for candidate, allows_fill in fallback_candidates:
+            if consider(candidate, fallback_candidate=True, fallback_allows_fill=allows_fill):
                 return selected
             if len(selected) > before_count:
                 break
@@ -863,15 +863,17 @@ class RemoteSession:
                 agent_statuses = canonical_agent_statuses(self.app.load_agent_statuses())
             except (AttributeError, OSError, ValueError, TypeError):
                 agent_statuses = {}
-            active_agents = canonical_agent_list([
-                str(agent)
-                for agent in [
-                    self.app.state.get("next_agent"),
-                    self.app.state.get("last_agent"),
-                    *list(self.app.state.get("expected_agents") or []),
-                ]
-                if agent
-            ])
+            active_agents = []
+            if self.command_running() or self.app.state.get("status") not in {"idle", "blocked", "awaiting_approval"}:
+                active_agents = canonical_agent_list([
+                    str(agent)
+                    for agent in [
+                        self.app.state.get("next_agent"),
+                        self.app.state.get("last_agent"),
+                        *list(self.app.state.get("expected_agents") or []),
+                    ]
+                    if agent
+                ])
             lane_agents = build_lane_agents(
                 main_agents,
                 direct_agents,
