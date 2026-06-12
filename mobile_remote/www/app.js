@@ -32,6 +32,14 @@ const els = {
   tokenLine: document.getElementById("tokenLine"),
   flowChain: document.getElementById("flowChain"),
   latestResponse: document.getElementById("latestResponse"),
+  approvalPanel: document.getElementById("approvalPanel"),
+  approvalMeta: document.getElementById("approvalMeta"),
+  approvalSummary: document.getElementById("approvalSummary"),
+  approvalEstimate: document.getElementById("approvalEstimate"),
+  approvalModification: document.getElementById("approvalModification"),
+  approve: document.getElementById("approveButton"),
+  modify: document.getElementById("modifyButton"),
+  reject: document.getElementById("rejectButton"),
   prompt: document.getElementById("promptInput"),
   transcript: document.getElementById("transcriptList"),
   transcriptPanel: document.getElementById("transcriptPanel"),
@@ -441,7 +449,7 @@ function flowSteps(data) {
   const mode = data.collaboration_mode || data.mode || "default";
   const commandRunning = Boolean(data.command_running);
   const idle = ["idle", "awaiting_input"].includes(status);
-  const blocked = ["blocked", "question", "proposal"].includes(status);
+  const blocked = ["blocked", "question", "proposal", "awaiting_approval", "awaiting_input"].includes(status);
   return [
     { label: "input", value: activeTask ? "prompt" : "ready", state: activeTask ? "done" : "active" },
     { label: "router", value: mode, state: activeTask ? "done" : "" },
@@ -466,6 +474,47 @@ function renderFlow(data) {
     root.appendChild(value);
     els.flowChain.appendChild(root);
   }
+}
+
+function agentDisplayName(agent) {
+  return String(agent || "")
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ") || "Agent";
+}
+
+function formatExecutionEstimate(estimate) {
+  if (!estimate || typeof estimate !== "object") {
+    return "Execution estimate unavailable.";
+  }
+  const parts = [];
+  if (estimate.agent) {
+    parts.push(`via ${agentDisplayName(estimate.agent)}`);
+  }
+  if (estimate.input_tokens !== undefined || estimate.output_tokens !== undefined) {
+    const input = Number(estimate.input_tokens || 0).toLocaleString();
+    const output = Number(estimate.output_tokens || 0).toLocaleString();
+    parts.push(`${input} in / ${output} out`);
+  }
+  if (estimate.total_usd !== undefined && estimate.total_usd !== null) {
+    parts.push(`$${Number(estimate.total_usd).toFixed(4)}`);
+  } else if (estimate.cost_configured === false) {
+    parts.push("cost unavailable");
+  }
+  return parts.length ? parts.join(" · ") : "Execution estimate unavailable.";
+}
+
+function renderApproval(data) {
+  const proposal = data.proposal || null;
+  const awaitingApproval = data.status === "awaiting_approval" && proposal;
+  els.approvalPanel.classList.toggle("hidden", !awaitingApproval);
+  if (!awaitingApproval) {
+    return;
+  }
+  els.approvalMeta.textContent = `${agentDisplayName(proposal.proposed_by)} proposal`;
+  els.approvalSummary.textContent = proposal.summary || "Review proposal";
+  els.approvalEstimate.textContent = formatExecutionEstimate(proposal.execution_estimate);
 }
 
 function scrollLatestResponseIntoView() {
@@ -513,6 +562,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   els.task.textContent = data.active_task || "-";
   els.tokenLine.textContent = data.token_line || "";
   renderFlow(data);
+  renderApproval(data);
   const transcript = data.transcript || [];
   renderLatestResponse(transcript);
   renderList(els.transcript, transcript);
@@ -535,6 +585,8 @@ function applySession(data, { scrollLatest = false } = {}) {
   if (data.command_running) {
     setSendState(false, "Waiting for agents...");
     scheduleRefreshPoll();
+  } else if (data.status === "awaiting_approval") {
+    setSendState(false, "Proposal awaiting approval.");
   } else {
     stopPolling();
     state.commandActive = false;
@@ -701,6 +753,19 @@ els.project.addEventListener("change", () => {
 els.send.addEventListener("click", () => {
   saveSettings();
   sendPrompt(els.prompt.value);
+});
+
+els.approve.addEventListener("click", () => {
+  sendPrompt("APPROVE");
+});
+
+els.reject.addEventListener("click", () => {
+  sendPrompt("REJECT");
+});
+
+els.modify.addEventListener("click", () => {
+  const note = els.approvalModification.value.trim();
+  sendPrompt(note ? `MODIFY ${note}` : "MODIFY");
 });
 
 if (window.visualViewport) {

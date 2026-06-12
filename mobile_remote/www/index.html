@@ -83,6 +83,21 @@
       <div id="latestResponse" class="latest-response">-</div>
     </section>
 
+    <section id="approvalPanel" class="panel approval-panel hidden">
+      <div class="section-head">
+        <h2>Approval</h2>
+      </div>
+      <div class="approval-meta" id="approvalMeta">Proposal</div>
+      <div class="approval-summary" id="approvalSummary">Awaiting approval</div>
+      <div class="approval-estimate" id="approvalEstimate"></div>
+      <textarea id="approvalModification" rows="2" placeholder="Modification note..."></textarea>
+      <div class="button-row approval-actions">
+        <button id="approveButton" type="button">Approve</button>
+        <button id="modifyButton" class="ghost" type="button">Modify</button>
+        <button id="rejectButton" class="ghost danger" type="button">Reject</button>
+      </div>
+    </section>
+
     <section id="transcriptPanel" class="panel transcript-panel hidden">
       <div class="section-head">
         <h2>Transcript</h2>

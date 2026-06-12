@@ -60,7 +60,7 @@
         </div>
         <div class="topbar-actions">
           <button id="liveButton" class="status-button" type="button"><span id="liveDot" class="live-dot offline"></span> <span id="liveLabel">Offline</span></button>
-          <button class="ghost-button" type="button">Session</button>
+          <button id="sessionButton" class="ghost-button" type="button">Session</button>
           <button id="connectionToggle" class="ghost-button" type="button">Connection v</button>
           <button id="themeToggle" class="ghost-button" type="button">Light</button>
         </div>
@@ -97,6 +97,19 @@
               <button id="logsButton" class="ghost-button" type="button">Logs</button>
             </div>
           </header>
+          <section id="approvalPanel" class="approval-panel hidden" aria-label="Proposal approval">
+            <div>
+              <div class="event-meta"><span id="approvalMeta">Proposal</span></div>
+              <h3 id="approvalSummary">Awaiting approval</h3>
+              <p id="approvalEstimate"></p>
+            </div>
+            <textarea id="approvalModification" rows="2" placeholder="Modification note..."></textarea>
+            <div class="approval-actions">
+              <button id="approveButton" class="approval-button approve-action" type="button">Approve</button>
+              <button id="modifyButton" class="approval-button modify-action" type="button">Modify</button>
+              <button id="rejectButton" class="approval-button reject-action" type="button">Reject</button>
+            </div>
+          </section>
           <div class="summary-grid">
             <div class="summary-copy">
               <div class="event-meta"><time id="coordTime"></time><span>System Feed</span></div>

@@ -35,6 +35,7 @@ from ui.stream import Stream
 
 TRANSCRIPT_LIMIT = 120
 COMMAND_MAX_CHARS = 6000
+REMOTE_PROPOSAL_RAW_LIMIT = 4000
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
@@ -44,6 +45,9 @@ WORKBENCH_WWW_ROOT = Path(__file__).resolve().parent / "mobile_remote" / "www"
 # Exact-match allowlist: request paths never touch the filesystem directly,
 # so traversal sequences in a URL can only miss the map and return 404.
 WORKBENCH_STATIC_ROUTES = {
+    "/": ("index.html", "text/html; charset=utf-8"),
+    "/styles.css": ("styles.css", "text/css; charset=utf-8"),
+    "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/workbench": ("workbench.html", "text/html; charset=utf-8"),
     "/workbench.css": ("workbench.css", "text/css; charset=utf-8"),
     "/workbench.js": ("workbench.js", "text/javascript; charset=utf-8"),
@@ -157,6 +161,20 @@ def build_token_usage(
             }
         )
     return usage
+
+
+def proposal_snapshot(proposal: Any) -> dict[str, Any] | None:
+    if not isinstance(proposal, dict):
+        return None
+    raw = str(proposal.get("raw") or "")
+    return {
+        "id": proposal.get("id"),
+        "summary": proposal.get("summary"),
+        "proposed_by": proposal.get("proposed_by"),
+        "raw": raw[:REMOTE_PROPOSAL_RAW_LIMIT],
+        "raw_truncated": len(raw) > REMOTE_PROPOSAL_RAW_LIMIT,
+        "execution_estimate": proposal.get("execution_estimate"),
+    }
 
 
 def git_environment(proj_path: Path | None) -> dict[str, Any] | None:
@@ -561,6 +579,7 @@ class RemoteSession:
                 "completed_agents": list(self.app.state.get("completed_agents") or []),
                 "collaboration_mode": self.app.state.get("collaboration_mode"),
                 "context_mode": self.app.state.get("context_mode"),
+                "proposal": proposal_snapshot(self.app.state.get("proposal")),
                 "command_running": self.command_running(),
                 "command_text": self._command_text,
                 "agents": main_agents,
@@ -660,9 +679,6 @@ class RemoteHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path == "/":
-            self.respond_html(build_mobile_shell(self.server.session.app.project))
-            return
         if parsed.path in WORKBENCH_STATIC_ROUTES:
             relative_path, content_type = WORKBENCH_STATIC_ROUTES[parsed.path]
             self.respond_static(relative_path, content_type)
@@ -869,356 +885,6 @@ class RemoteHandler(BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         if include_csp:
             self.send_header("Content-Security-Policy", SHELL_CSP)
-
-
-def build_mobile_shell(project: str) -> str:
-    escaped_project = project.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ChatBoks Remote - {escaped_project}</title>
-  <style>
-    :root {{
-      color-scheme: dark;
-      --bg: #111214;
-      --panel: #191b1f;
-      --border: #2a2e35;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --accent: #f97316;
-      --accent-2: #22c55e;
-      --danger: #ef4444;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }}
-    header {{
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(17, 18, 20, 0.94);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 16px;
-    }}
-    h1 {{
-      margin: 0;
-      font-size: 20px;
-    }}
-    .sub {{
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 13px;
-    }}
-    main {{
-      padding: 16px;
-      display: grid;
-      gap: 12px;
-    }}
-    section {{
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-    }}
-    .meta {{
-      display: grid;
-      gap: 6px;
-      font-size: 14px;
-    }}
-    .meta strong {{
-      color: var(--muted);
-      font-weight: 600;
-    }}
-    .tokens {{
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 12px;
-      color: var(--muted);
-      white-space: pre-wrap;
-    }}
-    .list {{
-      display: grid;
-      gap: 10px;
-      max-height: 48vh;
-      overflow: auto;
-    }}
-    .item {{
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-      background: #14161a;
-    }}
-    .sender {{
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }}
-    .text {{
-      white-space: pre-wrap;
-      line-height: 1.4;
-      word-break: break-word;
-    }}
-    textarea, input {{
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #101215;
-      color: var(--text);
-      padding: 12px;
-      font: inherit;
-    }}
-    textarea {{
-      min-height: 100px;
-      resize: vertical;
-    }}
-    .row {{
-      display: grid;
-      gap: 10px;
-    }}
-    button {{
-      appearance: none;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      padding: 12px;
-      font: inherit;
-      color: white;
-      background: var(--accent);
-    }}
-    button.secondary {{
-      background: transparent;
-      border-color: var(--border);
-      color: var(--text);
-    }}
-    button.inline {{
-      padding: 10px;
-      font-size: 14px;
-    }}
-    .hint {{
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-    }}
-    .error {{
-      color: #fecaca;
-      background: rgba(127, 29, 29, 0.35);
-      border: 1px solid rgba(248, 113, 113, 0.4);
-      border-radius: 8px;
-      padding: 10px;
-      display: none;
-    }}
-    .quick {{
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }}
-  </style>
-</head>
-<body>
-  <header>
-    <h1>ChatBoks Remote</h1>
-    <div class="sub">{escaped_project} desktop bridge</div>
-  </header>
-  <main>
-    <section>
-      <div class="row">
-        <input id="pairCode" type="text" placeholder="Enter one-time pairing code" autocomplete="one-time-code">
-        <input id="token" type="password" placeholder="Session token (filled after pairing)">
-        <div class="quick">
-          <button class="secondary inline" id="pair">Pair device</button>
-          <button class="secondary inline" id="saveToken">Save token</button>
-          <button class="secondary inline" id="refresh">Refresh</button>
-        </div>
-      </div>
-      <p class="hint">Pair with the one-time desktop code first. Session tokens are short-lived; saving one is optional and meant for your own device only.</p>
-      <div id="error" class="error"></div>
-    </section>
-
-    <section>
-      <div class="meta">
-        <div><strong>Status:</strong> <span id="status">-</span></div>
-        <div><strong>Active task:</strong> <span id="task">-</span></div>
-        <div><strong>Next agent:</strong> <span id="next">-</span></div>
-      </div>
-      <div class="tokens" id="tokens"></div>
-    </section>
-
-    <section>
-      <div class="quick">
-        <button class="secondary inline" data-prompt="@zero role call">Agent Zero role call</button>
-        <button class="secondary inline" data-prompt="@zero what's next for ChatBoks?">Ask Zero what's next</button>
-      </div>
-    </section>
-
-    <section>
-      <div class="row">
-        <textarea id="prompt" placeholder="Send a prompt or slash command"></textarea>
-        <button id="send">Send to ChatBoks</button>
-      </div>
-    </section>
-
-    <section>
-      <div class="sender">Transcript</div>
-      <div id="transcript" class="list"></div>
-    </section>
-
-    <section>
-      <div class="sender">Live bridge events</div>
-      <div id="events" class="list"></div>
-    </section>
-  </main>
-  <script>
-    const tokenInput = document.getElementById("token");
-    const pairCodeInput = document.getElementById("pairCode");
-    const errorBox = document.getElementById("error");
-    const transcriptBox = document.getElementById("transcript");
-    const eventsBox = document.getElementById("events");
-    const promptInput = document.getElementById("prompt");
-    const statusEl = document.getElementById("status");
-    const taskEl = document.getElementById("task");
-    const nextEl = document.getElementById("next");
-    const tokensEl = document.getElementById("tokens");
-    let eventCursor = 0;
-
-    const params = new URLSearchParams(window.location.search);
-    tokenInput.value = params.get("token") || localStorage.getItem("chatboks-remote-token") || "";
-
-    function showError(message) {{
-      errorBox.style.display = message ? "block" : "none";
-      errorBox.textContent = message || "";
-    }}
-
-    function authHeaders() {{
-      const token = tokenInput.value.trim();
-      if (!token) {{
-        throw new Error("Enter the bearer token from the desktop bridge first.");
-      }}
-      return {{
-        "Authorization": "Bearer " + token,
-        "Content-Type": "application/json"
-      }};
-    }}
-
-    function renderItems(container, items) {{
-      container.innerHTML = "";
-      for (const item of items) {{
-        const div = document.createElement("div");
-        div.className = "item";
-        const sender = document.createElement("div");
-        sender.className = "sender";
-        sender.textContent = item.sender;
-        const text = document.createElement("div");
-        text.className = "text";
-        text.textContent = item.text;
-        div.appendChild(sender);
-        div.appendChild(text);
-        container.appendChild(div);
-      }}
-    }}
-
-    async function pairDevice() {{
-      const code = pairCodeInput.value.trim();
-      if (!code) {{
-        throw new Error("Enter the one-time pairing code from the desktop bridge.");
-      }}
-      const response = await fetch("/api/pair", {{
-        method: "POST",
-        headers: {{ "Content-Type": "application/json" }},
-        body: JSON.stringify({{ pair_code: code }})
-      }});
-      const data = await response.json();
-      if (!response.ok) {{
-        throw new Error(data.error || "Pairing failed.");
-      }}
-      tokenInput.value = data.session_token || "";
-      pairCodeInput.value = "";
-      return data;
-    }}
-
-    async function refreshSession() {{
-      try {{
-        const response = await fetch("/api/session?cursor=" + eventCursor, {{
-          headers: authHeaders()
-        }});
-        if (!response.ok) {{
-          throw new Error("Refresh failed: " + response.status);
-        }}
-        const data = await response.json();
-        statusEl.textContent = data.status || "-";
-        taskEl.textContent = data.active_task || "-";
-        nextEl.textContent = data.next_agent || "-";
-        tokensEl.textContent = data.token_line || "";
-        renderItems(transcriptBox, data.transcript || []);
-        const events = data.events || [];
-        if (events.length) {{
-          eventCursor = events[events.length - 1].id;
-        }}
-        renderItems(eventsBox, events);
-        showError("");
-      }} catch (error) {{
-        showError(error.message || String(error));
-      }}
-    }}
-
-    async function sendPrompt(text) {{
-      try {{
-        const response = await fetch("/api/command", {{
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({{ text }})
-        }});
-        const data = await response.json();
-        if (!response.ok) {{
-          throw new Error(data.error || "Command failed.");
-        }}
-        promptInput.value = "";
-        await refreshSession();
-      }} catch (error) {{
-        showError(error.message || String(error));
-      }}
-    }}
-
-    document.getElementById("saveToken").addEventListener("click", () => {{
-      localStorage.setItem("chatboks-remote-token", tokenInput.value.trim());
-      showError("");
-    }});
-
-    document.getElementById("pair").addEventListener("click", async () => {{
-      try {{
-        await pairDevice();
-        showError("");
-      }} catch (error) {{
-        showError(error.message || String(error));
-      }}
-    }});
-
-    document.getElementById("refresh").addEventListener("click", refreshSession);
-
-    document.getElementById("send").addEventListener("click", () => {{
-      const text = promptInput.value.trim();
-      if (text) {{
-        sendPrompt(text);
-      }}
-    }});
-
-    for (const button of document.querySelectorAll("[data-prompt]")) {{
-      button.addEventListener("click", () => sendPrompt(button.dataset.prompt));
-    }}
-
-    refreshSession();
-    setInterval(refreshSession, 3000);
-  </script>
-</body>
-</html>
-"""
-
-
 def default_operator_status_path() -> Path:
     return Path.cwd() / ".chatboks" / OPERATOR_STATUS_FILENAME
 

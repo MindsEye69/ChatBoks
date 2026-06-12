@@ -609,6 +609,75 @@ kbd {
   gap: 10px;
 }
 
+.approval-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.75fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 173, 69, 0.42);
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.approval-panel h3 {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.approval-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-panel textarea {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: rgba(5, 12, 16, 0.38);
+  color: var(--text);
+  padding: 9px 10px;
+}
+
+[data-theme="light"] .approval-panel textarea {
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.approval-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.approval-button {
+  min-height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0 12px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 700;
+}
+
+.approve-action {
+  border-color: rgba(85, 211, 125, 0.44);
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.modify-action {
+  border-color: rgba(255, 173, 69, 0.46);
+  color: var(--accent);
+}
+
+.reject-action {
+  border-color: rgba(239, 68, 68, 0.42);
+  color: #fca5a5;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 210px;
@@ -1162,9 +1231,14 @@ dd {
   }
 
   .agent-lanes,
+  .approval-panel,
   .summary-grid,
   .right-rail {
     grid-template-columns: 1fr;
+  }
+
+  .approval-actions {
+    flex-wrap: wrap;
   }
 
   .agent-pane {

@@ -80,9 +80,11 @@ for (const id of [
   "themeToggle", "themeToggleRail", "newTaskButton", "projectList", "sessionList",
   "tokenBalances", "settingsButton", "stripCpu", "stripRam",
   "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel",
-  "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
+  "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox",
   "agentLanes", "coordDot", "coordState", "roleCallButton", "logsButton",
+  "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
+  "approvalModification", "approveButton", "modifyButton", "rejectButton",
   "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
   "workbenchPrompt", "sendStatus", "sendButton",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
@@ -139,6 +141,7 @@ function setConnected(connected) {
   state.connected = connected;
   els.liveDot.classList.toggle("offline", !connected);
   els.liveLabel.textContent = connected ? "Live" : "Offline";
+  els.connectionToggle.textContent = connected ? "Connection ok" : "Connection";
   els.coordDot.classList.toggle("offline", !connected);
   if (!connected) {
     els.coordState.textContent = "Offline";
@@ -530,6 +533,42 @@ function renderCoordinator(data) {
     : "Idle";
 }
 
+function formatExecutionEstimate(estimate) {
+  if (!estimate || typeof estimate !== "object") {
+    return "Execution estimate unavailable.";
+  }
+  const parts = [];
+  if (estimate.agent) {
+    parts.push(`via ${agentDisplayName(String(estimate.agent))}`);
+  }
+  if (estimate.total_tokens !== undefined) {
+    parts.push(`${Number(estimate.total_tokens).toLocaleString()} tokens`);
+  } else if (estimate.input_tokens !== undefined || estimate.output_tokens !== undefined) {
+    const input = Number(estimate.input_tokens || 0).toLocaleString();
+    const output = Number(estimate.output_tokens || 0).toLocaleString();
+    parts.push(`${input} in / ${output} out`);
+  }
+  if (estimate.total_usd !== undefined && estimate.total_usd !== null) {
+    parts.push(`$${Number(estimate.total_usd).toFixed(4)}`);
+  } else if (estimate.cost_configured === false) {
+    parts.push("cost unavailable");
+  }
+  return parts.length ? parts.join(" · ") : "Execution estimate unavailable.";
+}
+
+function renderApproval(data) {
+  const proposal = data.proposal || null;
+  const awaitingApproval = data.status === "awaiting_approval" && proposal;
+  els.approvalPanel.classList.toggle("hidden", !awaitingApproval);
+  if (!awaitingApproval) {
+    return;
+  }
+  const proposer = proposal.proposed_by ? agentDisplayName(proposal.proposed_by) : "Agent";
+  els.approvalMeta.textContent = `${proposer} proposal`;
+  els.approvalSummary.textContent = proposal.summary || "Review proposal";
+  els.approvalEstimate.textContent = formatExecutionEstimate(proposal.execution_estimate);
+}
+
 /* ---------- left rail ---------- */
 
 function renderProjects(projects, currentProject) {
@@ -743,9 +782,11 @@ function renderProgress(data) {
 function applySession(data) {
   els.topbarProject.textContent = data.project || "-";
   els.topbarSession.textContent = data.session || "-";
-  const statusText = data.command_running ? "Working" : data.status || "unknown";
+  const awaitingApproval = data.status === "awaiting_approval";
+  const statusText = data.command_running ? "Working" : awaitingApproval ? "Approval needed" : data.status || "unknown";
   els.topbarStatus.textContent = statusText;
-  els.topbarStatus.classList.toggle("muted-pill", Boolean(data.command_running) === false && data.status !== "idle" && data.status !== "active");
+  els.topbarStatus.classList.toggle("muted-pill", Boolean(data.command_running) === false && !awaitingApproval && data.status !== "idle" && data.status !== "active");
+  els.sessionButton.textContent = awaitingApproval ? "Approval" : data.command_running ? "Working" : "Session";
 
   state.commandRunning = Boolean(data.command_running);
   state.agents = data.agents || [];
@@ -766,18 +807,23 @@ function applySession(data) {
   renderLanes(data.transcript || []);
   updateLaneActivity(data);
   renderCoordinator(data);
+  renderApproval(data);
   renderProgress(data);
 
   els.statRound.textContent = data.round === null || data.round === undefined ? "-" : String(data.round);
   els.statMode.textContent = data.collaboration_mode || "-";
   els.statNext.textContent = data.next_agent || "-";
   els.statStatus.textContent = statusText;
-  els.statStatus.classList.toggle("muted-pill", statusText !== "idle" && !data.command_running);
+  els.statStatus.classList.toggle("muted-pill", statusText !== "idle" && !data.command_running && !awaitingApproval);
 
-  els.terminalCaption.textContent = state.lastActivity || (state.commandRunning ? "agents working..." : "bridge idle - click to focus");
+  els.terminalCaption.textContent = awaitingApproval
+    ? "approval needed"
+    : state.lastActivity || (state.commandRunning ? "agents working..." : "bridge idle - click to focus");
 
   if (state.commandRunning) {
     setSendState(true, "Agents working...");
+  } else if (awaitingApproval) {
+    setSendState(false, "Proposal awaiting approval.");
   } else if (els.sendButton.disabled) {
     setSendState(false, "Latest response shown.");
   }
@@ -898,6 +944,12 @@ els.terminalFocus.addEventListener("click", () => {
 });
 
 els.roleCallButton.addEventListener("click", () => sendPrompt("@zero role call"));
+els.approveButton.addEventListener("click", () => sendPrompt("APPROVE"));
+els.rejectButton.addEventListener("click", () => sendPrompt("REJECT"));
+els.modifyButton.addEventListener("click", () => {
+  const note = els.approvalModification.value.trim();
+  sendPrompt(note ? `MODIFY ${note}` : "MODIFY");
+});
 els.logsButton.addEventListener("click", () => {
   state.coordExpanded = !state.coordExpanded;
   els.logsButton.textContent = state.coordExpanded ? "Less" : "Logs";

@@ -20,6 +20,7 @@ from remote_control import (
     is_allowed_app_origin,
     is_tailnet_ipv4_host,
     parse_chatboks_messages,
+    proposal_snapshot,
     rotate_pair_code_from_operator_file,
 )
 
@@ -286,6 +287,42 @@ def test_remote_session_snapshot_returns_while_command_is_running(tmp_path: Path
     print("PASS: remote session snapshots remain responsive during long commands")
 
 
+def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", threading.Event(), threading.Event())
+    app.state["proposal"] = {
+        "id": "prop_1",
+        "summary": "Ship the remote polish",
+        "raw": "Ship the remote polish\n>>> PROPOSAL",
+        "proposed_by": "codex",
+        "execution_estimate": {"total_tokens": 1200},
+    }
+    session.app = app
+
+    payload = session.snapshot()
+
+    assert payload["proposal"]["id"] == "prop_1"
+    assert payload["proposal"]["summary"] == "Ship the remote polish"
+    assert payload["proposal"]["proposed_by"] == "codex"
+    assert payload["proposal"]["execution_estimate"] == {"total_tokens": 1200}
+    print("PASS: remote session snapshots include compact proposal metadata")
+
+
+def test_proposal_snapshot_truncates_large_raw_text():
+    payload = proposal_snapshot({"raw": "x" * 5000})
+
+    assert payload is not None
+    assert len(payload["raw"]) == 4000
+    assert payload["raw_truncated"] is True
+    print("PASS: proposal snapshots cap raw proposal text")
+
+
 def test_remote_bridge_allows_capacitor_origin_preflight():
     server, thread, base = run_server(FakeSession(), "secret-token")
     try:
@@ -492,9 +529,25 @@ def test_remote_bridge_session_token_cannot_rotate_pair_code():
     print("PASS: session tokens cannot rotate bridge pairing codes")
 
 
-def test_remote_bridge_serves_workbench_static_files():
+def test_remote_bridge_serves_static_ui_files():
     server, thread, base = run_server(FakeSession(), "secret-token")
     try:
+        with urllib.request.urlopen(f"{base}/", timeout=5) as response:
+            body = response.read().decode("utf-8")
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/html")
+            assert "Content-Security-Policy" in response.headers
+            assert "app.js" in body
+
+        with urllib.request.urlopen(f"{base}/app.js", timeout=5) as response:
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/javascript")
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+        with urllib.request.urlopen(f"{base}/styles.css", timeout=5) as response:
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/css")
+
         with urllib.request.urlopen(f"{base}/workbench", timeout=5) as response:
             body = response.read().decode("utf-8")
             assert response.status == 200
@@ -514,7 +567,7 @@ def test_remote_bridge_serves_workbench_static_files():
         server.shutdown()
         thread.join(timeout=5)
         server.server_close()
-    print("PASS: remote bridge serves the workbench shell, script, and styles")
+    print("PASS: remote bridge serves the mobile and workbench static UI files")
 
 
 def test_remote_bridge_rejects_paths_outside_static_allowlist():
@@ -522,6 +575,7 @@ def test_remote_bridge_rejects_paths_outside_static_allowlist():
     try:
         for path in (
             "/assets/../remote_control.py",
+            "/index.html",
             "/workbench.html",
             "/assets/unknown.png",
             "/../config.yaml",

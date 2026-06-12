@@ -330,13 +330,13 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781198648.9520154,
-    "ast_hash": "1779d43d1b03be923fef9add22ab6a3a",
+    "mtime": 1781251467.1187618,
+    "ast_hash": "51476c51052700b3f2c6b4b834fe9c39",
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781215304.1355338,
-    "ast_hash": "66d30a29315602c127a9cd5747268a4c",
+    "mtime": 1781252280.7752578,
+    "ast_hash": "541591505c3a4129ee7596dbda623690",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781204915.5778165,
-    "ast_hash": "1ad01a3181f9b2d0ca52aff9db15ff58",
+    "mtime": 1781251785.351794,
+    "ast_hash": "44a487412f7ae3eff64ee84e0fc92200",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/index.html": {
-    "mtime": 1781202335.1523492,
-    "ast_hash": "47e06b8709f51877bc3f78ca4ddd3fe0",
+    "mtime": 1781251409.2696476,
+    "ast_hash": "bc602baa9ac86da1b8ee03b2388fb3c8",
     "semantic_hash": ""
   },
   "output/playwright/usage/smoke-raw/.playwright-cli/page-2026-06-08T16-29-47-279Z.yml": {
@@ -685,8 +685,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.js": {
-    "mtime": 1781214843.579466,
-    "ast_hash": "a4a30ad3adac4f2ec7717d1daa5070dd",
+    "mtime": 1781251382.881747,
+    "ast_hash": "1340c0f24fb62972e78951a3297b23e4",
     "semantic_hash": ""
   },
   "INTERFACE_HANDOFF.md": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.html": {
-    "mtime": 1781214802.881485,
-    "ast_hash": "eea2486330a4e31fbc02dd535e9e7a90",
+    "mtime": 1781251320.4802735,
+    "ast_hash": "783cee21c98608530bcd979a4ee3cc9f",
     "semantic_hash": ""
   },
   ".claude/launch.json": {

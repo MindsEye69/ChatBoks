@@ -164,6 +164,11 @@ button.ghost {
   border-color: var(--border);
 }
 
+button.danger {
+  border-color: rgba(248, 113, 113, 0.48);
+  color: var(--danger);
+}
+
 button.ghost.active {
   border-color: rgba(249, 115, 22, 0.75);
   background: rgba(249, 115, 22, 0.16);
@@ -268,12 +273,46 @@ button.compact {
 }
 
 .response-panel,
+.approval-panel,
 .transcript-panel,
 .system-panel,
 .events-panel,
 .flow-panel,
 .rail-panel {
   min-width: 0;
+}
+
+.approval-panel {
+  border-color: rgba(249, 115, 22, 0.52);
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.approval-meta {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.approval-summary {
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.approval-estimate {
+  margin: 6px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-panel textarea {
+  min-height: 58px;
+  margin-bottom: 10px;
+}
+
+.approval-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .flow-chain {
@@ -549,6 +588,7 @@ button.compact {
     grid-template-areas:
       "left flow right"
       "left main right"
+      "left approval right"
       "left system right"
       "left transcript right";
     align-items: start;
@@ -579,6 +619,10 @@ button.compact {
 
   .flow-panel {
     grid-area: flow;
+  }
+
+  .approval-panel {
+    grid-area: approval;
   }
 
   .response-panel .latest-response {
