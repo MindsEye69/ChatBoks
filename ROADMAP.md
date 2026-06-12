@@ -14,7 +14,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Antigravity remains pending until the `agy` CLI is available on Windows.
 - `install.py` exists as the first-run setup helper.
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
-- Agent Zero has an initial optional Ollama adapter, direct-only `@zero` / `@agent0` routing, and installer support. It is configured for ChatBoks but stays out of normal rounds until explicitly tagged.
+- Coordinator has an initial optional Ollama adapter, direct-only `@coordinator` / `@coordinator` routing, and installer support. It is configured for ChatBoks but stays out of normal rounds until explicitly tagged.
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
@@ -27,21 +27,21 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Session token usage bars and per-session warning/cap thresholds are live.
 - Proposal approval gates now show rough token and optional USD cost estimates.
 - Role-file trust approval is enforced for project-local role files, with approved hashes stored outside the project tree.
-- Agent Zero is now validated against Ollama's direct REST API with `think: false`, and `gemma3:4b` is the current best local balance between usefulness and desktop impact.
+- Coordinator is now validated against Ollama's direct REST API with `think: false`, and `gemma3:4b` is the current best local balance between usefulness and desktop impact.
 - Secure mobile remote control works over a private Tailscale path with pairing/session tokens, project switching, compact mobile UI, sticky composer, latest-response/full-transcript views, and nonblocking command submission.
 
 ## Phase 0 - Onboarding and Compatibility
 
 Must exist before public release.
 
-- Embedded setup agent: Agent Zero.
+- Embedded setup agent: Coordinator.
 - Admin-privilege first run for installing CLIs, fixing PATH, and setting environment variables.
 - `chatboks doctor` diagnostic command.
 - Self-healing CLI detection with adapter tests per agent.
 - OAuth and API-key authentication flow, browser-based where possible.
 - Versioned adapter system with per-agent YAML configs and tested CLI flag sets.
 - First-run wizard that detects git repos, configures agents, and runs CodeGraph init.
-- After setup, Agent Zero joins the team permanently.
+- After setup, Coordinator joins the team permanently.
 
 ## Phase 1 - Core Stability
 
@@ -79,7 +79,7 @@ Completed:
 
 - Role-based routing with predefined agent lanes per project.
 - Collaboration-mode lane strategies such as `solo_codex`, `solo_claude`, and `full_round`.
-- Conservative routing intelligence for lightweight Agent Zero, Codex-first, and Claude-first auto-routing.
+- Conservative routing intelligence for lightweight Coordinator, Codex-first, and Claude-first auto-routing.
 - Session token usage bars plus per-session warning and hard-cap thresholds.
 - Provider usage baseline capture for:
   - `console.anthropic.com/usage`
@@ -95,7 +95,7 @@ Completed:
 
 Remaining:
 
-- Task auction / classifier refinement so Agent Zero answers more low-cost prompts without devolving into generic or bare-signal responses.
+- Task auction / classifier refinement so Coordinator answers more low-cost prompts without devolving into generic or bare-signal responses.
 - Better token accounting from provider-native telemetry instead of response-length estimation alone.
 - Automatic light resume check at startup, with manual `/resume` for the full visible report.
 - Optional automatic `/sleep` trigger after long idle periods or high transcript growth, while keeping manual `/sleep` as the explicit break marker.
@@ -145,9 +145,9 @@ Remaining:
 - Community adapter contributions for other models.
 - Documentation site.
 
-## Agent Zero
+## Coordinator
 
-Agent Zero is a small local model used for coordination so frontier/cloud models are called only when needed.
+Coordinator is a small local model used for coordination so frontier/cloud models are called only when needed.
 
 Responsibilities:
 
@@ -175,14 +175,14 @@ Routing lanes:
 - `claude`: architecture, security analysis, reasoning, writing, code review.
 - `codex`: implementation, refactoring, testing, git operations.
 - `antigravity`: browser testing, visual QA, parallel execution.
-- `agent_zero`: simple queries, status checks, routing decisions, and local coordination.
+- `coordinator`: simple queries, status checks, routing decisions, and local coordination.
 
 Open question:
 
-- Keep Agent Zero routing decisions under 10 seconds on Windows while improving answer quality.
-- Improve Agent Zero role-call, "what's next?", and "what should I test next?" responses so they stay concrete and ChatBoks-native.
+- Keep Coordinator routing decisions under 10 seconds on Windows while improving answer quality.
+- Improve Coordinator role-call, "what's next?", and "what should I test next?" responses so they stay concrete and ChatBoks-native.
 - Reproduce and isolate the intermittent stacked-window glitch in the desktop app path; isolated CLI role calls have not reproduced it so far.
-- Evaluate Gemma 4 QAT as the next Agent Zero model family:
+- Evaluate Gemma 4 QAT as the next Coordinator model family:
   - Test `Gemma 4 E4B QAT Q4_0` first as the likely replacement for `gemma3:4b`.
   - Test `Gemma 4 E2B QAT` as the low-impact fallback if E4B affects desktop responsiveness.
   - Test `Gemma 4 12B QAT Q4_0` only as an opt-in stronger local review lane, not as the default always-on coordinator.
@@ -196,7 +196,7 @@ Dynamic timeout:
 - Standard task: 300 seconds.
 - Large task: 600 seconds.
 - Massive task: 1800 seconds, with user notification before starting.
-- Agent Zero may suggest splitting massive tasks instead of running them as one long call.
+- Coordinator may suggest splitting massive tasks instead of running them as one long call.
 
 Automatic timeout recovery:
 
@@ -295,9 +295,9 @@ IO Website:
 
 1. Run a ChatBoks multi-agent review of Thought Packets and sleep/resume lifecycle.
 2. Add optional heavier `/sleep` modes for Graphify refresh, doctor, and focused tests.
-3. Continue refining Agent Zero direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
+3. Continue refining Coordinator direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
 4. Refine packet-risk matching from real confirmation-mode traces if the first heuristic is too strict or too loose.
-5. Run an Agent Zero model bake-off with Gemma 4 QAT:
+5. Run an Coordinator model bake-off with Gemma 4 QAT:
    - current `gemma3:4b` baseline
    - `Gemma 4 E4B QAT Q4_0`
    - `Gemma 4 E2B QAT`

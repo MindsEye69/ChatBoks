@@ -302,25 +302,25 @@ def test_prompt_approval_preview_does_not_emit_raw_escape_sequences(capsys):
 def test_router_unapproved_project_role_falls_back_to_installed_role():
     with tempfile.TemporaryDirectory() as tmp:
         project = Path(tmp)
-        (project / "AGENT_ZERO.md").write_text(
+        (project / "COORDINATOR.md").write_text(
             "Project-local role must not load.\n",
             encoding="utf-8",
         )
         router = Router(
             {
-                "projects": {"chatboks": {"agents": ["agent_zero"]}},
-                "agents": {"agent_zero": {}},
+                "projects": {"chatboks": {"agents": ["coordinator"]}},
+                "agents": {"coordinator": {}},
             },
             "chatboks",
             project,
         )
 
         with patch("router.load_role_with_approval", return_value=None):
-            result = router.load_role("agent_zero", {"role_file": "AGENT_ZERO.md"})
+            result = router.load_role("coordinator", {"role_file": "COORDINATOR.md"})
 
         assert "Project-local role must not load" not in result
         assert "ChatBoks Collaboration Protocol" in result
-        assert "Agent Zero's Role - ChatBoks" in result
+        assert "Coordinator's Role - ChatBoks" in result
 
 
 def test_router_fallback_uses_role_basename_only():
@@ -328,18 +328,18 @@ def test_router_fallback_uses_role_basename_only():
         project = Path(tmp)
         router = Router(
             {
-                "projects": {"chatboks": {"agents": ["agent_zero"]}},
-                "agents": {"agent_zero": {}},
+                "projects": {"chatboks": {"agents": ["coordinator"]}},
+                "agents": {"coordinator": {}},
             },
             "chatboks",
             project,
         )
 
         with patch("router.load_role_with_approval", return_value=None):
-            result = router.load_role("agent_zero", {"role_file": "../AGENT_ZERO.md"})
+            result = router.load_role("coordinator", {"role_file": "../COORDINATOR.md"})
 
         assert "ChatBoks Collaboration Protocol" in result
-        assert "Agent Zero's Role - ChatBoks" in result
+        assert "Coordinator's Role - ChatBoks" in result
 
 
 def test_router_prepends_protocol_to_approved_project_role():
@@ -347,15 +347,15 @@ def test_router_prepends_protocol_to_approved_project_role():
         project = Path(tmp)
         router = Router(
             {
-                "projects": {"chatboks": {"agents": ["agent_zero"]}},
-                "agents": {"agent_zero": {}},
+                "projects": {"chatboks": {"agents": ["coordinator"]}},
+                "agents": {"coordinator": {}},
             },
             "chatboks",
             project,
         )
 
         with patch("router.load_role_with_approval", return_value="Project approved role.\n"):
-            result = router.load_role("agent_zero", {"role_file": "AGENT_ZERO.md"})
+            result = router.load_role("coordinator", {"role_file": "COORDINATOR.md"})
 
         assert result.startswith("# ChatBoks Collaboration Protocol")
         assert "Project approved role." in result

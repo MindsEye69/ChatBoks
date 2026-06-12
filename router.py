@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from agents.agent_zero import AgentZeroAgent
+from agents.coordinator import CoordinatorAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
 from agents.codex import CodexAgent, CodexSparkAgent
@@ -12,7 +12,7 @@ from trust import load_role_with_approval
 
 
 AGENT_CLASSES = {
-    "agent_zero": AgentZeroAgent,
+    "coordinator": CoordinatorAgent,
     "claude": ClaudeAgent,
     "codex": CodexAgent,
     "codex_spark": CodexSparkAgent,
@@ -101,11 +101,7 @@ class Router:
             return RoutingDecision(list(self.agent_names), cleaned, strategy="explicit_all")
 
         aliases = {
-            "0": "agent_zero",
-            "agent0": "agent_zero",
-            "az": "agent_zero",
-            "forge": "agent_zero",
-            "zero": "agent_zero",
+            "coord": "coordinator",
             "antigrav": "antigravity",
             "agy": "antigravity",
             "spark": "codex_spark",
@@ -186,12 +182,12 @@ class Router:
         if not lowered:
             return None
 
-        if self.should_route_to_agent_zero(lowered, collaboration_mode):
+        if self.should_route_to_coordinator(lowered, collaboration_mode):
             return RoutingDecision(
-                ["agent_zero"],
+                ["coordinator"],
                 text,
-                note="Routing intelligence: lightweight setup/status request -> Agent Zero.",
-                strategy="agent_zero_direct",
+                note="Routing intelligence: lightweight setup/status request -> Coordinator.",
+                strategy="coordinator_direct",
             )
 
         if self.should_route_to_codex(lowered, collaboration_mode):
@@ -211,12 +207,12 @@ class Router:
             )
         return None
 
-    def should_route_to_agent_zero(
+    def should_route_to_coordinator(
         self,
         lowered: str,
         collaboration_mode: str | None,
     ) -> bool:
-        if "agent_zero" not in self.direct_agent_names and "agent_zero" not in self.agent_names:
+        if "coordinator" not in self.direct_agent_names and "coordinator" not in self.agent_names:
             return False
         if collaboration_mode in {"brainstorm", "review", "bugsearch"}:
             return False
@@ -259,7 +255,7 @@ class Router:
                 "doctor.py",
                 "why is claude",
                 "why is codex",
-                "why is agent_zero",
+                "why is coordinator",
                 "why is antigravity",
                 "current mode",
                 "context mode",

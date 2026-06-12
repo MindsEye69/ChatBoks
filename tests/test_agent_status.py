@@ -28,7 +28,7 @@ def _make_app(root: Path) -> Chatboks:
         "agents": {
             "claude": {},
             "codex": {},
-            "agent_zero": {},
+            "coordinator": {},
         },
     }
     app.proj_config = app.config["projects"]["test"]
@@ -129,20 +129,20 @@ def test_direct_fallback_must_be_allowed_to_fill_main_seat():
         app = _make_app(Path(tmp))
         app.config["projects"]["test"]["agents"] = ["claude"]
         app.proj_config = app.config["projects"]["test"]
-        app.config["agent_fallbacks"] = {"claude": ["agent_zero"]}
+        app.config["agent_fallbacks"] = {"claude": ["coordinator"]}
         app.save_agent_statuses({"claude": {"status": "exhausted", "updated_at": app.timestamp()}})
 
         assert app.resolve_available_agents(["claude"], None) == []
 
-        app.config["agents"]["agent_zero"]["can_fill_main_seat"] = True
-        assert app.resolve_available_agents(["claude"], None) == ["agent_zero"]
+        app.config["agents"]["coordinator"]["can_fill_main_seat"] = True
+        assert app.resolve_available_agents(["claude"], None) == ["coordinator"]
         print("PASS: direct fallback must be allowed to fill a main seat")
 
 
-def test_agent_zero_can_substitute_after_main_agents_exhausted_when_allowed():
+def test_coordinator_can_substitute_after_main_agents_exhausted_when_allowed():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
-        app.config["agents"]["agent_zero"]["can_fill_main_seat"] = True
+        app.config["agents"]["coordinator"]["can_fill_main_seat"] = True
         app.save_agent_statuses(
             {
                 "claude": {"status": "exhausted", "updated_at": app.timestamp()},
@@ -155,10 +155,10 @@ def test_agent_zero_can_substitute_after_main_agents_exhausted_when_allowed():
 
         app.run_agent_round.assert_called_once()
         _, kwargs = app.run_agent_round.call_args
-        assert kwargs["agents"] == ["agent_zero"]
+        assert kwargs["agents"] == ["coordinator"]
         transcript = app.chatboks_md.read_text(encoding="utf-8")
-        assert "substituting agent_zero" in transcript
-        print("PASS: Agent Zero can substitute after main agents are exhausted when allowed")
+        assert "substituting coordinator" in transcript
+        print("PASS: Coordinator can substitute after main agents are exhausted when allowed")
 
 
 def test_explicit_route_to_exhausted_agent_does_not_substitute():
@@ -178,7 +178,7 @@ def test_explicit_route_to_exhausted_agent_does_not_substitute():
 def test_role_call_announces_direct_standby_agents_without_starting_them():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
-        app.config["projects"]["test"]["direct_agents"] = ["agent_zero"]
+        app.config["projects"]["test"]["direct_agents"] = ["coordinator"]
         app.proj_config = app.config["projects"]["test"]
         app.call_agent_with_token_recovery = MagicMock(
             side_effect=[
@@ -193,10 +193,10 @@ def test_role_call_announces_direct_standby_agents_without_starting_them():
         assert [call.args[0] for call in app.call_agent_with_token_recovery.call_args_list] == ["claude", "codex"]
         app.stream.standby.assert_called_once()
         standby_agent, standby_text = app.stream.standby.call_args.args
-        assert standby_agent == "agent_zero"
-        assert "Standby via @zero." in standby_text
+        assert standby_agent == "coordinator"
+        assert "Standby via @coordinator." in standby_text
         assert "stays idle unless explicitly routed" in standby_text
-        print("PASS: role call shows Agent Zero standby without waking it")
+        print("PASS: role call shows Coordinator standby without waking it")
 
 
 if __name__ == "__main__":
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     test_expired_exhaustion_auto_clears_on_display()
     test_normal_round_substitutes_exhausted_agent()
     test_direct_fallback_must_be_allowed_to_fill_main_seat()
-    test_agent_zero_can_substitute_after_main_agents_exhausted_when_allowed()
+    test_coordinator_can_substitute_after_main_agents_exhausted_when_allowed()
     test_explicit_route_to_exhausted_agent_does_not_substitute()
     test_role_call_announces_direct_standby_agents_without_starting_them()
     print("\nAll agent status smoke tests passed.")

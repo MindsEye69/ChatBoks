@@ -81,7 +81,7 @@ def test_outcomes_summary_reads_jsonl():
                             "project": "test",
                             "round": 2,
                             "type": "failure",
-                            "agent": "agent_zero",
+                            "agent": "coordinator",
                             "category": "bad_signal",
                             "impact": "medium",
                             "mode": "manual",
@@ -99,20 +99,20 @@ def test_outcomes_summary_reads_jsonl():
         message = app.stream.system.call_args.args[0]
         assert "Outcomes: 2" in message
         assert "claude=1" in message
-        assert "agent_zero=1" in message
+        assert "coordinator=1" in message
         assert "better_architecture=1" in message
         assert "bad_signal=1" in message
         print("PASS: /outcomes summarizes JSONL records")
 
 
-def test_suggest_outcome_uses_agent_zero_without_recording_jsonl():
+def test_suggest_outcome_uses_coordinator_without_recording_jsonl():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
         app.config = {
             "agents": {
                 "claude": {},
                 "codex": {},
-                "agent_zero": {},
+                "coordinator": {},
             }
         }
         app.ensure_project_files()
@@ -147,11 +147,11 @@ def test_suggest_outcome_uses_agent_zero_without_recording_jsonl():
         message = app.stream.system.call_args.args[0]
         assert '/win codex timeout_recovery high "Found and fixed the retry bug."' in message
         assert app.load_outcomes() == []
-        print("PASS: /suggest-outcome uses Agent Zero without recording JSONL")
+        print("PASS: /suggest-outcome uses Coordinator without recording JSONL")
 
 
 if __name__ == "__main__":
     test_win_command_records_jsonl_without_agent_round()
     test_outcomes_summary_reads_jsonl()
-    test_suggest_outcome_uses_agent_zero_without_recording_jsonl()
+    test_suggest_outcome_uses_coordinator_without_recording_jsonl()
     print("\nAll outcome smoke tests passed.")

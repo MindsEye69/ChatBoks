@@ -32,7 +32,7 @@ Use this plain-text shape:
 
 ```text
 >>> PACKET
-agent: claude|codex|spark|agent_zero
+agent: claude|codex|spark|coordinator
 stance: ADD|VERIFY|CHALLENGE|SKIP|HANDOFF
 observed:
 - file/test/tool fact you verified
@@ -83,7 +83,7 @@ The signal is a contract with the orchestrator. Do not emit `TASK_COMPLETE` unle
 - Hand off to the agent best suited for the next step.
 - Preserve decisions, assumptions, blockers, tests, and file changes. Drop agreement chatter.
 
-For implementation tasks: Claude should clarify architecture and risks, Codex should implement and verify, and Agent Zero should stay cheap unless directly tagged.
+For implementation tasks: Claude should clarify architecture and risks, Codex should implement and verify, and Coordinator should stay cheap unless directly tagged.
 
 For bugsearch/review: challenge correctness, missing tests, hidden state, and security assumptions before proposing broad rewrites.
 

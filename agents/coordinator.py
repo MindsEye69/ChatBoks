@@ -13,8 +13,8 @@ from typing import Any
 from agents.base import BaseAgent
 
 
-class AgentZeroAgent(BaseAgent):
-    name = "agent_zero"
+class CoordinatorAgent(BaseAgent):
+    name = "coordinator"
     signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
     role_call_requests = {"role call", "roll call", "rolecall", "rollcall"}
     next_step_markers = ("what's next", "whats next", "what is next", "next step", "what should i test next")
@@ -28,11 +28,11 @@ class AgentZeroAgent(BaseAgent):
         if len(context) > max_chars:
             context = (
                 context[:max_chars]
-                + "\n\n[TRUNCATED_FOR_AGENT_ZERO]\n"
-                + "Agent Zero receives compact context only. Ask Claude or Codex for deep code work."
+                + "\n\n[TRUNCATED_FOR_COORDINATOR]\n"
+                + "Coordinator receives compact context only. Ask Claude or Codex for deep code work."
             )
         instruction = (
-            "You are Agent Zero for ChatBoks: a local, cheap coordinator for setup, "
+            "You are Coordinator for ChatBoks: a local, cheap coordinator for setup, "
             "diagnostics, routing, summaries, and small status checks. You do not have tools. "
             "Do not emit JSON, markdown fences, fake tool calls, or END_OF_MESSAGE. "
             "Reply in concise plain text. Prefer one concrete next action grounded in "
@@ -40,7 +40,7 @@ class AgentZeroAgent(BaseAgent):
             "concrete next diagnostic command when possible. Valid local commands include "
             "/help, /agent, /mode, /context, /usage, /suggest-outcome, /wins, /failures, "
             "and /outcomes. For environment checks, prefer python doctor.py <project> or "
-            "/agent. For model-switch validation, prefer @zero role call or @zero what's next "
+            "/agent. For model-switch validation, prefer @coordinator role call or @coordinator what's next "
             "for ChatBoks? as the next check. Do not suggest /context unless the user is "
             "explicitly asking about context mode. Do not invent commands such as /status. "
             "Use >>> QUESTION only when you "
@@ -104,7 +104,7 @@ class AgentZeroAgent(BaseAgent):
         endpoint = self.endpoint()
         if not self._is_loopback_endpoint(endpoint):
             return (
-                f"Agent Zero endpoint '{endpoint}' is not a loopback address. "
+                f"Coordinator endpoint '{endpoint}' is not a loopback address. "
                 "Only localhost, 127.x.x.x, or ::1 endpoints are permitted.\n>>> BLOCKED"
             )
         model = self.configured_model()
@@ -116,14 +116,14 @@ class AgentZeroAgent(BaseAgent):
                 {
                     "role": "system",
                     "content": (
-                        "You are Agent Zero in ChatBoks. Plain text only. No JSON. "
+                        "You are Coordinator in ChatBoks. Plain text only. No JSON. "
                         "No markdown fences. No tool calls. Prefer one concrete next action "
                         "grounded in the provided context over broad category questions. "
                         "For setup checks, provide one concrete next diagnostic command when "
                         "possible. Valid local commands include /help, /agent, /mode, /context, "
                         "/usage, /suggest-outcome, /wins, /failures, and /outcomes. For "
                         "environment checks, prefer python doctor.py <project> or /agent. For "
-                        "model-switch validation, prefer @zero role call or @zero what's next "
+                        "model-switch validation, prefer @coordinator role call or @coordinator what's next "
                         "for ChatBoks? as the next check. Do not suggest /context unless the "
                         "user is explicitly asking about context mode. Do not invent commands "
                         "such as /status. Use >>> QUESTION only with a "
@@ -215,7 +215,7 @@ class AgentZeroAgent(BaseAgent):
             return f"{self.name} returned no output.\n>>> BLOCKED"
         if self.looks_like_tool_call(cleaned):
             return (
-                "Agent Zero attempted to emit a tool call instead of plain text. "
+                "Coordinator attempted to emit a tool call instead of plain text. "
                 "Retry with a smaller diagnostic request or route to Codex.\n>>> BLOCKED"
             )
         signal_positions = [
@@ -268,7 +268,7 @@ class AgentZeroAgent(BaseAgent):
             return self.role_call_response()
         if self.is_model_switch_validation_request(lowered):
             return (
-                "Next check: run @zero role call once and confirm Agent Zero answers promptly "
+                "Next check: run @coordinator role call once and confirm Coordinator answers promptly "
                 "on the lighter model without suggesting nonexistent commands.\n>>> TASK_COMPLETE"
             )
         if self.is_next_step_request(lowered):
@@ -276,10 +276,10 @@ class AgentZeroAgent(BaseAgent):
         if "routing policy" in lowered:
             return (
                 "- Normal prompts go to the configured default round agents for the project.\n"
-                "- Direct routes like @claude, @codex, or @zero go only to that named agent.\n"
+                "- Direct routes like @claude, @codex, or @coordinator go only to that named agent.\n"
                 "- @all opts into the full configured non-direct project team for one prompt.\n"
                 "- Exhausted main agents may be substituted with eligible available fallbacks, with a visible system note.\n"
-                "- Direct-only agents such as Agent Zero stay quiet unless tagged directly or selected as an eligible fallback.\n"
+                "- Direct-only agents such as Coordinator stay quiet unless tagged directly or selected as an eligible fallback.\n"
                 ">>> TASK_COMPLETE"
             )
         if "diagnostic command" in lowered or "check this project setup" in lowered:
@@ -292,7 +292,7 @@ class AgentZeroAgent(BaseAgent):
                 "want live model calls.\n>>> TASK_COMPLETE"
             )
         return (
-            "Agent Zero returned a bare control signal without an actionable response. "
+            "Coordinator returned a bare control signal without an actionable response. "
             "Retry the request or route it to Codex.\n>>> BLOCKED"
         )
 
@@ -313,7 +313,7 @@ class AgentZeroAgent(BaseAgent):
             if "/context" in lowered_body or "context before proceeding" in lowered_body:
                 if self.is_model_switch_validation_request(lowered_request):
                     return (
-                        "Next check: run @zero role call once and confirm Agent Zero answers "
+                        "Next check: run @coordinator role call once and confirm Coordinator answers "
                         "promptly on gemma3:4b without UI lag or invented commands."
                     )
                 return self.next_step_response(lowered_request).removesuffix("\n>>> TASK_COMPLETE")
@@ -323,7 +323,7 @@ class AgentZeroAgent(BaseAgent):
         if self.is_model_switch_validation_request(lowered_request):
             if "/context" in lowered_body or "context before proceeding" in lowered_body:
                 return (
-                    "Next check: run @zero role call once and confirm Agent Zero answers "
+                    "Next check: run @coordinator role call once and confirm Coordinator answers "
                     "promptly on gemma3:4b without UI lag or invented commands."
                 )
         return body
@@ -345,15 +345,15 @@ class AgentZeroAgent(BaseAgent):
     def next_step_response(self, lowered_request: str) -> str:
         if self.is_model_switch_validation_request(lowered_request):
             return (
-                "Next test: run @zero role call, then @zero what's next for ChatBoks? "
+                "Next test: run @coordinator role call, then @coordinator what's next for ChatBoks? "
                 "Confirm both answers are concrete, fast, and do not suggest nonexistent "
                 "commands such as /status.\n>>> TASK_COMPLETE"
             )
         if "test" in lowered_request:
             return (
                 "Next test: run the smallest smoke for the most recent change, then route "
-                "any failure to Codex with the exact error text. For Agent Zero specifically, "
-                "use @zero role call and @zero what's next for ChatBoks? as the quick quality checks.\n"
+                "any failure to Codex with the exact error text. For Coordinator specifically, "
+                "use @coordinator role call and @coordinator what's next for ChatBoks? as the quick quality checks.\n"
                 ">>> TASK_COMPLETE"
             )
         if "chatboks" in lowered_request or "project" in lowered_request:
@@ -363,7 +363,7 @@ class AgentZeroAgent(BaseAgent):
                 "availability before starting a longer round.\n>>> TASK_COMPLETE"
             )
         return (
-            "Next step: pick one scoped validation or diagnostic, keep Agent Zero on status/routing, "
+            "Next step: pick one scoped validation or diagnostic, keep Coordinator on status/routing, "
             "and route implementation or repo edits to Codex. Run /agent first if availability is unclear.\n"
             ">>> TASK_COMPLETE"
         )
@@ -373,7 +373,7 @@ class AgentZeroAgent(BaseAgent):
         endpoint = self.endpoint()
         if not self._is_loopback_endpoint(endpoint):
             status_line = (
-                f"Agent Zero configured for Ollama model `{model}`, but the endpoint is blocked by loopback policy: {endpoint}."
+                f"Coordinator configured for Ollama model `{model}`, but the endpoint is blocked by loopback policy: {endpoint}."
             )
         else:
             tags_endpoint = self.tags_endpoint(endpoint)
@@ -382,19 +382,19 @@ class AgentZeroAgent(BaseAgent):
                     data = json.loads(response.read().decode("utf-8"))
                 models = {str(item.get("name")) for item in data.get("models", []) if item.get("name")}
                 if model in models:
-                    status_line = f"Agent Zero online. Local coordinator ready via Ollama model `{model}`."
+                    status_line = f"Coordinator online. Local coordinator ready via Ollama model `{model}`."
                 else:
                     status_line = (
-                        f"Agent Zero configured for Ollama model `{model}`, but that model is not currently available in Ollama."
+                        f"Coordinator configured for Ollama model `{model}`, but that model is not currently available in Ollama."
                     )
             except (OSError, urllib.error.URLError, json.JSONDecodeError):
                 status_line = (
-                    f"Agent Zero configured for Ollama model `{model}`, but the local Ollama runtime did not answer a readiness check."
+                    f"Coordinator configured for Ollama model `{model}`, but the local Ollama runtime did not answer a readiness check."
                 )
         return (
             f"{status_line}\n"
             "I handle lightweight setup checks, routing, summaries, and simple status questions.\n"
-            "Use /agent to inspect availability or @zero for a direct local diagnostic.\n"
+            "Use /agent to inspect availability or @coordinator for a direct local diagnostic.\n"
             ">>> TASK_COMPLETE"
         )
 
@@ -413,6 +413,6 @@ class AgentZeroAgent(BaseAgent):
     def write_prompt_file(self, prompt: str) -> Path:
         state_dir = self.project_path / ".chatboks"
         state_dir.mkdir(parents=True, exist_ok=True)
-        prompt_path = state_dir / "agent_zero_prompt.md"
+        prompt_path = state_dir / "coordinator_prompt.md"
         prompt_path.write_text(prompt, encoding="utf-8")
         return prompt_path

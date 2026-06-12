@@ -37,7 +37,7 @@ def main() -> int:
     parser.add_argument("project", nargs="?", help="Optional project name from config.yaml")
     parser.add_argument("--config", type=Path, default=default_config_path())
     parser.add_argument("--yes", action="store_true", help="Assume yes for install prompts")
-    parser.add_argument("--agent-zero", action="store_true", help="Install/check Forge and offer to add Agent Zero to selected projects")
+    parser.add_argument("--coordinator", action="store_true", help="Install/check Ollama and offer to add Coordinator to selected projects")
     parser.add_argument("--install-hook", action="store_true", help="Install ChatBoks post-commit handoff hook")
     args = parser.parse_args()
 
@@ -57,7 +57,7 @@ def main() -> int:
         ok = False
     if not ensure_codegraph(args.yes):
         ok = False
-    if args.agent_zero and not ensure_agent_zero_ollama(config, args.yes):
+    if args.coordinator and not ensure_coordinator_ollama(config, args.yes):
         ok = False
 
     changed_config = False
@@ -69,8 +69,8 @@ def main() -> int:
         ok = ensure_project_codegraph(project, projects[project], config) and ok
         if args.install_hook:
             ok = ensure_project_hook(project, projects[project], args.config, args.yes) and ok
-        if args.agent_zero:
-            changed_config = offer_agent_zero(project, projects[project], args.yes) or changed_config
+        if args.coordinator:
+            changed_config = offer_coordinator(project, projects[project], args.yes) or changed_config
 
     if changed_config:
         args.config.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
@@ -106,16 +106,16 @@ def ensure_codegraph(assume_yes: bool) -> bool:
     return False
 
 
-def ensure_agent_zero_ollama(config: dict[str, Any], assume_yes: bool) -> bool:
-    agent_config = config.get("agents", {}).get("agent_zero", {})
+def ensure_coordinator_ollama(config: dict[str, Any], assume_yes: bool) -> bool:
+    agent_config = config.get("agents", {}).get("coordinator", {})
     model = str(agent_config.get("model", "gemma3:4b"))
     endpoint = str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
     tags_endpoint = endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
 
     models = fetch_ollama_models(tags_endpoint)
     if models is not None and model in models:
-        print(f"OK   Agent Zero Ollama endpoint: {tags_endpoint}")
-        print(f"OK   Agent Zero model available: {model}")
+        print(f"OK   Coordinator Ollama endpoint: {tags_endpoint}")
+        print(f"OK   Coordinator model available: {model}")
         return True
 
     ollama = shutil.which("ollama")
@@ -135,10 +135,10 @@ def ensure_agent_zero_ollama(config: dict[str, Any], assume_yes: bool) -> bool:
     )
     has_model = result.returncode == 0 and model in result.stdout
     if has_model:
-        print(f"OK   Agent Zero model available: {model}")
+        print(f"OK   Coordinator model available: {model}")
         return True
 
-    print(f"WARN Agent Zero model missing: {model}")
+    print(f"WARN Coordinator model missing: {model}")
     print(f"INFO Expected Ollama endpoint: {tags_endpoint}")
     if ask(f"Pull {model} with Ollama now?", assume_yes):
         return run([ollama, "pull", model])
@@ -247,16 +247,16 @@ def find_codegraph_command() -> Path | None:
     return None
 
 
-def offer_agent_zero(project: str, project_config: dict[str, Any], assume_yes: bool) -> bool:
+def offer_coordinator(project: str, project_config: dict[str, Any], assume_yes: bool) -> bool:
     agents = project_config.setdefault("agents", [])
-    if "agent_zero" in agents:
-        print(f"OK   {project}: Agent Zero already on the team")
+    if "coordinator" in agents:
+        print(f"OK   {project}: Coordinator already on the team")
         return False
-    if ask(f"Agent Zero is available. Add it to the {project} team?", assume_yes):
-        agents.insert(0, "agent_zero")
-        print(f"OK   {project}: Agent Zero added as first responder")
+    if ask(f"Coordinator is available. Add it to the {project} team?", assume_yes):
+        agents.insert(0, "coordinator")
+        print(f"OK   {project}: Coordinator added as first responder")
         return True
-    print(f"SKIP {project}: Agent Zero not added")
+    print(f"SKIP {project}: Coordinator not added")
     return False
 
 

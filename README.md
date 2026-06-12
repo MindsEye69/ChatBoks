@@ -54,7 +54,7 @@ These local slash commands do not call any agents or consume model tokens:
 
 ```text
 /win codex missed_defect high "Caught the IPC pipe fallback issue."
-/fail agent_zero bad_signal medium "Returned a bare QUESTION."
+/fail coordinator bad_signal medium "Returned a bare QUESTION."
 /outcome win claude better_architecture medium "Found the simpler protocol flow."
 /wins
 /failures
@@ -63,14 +63,14 @@ These local slash commands do not call any agents or consume model tokens:
 
 Use this to compare collaboration modes, agent combinations, and unique model contributions over time.
 
-When you want help phrasing likely outcome entries from recent work, ask Agent Zero for suggestions:
+When you want help phrasing likely outcome entries from recent work, ask Coordinator for suggestions:
 
 ```text
 /suggest-outcome
 /suggest-outcome codex
 ```
 
-This is advisory only. Agent Zero suggests candidate `/win` or `/fail` lines, but nothing is written to
+This is advisory only. Coordinator suggests candidate `/win` or `/fail` lines, but nothing is written to
 `.chatboks/outcomes.jsonl` until you run a manual outcome command yourself.
 
 ## Collaboration Modes
@@ -112,7 +112,7 @@ projects:
 ```
 
 - `solo_codex`: route that mode's requests to Codex only unless an explicit `@agent` tag or a stronger lightweight
-  Agent Zero route applies first.
+  Coordinator route applies first.
 - `solo_claude`: same idea, but Claude-first.
 - `full_round`: keep the configured collaboration lane for that mode.
 - `confirm_round`: start with the project primary when no stronger route applies, then ask a different configured
@@ -161,15 +161,15 @@ These commands do not call any agents or consume model tokens.
 /agent claude exhausted 50m
 /agent claude available
 /agent codex low
-/agent agent_zero blocked "Ollama is offline"
+/agent coordinator blocked "Ollama is offline"
 ```
 
 Availability is stored per project in `.chatboks/agent_status.json` and included in round context. Normal multi-agent
 rounds skip exhausted or blocked agents and use configured fallbacks when possible. Explicit routes such as `@claude`
 do not silently substitute another model; ChatBoks tells you the target is unavailable so you can decide what to do.
 
-Normal rounds use the configured default project team and exclude `direct_agents` such as Agent Zero or Codex Spark.
-Use direct tags like `@zero` when you want the local/bootstrap model specifically, or `@spark` when you want the fast
+Normal rounds use the configured default project team and exclude `direct_agents` such as Coordinator or Codex Spark.
+Use direct tags like `@coordinator` when you want the local/bootstrap model specifically, or `@spark` when you want the fast
 Codex Spark lane for a small scoped coding task. Use `@all ...` to opt into the full configured non-direct project team
 for one prompt. Local/direct agents can fill a main seat only when explicitly marked with `can_fill_main_seat: true` and
 selected as a fallback for an exhausted agent.
@@ -207,7 +207,7 @@ projects:
 
 Current basic behavior is conservative:
 
-- Lightweight setup, status, routing-policy, and diagnostic questions can auto-route to Agent Zero.
+- Lightweight setup, status, routing-policy, and diagnostic questions can auto-route to Coordinator.
 - Obvious implementation requests can auto-route to Codex only.
 - Obvious design, architecture, and security-analysis requests can auto-route to Claude only.
 - Everything else still uses the configured mode strategy or collaboration-mode lane.
@@ -336,20 +336,20 @@ prompts or slash commands from your phone through a private tunnel or VPN. The i
 proxy such as Tailscale Serve that forwards to the loopback bridge; do not expose this port directly to the public
 internet.
 
-Agent Zero is an optional local/bootstrap agent backed directly by Ollama. The current recommended default is
+Coordinator is an optional local/bootstrap agent backed directly by Ollama. The current recommended default is
 `gemma3:4b` through Ollama's local chat endpoint (`http://127.0.0.1:11434/api/chat`) with `think: false` so
 responses stay in normal output instead of Ollama's separate thinking field. It is configured but not added to
-project teams by default. To check Ollama/model availability and ask whether Agent Zero should join a project, run:
+project teams by default. To check Ollama/model availability and ask whether Coordinator should join a project, run:
 
 ```bash
-python install.py tinyguardian --agent-zero
+python install.py tinyguardian --coordinator
 ```
 
 You can also route to it directly without adding it to normal rounds:
 
 ```text
-@zero check this project setup and recommend the next diagnostic command.
-@agent0 check this project setup and recommend the next diagnostic command.
+@coordinator check this project setup and recommend the next diagnostic command.
+@coordinator check this project setup and recommend the next diagnostic command.
 ```
 
 Make sure Ollama is running and the selected model exists locally, for example with `ollama pull gemma3:4b`.
@@ -454,12 +454,12 @@ Do not install Graphify assistant hooks by default; they can conflict with ChatB
 
 ## Ollama and Local Models (third-party integration)
 
-Agent Zero uses [Ollama](https://ollama.com/) as an optional local model runtime. The default configuration points at
+Coordinator uses [Ollama](https://ollama.com/) as an optional local model runtime. The default configuration points at
 `gemma3:4b`, but ChatBoks does not own, bundle, or license Ollama or the model weights. Ollama and any models
 you install are third-party projects with their own licenses, terms, update cadence, storage needs, and support channels.
 
-ChatBoks core orchestration works without Ollama. If Ollama or the selected local model is unavailable, Agent Zero can
-be left out of normal rounds or marked unavailable with `/agent agent_zero blocked "Ollama is offline"`. Claude/Codex
+ChatBoks core orchestration works without Ollama. If Ollama or the selected local model is unavailable, Coordinator can
+be left out of normal rounds or marked unavailable with `/agent coordinator blocked "Ollama is offline"`. Claude/Codex
 relay features, CodeGraph context, slash commands, and approval flow remain usable.
 
 ## CodeGraph (third-party integration)

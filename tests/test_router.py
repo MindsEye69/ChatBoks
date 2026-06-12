@@ -110,9 +110,9 @@ def test_primary_falls_back_when_configured_primary_not_in_agents():
 # ---------------------------------------------------------------------------
 
 def test_after_returns_next_agent():
-    r = _router("claude", "codex", "agent_zero")
+    r = _router("claude", "codex", "coordinator")
     assert r.after("claude") == "codex"
-    assert r.after("codex") == "agent_zero"
+    assert r.after("codex") == "coordinator"
     print("PASS: after returns next agent in sequence")
 
 
@@ -134,7 +134,7 @@ def test_after_unknown_agent_returns_primary():
 
 def test_normalize_round_agents_filters_nonmembers():
     r = _router("claude", "codex")
-    assert r.normalize_round_agents(["claude", "agent_zero"]) == ["claude"]
+    assert r.normalize_round_agents(["claude", "coordinator"]) == ["claude"]
     print("PASS: normalize filters agents not in project")
 
 
@@ -152,7 +152,7 @@ def test_normalize_round_agents_non_list_returns_empty():
 
 
 def test_normalize_round_agents_preserves_order():
-    r = _router("claude", "codex", "agent_zero")
+    r = _router("claude", "codex", "coordinator")
     assert r.normalize_round_agents(["codex", "claude"]) == ["codex", "claude"]
     print("PASS: normalize preserves insertion order")
 
@@ -180,14 +180,14 @@ def test_normal_round_agents_no_mode_returns_all_agents():
 
 
 def test_normal_round_agents_uses_round_agents_config():
-    r = _router("claude", "codex", "agent_zero", round_agents=["codex", "claude"])
+    r = _router("claude", "codex", "coordinator", round_agents=["codex", "claude"])
     assert r.normal_round_agents(None) == ["codex", "claude"]
     print("PASS: normal_round_agents uses configured round_agents")
 
 
 def test_normal_round_agents_uses_default_agents_when_no_round_agents():
-    r = _router("claude", "codex", "agent_zero", default_agents=["agent_zero", "claude"])
-    assert r.normal_round_agents(None) == ["agent_zero", "claude"]
+    r = _router("claude", "codex", "coordinator", default_agents=["coordinator", "claude"])
+    assert r.normal_round_agents(None) == ["coordinator", "claude"]
     print("PASS: normal_round_agents uses default_agents fallback")
 
 
@@ -216,9 +216,9 @@ def test_route_no_prefix_preserves_original_text():
 # ---------------------------------------------------------------------------
 
 def test_route_at_all_routes_to_all_agents():
-    r = _router("claude", "codex", "agent_zero")
+    r = _router("claude", "codex", "coordinator")
     d = r.route_user_prompt_details("@all review this")
-    assert set(d.agents) == {"claude", "codex", "agent_zero"}
+    assert set(d.agents) == {"claude", "codex", "coordinator"}
     assert d.cleaned_prompt == "review this"
     assert d.strategy == "explicit_all"
     print("PASS: @all routes to every project agent")
@@ -271,10 +271,10 @@ def test_route_at_claude_exclusive():
 
 
 def test_route_at_direct_agent_exclusive():
-    r = _router("claude", "codex", direct_agents=["agent_zero"])
-    d = r.route_user_prompt_details("@agent_zero check status")
-    assert d.agents == ["agent_zero"]
-    assert d.exclusive_agent == "agent_zero"
+    r = _router("claude", "codex", direct_agents=["coordinator"])
+    d = r.route_user_prompt_details("@coordinator check status")
+    assert d.agents == ["coordinator"]
+    assert d.exclusive_agent == "coordinator"
     assert d.cleaned_prompt == "check status"
     assert d.strategy == "explicit_agent"
     print("PASS: @agent can route to configured direct agent")
@@ -300,42 +300,12 @@ def test_route_alias_spark_maps_to_codex_spark():
     print("PASS: @spark alias resolves to codex_spark")
 
 
-def test_route_alias_zero_maps_to_agent_zero():
-    r = _router("claude", "codex", "agent_zero")
-    d = r.route_user_prompt_details("@zero do something")
-    assert d.agents == ["agent_zero"]
-    assert d.exclusive_agent == "agent_zero"
-    print("PASS: @zero alias resolves to agent_zero")
-
-
-def test_route_alias_numeric_zero_maps_to_agent_zero():
-    r = _router("claude", "codex", "agent_zero")
-    d = r.route_user_prompt_details("@0 do something")
-    assert d.agents == ["agent_zero"]
-    assert d.exclusive_agent == "agent_zero"
-    print("PASS: @0 alias resolves to agent_zero")
-
-
-def test_route_alias_agent0_maps_to_agent_zero():
-    r = _router("claude", "codex", "agent_zero")
-    d = r.route_user_prompt_details("@agent0 do something")
-    assert d.agents == ["agent_zero"]
-    assert d.exclusive_agent == "agent_zero"
-    print("PASS: @agent0 alias resolves to agent_zero")
-
-
-def test_route_alias_az_maps_to_agent_zero():
-    r = _router("claude", "codex", "agent_zero")
-    d = r.route_user_prompt_details("@az do something")
-    assert d.agents == ["agent_zero"]
-    print("PASS: @az alias resolves to agent_zero")
-
-
-def test_route_alias_forge_maps_to_agent_zero():
-    r = _router("claude", "codex", "agent_zero")
-    d = r.route_user_prompt_details("@forge do something")
-    assert d.agents == ["agent_zero"]
-    print("PASS: @forge alias resolves to agent_zero")
+def test_route_alias_coord_maps_to_coordinator():
+    r = _router("claude", "codex", "coordinator")
+    d = r.route_user_prompt_details("@coord do something")
+    assert d.agents == ["coordinator"]
+    assert d.exclusive_agent == "coordinator"
+    print("PASS: @coord alias resolves to coordinator")
 
 
 def test_route_alias_antigrav_maps_to_antigravity():
@@ -374,9 +344,9 @@ def test_route_at_unknown_agent_falls_back_to_round():
 
 
 def test_route_at_agent_not_in_project_falls_back_to_round():
-    # agent_zero is a known AGENT_CLASS but is not in this project's agents list
+    # coordinator is a known AGENT_CLASS but is not in this project's agents list
     r = _router("claude", "codex")
-    d = r.route_user_prompt_details("@agent_zero do something")
+    d = r.route_user_prompt_details("@coordinator do something")
     assert d.agents == ["claude", "codex"]
     assert d.exclusive_agent is None
     print("PASS: @agent not in project falls back to normal round")
@@ -630,11 +600,7 @@ if __name__ == "__main__":
     test_route_at_direct_agent_exclusive()
     test_route_at_agent_no_body_uses_full_text()
     test_route_alias_spark_maps_to_codex_spark()
-    test_route_alias_zero_maps_to_agent_zero()
-    test_route_alias_numeric_zero_maps_to_agent_zero()
-    test_route_alias_agent0_maps_to_agent_zero()
-    test_route_alias_az_maps_to_agent_zero()
-    test_route_alias_forge_maps_to_agent_zero()
+    test_route_alias_coord_maps_to_coordinator()
     test_route_alias_antigrav_maps_to_antigravity()
     test_route_alias_agy_maps_to_antigravity()
     test_route_alias_codexspark_maps_to_codex_spark()

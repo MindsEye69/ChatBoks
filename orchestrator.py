@@ -83,10 +83,10 @@ CRITERIA_GATE_REASONS = {
 AGENT_STATUSES = {"available", "low", "exhausted", "blocked"}
 
 DEFAULT_AGENT_FALLBACKS = {
-    "claude": ["codex", "agent_zero"],
-    "codex": ["claude", "agent_zero"],
-    "gemini": ["claude", "codex", "agent_zero"],
-    "antigravity": ["codex", "claude", "agent_zero"],
+    "claude": ["codex", "coordinator"],
+    "codex": ["claude", "coordinator"],
+    "gemini": ["claude", "codex", "coordinator"],
+    "antigravity": ["codex", "claude", "coordinator"],
 }
 
 HELP_COMMANDS = [
@@ -111,12 +111,12 @@ HELP_COMMANDS = [
     ("/test confirmation-risk", "Run a local no-agent smoke for confirmation packet risk gating."),
     ("/win ...", "Record a collaboration win without calling agents."),
     ("/fail ...", "Record a collaboration failure without calling agents."),
-    ("/suggest-outcome [agent]", "Ask Agent Zero for candidate /win or /fail lines from recent work."),
+    ("/suggest-outcome [agent]", "Ask Coordinator for candidate /win or /fail lines from recent work."),
     ("/outcomes", "Show recent wins and failures."),
     ("/usage", "Show saved provider usage baselines and available sync targets."),
     ("/usage sync <provider>", "Open a provider usage dashboard, capture a screenshot, and save a baseline."),
     ("/latency", "Show recent agent CLI latency splits."),
-    ("@claude / @codex / @spark / @zero", "Route the next prompt exclusively to one agent."),
+    ("@claude / @codex / @spark / @coordinator", "Route the next prompt exclusively to one agent."),
     ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
     ("/dismiss", "Discard the active proposal without executing it."),
@@ -144,7 +144,7 @@ HELP_PIN_COMMANDS = [
     "@claude",
     "@codex",
     "@spark",
-    "@zero",
+    "@coordinator",
     "exit",
 ]
 
@@ -165,7 +165,7 @@ USAGE_PROVIDERS = {
 
 ROLE_CALL_REQUESTS = {"role call", "roll call", "rolecall", "rollcall"}
 DIRECT_AGENT_ALIASES = {
-    "agent_zero": "@zero",
+    "coordinator": "@coordinator",
     "codex_spark": "@spark",
     "antigravity": "@agy",
 }
@@ -2102,13 +2102,13 @@ class Chatboks:
             return
 
         prompt = self.build_outcome_suggestion_prompt(agent_filter)
-        self.stream.system("Asking Agent Zero for outcome suggestions...")
-        response = self.call_agent_zero_direct(prompt)
+        self.stream.system("Asking Coordinator for outcome suggestions...")
+        response = self.call_coordinator_direct(prompt)
         if response is None:
             return
         body = self.strip_signal_suffix(response)
         if not body:
-            body = "Agent Zero returned no outcome suggestions."
+            body = "Coordinator returned no outcome suggestions."
         self.stream.system(body)
 
     def build_outcome_suggestion_prompt(self, agent_filter: str | None = None) -> str:
@@ -2217,31 +2217,31 @@ class Chatboks:
         ]
         return lines[-limit:] if limit > 0 else lines
 
-    def call_agent_zero_direct(self, prompt: str) -> str | None:
-        if "agent_zero" not in self.config.get("agents", {}):
-            self.stream.system("Agent Zero is not configured for this ChatBoks install.")
+    def call_coordinator_direct(self, prompt: str) -> str | None:
+        if "coordinator" not in self.config.get("agents", {}):
+            self.stream.system("Coordinator is not configured for this ChatBoks install.")
             return None
 
         statuses = self.load_agent_statuses()
         self.update_state({"agent_status": statuses})
-        if not self.agent_is_available("agent_zero", statuses):
+        if not self.agent_is_available("coordinator", statuses):
             self.stream.system(
-                "Agent Zero is exhausted or unavailable. Use /agent agent_zero available when it is ready again."
+                "Coordinator is exhausted or unavailable. Use /agent coordinator available when it is ready again."
             )
             return None
 
         try:
-            self.check_token_limit("agent_zero")
-            agent = self.router.get_agent("agent_zero")
+            self.check_token_limit("coordinator")
+            agent = self.router.get_agent("coordinator")
             response = agent.call(prompt)
         except AgentTimeoutError as exc:
-            self.stream.system(f"Agent Zero timed out while suggesting outcomes: {exc}")
+            self.stream.system(f"Coordinator timed out while suggesting outcomes: {exc}")
             return None
         except TokenExhaustionError as exc:
-            self.stream.system(f"Agent Zero hit its token limit while suggesting outcomes: {exc}")
+            self.stream.system(f"Coordinator hit its token limit while suggesting outcomes: {exc}")
             return None
 
-        self.update_token_count("agent_zero", response)
+        self.update_token_count("coordinator", response)
         return response
 
     def strip_signal_suffix(self, response: str) -> str:

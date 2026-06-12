@@ -465,7 +465,7 @@ kbd {
   background: linear-gradient(180deg, #68a8ff, #8bd0ff);
 }
 
-.zero-logo {
+.system-logo {
   border-color: rgba(82, 199, 191, 0.58);
   color: #8de9df;
   background: rgba(82, 199, 191, 0.1);
@@ -1179,8 +1179,8 @@ dd {
   background: linear-gradient(180deg, #95e7a4, #d3f7d9);
 }
 
-.agent_zero-pane::before,
-.agent_zero-logo {
+.coordinator-pane::before,
+.coordinator-logo {
   background: linear-gradient(180deg, #52c7bf, #8de9df);
 }
 
@@ -1193,7 +1193,7 @@ dd {
   background: #f3cd5a;
 }
 
-.agent_zero .meter span {
+.coordinator .meter span {
   background: #52c7bf;
 }
 

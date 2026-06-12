@@ -147,12 +147,12 @@ def test_question_after_proposal_abandons_buffer():
 def test_blocked_after_prior_completion_is_warning_not_terminal_block():
     """A weak trailing agent must not override a prior completed result."""
     app = _make_app()
-    app.proj_config = {**app.proj_config, "agents": ["claude", "agent_zero"]}
+    app.proj_config = {**app.proj_config, "agents": ["claude", "coordinator"]}
 
     def fake_call(agent_name: str, mode: str) -> str:
         if agent_name == "claude":
             return "Committed and pushed with evidence.\n>>> TASK_COMPLETE"
-        return "Agent Zero returned a bare control signal.\n>>> BLOCKED"
+        return "Coordinator returned a bare control signal.\n>>> BLOCKED"
 
     app.call_agent_with_token_recovery = fake_call  # type: ignore[method-assign]
     app.append_message = MagicMock()
@@ -164,7 +164,7 @@ def test_blocked_after_prior_completion_is_warning_not_terminal_block():
 
     app.run_agent_round()
 
-    app.stream.system.assert_any_call("agent_zero blocked after claude completed the task; treating as a warning.")
+    app.stream.system.assert_any_call("coordinator blocked after claude completed the task; treating as a warning.")
     app.stream.system.assert_any_call("Task complete. Awaiting next instruction.")
     app.update_state.assert_any_call({"status": "idle", "active_task": None, "confirmation": None})
     assert all(

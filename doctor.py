@@ -22,7 +22,7 @@ try:
 except ImportError:  # pragma: no cover - diagnostic path
     yaml = None
 
-from agents.agent_zero import AgentZeroAgent
+from agents.coordinator import CoordinatorAgent
 from agents.antigravity import AntigravityAgent
 from agents.claude import ClaudeAgent
 from agents.codex import CodexAgent, CodexSparkAgent
@@ -30,7 +30,7 @@ from encoding_utils import configure_utf8_stdio, utf8_env
 
 
 AGENT_CLASSES = {
-    "agent_zero": AgentZeroAgent,
+    "coordinator": CoordinatorAgent,
     "antigravity": AntigravityAgent,
     "claude": ClaudeAgent,
     "codex": CodexAgent,
@@ -248,8 +248,8 @@ def check_project_hook(project_path: Path) -> bool:
 
 
 def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any], smoke_agents: bool) -> bool:
-    if agent_name == "agent_zero":
-        return check_agent_zero(agent_config, smoke_agents)
+    if agent_name == "coordinator":
+        return check_coordinator(agent_config, smoke_agents)
 
     ok = True
     cli = agent_config.get("cli", agent_name)
@@ -293,33 +293,33 @@ def adapter_profile_known(agent_name: str, agent_config: dict[str, Any]) -> bool
     return primary_ok and fallback_ok
 
 
-def check_agent_zero(agent_config: dict[str, Any], smoke_agents: bool) -> bool:
+def check_coordinator(agent_config: dict[str, Any], smoke_agents: bool) -> bool:
     ok = True
     cli = agent_config.get("cli", "ollama")
     cli_path = find_ollama_command(cli)
     cli_ok = cli_path is not None
-    print(("OK  " if cli_ok else "WARN") + f" agent_zero ollama cli: {cli_path or cli}")
+    print(("OK  " if cli_ok else "WARN") + f" coordinator ollama cli: {cli_path or cli}")
 
     endpoint = str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat"))
-    endpoint_ok = AgentZeroAgent._is_loopback_endpoint(endpoint)
-    print(("OK  " if endpoint_ok else "FAIL") + f" agent_zero endpoint scope: {endpoint}")
+    endpoint_ok = CoordinatorAgent._is_loopback_endpoint(endpoint)
+    print(("OK  " if endpoint_ok else "FAIL") + f" coordinator endpoint scope: {endpoint}")
     ok = ok and endpoint_ok
     tags_endpoint = endpoint.replace("/api/chat", "/api/tags").replace("/api/generate", "/api/tags")
     model = str(agent_config.get("model", "gemma3:4b"))
     models = fetch_ollama_models(tags_endpoint)
     if models is None:
-        print(f"FAIL agent_zero ollama endpoint: {tags_endpoint}")
+        print(f"FAIL coordinator ollama endpoint: {tags_endpoint}")
         return False
 
-    print(f"OK   agent_zero ollama endpoint: {tags_endpoint}")
+    print(f"OK   coordinator ollama endpoint: {tags_endpoint}")
     has_model = model in models
-    print(("OK  " if has_model else "FAIL") + f" agent_zero model: {model}")
+    print(("OK  " if has_model else "FAIL") + f" coordinator model: {model}")
     ok = ok and has_model
 
     if smoke_agents and has_model:
-        ok = smoke_agent_zero(endpoint, model, think=bool(agent_config.get("think", False))) and ok
+        ok = smoke_coordinator(endpoint, model, think=bool(agent_config.get("think", False))) and ok
     elif not smoke_agents:
-        print("SKIP agent_zero smoke test (use --smoke-agents)")
+        print("SKIP coordinator smoke test (use --smoke-agents)")
     return ok
 
 
@@ -337,8 +337,8 @@ def smoke_agent_stdin(
 ) -> bool:
     env = os.environ.copy()
     env["CHATBOKS"] = "1"
-    if agent_name == "agent_zero":
-        return smoke_agent_zero(
+    if agent_name == "coordinator":
+        return smoke_coordinator(
             str(agent_config.get("endpoint", "http://127.0.0.1:11434/api/chat")),
             str(agent_config.get("model", "gemma3:4b")),
             think=bool(agent_config.get("think", False)),
@@ -348,7 +348,7 @@ def smoke_agent_stdin(
         print(f"SKIP {agent_name} stdin smoke test: no adapter yet")
         return True
     command = cls(project_path, agent_config, "doctor smoke").command()
-    input_text = None if agent_name == "agent_zero" else "Reply with exactly: CHATBOKS_OK"
+    input_text = None if agent_name == "coordinator" else "Reply with exactly: CHATBOKS_OK"
     result = run_capture(command, input_text=input_text, cwd=project_path, env=env, timeout=60)
     ok = result.returncode == 0 and "CHATBOKS_OK" in (result.stdout or "")
     print(("OK  " if ok else "FAIL") + f" {agent_name} stdin smoke")
@@ -364,7 +364,7 @@ def fetch_ollama_models(tags_endpoint: str) -> set[str] | None:
     return {str(model.get("name")) for model in data.get("models", []) if model.get("name")}
 
 
-def smoke_agent_zero(endpoint: str, model: str, think: bool = False) -> bool:
+def smoke_coordinator(endpoint: str, model: str, think: bool = False) -> bool:
     payload = {
         "model": model,
         "think": think,
@@ -385,11 +385,11 @@ def smoke_agent_zero(endpoint: str, model: str, think: bool = False) -> bool:
         with urllib.request.urlopen(request, timeout=60) as response:
             data = json.loads(response.read().decode("utf-8"))
     except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
-        print(f"FAIL agent_zero ollama smoke ({exc})")
+        print(f"FAIL coordinator ollama smoke ({exc})")
         return False
     output = (data.get("message") or {}).get("content") or data.get("response") or ""
     ok = "CHATBOKS_OK" in output
-    print(("OK  " if ok else "FAIL") + " agent_zero ollama smoke")
+    print(("OK  " if ok else "FAIL") + " coordinator ollama smoke")
     return ok
 
 

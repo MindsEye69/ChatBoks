@@ -7,7 +7,7 @@ const COORD_FEED_LIMIT = 6;
 const COORD_FEED_EXPANDED_LIMIT = 40;
 const DEFAULT_AGENTS = ["claude", "codex", "gemini"];
 
-const KNOWN_AGENT_STYLES = new Set(["claude", "codex", "gemini", "antigravity", "codex_spark", "agent_zero"]);
+const KNOWN_AGENT_STYLES = new Set(["claude", "codex", "gemini", "antigravity", "codex_spark", "coordinator"]);
 
 const state = {
   token: "",
@@ -49,7 +49,7 @@ const previewSession = {
   command_running: false,
   command_text: "",
   agents: DEFAULT_AGENTS,
-  direct_agents: ["agent_zero"],
+  direct_agents: ["coordinator"],
   token_usage: [
     { agent: "claude", used: 42, limit: 100, warning: 80, percent: 42 },
     { agent: "codex", used: 26, limit: 100, warning: 80, percent: 26 },
@@ -855,7 +855,7 @@ function applySession(data) {
   state.commandRunning = Boolean(data.command_running);
   state.agents = data.agents || [];
   state.directAgents = data.direct_agents || [];
-  els.roleCallButton.classList.toggle("hidden", !state.directAgents.includes("agent_zero"));
+  els.roleCallButton.classList.toggle("hidden", !state.directAgents.includes("coordinator"));
 
   ensureLanes(state.agents);
   renderProjects(data.projects || [], data.project || "");
@@ -1011,7 +1011,7 @@ els.terminalFocus.addEventListener("click", () => {
   els.workbenchPrompt.focus();
 });
 
-els.roleCallButton.addEventListener("click", () => sendPrompt("@zero role call"));
+els.roleCallButton.addEventListener("click", () => sendPrompt("@coordinator role call"));
 els.approveButton.addEventListener("click", () => sendPrompt("APPROVE"));
 els.rejectButton.addEventListener("click", () => sendPrompt("REJECT"));
 els.modifyButton.addEventListener("click", () => {

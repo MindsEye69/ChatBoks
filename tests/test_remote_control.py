@@ -279,7 +279,7 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
 
         command = urllib.request.Request(
             f"{base}/api/command",
-            data=json.dumps({"text": "@zero role call"}).encode("utf-8"),
+            data=json.dumps({"text": "@coordinator role call"}).encode("utf-8"),
             headers={
                 "Authorization": "Bearer secret-token",
                 "Content-Type": "application/json",
@@ -289,7 +289,7 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
         with urllib.request.urlopen(command, timeout=5) as response:
             payload = json.loads(response.read().decode("utf-8"))
         assert payload["status"] == "active"
-        assert session.commands == ["@zero role call"]
+        assert session.commands == ["@coordinator role call"]
     finally:
         server.shutdown()
         thread.join(timeout=5)
@@ -868,7 +868,7 @@ def test_workbench_api_requires_token_and_returns_status():
 
 def test_build_token_usage_orders_main_agents_and_computes_percent():
     usage = build_token_usage(
-        {"codex": 60_000, "agent_zero": 500},
+        {"codex": 60_000, "coordinator": 500},
         {
             "claude": {"token_limit": 180_000, "token_warning": 150_000},
             "codex": {"token_limit": 120_000, "token_warning": 100_000},
@@ -876,7 +876,7 @@ def test_build_token_usage_orders_main_agents_and_computes_percent():
         ["claude", "codex"],
     )
 
-    assert [entry["agent"] for entry in usage] == ["claude", "codex", "agent_zero"]
+    assert [entry["agent"] for entry in usage] == ["claude", "codex", "coordinator"]
     assert usage[0] == {"agent": "claude", "used": 0, "limit": 180_000, "warning": 150_000, "percent": 0.0}
     assert usage[1]["percent"] == 50.0
     assert usage[2]["percent"] is None

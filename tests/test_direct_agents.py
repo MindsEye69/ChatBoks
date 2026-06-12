@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.agent_zero import AgentZeroAgent
+from agents.coordinator import CoordinatorAgent
 from router import Router
 
 
@@ -33,12 +33,12 @@ def _make_router(root: Path) -> Router:
             "chatboks": {
                 "path": str(root),
                 "agents": ["claude", "codex"],
-                "direct_agents": ["agent_zero", "codex_spark"],
+                "direct_agents": ["coordinator", "codex_spark"],
                 "primary": "codex",
             }
         },
         "agents": {
-            "agent_zero": {},
+            "coordinator": {},
             "claude": {},
             "codex": {},
             "codex_spark": {},
@@ -67,12 +67,12 @@ def test_normal_route_uses_default_round_agents_when_configured():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex", "antigravity"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
                 "antigravity": {},
@@ -97,12 +97,12 @@ def test_role_route_uses_collaboration_mode_lane_when_configured():
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
                     "role_routes": {"implement": ["codex", "claude"]},
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -129,12 +129,12 @@ def test_role_route_falls_back_to_default_round_when_unknown():
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude"],
                     "role_routes": {"implement": ["codex", "claude"]},
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -159,12 +159,12 @@ def test_all_route_opts_into_full_project_team_not_direct_agents():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex", "antigravity"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
                 "antigravity": {},
@@ -175,7 +175,7 @@ def test_all_route_opts_into_full_project_team_not_direct_agents():
         agents, prompt, exclusive = router.route_user_prompt("@all compare options")
 
         assert agents == ["claude", "codex", "antigravity"]
-        assert "agent_zero" not in agents
+        assert "coordinator" not in agents
         assert prompt == "compare options"
         assert exclusive is None
         print("PASS: @all opts into the full non-direct project team")
@@ -189,12 +189,12 @@ def test_explicit_route_ignores_collaboration_mode_lane():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "role_routes": {"implement": ["codex", "claude"]},
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -212,17 +212,17 @@ def test_explicit_route_ignores_collaboration_mode_lane():
         print("PASS: explicit route ignores role lane")
 
 
-def test_agent_zero_direct_route_aliases_work():
+def test_coordinator_direct_route_aliases_work():
     with tempfile.TemporaryDirectory() as tmp:
         router = _make_router(Path(tmp))
 
-        for alias in ("@zero", "@agent0", "@0", "@forge", "@az"):
+        for alias in ("@coordinator", "@coordinator", "@coordinator", "@coordinator", "@coordinator"):
             agents, prompt, exclusive = router.route_user_prompt(f"{alias} check setup")
-            assert agents == ["agent_zero"]
+            assert agents == ["coordinator"]
             assert prompt == "check setup"
-            assert exclusive == "agent_zero"
+            assert exclusive == "coordinator"
 
-        print("PASS: Agent Zero direct route aliases work")
+        print("PASS: Coordinator direct route aliases work")
 
 
 def test_codex_spark_direct_route_aliases_work():
@@ -250,9 +250,9 @@ def test_unlisted_agent_direct_route_falls_back_to_normal_round():
         print("PASS: unlisted direct route falls back to normal round")
 
 
-def test_agent_zero_call_accepts_base_timeout_keywords():
+def test_coordinator_call_accepts_base_timeout_keywords():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {
                 "cli": "ollama",
@@ -260,7 +260,7 @@ def test_agent_zero_call_accepts_base_timeout_keywords():
                 "model": "test",
                 "project_name": "chatboks",
             },
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         class FakeResponse:
@@ -273,18 +273,18 @@ def test_agent_zero_call_accepts_base_timeout_keywords():
             def read(self):
                 return b'{"message":{"content":"Ready.\\n>>> TASK_COMPLETE"}}'
 
-        with patch("agents.agent_zero.urllib.request.urlopen", return_value=FakeResponse()) as urlopen:
+        with patch("agents.coordinator.urllib.request.urlopen", return_value=FakeResponse()) as urlopen:
             result = agent.call("compact context")
 
         assert "Ready." in result
         assert ">>> TASK_COMPLETE" in result
         assert urlopen.call_args.kwargs["timeout"] == 900
-        print("PASS: Agent Zero call accepts BaseAgent timeout keywords")
+        print("PASS: Coordinator call accepts BaseAgent timeout keywords")
 
 
-def test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_by_default():
+def test_coordinator_ollama_payload_uses_configured_model_and_disables_thinking_by_default():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {
                 "cli": "ollama",
@@ -292,7 +292,7 @@ def test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_b
                 "model": "gemma3:4b",
                 "project_name": "chatboks",
             },
-            "Agent Zero role",
+            "Coordinator role",
         )
         captured_payload: dict[str, object] = {}
 
@@ -311,19 +311,19 @@ def test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_b
             captured_payload.update(json.loads(request.data.decode("utf-8")))
             return FakeResponse()
 
-        with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
+        with patch("agents.coordinator.urllib.request.urlopen", side_effect=fake_urlopen):
             result = agent.call("check setup")
 
         assert result.endswith(">>> TASK_COMPLETE")
         assert captured_payload["model"] == "gemma3:4b"
         assert captured_payload["think"] is False
         assert captured_payload["stream"] is True
-        print("PASS: Agent Zero payload uses the configured model and disables Ollama thinking")
+        print("PASS: Coordinator payload uses the configured model and disables Ollama thinking")
 
 
-def test_agent_zero_streams_ollama_deltas_to_stdout_callback():
+def test_coordinator_streams_ollama_deltas_to_stdout_callback():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {
                 "cli": "ollama",
@@ -331,7 +331,7 @@ def test_agent_zero_streams_ollama_deltas_to_stdout_callback():
                 "model": "gemma3:4b",
                 "project_name": "chatboks",
             },
-            "Agent Zero role",
+            "Coordinator role",
         )
         chunks: list[str] = []
         agent.stdout_callback = chunks.append
@@ -355,20 +355,20 @@ def test_agent_zero_streams_ollama_deltas_to_stdout_callback():
             def readline(self):
                 return next(self.lines, b"")
 
-        with patch("agents.agent_zero.urllib.request.urlopen", return_value=FakeStreamingResponse()):
+        with patch("agents.coordinator.urllib.request.urlopen", return_value=FakeStreamingResponse()):
             result = agent.call("check setup")
 
         assert result == "Ready.\n>>> TASK_COMPLETE"
         assert chunks == ["Ready", ".\n>>> TASK_COMPLETE"]
-        print("PASS: Agent Zero streams Ollama deltas through stdout callback")
+        print("PASS: Coordinator streams Ollama deltas through stdout callback")
 
 
-def test_agent_zero_prompt_lists_real_local_commands():
+def test_coordinator_prompt_lists_real_local_commands():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         prompt = agent.build_prompt("Current context", mode="respond")
@@ -376,17 +376,17 @@ def test_agent_zero_prompt_lists_real_local_commands():
         assert "/agent" in prompt
         assert "python doctor.py <project>" in prompt
         assert "Do not invent commands such as /status." in prompt
-        assert "@zero role call" in prompt
+        assert "@coordinator role call" in prompt
         assert "Do not suggest /context unless the user is explicitly asking about context mode." in prompt
-        print("PASS: Agent Zero prompt names valid local commands")
+        print("PASS: Coordinator prompt names valid local commands")
 
 
-def test_agent_zero_rewrites_model_switch_validation_away_from_context_mode():
+def test_coordinator_rewrites_model_switch_validation_away_from_context_mode():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks"},
-            "Agent Zero role",
+            "Coordinator role",
         )
         prompt = (
             "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
@@ -401,18 +401,18 @@ def test_agent_zero_rewrites_model_switch_validation_away_from_context_mode():
             prompt,
         )
 
-        assert "@zero role call" in result
+        assert "@coordinator role call" in result
         assert "/context" not in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero rewrites model-switch validation away from /context")
+        print("PASS: Coordinator rewrites model-switch validation away from /context")
 
 
-def test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action():
+def test_coordinator_rewrites_next_step_stub_into_useful_chatboks_action():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "what's next for ChatBoks?")
@@ -420,15 +420,15 @@ def test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action():
         assert "Next ChatBoks step:" in result
         assert "run /agent" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero rewrites next-step stubs into a useful ChatBoks action")
+        print("PASS: Coordinator rewrites next-step stubs into a useful ChatBoks action")
 
 
-def test_agent_zero_rewrites_next_step_agent_command_with_extra_text():
+def test_coordinator_rewrites_next_step_agent_command_with_extra_text():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         result = agent.normalize_output("/agent what's next for ChatBoks?\n>>> TASK_COMPLETE", "what's next for ChatBoks?")
@@ -436,35 +436,35 @@ def test_agent_zero_rewrites_next_step_agent_command_with_extra_text():
         assert "Next ChatBoks step:" in result
         assert "run /agent" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero rewrites /agent command echoes into a useful next-step action")
+        print("PASS: Coordinator rewrites /agent command echoes into a useful next-step action")
 
 
-def test_agent_zero_rewrites_role_call_stub_into_real_role_call():
+def test_coordinator_rewrites_role_call_stub_into_real_role_call():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         with patch(
-            "agents.agent_zero.urllib.request.urlopen",
+            "agents.coordinator.urllib.request.urlopen",
             return_value=FakeJsonResponse({"models": [{"name": "gemma3:4b"}]}),
         ):
             result = agent.normalize_output("Run: /agent\n>>> TASK_COMPLETE", "role call")
 
-        assert "Agent Zero online." in result
+        assert "Coordinator online." in result
         assert "gemma3:4b" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero rewrites a stub role call into a useful response")
+        print("PASS: Coordinator rewrites a stub role call into a useful response")
 
 
-def test_agent_zero_ignores_unknown_directive_lines_from_model():
+def test_coordinator_ignores_unknown_directive_lines_from_model():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         result = agent.normalize_output(
@@ -475,15 +475,15 @@ def test_agent_zero_ignores_unknown_directive_lines_from_model():
         assert ">>> DIAGNOSTIC_COMMAND" not in result
         assert "Next ChatBoks step:" in result
         assert result.endswith(">>> TASK_COMPLETE")
-        print("PASS: Agent Zero ignores unknown directive lines from the local model")
+        print("PASS: Coordinator ignores unknown directive lines from the local model")
 
 
-def test_agent_zero_diagnostic_fallback_uses_active_task_only():
+def test_coordinator_diagnostic_fallback_uses_active_task_only():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks"},
-            "Agent Zero role",
+            "Coordinator role",
         )
         prompt = (
             "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
@@ -498,32 +498,32 @@ def test_agent_zero_diagnostic_fallback_uses_active_task_only():
         assert "doctor.py" not in result
         assert "bare control signal" in result
         assert ">>> BLOCKED" in result
-        print("PASS: Agent Zero fallback ignores stale diagnostic history")
+        print("PASS: Coordinator fallback ignores stale diagnostic history")
 
 
-def test_agent_zero_role_call_fallback_handles_bare_signal():
+def test_coordinator_role_call_fallback_handles_bare_signal():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         with patch(
-            "agents.agent_zero.urllib.request.urlopen",
+            "agents.coordinator.urllib.request.urlopen",
             return_value=FakeJsonResponse({"models": [{"name": "gemma3:4b"}]}),
         ):
             result = agent.fallback_for_bare_signal("role call")
 
-        assert "Agent Zero online." in result
+        assert "Coordinator online." in result
         assert "gemma3:4b" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero bare role call fallback stays useful")
+        print("PASS: Coordinator bare role call fallback stays useful")
 
 
-def test_agent_zero_role_call_short_circuits_generation_with_tags_check():
+def test_coordinator_role_call_short_circuits_generation_with_tags_check():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {
                 "cli": "ollama",
@@ -531,7 +531,7 @@ def test_agent_zero_role_call_short_circuits_generation_with_tags_check():
                 "project_name": "chatboks",
                 "model": "gemma3:4b",
             },
-            "Agent Zero role",
+            "Coordinator role",
         )
         requested_urls: list[str] = []
 
@@ -540,21 +540,21 @@ def test_agent_zero_role_call_short_circuits_generation_with_tags_check():
             requested_urls.append(str(url))
             return FakeJsonResponse({"models": [{"name": "gemma3:4b"}]})
 
-        with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
+        with patch("agents.coordinator.urllib.request.urlopen", side_effect=fake_urlopen):
             result = agent.call("role call")
 
         assert requested_urls == ["http://127.0.0.1:11434/api/tags"]
-        assert "Agent Zero online." in result
+        assert "Coordinator online." in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero role call uses a cheap readiness check instead of generation")
+        print("PASS: Coordinator role call uses a cheap readiness check instead of generation")
 
 
-def test_agent_zero_defaults_to_gemma3_4b_when_model_is_omitted():
+def test_coordinator_defaults_to_gemma3_4b_when_model_is_omitted():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "endpoint": "http://127.0.0.1:11434/api/chat", "project_name": "chatboks"},
-            "Agent Zero role",
+            "Coordinator role",
         )
         captured_payload: dict[str, object] = {}
 
@@ -563,20 +563,20 @@ def test_agent_zero_defaults_to_gemma3_4b_when_model_is_omitted():
             captured_payload.update(json.loads(request.data.decode("utf-8")))
             return FakeJsonResponse({"message": {"content": "Ready.\n>>> TASK_COMPLETE"}})
 
-        with patch("agents.agent_zero.urllib.request.urlopen", side_effect=fake_urlopen):
+        with patch("agents.coordinator.urllib.request.urlopen", side_effect=fake_urlopen):
             result = agent.call("check setup")
 
         assert captured_payload["model"] == "gemma3:4b"
         assert result.endswith(">>> TASK_COMPLETE")
-        print("PASS: Agent Zero defaults to gemma3:4b when model is omitted")
+        print("PASS: Coordinator defaults to gemma3:4b when model is omitted")
 
 
-def test_agent_zero_next_step_fallback_handles_bare_signal():
+def test_coordinator_next_step_fallback_handles_bare_signal():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
         result = agent.fallback_for_bare_signal("what's next for ChatBoks?")
@@ -584,50 +584,50 @@ def test_agent_zero_next_step_fallback_handles_bare_signal():
         assert "Next ChatBoks step:" in result
         assert "run /agent" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero bare next-step fallback stays useful")
+        print("PASS: Coordinator bare next-step fallback stays useful")
 
 
-def test_agent_zero_next_step_call_short_circuits_generation():
+def test_coordinator_next_step_call_short_circuits_generation():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
-        with patch("agents.agent_zero.urllib.request.urlopen") as urlopen:
+        with patch("agents.coordinator.urllib.request.urlopen") as urlopen:
             result = agent.call("what's next for ChatBoks?")
 
         urlopen.assert_not_called()
         assert "Next ChatBoks step:" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero next-step requests use deterministic guidance")
+        print("PASS: Coordinator next-step requests use deterministic guidance")
 
 
-def test_agent_zero_test_next_call_short_circuits_generation():
+def test_coordinator_test_next_call_short_circuits_generation():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks", "model": "gemma3:4b"},
-            "Agent Zero role",
+            "Coordinator role",
         )
 
-        with patch("agents.agent_zero.urllib.request.urlopen") as urlopen:
+        with patch("agents.coordinator.urllib.request.urlopen") as urlopen:
             result = agent.call("what should I test next after switching to gemma3:4b?")
 
         urlopen.assert_not_called()
-        assert "@zero role call" in result
+        assert "@coordinator role call" in result
         assert "/status" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero model-switch test suggestions use deterministic guidance")
+        print("PASS: Coordinator model-switch test suggestions use deterministic guidance")
 
 
-def test_agent_zero_diagnostic_fallback_allows_current_setup_task():
+def test_coordinator_diagnostic_fallback_allows_current_setup_task():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks"},
-            "Agent Zero role",
+            "Coordinator role",
         )
         prompt = (
             "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
@@ -641,15 +641,15 @@ def test_agent_zero_diagnostic_fallback_allows_current_setup_task():
 
         assert "python doctor.py chatboks" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero fallback still handles current diagnostic tasks")
+        print("PASS: Coordinator fallback still handles current diagnostic tasks")
 
 
-def test_agent_zero_routing_policy_fallback_uses_active_task():
+def test_coordinator_routing_policy_fallback_uses_active_task():
     with tempfile.TemporaryDirectory() as tmp:
-        agent = AgentZeroAgent(
+        agent = CoordinatorAgent(
             Path(tmp),
             {"cli": "ollama", "project_name": "chatboks"},
-            "Agent Zero role",
+            "Coordinator role",
         )
         prompt = (
             "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
@@ -665,10 +665,10 @@ def test_agent_zero_routing_policy_fallback_uses_active_task():
         assert "@all opts into" in result
         assert "Direct routes" in result
         assert ">>> TASK_COMPLETE" in result
-        print("PASS: Agent Zero fallback can summarize routing policy")
+        print("PASS: Coordinator fallback can summarize routing policy")
 
 
-def test_routing_intelligence_can_auto_route_status_questions_to_agent_zero():
+def test_routing_intelligence_can_auto_route_status_questions_to_coordinator():
     with tempfile.TemporaryDirectory() as tmp:
         config = {
             "projects": {
@@ -676,13 +676,13 @@ def test_routing_intelligence_can_auto_route_status_questions_to_agent_zero():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "routing_intelligence": {"enabled": True},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -691,11 +691,11 @@ def test_routing_intelligence_can_auto_route_status_questions_to_agent_zero():
 
         decision = router.route_user_prompt_details("what's next for this project?")
 
-        assert decision.agents == ["agent_zero"]
+        assert decision.agents == ["coordinator"]
         assert decision.exclusive_agent is None
-        assert decision.strategy == "agent_zero_direct"
-        assert "Agent Zero" in (decision.note or "")
-        print("PASS: routing intelligence can auto-route status checks to Agent Zero")
+        assert decision.strategy == "coordinator_direct"
+        assert "Coordinator" in (decision.note or "")
+        print("PASS: routing intelligence can auto-route status checks to Coordinator")
 
 
 def test_routing_intelligence_can_auto_route_implementation_requests_to_codex():
@@ -706,13 +706,13 @@ def test_routing_intelligence_can_auto_route_implementation_requests_to_codex():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "routing_intelligence": {"enabled": True},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -736,13 +736,13 @@ def test_routing_intelligence_can_auto_route_architecture_review_to_claude():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "routing_intelligence": {"enabled": True},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -766,13 +766,13 @@ def test_routing_intelligence_defers_to_full_round_for_brainstorm_requests():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "routing_intelligence": {"enabled": True},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -799,13 +799,13 @@ def test_mode_strategy_can_route_implement_mode_to_codex_solo():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "mode_strategies": {"implement": "solo_codex"},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -832,13 +832,13 @@ def test_mode_strategy_can_route_review_mode_to_claude_solo():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "mode_strategies": {"review": "solo_claude"},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -857,7 +857,7 @@ def test_mode_strategy_can_route_review_mode_to_claude_solo():
         print("PASS: review mode can route to Claude solo")
 
 
-def test_mode_strategy_still_allows_agent_zero_for_lightweight_diagnose_requests():
+def test_mode_strategy_still_allows_coordinator_for_lightweight_diagnose_requests():
     with tempfile.TemporaryDirectory() as tmp:
         config = {
             "projects": {
@@ -865,14 +865,14 @@ def test_mode_strategy_still_allows_agent_zero_for_lightweight_diagnose_requests
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "routing_intelligence": {"enabled": True},
                     "mode_strategies": {"diagnose": "solo_claude"},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -884,9 +884,9 @@ def test_mode_strategy_still_allows_agent_zero_for_lightweight_diagnose_requests
             collaboration_mode="diagnose",
         )
 
-        assert decision.agents == ["agent_zero"]
-        assert decision.strategy == "agent_zero_direct"
-        print("PASS: Agent Zero can still catch lightweight diagnose requests")
+        assert decision.agents == ["coordinator"]
+        assert decision.strategy == "coordinator_direct"
+        print("PASS: Coordinator can still catch lightweight diagnose requests")
 
 
 def test_explicit_route_still_overrides_mode_strategy():
@@ -897,13 +897,13 @@ def test_explicit_route_still_overrides_mode_strategy():
                     "path": str(Path(tmp)),
                     "agents": ["claude", "codex"],
                     "round_agents": ["claude", "codex"],
-                    "direct_agents": ["agent_zero"],
+                    "direct_agents": ["coordinator"],
                     "mode_strategies": {"review": "solo_claude"},
                     "primary": "codex",
                 }
             },
             "agents": {
-                "agent_zero": {},
+                "coordinator": {},
                 "claude": {},
                 "codex": {},
             },
@@ -928,33 +928,33 @@ if __name__ == "__main__":
     test_role_route_falls_back_to_default_round_when_unknown()
     test_all_route_opts_into_full_project_team_not_direct_agents()
     test_explicit_route_ignores_collaboration_mode_lane()
-    test_agent_zero_direct_route_aliases_work()
+    test_coordinator_direct_route_aliases_work()
     test_codex_spark_direct_route_aliases_work()
     test_unlisted_agent_direct_route_falls_back_to_normal_round()
-    test_agent_zero_call_accepts_base_timeout_keywords()
-    test_agent_zero_ollama_payload_uses_configured_model_and_disables_thinking_by_default()
-    test_agent_zero_streams_ollama_deltas_to_stdout_callback()
-    test_agent_zero_prompt_lists_real_local_commands()
-    test_agent_zero_rewrites_model_switch_validation_away_from_context_mode()
-    test_agent_zero_rewrites_next_step_stub_into_useful_chatboks_action()
-    test_agent_zero_rewrites_next_step_agent_command_with_extra_text()
-    test_agent_zero_rewrites_role_call_stub_into_real_role_call()
-    test_agent_zero_ignores_unknown_directive_lines_from_model()
-    test_agent_zero_diagnostic_fallback_uses_active_task_only()
-    test_agent_zero_diagnostic_fallback_allows_current_setup_task()
-    test_agent_zero_routing_policy_fallback_uses_active_task()
-    test_agent_zero_role_call_fallback_handles_bare_signal()
-    test_agent_zero_role_call_short_circuits_generation_with_tags_check()
-    test_agent_zero_defaults_to_gemma3_4b_when_model_is_omitted()
-    test_agent_zero_next_step_fallback_handles_bare_signal()
-    test_agent_zero_next_step_call_short_circuits_generation()
-    test_agent_zero_test_next_call_short_circuits_generation()
-    test_routing_intelligence_can_auto_route_status_questions_to_agent_zero()
+    test_coordinator_call_accepts_base_timeout_keywords()
+    test_coordinator_ollama_payload_uses_configured_model_and_disables_thinking_by_default()
+    test_coordinator_streams_ollama_deltas_to_stdout_callback()
+    test_coordinator_prompt_lists_real_local_commands()
+    test_coordinator_rewrites_model_switch_validation_away_from_context_mode()
+    test_coordinator_rewrites_next_step_stub_into_useful_chatboks_action()
+    test_coordinator_rewrites_next_step_agent_command_with_extra_text()
+    test_coordinator_rewrites_role_call_stub_into_real_role_call()
+    test_coordinator_ignores_unknown_directive_lines_from_model()
+    test_coordinator_diagnostic_fallback_uses_active_task_only()
+    test_coordinator_diagnostic_fallback_allows_current_setup_task()
+    test_coordinator_routing_policy_fallback_uses_active_task()
+    test_coordinator_role_call_fallback_handles_bare_signal()
+    test_coordinator_role_call_short_circuits_generation_with_tags_check()
+    test_coordinator_defaults_to_gemma3_4b_when_model_is_omitted()
+    test_coordinator_next_step_fallback_handles_bare_signal()
+    test_coordinator_next_step_call_short_circuits_generation()
+    test_coordinator_test_next_call_short_circuits_generation()
+    test_routing_intelligence_can_auto_route_status_questions_to_coordinator()
     test_routing_intelligence_can_auto_route_implementation_requests_to_codex()
     test_routing_intelligence_can_auto_route_architecture_review_to_claude()
     test_routing_intelligence_defers_to_full_round_for_brainstorm_requests()
     test_mode_strategy_can_route_implement_mode_to_codex_solo()
     test_mode_strategy_can_route_review_mode_to_claude_solo()
-    test_mode_strategy_still_allows_agent_zero_for_lightweight_diagnose_requests()
+    test_mode_strategy_still_allows_coordinator_for_lightweight_diagnose_requests()
     test_explicit_route_still_overrides_mode_strategy()
     print("\nAll direct-agent smoke tests passed.")

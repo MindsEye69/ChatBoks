@@ -299,12 +299,12 @@ def test_stream_help_pin_contains_compact_commands():
     stream = Stream({}, [])
     stream.console = Console(file=buffer, width=80, color_system=None)
 
-    stream.help_pin(["/help", "/agent", "@zero", "exit"])
+    stream.help_pin(["/help", "/agent", "@coordinator", "exit"])
 
     output = buffer.getvalue()
     assert "commands:" in output
     assert "/help" in output
-    assert "@zero" in output
+    assert "@coordinator" in output
     assert "exit" in output
     print("PASS: compact help pin renders prompt command strip")
 
@@ -314,20 +314,20 @@ def test_stream_token_usage_renders_session_bars():
         {
             "claude": {"token_limit": 180_000, "token_warning": 150_000},
             "codex": {"token_limit": 120_000, "token_warning": 100_000},
-            "agent_zero": {"token_limit": 32_000, "token_warning": 24_000},
+            "coordinator": {"token_limit": 32_000, "token_warning": 24_000},
         },
         ["claude", "codex"],
     )
 
     line = stream.build_token_usage_line(
-        {"claude": 90_000, "codex": 12_000, "agent_zero": 4_000},
+        {"claude": 90_000, "codex": 12_000, "coordinator": 4_000},
         {"used": 106_000, "warning": 220_000, "limit": 280_000},
     )
 
     assert "session tokens:" in line
     assert "CLAUDE" in line
     assert "CODEX" in line
-    assert "AGENT_ZERO" in line
+    assert "COORDINATOR" in line
     assert "TOTAL" in line
     assert "[green][#####-----][/green]" in line
     print("PASS: token usage bar renders configured and extra-count agents")
@@ -335,14 +335,14 @@ def test_stream_token_usage_renders_session_bars():
 
 def test_stream_standby_uses_agent_label():
     buffer = io.StringIO()
-    stream = Stream({"agent_zero": {"color": "magenta"}}, [])
+    stream = Stream({"coordinator": {"color": "magenta"}}, [])
     stream.console = Console(file=buffer, width=80, color_system=None)
 
-    stream.standby("agent_zero", "Standby via @zero. Available on demand.")
+    stream.standby("coordinator", "Standby via @coordinator. Available on demand.")
 
     output = buffer.getvalue()
-    assert "[AGENT_ZERO]" in output
-    assert "Standby via @zero. Available on demand." in output
+    assert "[COORDINATOR]" in output
+    assert "Standby via @coordinator. Available on demand." in output
     print("PASS: standby line renders with agent label")
 
 

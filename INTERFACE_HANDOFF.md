@@ -40,7 +40,7 @@ Broad layout:
 - Left rail: projects, recent tasks/chats, token balances, settings.
 - Main area:
   - Separate vertical lanes/cards for major agents such as Claude, Codex, Gemini/Fable, etc.
-  - A lower horizontal lane for Agent Zero / local coordinator.
+  - A lower horizontal lane for Coordinator / local coordinator.
   - Central input composer at the bottom.
 - Right rail:
   - Environment/status card: branch, changes, local/remote, commit/push.

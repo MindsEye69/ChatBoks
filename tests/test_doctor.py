@@ -51,7 +51,7 @@ def test_check_py_launcher_accepts_real_listing():
     assert "C:\\Python314\\python.exe" in message
 
 
-def test_smoke_agent_zero_includes_think_flag():
+def test_smoke_coordinator_includes_think_flag():
     payload = {}
 
     class FakeResponse:
@@ -70,7 +70,7 @@ def test_smoke_agent_zero_includes_think_flag():
         return FakeResponse()
 
     with patch("doctor.urllib.request.urlopen", side_effect=fake_urlopen):
-        assert doctor.smoke_agent_zero("http://127.0.0.1:11434/api/chat", "gemma3:4b", think=False)
+        assert doctor.smoke_coordinator("http://127.0.0.1:11434/api/chat", "gemma3:4b", think=False)
 
     assert payload["model"] == "gemma3:4b"
     assert payload["think"] is False
@@ -98,14 +98,14 @@ def test_check_project_includes_direct_agents():
                         {
                             "path": str(root),
                             "agents": ["claude", "codex"],
-                            "direct_agents": ["agent_zero"],
+                            "direct_agents": ["coordinator"],
                         },
-                        {"agents": {"claude": {}, "codex": {}, "agent_zero": {}}},
+                        {"agents": {"claude": {}, "codex": {}, "coordinator": {}}},
                         smoke_agents=False,
                     )
 
     assert ok
-    assert seen == ["claude", "codex", "agent_zero"]
+    assert seen == ["claude", "codex", "coordinator"]
 
 
 def test_parse_graphify_built_commit_reads_report():

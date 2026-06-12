@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.agent_zero import AgentZeroAgent
+from agents.coordinator import CoordinatorAgent
 from agents.base import AgentTimeoutError
 from orchestrator import Chatboks
 
@@ -202,9 +202,9 @@ def test_load_state_accepts_utf8_bom():
         assert state["round"] == 2
 
 
-def test_agent_zero_strips_prefixed_signal_lines_from_body():
-    agent = AgentZeroAgent.__new__(AgentZeroAgent)
-    agent.name = "agent_zero"
+def test_coordinator_strips_prefixed_signal_lines_from_body():
+    agent = CoordinatorAgent.__new__(CoordinatorAgent)
+    agent.name = "coordinator"
     agent.signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
 
     normalized = agent.normalize_output(">>> QUESTION\nWhat target?\n>>> QUESTION")
@@ -421,7 +421,7 @@ if __name__ == "__main__":
     test_handle_approval_accepts_common_affirmatives()
     test_dismiss_command_clears_active_proposal_without_agent_round()
     test_load_state_accepts_utf8_bom()
-    test_agent_zero_strips_prefixed_signal_lines_from_body()
+    test_coordinator_strips_prefixed_signal_lines_from_body()
     test_agent_call_shows_activity_until_response_returns()
     test_streamed_agent_response_is_persisted_without_duplicate_render()
     test_agent_timeout_recovery_checkpoints_partial_output_and_retries()

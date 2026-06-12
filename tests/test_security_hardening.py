@@ -4,7 +4,7 @@ Covers:
 - chatboks.md history marked as read-only prior context
 - normalize_state sanitizes untrusted fields and recomputes mode instruction
 - parse_signal uses last-wins (rightmost marker in response)
-- Agent Zero rejects non-loopback endpoints
+- Coordinator rejects non-loopback endpoints
 - CodeGraph column name validation filters unsafe names
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.agent_zero import AgentZeroAgent
+from agents.coordinator import CoordinatorAgent
 from context.builder import ContextBuilder, _SAFE_COL
 from orchestrator import Chatboks, COLLABORATION_MODES
 
@@ -53,12 +53,12 @@ def _make_builder() -> ContextBuilder:
     return builder
 
 
-def _make_agent_zero() -> AgentZeroAgent:
-    agent = AgentZeroAgent.__new__(AgentZeroAgent)
-    agent.name = "agent_zero"
+def _make_coordinator() -> CoordinatorAgent:
+    agent = CoordinatorAgent.__new__(CoordinatorAgent)
+    agent.name = "coordinator"
     agent.signals = ("TASK_COMPLETE", "QUESTION", "BLOCKED")
     agent.config = {}
-    agent.role = "You are Agent Zero."
+    agent.role = "You are Coordinator."
     agent.project_path = Path(".")
     return agent
 
@@ -178,22 +178,22 @@ def test_parse_signal_last_wins_proposal_then_skip():
 
 
 # ---------------------------------------------------------------------------
-# F4: Agent Zero rejects non-loopback endpoints
+# F4: Coordinator rejects non-loopback endpoints
 # ---------------------------------------------------------------------------
 
-def test_agent_zero_blocks_non_loopback_endpoint():
-    agent = _make_agent_zero()
+def test_coordinator_blocks_non_loopback_endpoint():
+    agent = _make_coordinator()
     agent.config = {"endpoint": "http://evil.example.com:11434/api/chat"}
-    with patch.object(AgentZeroAgent, "_is_loopback_endpoint", return_value=False):
+    with patch.object(CoordinatorAgent, "_is_loopback_endpoint", return_value=False):
         result = agent.run_cli("hello")
     assert ">>> BLOCKED" in result
     assert "loopback" in result.lower()
 
 
-def test_agent_zero_allows_loopback_endpoint():
-    agent = _make_agent_zero()
+def test_coordinator_allows_loopback_endpoint():
+    agent = _make_coordinator()
     agent.config = {"endpoint": "http://127.0.0.1:11434/api/chat", "model": "test"}
-    with patch.object(AgentZeroAgent, "_is_loopback_endpoint", return_value=True):
+    with patch.object(CoordinatorAgent, "_is_loopback_endpoint", return_value=True):
         with patch("urllib.request.urlopen") as mock_open:
             mock_resp = MagicMock()
             mock_resp.read.return_value = b'{"message": {"content": "ok"}, "done": true}'
@@ -205,31 +205,31 @@ def test_agent_zero_allows_loopback_endpoint():
 
 
 def test_is_loopback_endpoint_localhost():
-    assert AgentZeroAgent._is_loopback_endpoint("http://127.0.0.1:11434/api/chat") is True
+    assert CoordinatorAgent._is_loopback_endpoint("http://127.0.0.1:11434/api/chat") is True
 
 
 def test_is_loopback_endpoint_localhost_hostname():
     with patch("socket.gethostbyname", return_value="127.0.0.1"):
-        assert AgentZeroAgent._is_loopback_endpoint("http://localhost:11434/api/chat") is True
+        assert CoordinatorAgent._is_loopback_endpoint("http://localhost:11434/api/chat") is True
 
 
 def test_is_loopback_endpoint_ipv6_loopback():
-    assert AgentZeroAgent._is_loopback_endpoint("http://[::1]:11434/api/chat") is True
+    assert CoordinatorAgent._is_loopback_endpoint("http://[::1]:11434/api/chat") is True
 
 
 def test_is_loopback_endpoint_external_fails():
     # socket.gethostbyname("evil.example.com") may succeed in DNS — patch it
     with patch("socket.gethostbyname", return_value="93.184.216.34"):
-        assert AgentZeroAgent._is_loopback_endpoint("http://evil.example.com/api") is False
+        assert CoordinatorAgent._is_loopback_endpoint("http://evil.example.com/api") is False
 
 
 def test_is_loopback_endpoint_unparseable_returns_false():
-    assert AgentZeroAgent._is_loopback_endpoint("not_a_url") is False
+    assert CoordinatorAgent._is_loopback_endpoint("not_a_url") is False
 
 
 def test_is_loopback_endpoint_arbitrary_hostname_resolving_to_loopback_is_rejected():
     with patch("socket.gethostbyname", return_value="127.0.0.1"):
-        assert AgentZeroAgent._is_loopback_endpoint("http://workstation.local:11434/api/chat") is False
+        assert CoordinatorAgent._is_loopback_endpoint("http://workstation.local:11434/api/chat") is False
 
 
 # ---------------------------------------------------------------------------

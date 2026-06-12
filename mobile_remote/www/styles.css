@@ -9,7 +9,7 @@
   --codex: #22c55e;
   --claude: #38bdf8;
   --spark: #a78bfa;
-  --zero: #facc15;
+  --coordinator: #facc15;
   --antigravity: #f59e0b;
   --ok: #86efac;
   --danger: #fca5a5;
@@ -500,9 +500,8 @@ button.compact {
   border-left-color: var(--spark);
 }
 
-.sender-agent_zero,
-.sender-zero {
-  border-left-color: var(--zero);
+.sender-coordinator {
+  border-left-color: var(--coordinator);
 }
 
 .sender-antigravity {
@@ -526,11 +525,9 @@ button.compact {
   color: var(--spark);
 }
 
-.sender-agent_zero .item-sender,
-.sender-zero .item-sender,
-.sender-agent_zero .response-sender,
-.sender-zero .response-sender {
-  color: var(--zero);
+.sender-coordinator .item-sender,
+.sender-coordinator .response-sender {
+  color: var(--coordinator);
 }
 
 .sender-antigravity .item-sender,

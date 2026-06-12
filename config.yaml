@@ -2,7 +2,7 @@ projects:
   chatboks:
     path: C:\Users\MindsEye\Desktop\chatboks
     agents: [claude, codex]
-    direct_agents: [agent_zero, codex_spark]
+    direct_agents: [coordinator, codex_spark]
     primary: codex
     codegraph: true
     routing_intelligence:
@@ -43,8 +43,8 @@ projects:
     codegraph: true
   biosassist:
     path: C:\Users\MindsEye\Desktop\BiosAssist\Repo
-    agents: [claude, agent_zero]
-    direct_agents: [agent_zero]
+    agents: [claude, coordinator]
+    direct_agents: [coordinator]
     primary: claude
     codegraph: true
     routing_intelligence:
@@ -52,10 +52,10 @@ projects:
     mode_strategies:
       brainstorm: full_round
     role_routes:
-      brainstorm: [claude, agent_zero]
+      brainstorm: [claude, coordinator]
 
 agents:
-  agent_zero:
+  coordinator:
     cli: ollama
     runtime: ollama
     endpoint: http://127.0.0.1:11434/api/chat
@@ -68,7 +68,7 @@ agents:
     num_predict: 512
     can_fill_main_seat: true
     color: magenta
-    role_file: AGENT_ZERO.md
+    role_file: COORDINATOR.md
   claude:
     cli: C:\Users\MindsEye\AppData\Roaming\npm\claude.cmd
     adapter_profile: claude_code_print_v1
