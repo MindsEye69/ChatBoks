@@ -14,7 +14,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Antigravity remains pending until the `agy` CLI is available on Windows.
 - `install.py` exists as the first-run setup helper.
 - `doctor.py` has dependency, CodeGraph, CLI, and optional stdin smoke checks.
-- Coordinator has an initial optional Ollama adapter, direct-only `@coordinator` / `@coordinator` routing, and installer support. It is configured for ChatBoks but stays out of normal rounds until explicitly tagged.
+- Coordinator has an initial optional Ollama adapter, direct-only `@coordinator` / `@coord` routing, and installer support. It is configured for ChatBoks but stays out of normal rounds until explicitly tagged.
 - Manual collaboration outcome tracking writes wins/failures to project-local `.chatboks/outcomes.jsonl`.
 - Collaboration modes are available as prompt-framing slash commands: default, brainstorm, bugsearch, implement, review, and diagnose.
 - Agent availability is tracked per project with `/agent`, including exhausted/blocked status and normal-round fallbacks.
@@ -297,7 +297,7 @@ IO Website:
 2. Add optional heavier `/sleep` modes for Graphify refresh, doctor, and focused tests.
 3. Continue refining Coordinator direct responses for role call, routing-policy, next-step prompts, and packet-aware summaries.
 4. Refine packet-risk matching from real confirmation-mode traces if the first heuristic is too strict or too loose.
-5. Run an Coordinator model bake-off with Gemma 4 QAT:
+5. Run a Coordinator model bake-off with Gemma 4 QAT:
    - current `gemma3:4b` baseline
    - `Gemma 4 E4B QAT Q4_0`
    - `Gemma 4 E2B QAT`

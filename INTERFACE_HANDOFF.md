@@ -5,31 +5,28 @@ Use this handoff to continue ChatBoks interface work in a fresh chat. The curren
 ## Current Repo State
 
 - Project root: `C:\Users\MindsEye\Desktop\chatboks`
-- Main branch at last known commit: `f8b2186`
-- `.claude/` is untracked and should be ignored unless the user explicitly says otherwise.
-- Current uncommitted work includes:
-  - Mobile remote live-flow strip.
-  - Mobile remote client polish from security scan findings.
-  - Transcript parser support for `[ANTIGRAV]` and `[CODEX_SPARK]`.
-  - Confirmation packet-risk gate tightening.
-  - Refreshed Graphify outputs.
+- Main branch at last known commit: `78e791d` (`Rename local helper to Coordinator`)
+- `main` was aligned with `origin/main` when this handoff was refreshed.
+- Worktree was clean when this handoff was refreshed.
+- The local helper has been renamed project-wide to Coordinator.
+- Canonical direct route: `@coordinator`; short alias: `@coord`.
 
 ## Verified So Far
 
 The latest verification run before this handoff:
 
 ```powershell
-node --check mobile_remote\www\app.js
-py -m pytest tests/test_modes.py tests/test_context_modes.py tests/test_remote_control.py
+py -m py_compile agents\coordinator.py router.py doctor.py orchestrator.py install.py remote_control.py
+node --check mobile_remote\www\workbench.js
 py -m pytest
 ```
 
-Result: `287 passed`.
+Result: `321 passed`.
 
 Graph status after refresh:
 
-- CodeGraph: synced, 50 files, 1252 nodes, 1399 edges.
-- Graphify: refreshed, 1176 nodes, 2971 edges, 61 communities.
+- CodeGraph: synced and up to date, 52 files, 1467 nodes, 3356 edges.
+- Graphify: refreshed, 1395 nodes, 3528 edges, 75 communities.
 
 ## Interface Direction
 
@@ -67,6 +64,9 @@ Current files:
 - `mobile_remote/www/index.html`
 - `mobile_remote/www/styles.css`
 - `mobile_remote/www/app.js`
+- `mobile_remote/www/workbench.html`
+- `mobile_remote/www/workbench.css`
+- `mobile_remote/www/workbench.js`
 
 Recently added:
 
@@ -78,6 +78,8 @@ Recently added:
 - Sticky bottom composer.
 - Token usage toggle.
 - Live flow panel: `input -> router -> agent -> signal -> output`.
+- Desktop-style workbench shell with agent lanes, Coordinator/system lane, environment rail, graph status, monitor, mini-terminal, and trace panels.
+- Pairing feedback and request validation hardening.
 
 Known UX points from user testing:
 
@@ -94,7 +96,7 @@ Claude/Fable security scan file:
 
 `C:\Users\MindsEye\Desktop\Fable 5 Security scan of chatboks.txt`
 
-Already addressed in current uncommitted work:
+Already addressed and committed:
 
 - Default mobile bridge URL no longer commits the personal tailnet hostname.
 - Failed-fetch message no longer says URL must exactly match that hostname.
@@ -103,16 +105,17 @@ Already addressed in current uncommitted work:
 - Successful poll no longer forcibly collapses Connection/Session panels.
 - Transcript turn parsing now includes `[ANTIGRAV]` and `[CODEX_SPARK]`.
 - Packet-risk gate no longer treats unresolved/remaining language as risk resolution.
+- JSON request bodies are capped and must be UTF-8 JSON objects.
+- `/api/session` query params are validated, and oversized transcript limits are clamped.
+- Successful pairing refreshes the operator file with the newly rotated pair code.
 
 Still worth triaging later:
 
-- Pairing code rotates silently after TTL; bridge should print/log renewed code clearly.
+- Add a bridge single-instance / stale-operator-file guard so old bridge copies cannot confuse pairing.
+- Pairing code still renews silently on TTL if nobody touches the bridge; decide whether to update/log the operator file on a timer or expose an operator status check.
 - Remote snapshot reloads/reassigns app state during running command; review for race/state safety.
 - No remote cancel/interrupt.
-- Role-file trust prompt can block remote commands invisibly.
-- JSON body reads have no size cap.
-- No single-instance guard for bridge/session.
-- Query param int parsing and `transcript_limit=0` edge cases.
+- Role-file trust failures need clearer remote-visible status if they occur.
 - Avoid tokens in URLs where possible.
 - Improve project switch failure logging.
 - Confirmation mode last-agent HANDOFF behavior may need another look, but verify against current tests before changing.
@@ -137,14 +140,16 @@ Potential behavior:
 
 ## Suggested Next Work
 
-1. Commit current verified work if the user approves.
-2. Build a higher-fidelity desktop/web workbench mockup using the Photoshop layout as source direction.
-3. Decide whether the first real UI target is:
-   - static HTML/CSS prototype,
-   - local web app,
+1. Add the remote bridge single-instance / stale-operator-file guard.
+2. Improve mobile/workbench connection recovery feedback and pairing-state copy.
+3. Add approval-specific controls for APPROVE / MODIFY / REJECT in the remote UI.
+4. Continue the higher-fidelity desktop/web workbench using the Photoshop layout as source direction.
+5. Decide whether the first durable desktop target is:
+   - the current static bridge-served web UI,
+   - a local web app,
    - Electron/Tauri desktop shell,
-   - or expanding the current mobile remote into responsive desktop.
-4. Add a small UI state model before adding more panels:
+   - or a richer native/React Native app later.
+6. Keep the UI state model small and explicit before adding more panels:
    - current project,
    - active task,
    - agent panes,
@@ -152,13 +157,14 @@ Potential behavior:
    - latest response group,
    - progress checklist,
    - terminal focus state.
-5. Test with a real ChatBoks session after each UI change, especially scroll/focus/composer behavior.
+7. Test with a real ChatBoks session after each UI change, especially scroll/focus/composer behavior.
 
 ## Useful Commands
 
 ```powershell
 git status --short
 node --check mobile_remote\www\app.js
+node --check mobile_remote\www\workbench.js
 py -m pytest tests/test_remote_control.py
 py -m pytest tests/test_modes.py tests/test_context_modes.py
 py -m pytest
@@ -173,5 +179,5 @@ Graphify may need normal user-level access to the `uv` tool cache. If it fails i
 Paste this into a fresh chat:
 
 ```text
-We are continuing ChatBoks interface work. Read `INTERFACE_HANDOFF.md`, inspect current git status, and ignore untracked `.claude/` unless I say otherwise. The goal is a polished desktop/web workbench based on `C:\Users\MindsEye\Desktop\mockup_chatboks.jpg`, while preserving the mobile remote fixes already in progress. Start by reviewing the current uncommitted UI/security-scan changes, then propose the smallest next implementation step. Do not rewrite the backend unless required.
+We are continuing ChatBoks interface and remote bridge work. Read `INTERFACE_HANDOFF.md`, inspect current git status, and verify CodeGraph status. The repo should be clean on `main`. The next planned slice is the remote bridge single-instance / stale-operator-file guard, followed by connection recovery feedback and approval controls in the remote UI. Keep the desktop/workbench direction grounded in `C:\Users\MindsEye\Desktop\mockup_chatboks.jpg`.
 ```
