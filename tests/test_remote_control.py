@@ -8,6 +8,8 @@ import urllib.request
 from pathlib import Path
 
 from remote_control import (
+    MAX_JSON_BODY_BYTES,
+    MAX_TRANSCRIPT_LIMIT,
     RemoteEventBuffer,
     RemoteAuth,
     RemoteBridgeServer,
@@ -31,6 +33,7 @@ from remote_control import (
 class FakeSession:
     def __init__(self) -> None:
         self.commands: list[str] = []
+        self.snapshot_calls: list[tuple[int, int]] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
 
@@ -44,7 +47,7 @@ class FakeSession:
         }
 
     def snapshot(self, cursor: int = 0, transcript_limit: int = 120) -> dict[str, object]:
-        del transcript_limit
+        self.snapshot_calls.append((cursor, transcript_limit))
         return {
             "project": self.project,
             "projects": self.projects,
@@ -292,6 +295,97 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge accepts an authorized command and forwards it")
+
+
+def test_remote_bridge_rejects_invalid_session_query():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/session?cursor=abc",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        try:
+            urllib.request.urlopen(request, timeout=5)
+            assert False, "expected bad query failure"
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+            payload = json.loads(exc.read().decode("utf-8"))
+        assert payload["error"] == "Query parameter 'cursor' must be an integer."
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge rejects malformed session query parameters")
+
+
+def test_remote_bridge_clamps_session_transcript_limit():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/session?cursor=3&limit=999999",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5):
+            pass
+        assert session.snapshot_calls[-1] == (3, MAX_TRANSCRIPT_LIMIT)
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge clamps oversized transcript limits")
+
+
+def test_remote_bridge_rejects_oversized_json_body():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/pair",
+            data=b'{"x":"' + b"a" * MAX_JSON_BODY_BYTES + b'"}',
+            headers={
+                "Origin": "capacitor://localhost",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(request, timeout=5)
+            assert False, "expected oversized body failure"
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+            payload = json.loads(exc.read().decode("utf-8"))
+        assert "exceeds" in payload["error"]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge rejects oversized JSON bodies")
+
+
+def test_remote_bridge_rejects_non_object_json_body():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/pair",
+            data=b"[]",
+            headers={
+                "Origin": "capacitor://localhost",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(request, timeout=5)
+            assert False, "expected non-object body failure"
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+            payload = json.loads(exc.read().decode("utf-8"))
+        assert payload["error"] == "Request body must be a JSON object."
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge rejects JSON bodies that are not objects")
 
 
 def test_remote_bridge_lists_projects_for_authorized_client():
@@ -577,6 +671,37 @@ def test_remote_bridge_invalidates_pair_code_after_successful_exchange():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge invalidates a pairing code after one successful exchange")
+
+
+def test_remote_bridge_pair_exchange_updates_operator_file(tmp_path: Path):
+    operator_file = tmp_path / "remote_bridge.json"
+    server, thread, base = run_server(FakeSession(), "admin-token", operator_file)
+    try:
+        server.write_operator_status()
+        original = json.loads(operator_file.read_text(encoding="utf-8"))
+        pair_request = urllib.request.Request(
+            f"{base}/api/pair",
+            data=json.dumps({"pair_code": original["pair_code"]}).encode("utf-8"),
+            headers={
+                "Origin": "capacitor://localhost",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(pair_request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        stored = json.loads(operator_file.read_text(encoding="utf-8"))
+        current_code, _ttl = server.auth.current_pair_code()
+        assert payload["session_token"]
+        assert stored["pair_code"] == current_code
+        assert stored["pair_code"] != original["pair_code"]
+        assert stored["base_url"] == base
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge updates the operator file after pairing")
 
 
 def test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file(tmp_path: Path):

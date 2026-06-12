@@ -380,7 +380,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "agents_base_agenttimeouterror",
-      "community": 48,
+      "community": 71,
       "norm_label": "agenttimeouterror"
     },
     {
@@ -640,7 +640,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "agents_base_rationale_20",
-      "community": 48,
+      "community": 71,
       "norm_label": "raised when an agent cli exceeds its idle or wall-clock timeout."
     },
     {
@@ -4280,7 +4280,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler",
-      "community": 48,
+      "community": 9,
       "norm_label": "chatboksfilehandler"
     },
     {
@@ -4290,7 +4290,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "filesystemeventhandler",
-      "community": 48,
+      "community": 9,
       "norm_label": "filesystemeventhandler"
     },
     {
@@ -4300,7 +4300,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler_init",
-      "community": 48,
+      "community": 9,
       "norm_label": ".__init__()"
     },
     {
@@ -4530,7 +4530,7 @@
       "source_location": "L660",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_model_commands_command",
-      "community": 0,
+      "community": 66,
       "norm_label": ".handle_model_commands_command()"
     },
     {
@@ -4560,7 +4560,7 @@
       "source_location": "L775",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_wrong_owner_note",
-      "community": 45,
+      "community": 66,
       "norm_label": ".model_command_wrong_owner_note()"
     },
     {
@@ -4580,7 +4580,7 @@
       "source_location": "L803",
       "_origin": "ast",
       "id": "orchestrator_chatboks_find_agent_model_command",
-      "community": 0,
+      "community": 66,
       "norm_label": ".find_agent_model_command()"
     },
     {
@@ -4590,7 +4590,7 @@
       "source_location": "L813",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_token_and_args",
-      "community": 0,
+      "community": 66,
       "norm_label": ".model_command_token_and_args()"
     },
     {
@@ -4600,7 +4600,7 @@
       "source_location": "L823",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_model_commands",
-      "community": 0,
+      "community": 66,
       "norm_label": ".agent_model_commands()"
     },
     {
@@ -4610,7 +4610,7 @@
       "source_location": "L850",
       "_origin": "ast",
       "id": "orchestrator_chatboks_split_model_command_args",
-      "community": 0,
+      "community": 66,
       "norm_label": ".split_model_command_args()"
     },
     {
@@ -4680,7 +4680,7 @@
       "source_location": "L939",
       "_origin": "ast",
       "id": "orchestrator_chatboks_packet_status_lines",
-      "community": 44,
+      "community": 9,
       "norm_label": ".packet_status_lines()"
     },
     {
@@ -4800,7 +4800,7 @@
       "source_location": "L1113",
       "_origin": "ast",
       "id": "orchestrator_py_completedprocess",
-      "community": 48,
+      "community": 44,
       "norm_label": "completedprocess"
     },
     {
@@ -4860,7 +4860,7 @@
       "source_location": "L1192",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_dismiss_command",
-      "community": 0,
+      "community": 45,
       "norm_label": ".handle_dismiss_command()"
     },
     {
@@ -4890,7 +4890,7 @@
       "source_location": "L1258",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_until",
-      "community": 44,
+      "community": 10,
       "norm_label": ".parse_status_until()"
     },
     {
@@ -4900,7 +4900,7 @@
       "source_location": "L1262",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_until_at",
-      "community": 44,
+      "community": 10,
       "norm_label": ".parse_status_until_at()"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_location": "L1451",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_mode_command",
-      "community": 0,
+      "community": 45,
       "norm_label": ".handle_mode_command()"
     },
     {
@@ -5050,7 +5050,7 @@
       "source_location": "L1475",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_context_command",
-      "community": 0,
+      "community": 45,
       "norm_label": ".handle_context_command()"
     },
     {
@@ -5060,7 +5060,7 @@
       "source_location": "L1489",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_sleep_command",
-      "community": 11,
+      "community": 46,
       "norm_label": ".handle_sleep_command()"
     },
     {
@@ -5110,7 +5110,7 @@
       "source_location": "L1562",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_sleep_status",
-      "community": 11,
+      "community": 46,
       "norm_label": ".show_sleep_status()"
     },
     {
@@ -5120,7 +5120,7 @@
       "source_location": "L1573",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_command",
-      "community": 53,
+      "community": 0,
       "norm_label": ".handle_outcome_command()"
     },
     {
@@ -5380,7 +5380,7 @@
       "source_location": "L2086",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_suggestion_command",
-      "community": 53,
+      "community": 0,
       "norm_label": ".handle_outcome_suggestion_command()"
     },
     {
@@ -5390,7 +5390,7 @@
       "source_location": "L2114",
       "_origin": "ast",
       "id": "orchestrator_chatboks_build_outcome_suggestion_prompt",
-      "community": 53,
+      "community": 0,
       "norm_label": ".build_outcome_suggestion_prompt()"
     },
     {
@@ -5400,7 +5400,7 @@
       "source_location": "L2154",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_outcome",
-      "community": 53,
+      "community": 0,
       "norm_label": ".append_outcome()"
     },
     {
@@ -5420,7 +5420,7 @@
       "source_location": "L2192",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_outcomes",
-      "community": 53,
+      "community": 0,
       "norm_label": ".load_outcomes()"
     },
     {
@@ -5430,7 +5430,7 @@
       "source_location": "L2208",
       "_origin": "ast",
       "id": "orchestrator_chatboks_outcomes_path",
-      "community": 53,
+      "community": 0,
       "norm_label": ".outcomes_path()"
     },
     {
@@ -5440,7 +5440,7 @@
       "source_location": "L2211",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_recent_transcript_lines",
-      "community": 53,
+      "community": 0,
       "norm_label": ".load_recent_transcript_lines()"
     },
     {
@@ -5450,7 +5450,7 @@
       "source_location": "L2220",
       "_origin": "ast",
       "id": "orchestrator_chatboks_call_agent_zero_direct",
-      "community": 53,
+      "community": 0,
       "norm_label": ".call_agent_zero_direct()"
     },
     {
@@ -5990,7 +5990,7 @@
       "source_location": "L3207",
       "_origin": "ast",
       "id": "agenttimeouterror",
-      "community": 48,
+      "community": 71,
       "norm_label": "agenttimeouterror"
     },
     {
@@ -6090,7 +6090,7 @@
       "source_location": "L3348",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_thought_packets",
-      "community": 44,
+      "community": 65,
       "norm_label": ".capture_thought_packets()"
     },
     {
@@ -6100,7 +6100,7 @@
       "source_location": "L3355",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_thought_packet",
-      "community": 44,
+      "community": 65,
       "norm_label": ".append_thought_packet()"
     },
     {
@@ -6110,7 +6110,7 @@
       "source_location": "L3355",
       "_origin": "ast",
       "id": "thoughtpacket",
-      "community": 48,
+      "community": 65,
       "norm_label": "thoughtpacket"
     },
     {
@@ -6120,7 +6120,7 @@
       "source_location": "L3369",
       "_origin": "ast",
       "id": "orchestrator_chatboks_packet_record_for_memory",
-      "community": 44,
+      "community": 65,
       "norm_label": ".packet_record_for_memory()"
     },
     {
@@ -6130,7 +6130,7 @@
       "source_location": "L3378",
       "_origin": "ast",
       "id": "orchestrator_chatboks_thought_packet_context",
-      "community": 44,
+      "community": 65,
       "norm_label": ".thought_packet_context()"
     },
     {
@@ -6140,7 +6140,7 @@
       "source_location": "L3408",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_packet_stage",
-      "community": 44,
+      "community": 65,
       "norm_label": ".confirmation_packet_stage()"
     },
     {
@@ -6150,7 +6150,7 @@
       "source_location": "L3425",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_context_value",
-      "community": 44,
+      "community": 65,
       "norm_label": ".truncate_context_value()"
     },
     {
@@ -6300,7 +6300,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "orchestrator_rationale_177",
-      "community": 48,
+      "community": 9,
       "norm_label": "watch chatboks.md for external handoff changes."
     },
     {
@@ -6317,7 +6317,7 @@
       "label": "is_loopback_host()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L79",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "remote_control_is_loopback_host",
       "community": 47,
@@ -6327,7 +6327,7 @@
       "label": "is_tailnet_ipv4_host()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L84",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "remote_control_is_tailnet_ipv4_host",
       "community": 47,
@@ -6337,7 +6337,7 @@
       "label": "is_allowed_bind_host()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L92",
+      "source_location": "L94",
       "_origin": "ast",
       "id": "remote_control_is_allowed_bind_host",
       "community": 47,
@@ -6347,7 +6347,7 @@
       "label": "is_allowed_app_origin()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L98",
+      "source_location": "L100",
       "_origin": "ast",
       "id": "remote_control_is_allowed_app_origin",
       "community": 51,
@@ -6357,57 +6357,57 @@
       "label": "parse_chatboks_messages()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L106",
+      "source_location": "L108",
       "_origin": "ast",
       "id": "remote_control_parse_chatboks_messages",
-      "community": 47,
+      "community": 56,
       "norm_label": "parse_chatboks_messages()"
     },
     {
       "label": "Path",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L106",
+      "source_location": "L108",
       "_origin": "ast",
       "id": "remote_control_py_path",
-      "community": 47,
+      "community": 56,
       "norm_label": "path"
     },
     {
       "label": "Any",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L106",
+      "source_location": "L108",
       "_origin": "ast",
       "id": "remote_control_py_any",
-      "community": 47,
+      "community": 56,
       "norm_label": "any"
     },
     {
       "label": "build_token_usage()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L141",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "remote_control_build_token_usage",
-      "community": 16,
+      "community": 56,
       "norm_label": "build_token_usage()"
     },
     {
       "label": "proposal_snapshot()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L169",
+      "source_location": "L171",
       "_origin": "ast",
       "id": "remote_control_proposal_snapshot",
-      "community": 47,
+      "community": 56,
       "norm_label": "proposal_snapshot()"
     },
     {
       "label": "compact_summary()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L183",
+      "source_location": "L185",
       "_origin": "ast",
       "id": "remote_control_compact_summary",
       "community": 47,
@@ -6417,7 +6417,7 @@
       "label": "signal_from_line()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L191",
+      "source_location": "L193",
       "_origin": "ast",
       "id": "remote_control_signal_from_line",
       "community": 47,
@@ -6427,7 +6427,7 @@
       "label": "agent_trace_from_transcript()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L207",
+      "source_location": "L209",
       "_origin": "ast",
       "id": "remote_control_agent_trace_from_transcript",
       "community": 47,
@@ -6437,47 +6437,57 @@
       "label": "packet_trace_from_file()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L229",
+      "source_location": "L231",
       "_origin": "ast",
       "id": "remote_control_packet_trace_from_file",
-      "community": 47,
+      "community": 56,
       "norm_label": "packet_trace_from_file()"
     },
     {
       "label": "trace_snapshot()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L262",
+      "source_location": "L264",
       "_origin": "ast",
       "id": "remote_control_trace_snapshot",
-      "community": 47,
+      "community": 56,
       "norm_label": "trace_snapshot()"
+    },
+    {
+      "label": "parse_query_int()",
+      "file_type": "code",
+      "source_file": "remote_control.py",
+      "source_location": "L271",
+      "_origin": "ast",
+      "id": "remote_control_parse_query_int",
+      "community": 47,
+      "norm_label": "parse_query_int()"
     },
     {
       "label": "git_environment()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L269",
+      "source_location": "L291",
       "_origin": "ast",
       "id": "remote_control_git_environment",
-      "community": 47,
+      "community": 56,
       "norm_label": "git_environment()"
     },
     {
       "label": "codegraph_stats()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L305",
+      "source_location": "L327",
       "_origin": "ast",
       "id": "remote_control_codegraph_stats",
-      "community": 47,
+      "community": 56,
       "norm_label": "codegraph_stats()"
     },
     {
       "label": "system_memory_percent()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L342",
+      "source_location": "L364",
       "_origin": "ast",
       "id": "remote_control_system_memory_percent",
       "community": 47,
@@ -6487,7 +6497,7 @@
       "label": "detect_tailnet_ip()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L372",
+      "source_location": "L394",
       "_origin": "ast",
       "id": "remote_control_detect_tailnet_ip",
       "community": 47,
@@ -6497,7 +6507,7 @@
       "label": "monitor_stats()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L384",
+      "source_location": "L406",
       "_origin": "ast",
       "id": "remote_control_monitor_stats",
       "community": 47,
@@ -6507,7 +6517,7 @@
       "label": "RemoteEventBuffer",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L401",
+      "source_location": "L423",
       "_origin": "ast",
       "id": "remote_control_remoteeventbuffer",
       "community": 13,
@@ -6517,7 +6527,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L402",
+      "source_location": "L424",
       "_origin": "ast",
       "id": "remote_control_remoteeventbuffer_init",
       "community": 13,
@@ -6527,7 +6537,7 @@
       "label": ".append()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L408",
+      "source_location": "L430",
       "_origin": "ast",
       "id": "remote_control_remoteeventbuffer_append",
       "community": 49,
@@ -6537,17 +6547,17 @@
       "label": ".since()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L423",
+      "source_location": "L445",
       "_origin": "ast",
       "id": "remote_control_remoteeventbuffer_since",
-      "community": 13,
+      "community": 56,
       "norm_label": ".since()"
     },
     {
       "label": "RemoteAuth",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L428",
+      "source_location": "L450",
       "_origin": "ast",
       "id": "remote_control_remoteauth",
       "community": 73,
@@ -6557,7 +6567,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L429",
+      "source_location": "L451",
       "_origin": "ast",
       "id": "remote_control_remoteauth_init",
       "community": 73,
@@ -6567,7 +6577,7 @@
       "label": "._new_pair_code()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L436",
+      "source_location": "L458",
       "_origin": "ast",
       "id": "remote_control_remoteauth_new_pair_code",
       "community": 73,
@@ -6577,7 +6587,7 @@
       "label": ".current_pair_code()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L440",
+      "source_location": "L462",
       "_origin": "ast",
       "id": "remote_control_remoteauth_current_pair_code",
       "community": 73,
@@ -6587,7 +6597,7 @@
       "label": ".rotate_pair_code()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L446",
+      "source_location": "L468",
       "_origin": "ast",
       "id": "remote_control_remoteauth_rotate_pair_code",
       "community": 73,
@@ -6597,7 +6607,7 @@
       "label": ".exchange_pair_code()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L452",
+      "source_location": "L474",
       "_origin": "ast",
       "id": "remote_control_remoteauth_exchange_pair_code",
       "community": 73,
@@ -6607,7 +6617,7 @@
       "label": ".authorize()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L467",
+      "source_location": "L489",
       "_origin": "ast",
       "id": "remote_control_remoteauth_authorize",
       "community": 73,
@@ -6617,7 +6627,7 @@
       "label": ".authorize_admin()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L478",
+      "source_location": "L500",
       "_origin": "ast",
       "id": "remote_control_remoteauth_authorize_admin",
       "community": 73,
@@ -6627,7 +6637,7 @@
       "label": "._refresh_pair_code_if_needed()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L481",
+      "source_location": "L503",
       "_origin": "ast",
       "id": "remote_control_remoteauth_refresh_pair_code_if_needed",
       "community": 73,
@@ -6637,7 +6647,7 @@
       "label": "._prune_expired_sessions()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L487",
+      "source_location": "L509",
       "_origin": "ast",
       "id": "remote_control_remoteauth_prune_expired_sessions",
       "community": 73,
@@ -6647,7 +6657,7 @@
       "label": "RemoteStream",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L493",
+      "source_location": "L515",
       "_origin": "ast",
       "id": "remote_control_remotestream",
       "community": 49,
@@ -6657,17 +6667,17 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L494",
+      "source_location": "L516",
       "_origin": "ast",
       "id": "remote_control_remotestream_init",
-      "community": 73,
+      "community": 56,
       "norm_label": ".__init__()"
     },
     {
       "label": ".banner()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L498",
+      "source_location": "L520",
       "_origin": "ast",
       "id": "remote_control_remotestream_banner",
       "community": 49,
@@ -6677,7 +6687,7 @@
       "label": ".ready()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L501",
+      "source_location": "L523",
       "_origin": "ast",
       "id": "remote_control_remotestream_ready",
       "community": 49,
@@ -6687,7 +6697,7 @@
       "label": ".intro()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L504",
+      "source_location": "L526",
       "_origin": "ast",
       "id": "remote_control_remotestream_intro",
       "community": 49,
@@ -6697,7 +6707,7 @@
       "label": ".role_call()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L507",
+      "source_location": "L529",
       "_origin": "ast",
       "id": "remote_control_remotestream_role_call",
       "community": 49,
@@ -6707,7 +6717,7 @@
       "label": ".message()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L513",
+      "source_location": "L535",
       "_origin": "ast",
       "id": "remote_control_remotestream_message",
       "community": 49,
@@ -6717,7 +6727,7 @@
       "label": ".standby()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L516",
+      "source_location": "L538",
       "_origin": "ast",
       "id": "remote_control_remotestream_standby",
       "community": 49,
@@ -6727,7 +6737,7 @@
       "label": ".system()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L519",
+      "source_location": "L541",
       "_origin": "ast",
       "id": "remote_control_remotestream_system",
       "community": 49,
@@ -6737,7 +6747,7 @@
       "label": ".help_box()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L522",
+      "source_location": "L544",
       "_origin": "ast",
       "id": "remote_control_remotestream_help_box",
       "community": 49,
@@ -6747,7 +6757,7 @@
       "label": ".proposal()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L527",
+      "source_location": "L549",
       "_origin": "ast",
       "id": "remote_control_remotestream_proposal",
       "community": 49,
@@ -6757,7 +6767,7 @@
       "label": ".question()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L530",
+      "source_location": "L552",
       "_origin": "ast",
       "id": "remote_control_remotestream_question",
       "community": 49,
@@ -6767,7 +6777,7 @@
       "label": ".escalate()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L533",
+      "source_location": "L555",
       "_origin": "ast",
       "id": "remote_control_remotestream_escalate",
       "community": 49,
@@ -6777,7 +6787,7 @@
       "label": ".token_usage()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L536",
+      "source_location": "L558",
       "_origin": "ast",
       "id": "remote_control_remotestream_token_usage",
       "community": 49,
@@ -6787,7 +6797,7 @@
       "label": ".agent_activity_start()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L543",
+      "source_location": "L565",
       "_origin": "ast",
       "id": "remote_control_remotestream_agent_activity_start",
       "community": 49,
@@ -6797,7 +6807,7 @@
       "label": ".agent_activity_finish()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L546",
+      "source_location": "L568",
       "_origin": "ast",
       "id": "remote_control_remotestream_agent_activity_finish",
       "community": 49,
@@ -6807,7 +6817,7 @@
       "label": ".agent_output_start()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L549",
+      "source_location": "L571",
       "_origin": "ast",
       "id": "remote_control_remotestream_agent_output_start",
       "community": 49,
@@ -6817,7 +6827,7 @@
       "label": ".agent_output_delta()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L552",
+      "source_location": "L574",
       "_origin": "ast",
       "id": "remote_control_remotestream_agent_output_delta",
       "community": 49,
@@ -6827,7 +6837,7 @@
       "label": ".agent_output_finish()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L556",
+      "source_location": "L578",
       "_origin": "ast",
       "id": "remote_control_remotestream_agent_output_finish",
       "community": 49,
@@ -6837,7 +6847,7 @@
       "label": ".prompt()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L559",
+      "source_location": "L581",
       "_origin": "ast",
       "id": "remote_control_remotestream_prompt",
       "community": 48,
@@ -6847,7 +6857,7 @@
       "label": "RemoteSession",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L563",
+      "source_location": "L585",
       "_origin": "ast",
       "id": "remote_control_remotesession",
       "community": 56,
@@ -6857,17 +6867,17 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L564",
+      "source_location": "L586",
       "_origin": "ast",
       "id": "remote_control_remotesession_init",
-      "community": 56,
+      "community": 49,
       "norm_label": ".__init__()"
     },
     {
       "label": ".available_projects()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L580",
+      "source_location": "L602",
       "_origin": "ast",
       "id": "remote_control_remotesession_available_projects",
       "community": 56,
@@ -6877,17 +6887,17 @@
       "label": ".prepare()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L583",
+      "source_location": "L605",
       "_origin": "ast",
       "id": "remote_control_remotesession_prepare",
-      "community": 56,
+      "community": 49,
       "norm_label": ".prepare()"
     },
     {
       "label": ".switch_project()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L591",
+      "source_location": "L613",
       "_origin": "ast",
       "id": "remote_control_remotesession_switch_project",
       "community": 56,
@@ -6897,7 +6907,7 @@
       "label": ".command_running()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L615",
+      "source_location": "L637",
       "_origin": "ast",
       "id": "remote_control_remotesession_command_running",
       "community": 56,
@@ -6907,7 +6917,7 @@
       "label": ".submit()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L618",
+      "source_location": "L640",
       "_origin": "ast",
       "id": "remote_control_remotesession_submit",
       "community": 56,
@@ -6917,17 +6927,17 @@
       "label": "._run_command()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L638",
+      "source_location": "L660",
       "_origin": "ast",
       "id": "remote_control_remotesession_run_command",
-      "community": 56,
+      "community": 49,
       "norm_label": "._run_command()"
     },
     {
       "label": ".snapshot()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L647",
+      "source_location": "L669",
       "_origin": "ast",
       "id": "remote_control_remotesession_snapshot",
       "community": 56,
@@ -6937,17 +6947,17 @@
       "label": ".workbench_status()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L686",
+      "source_location": "L708",
       "_origin": "ast",
       "id": "remote_control_remotesession_workbench_status",
-      "community": 47,
+      "community": 56,
       "norm_label": ".workbench_status()"
     },
     {
       "label": "RemoteBridgeServer",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L703",
+      "source_location": "L725",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver",
       "community": 73,
@@ -6967,27 +6977,27 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L707",
+      "source_location": "L729",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_init",
-      "community": 73,
+      "community": 56,
       "norm_label": ".__init__()"
     },
     {
       "label": "BaseHTTPRequestHandler",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L707",
+      "source_location": "L729",
       "_origin": "ast",
       "id": "basehttprequesthandler",
-      "community": 73,
+      "community": 56,
       "norm_label": "basehttprequesthandler"
     },
     {
       "label": ".write_operator_status()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L720",
+      "source_location": "L742",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_write_operator_status",
       "community": 73,
@@ -6997,7 +7007,7 @@
       "label": ".rotate_pair_code_for_operator()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L745",
+      "source_location": "L767",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_rotate_pair_code_for_operator",
       "community": 73,
@@ -7007,7 +7017,7 @@
       "label": "RemoteHandler",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L751",
+      "source_location": "L773",
       "_origin": "ast",
       "id": "remote_control_remotehandler",
       "community": 51,
@@ -7017,7 +7027,7 @@
       "label": ".do_OPTIONS()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L754",
+      "source_location": "L776",
       "_origin": "ast",
       "id": "remote_control_remotehandler_do_options",
       "community": 51,
@@ -7027,7 +7037,7 @@
       "label": ".do_GET()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L772",
+      "source_location": "L794",
       "_origin": "ast",
       "id": "remote_control_remotehandler_do_get",
       "community": 51,
@@ -7037,7 +7047,7 @@
       "label": ".do_POST()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L809",
+      "source_location": "L835",
       "_origin": "ast",
       "id": "remote_control_remotehandler_do_post",
       "community": 51,
@@ -7047,17 +7057,17 @@
       "label": ".log_message()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L874",
+      "source_location": "L901",
       "_origin": "ast",
       "id": "remote_control_remotehandler_log_message",
-      "community": 47,
+      "community": 51,
       "norm_label": ".log_message()"
     },
     {
       "label": ".authorized()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L877",
+      "source_location": "L904",
       "_origin": "ast",
       "id": "remote_control_remotehandler_authorized",
       "community": 51,
@@ -7067,7 +7077,7 @@
       "label": ".admin_authorized()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L891",
+      "source_location": "L918",
       "_origin": "ast",
       "id": "remote_control_remotehandler_admin_authorized",
       "community": 51,
@@ -7077,7 +7087,7 @@
       "label": ".read_json_body()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L905",
+      "source_location": "L932",
       "_origin": "ast",
       "id": "remote_control_remotehandler_read_json_body",
       "community": 51,
@@ -7087,7 +7097,7 @@
       "label": ".respond_json()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L916",
+      "source_location": "L952",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_json",
       "community": 51,
@@ -7097,7 +7107,7 @@
       "label": "HTTPStatus",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L916",
+      "source_location": "L952",
       "_origin": "ast",
       "id": "httpstatus",
       "community": 51,
@@ -7107,7 +7117,7 @@
       "label": ".respond_html()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L927",
+      "source_location": "L963",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_html",
       "community": 51,
@@ -7117,7 +7127,7 @@
       "label": ".respond_static()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L938",
+      "source_location": "L974",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_static",
       "community": 51,
@@ -7127,7 +7137,7 @@
       "label": ".respond_error()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L953",
+      "source_location": "L989",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_error",
       "community": 51,
@@ -7137,7 +7147,7 @@
       "label": ".request_origin()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L956",
+      "source_location": "L992",
       "_origin": "ast",
       "id": "remote_control_remotehandler_request_origin",
       "community": 51,
@@ -7147,7 +7157,7 @@
       "label": ".origin_allowed()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L960",
+      "source_location": "L996",
       "_origin": "ast",
       "id": "remote_control_remotehandler_origin_allowed",
       "community": 51,
@@ -7157,7 +7167,7 @@
       "label": ".write_cors_headers()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L967",
+      "source_location": "L1003",
       "_origin": "ast",
       "id": "remote_control_remotehandler_write_cors_headers",
       "community": 51,
@@ -7167,7 +7177,7 @@
       "label": ".write_security_headers()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L974",
+      "source_location": "L1010",
       "_origin": "ast",
       "id": "remote_control_remotehandler_write_security_headers",
       "community": 51,
@@ -7177,17 +7187,17 @@
       "label": "default_operator_status_path()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L980",
+      "source_location": "L1016",
       "_origin": "ast",
       "id": "remote_control_default_operator_status_path",
-      "community": 47,
+      "community": 73,
       "norm_label": "default_operator_status_path()"
     },
     {
       "label": "rotate_pair_code_from_operator_file()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L984",
+      "source_location": "L1020",
       "_origin": "ast",
       "id": "remote_control_rotate_pair_code_from_operator_file",
       "community": 16,
@@ -7197,10 +7207,10 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1024",
+      "source_location": "L1060",
       "_origin": "ast",
       "id": "remote_control_main",
-      "community": 47,
+      "community": 73,
       "norm_label": "main()"
     },
     {
@@ -7390,7 +7400,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "router_router_get_agent",
-      "community": 4,
+      "community": 1,
       "norm_label": ".get_agent()"
     },
     {
@@ -7400,7 +7410,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "router_router_load_role",
-      "community": 4,
+      "community": 1,
       "norm_label": ".load_role()"
     },
     {
@@ -7410,7 +7420,7 @@
       "source_location": "L363",
       "_origin": "ast",
       "id": "router_router_shared_protocol",
-      "community": 4,
+      "community": 1,
       "norm_label": ".shared_protocol()"
     },
     {
@@ -7420,7 +7430,7 @@
       "source_location": "L370",
       "_origin": "ast",
       "id": "router_router_with_shared_protocol",
-      "community": 4,
+      "community": 1,
       "norm_label": ".with_shared_protocol()"
     },
     {
@@ -8890,7 +8900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_latency",
-      "community": 9,
+      "community": 64,
       "norm_label": "test_latency.py"
     },
     {
@@ -8900,7 +8910,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_latency_make_app",
-      "community": 9,
+      "community": 64,
       "norm_label": "_make_app()"
     },
     {
@@ -8910,7 +8920,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_latency_py_path",
-      "community": 9,
+      "community": 64,
       "norm_label": "path"
     },
     {
@@ -8920,7 +8930,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_latency_py_chatboks",
-      "community": 9,
+      "community": 64,
       "norm_label": "chatboks"
     },
     {
@@ -8930,7 +8940,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "tests_test_latency_test_latency_reports_no_records_yet",
-      "community": 9,
+      "community": 64,
       "norm_label": "test_latency_reports_no_records_yet()"
     },
     {
@@ -8940,7 +8950,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "tests_test_latency_test_latency_summary_reads_recent_jsonl_records",
-      "community": 9,
+      "community": 64,
       "norm_label": "test_latency_summary_reads_recent_jsonl_records()"
     },
     {
@@ -8950,7 +8960,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "tests_test_latency_test_latency_summary_keeps_backward_compatible_field_aliases",
-      "community": 9,
+      "community": 64,
       "norm_label": "test_latency_summary_keeps_backward_compatible_field_aliases()"
     },
     {
@@ -8960,7 +8970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_latency_rationale_1",
-      "community": 9,
+      "community": 64,
       "norm_label": "smoke tests for local cli latency summaries."
     },
     {
@@ -9697,7 +9707,7 @@
       "label": "FakeSession",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L31",
+      "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession",
       "community": 16,
@@ -9707,7 +9717,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L32",
+      "source_location": "L34",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_init",
       "community": 16,
@@ -9717,7 +9727,7 @@
       "label": ".workbench_status()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L37",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_workbench_status",
       "community": 16,
@@ -9727,7 +9737,7 @@
       "label": ".snapshot()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L46",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_snapshot",
       "community": 13,
@@ -9737,7 +9747,7 @@
       "label": ".submit()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L59",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_submit",
       "community": 13,
@@ -9747,7 +9757,7 @@
       "label": ".available_projects()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L63",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_available_projects",
       "community": 16,
@@ -9757,7 +9767,7 @@
       "label": ".switch_project()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L66",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_switch_project",
       "community": 13,
@@ -9767,7 +9777,7 @@
       "label": "BlockingFakeApp",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L73",
+      "source_location": "L76",
       "_origin": "ast",
       "id": "tests_test_remote_control_blockingfakeapp",
       "community": 13,
@@ -9777,7 +9787,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L74",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_remote_control_blockingfakeapp_init",
       "community": 13,
@@ -9787,17 +9797,17 @@
       "label": "Path",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L74",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_remote_control_py_path",
-      "community": 13,
+      "community": 16,
       "norm_label": "path"
     },
     {
       "label": "Event",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L74",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "event",
       "community": 13,
@@ -9807,7 +9817,7 @@
       "label": ".handle_user_input()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L84",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_remote_control_blockingfakeapp_handle_user_input",
       "community": 13,
@@ -9817,7 +9827,7 @@
       "label": ".load_state()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L90",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "tests_test_remote_control_blockingfakeapp_load_state",
       "community": 13,
@@ -9827,7 +9837,7 @@
       "label": ".session_token_budget()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L93",
+      "source_location": "L96",
       "_origin": "ast",
       "id": "tests_test_remote_control_blockingfakeapp_session_token_budget",
       "community": 13,
@@ -9837,27 +9847,27 @@
       "label": "FakeStream",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L97",
+      "source_location": "L100",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakestream",
-      "community": 73,
+      "community": 13,
       "norm_label": "fakestream"
     },
     {
       "label": ".build_token_usage_line()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L98",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakestream_build_token_usage_line",
-      "community": 73,
+      "community": 13,
       "norm_label": ".build_token_usage_line()"
     },
     {
       "label": "run_server()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L102",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "tests_test_remote_control_run_server",
       "community": 16,
@@ -9867,17 +9877,17 @@
       "label": "RemoteBridgeServer",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L102",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "remotebridgeserver",
-      "community": 73,
+      "community": 13,
       "norm_label": "remotebridgeserver"
     },
     {
       "label": "Thread",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L102",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "thread",
       "community": 13,
@@ -9887,17 +9897,17 @@
       "label": "test_parse_chatboks_messages_reads_multiline_turns()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L114",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_parse_chatboks_messages_reads_multiline_turns",
-      "community": 13,
+      "community": 16,
       "norm_label": "test_parse_chatboks_messages_reads_multiline_turns()"
     },
     {
       "label": "test_agent_trace_extracts_signals_and_handoff_targets()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L131",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_agent_trace_extracts_signals_and_handoff_targets",
       "community": 47,
@@ -9907,17 +9917,17 @@
       "label": "test_packet_trace_reads_compact_packet_records()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L166",
+      "source_location": "L169",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_packet_trace_reads_compact_packet_records",
-      "community": 13,
+      "community": 16,
       "norm_label": "test_packet_trace_reads_compact_packet_records()"
     },
     {
       "label": "test_remote_event_buffer_preserves_stream_delta_whitespace()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L206",
+      "source_location": "L209",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_event_buffer_preserves_stream_delta_whitespace",
       "community": 13,
@@ -9927,7 +9937,7 @@
       "label": "test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L221",
+      "source_location": "L224",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses",
       "community": 47,
@@ -9937,7 +9947,7 @@
       "label": "test_allowed_bind_host_requires_explicit_tailnet_flag()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L230",
+      "source_location": "L233",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_allowed_bind_host_requires_explicit_tailnet_flag",
       "community": 47,
@@ -9947,7 +9957,7 @@
       "label": "test_allowed_app_origin_accepts_localhost_with_optional_ports()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L239",
+      "source_location": "L242",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_allowed_app_origin_accepts_localhost_with_optional_ports",
       "community": 51,
@@ -9957,7 +9967,7 @@
       "label": "test_remote_bridge_rejects_missing_bearer_token()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L249",
+      "source_location": "L252",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_rejects_missing_bearer_token",
       "community": 16,
@@ -9967,17 +9977,57 @@
       "label": "test_remote_bridge_accepts_token_and_forwards_commands()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L264",
+      "source_location": "L267",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_accepts_token_and_forwards_commands",
       "community": 16,
       "norm_label": "test_remote_bridge_accepts_token_and_forwards_commands()"
     },
     {
+      "label": "test_remote_bridge_rejects_invalid_session_query()",
+      "file_type": "code",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L300",
+      "_origin": "ast",
+      "id": "tests_test_remote_control_test_remote_bridge_rejects_invalid_session_query",
+      "community": 16,
+      "norm_label": "test_remote_bridge_rejects_invalid_session_query()"
+    },
+    {
+      "label": "test_remote_bridge_clamps_session_transcript_limit()",
+      "file_type": "code",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L321",
+      "_origin": "ast",
+      "id": "tests_test_remote_control_test_remote_bridge_clamps_session_transcript_limit",
+      "community": 16,
+      "norm_label": "test_remote_bridge_clamps_session_transcript_limit()"
+    },
+    {
+      "label": "test_remote_bridge_rejects_oversized_json_body()",
+      "file_type": "code",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L339",
+      "_origin": "ast",
+      "id": "tests_test_remote_control_test_remote_bridge_rejects_oversized_json_body",
+      "community": 16,
+      "norm_label": "test_remote_bridge_rejects_oversized_json_body()"
+    },
+    {
+      "label": "test_remote_bridge_rejects_non_object_json_body()",
+      "file_type": "code",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L365",
+      "_origin": "ast",
+      "id": "tests_test_remote_control_test_remote_bridge_rejects_non_object_json_body",
+      "community": 16,
+      "norm_label": "test_remote_bridge_rejects_non_object_json_body()"
+    },
+    {
       "label": "test_remote_bridge_lists_projects_for_authorized_client()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L297",
+      "source_location": "L391",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_lists_projects_for_authorized_client",
       "community": 16,
@@ -9987,7 +10037,7 @@
       "label": "test_remote_bridge_switches_project_for_authorized_client()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L314",
+      "source_location": "L408",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_switches_project_for_authorized_client",
       "community": 16,
@@ -9997,7 +10047,7 @@
       "label": "test_remote_session_snapshot_returns_while_command_is_running()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L338",
+      "source_location": "L432",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_session_snapshot_returns_while_command_is_running",
       "community": 13,
@@ -10007,7 +10057,7 @@
       "label": "test_remote_session_snapshot_includes_compact_proposal()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L369",
+      "source_location": "L463",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_session_snapshot_includes_compact_proposal",
       "community": 13,
@@ -10017,7 +10067,7 @@
       "label": "test_remote_session_snapshot_includes_trace_payload()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L396",
+      "source_location": "L490",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
       "community": 13,
@@ -10027,17 +10077,17 @@
       "label": "test_proposal_snapshot_truncates_large_raw_text()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L436",
+      "source_location": "L530",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_proposal_snapshot_truncates_large_raw_text",
-      "community": 47,
+      "community": 56,
       "norm_label": "test_proposal_snapshot_truncates_large_raw_text()"
     },
     {
       "label": "test_remote_bridge_allows_capacitor_origin_preflight()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L445",
+      "source_location": "L539",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_allows_capacitor_origin_preflight",
       "community": 16,
@@ -10047,7 +10097,7 @@
       "label": "test_remote_bridge_rejects_untrusted_origin()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L468",
+      "source_location": "L562",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_rejects_untrusted_origin",
       "community": 16,
@@ -10057,7 +10107,7 @@
       "label": "test_remote_bridge_pairs_device_and_accepts_short_lived_session_token()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L490",
+      "source_location": "L584",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_pairs_device_and_accepts_short_lived_session_token",
       "community": 16,
@@ -10067,7 +10117,7 @@
       "label": "test_remote_bridge_rejects_invalid_pair_code()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L531",
+      "source_location": "L625",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_rejects_invalid_pair_code",
       "community": 16,
@@ -10077,17 +10127,27 @@
       "label": "test_remote_bridge_invalidates_pair_code_after_successful_exchange()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L555",
+      "source_location": "L649",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_invalidates_pair_code_after_successful_exchange",
       "community": 16,
       "norm_label": "test_remote_bridge_invalidates_pair_code_after_successful_exchange()"
     },
     {
+      "label": "test_remote_bridge_pair_exchange_updates_operator_file()",
+      "file_type": "code",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L676",
+      "_origin": "ast",
+      "id": "tests_test_remote_control_test_remote_bridge_pair_exchange_updates_operator_file",
+      "community": 16,
+      "norm_label": "test_remote_bridge_pair_exchange_updates_operator_file()"
+    },
+    {
       "label": "test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L582",
+      "source_location": "L707",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file",
       "community": 16,
@@ -10097,7 +10157,7 @@
       "label": "test_remote_bridge_session_token_cannot_rotate_pair_code()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L614",
+      "source_location": "L739",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_session_token_cannot_rotate_pair_code",
       "community": 16,
@@ -10107,7 +10167,7 @@
       "label": "test_remote_bridge_serves_static_ui_files()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L651",
+      "source_location": "L776",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_serves_static_ui_files",
       "community": 16,
@@ -10117,7 +10177,7 @@
       "label": "test_remote_bridge_rejects_paths_outside_static_allowlist()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L696",
+      "source_location": "L821",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_rejects_paths_outside_static_allowlist",
       "community": 16,
@@ -10127,7 +10187,7 @@
       "label": "test_workbench_api_requires_token_and_returns_status()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L718",
+      "source_location": "L843",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_workbench_api_requires_token_and_returns_status",
       "community": 16,
@@ -10137,37 +10197,37 @@
       "label": "test_build_token_usage_orders_main_agents_and_computes_percent()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L744",
+      "source_location": "L869",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_build_token_usage_orders_main_agents_and_computes_percent",
-      "community": 16,
+      "community": 56,
       "norm_label": "test_build_token_usage_orders_main_agents_and_computes_percent()"
     },
     {
       "label": "test_git_environment_returns_none_for_non_repo()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L761",
+      "source_location": "L886",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_git_environment_returns_none_for_non_repo",
-      "community": 13,
+      "community": 16,
       "norm_label": "test_git_environment_returns_none_for_non_repo()"
     },
     {
       "label": "test_codegraph_stats_reads_counts_from_database()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L767",
+      "source_location": "L892",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_codegraph_stats_reads_counts_from_database",
-      "community": 13,
+      "community": 16,
       "norm_label": "test_codegraph_stats_reads_counts_from_database()"
     },
     {
       "label": "test_rotate_pair_code_helper_uses_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L800",
+      "source_location": "L925",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_rotate_pair_code_helper_uses_operator_file",
       "community": 16,
@@ -11440,7 +11500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_signal_state",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_signal_state.py"
     },
     {
@@ -11450,7 +11510,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_signal_state_make_app",
-      "community": 48,
+      "community": 71,
       "norm_label": "_make_app()"
     },
     {
@@ -11460,7 +11520,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_signal_state_py_path",
-      "community": 48,
+      "community": 71,
       "norm_label": "path"
     },
     {
@@ -11470,7 +11530,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_signal_state_py_chatboks",
-      "community": 48,
+      "community": 71,
       "norm_label": "chatboks"
     },
     {
@@ -11480,7 +11540,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_parse_signal_uses_declared_priority",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_parse_signal_uses_declared_priority()"
     },
     {
@@ -11490,7 +11550,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_execute_proposal_clears_active_proposal",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_execute_proposal_clears_active_proposal()"
     },
     {
@@ -11500,7 +11560,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_handle_proposal_includes_execution_cost_estimate_when_configured",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_handle_proposal_includes_execution_cost_estimate_when_configured()"
     },
     {
@@ -11510,7 +11570,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_handle_proposal_marks_cost_unavailable_when_rates_missing",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_handle_proposal_marks_cost_unavailable_when_rates_missing()"
     },
     {
@@ -11520,7 +11580,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_check_token_limit_uses_default_warning_threshold",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_check_token_limit_uses_default_warning_threshold()"
     },
     {
@@ -11530,7 +11590,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_update_token_count_refreshes_session_token_display",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_update_token_count_refreshes_session_token_display()"
     },
     {
@@ -11540,7 +11600,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_session_token_budget_emits_warning_once",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_session_token_budget_emits_warning_once()"
     },
     {
@@ -11550,7 +11610,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_session_token_budget_blocks_new_work_at_hard_cap",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_session_token_budget_blocks_new_work_at_hard_cap()"
     },
     {
@@ -11560,7 +11620,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_handle_approval_accepts_common_affirmatives",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_handle_approval_accepts_common_affirmatives()"
     },
     {
@@ -11570,7 +11630,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_dismiss_command_clears_active_proposal_without_agent_round",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_dismiss_command_clears_active_proposal_without_agent_round()"
     },
     {
@@ -11580,7 +11640,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_load_state_accepts_utf8_bom",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_load_state_accepts_utf8_bom()"
     },
     {
@@ -11590,7 +11650,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_zero_strips_prefixed_signal_lines_from_body",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_agent_zero_strips_prefixed_signal_lines_from_body()"
     },
     {
@@ -11600,7 +11660,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_call_shows_activity_until_response_returns",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_agent_call_shows_activity_until_response_returns()"
     },
     {
@@ -11610,7 +11670,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_streamed_agent_response_is_persisted_without_duplicate_render",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_streamed_agent_response_is_persisted_without_duplicate_render()"
     },
     {
@@ -11620,7 +11680,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_recovery_checkpoints_partial_output_and_retries",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_agent_timeout_recovery_checkpoints_partial_output_and_retries()"
     },
     {
@@ -11630,7 +11690,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_recover_token_exhaustion_writes_bounded_summary_checkpoint",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_recover_token_exhaustion_writes_bounded_summary_checkpoint()"
     },
     {
@@ -11640,7 +11700,7 @@
       "source_location": "L318",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_recovery_blocks_after_retry_budget",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_agent_timeout_recovery_blocks_after_retry_budget()"
     },
     {
@@ -11650,7 +11710,7 @@
       "source_location": "L345",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_loop_detection_uses_changed_line_overlap",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_agent_timeout_loop_detection_uses_changed_line_overlap()"
     },
     {
@@ -11660,7 +11720,7 @@
       "source_location": "L373",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_recovery_blocks_when_git_diff_repeats",
-      "community": 48,
+      "community": 71,
       "norm_label": "test_agent_timeout_recovery_blocks_when_git_diff_repeats()"
     },
     {
@@ -11670,7 +11730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_signal_state_rationale_1",
-      "community": 48,
+      "community": 71,
       "norm_label": "regression tests for signal parsing and proposal state cleanup."
     },
     {
@@ -19066,9 +19126,9 @@
       "source_file": "remote_control.py",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "context_packets",
-      "confidence_score": 1.0
+      "target": "context_packets"
     },
     {
       "relation": "imports_from",
@@ -19507,9 +19567,9 @@
       "source_file": "remote_control.py",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "context_packets_packet_records_from_jsonl",
-      "confidence_score": 1.0
+      "target": "context_packets_packet_records_from_jsonl"
     },
     {
       "relation": "calls",
@@ -19518,9 +19578,9 @@
       "source_file": "remote_control.py",
       "source_location": "L233",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_packet_trace_from_file",
-      "target": "context_packets_packet_records_from_jsonl",
-      "confidence_score": 1.0
+      "target": "context_packets_packet_records_from_jsonl"
     },
     {
       "relation": "contains",
@@ -24125,9 +24185,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L527",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app",
-      "target": "www_app_appendtracetext",
-      "confidence_score": 1.0
+      "target": "www_app_appendtracetext"
     },
     {
       "relation": "contains",
@@ -24425,9 +24485,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L551",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app",
-      "target": "www_app_rendertrace",
-      "confidence_score": 1.0
+      "target": "www_app_rendertrace"
     },
     {
       "relation": "contains",
@@ -24435,9 +24495,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L534",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app",
-      "target": "www_app_rendertracelist",
-      "confidence_score": 1.0
+      "target": "www_app_rendertracelist"
     },
     {
       "relation": "contains",
@@ -24605,9 +24665,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L513",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app",
-      "target": "www_app_tracesignallabel",
-      "confidence_score": 1.0
+      "target": "www_app_tracesignallabel"
     },
     {
       "relation": "contains",
@@ -25074,9 +25134,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L253",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app_forgetsessiontoken",
-      "target": "www_app_rendertrace",
-      "confidence_score": 1.0
+      "target": "www_app_rendertrace"
     },
     {
       "relation": "calls",
@@ -25338,9 +25398,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L515",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app_tracesignallabel",
-      "target": "www_app_agentdisplayname",
-      "confidence_score": 1.0
+      "target": "www_app_agentdisplayname"
     },
     {
       "relation": "calls",
@@ -25371,9 +25431,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L556",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app_rendertrace",
-      "target": "www_app_rendertracelist",
-      "confidence_score": 1.0
+      "target": "www_app_rendertracelist"
     },
     {
       "relation": "calls",
@@ -25382,9 +25442,9 @@
       "source_file": "mobile_remote/www/app.js",
       "source_location": "L651",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_app_applysession",
-      "target": "www_app_rendertrace",
-      "confidence_score": 1.0
+      "target": "www_app_rendertrace"
     },
     {
       "relation": "calls",
@@ -25520,9 +25580,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L816",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_appendtracetext",
-      "confidence_score": 1.0
+      "target": "www_workbench_appendtracetext"
     },
     {
       "relation": "contains",
@@ -25820,9 +25880,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L823",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_rendertrace",
-      "confidence_score": 1.0
+      "target": "www_workbench_rendertrace"
     },
     {
       "relation": "contains",
@@ -25830,9 +25890,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L799",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_rendertracelist",
-      "confidence_score": 1.0
+      "target": "www_workbench_rendertracelist"
     },
     {
       "relation": "contains",
@@ -26000,9 +26060,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L793",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_tracesignallabel",
-      "confidence_score": 1.0
+      "target": "www_workbench_tracesignallabel"
     },
     {
       "relation": "contains",
@@ -26483,9 +26543,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L795",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_tracesignallabel",
-      "target": "www_workbench_agentdisplayname",
-      "confidence_score": 1.0
+      "target": "www_workbench_agentdisplayname"
     },
     {
       "relation": "calls",
@@ -26725,9 +26785,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L828",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_rendertrace",
-      "target": "www_workbench_rendertracelist",
-      "confidence_score": 1.0
+      "target": "www_workbench_rendertracelist"
     },
     {
       "relation": "calls",
@@ -26736,9 +26796,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L876",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_applysession",
-      "target": "www_workbench_rendertrace",
-      "confidence_score": 1.0
+      "target": "www_workbench_rendertrace"
     },
     {
       "relation": "calls",
@@ -34512,9 +34572,9 @@
       "source_file": "remote_control.py",
       "source_location": "L207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "remote_control_agent_trace_from_transcript",
-      "confidence_score": 1.0
+      "target": "remote_control_agent_trace_from_transcript"
     },
     {
       "relation": "contains",
@@ -34542,9 +34602,9 @@
       "source_file": "remote_control.py",
       "source_location": "L183",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "remote_control_compact_summary",
-      "confidence_score": 1.0
+      "target": "remote_control_compact_summary"
     },
     {
       "relation": "contains",
@@ -34642,9 +34702,9 @@
       "source_file": "remote_control.py",
       "source_location": "L229",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "remote_control_packet_trace_from_file",
-      "confidence_score": 1.0
+      "target": "remote_control_packet_trace_from_file"
     },
     {
       "relation": "contains",
@@ -34655,6 +34715,16 @@
       "confidence_score": 1.0,
       "source": "remote_control",
       "target": "remote_control_parse_chatboks_messages"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "remote_control",
+      "target": "remote_control_parse_query_int",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -34742,9 +34812,9 @@
       "source_file": "remote_control.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "remote_control_signal_from_line",
-      "confidence_score": 1.0
+      "target": "remote_control_signal_from_line"
     },
     {
       "relation": "contains",
@@ -34762,9 +34832,9 @@
       "source_file": "remote_control.py",
       "source_location": "L262",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control",
-      "target": "remote_control_trace_snapshot",
-      "confidence_score": 1.0
+      "target": "remote_control_trace_snapshot"
     },
     {
       "relation": "imports_from",
@@ -35048,9 +35118,9 @@
       "source_file": "remote_control.py",
       "source_location": "L229",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_packet_trace_from_file",
-      "target": "remote_control_py_path",
-      "confidence_score": 1.0
+      "target": "remote_control_py_path"
     },
     {
       "relation": "uses",
@@ -35102,9 +35172,9 @@
       "source_file": "remote_control.py",
       "source_location": "L262",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_trace_snapshot",
-      "target": "remote_control_py_path",
-      "confidence_score": 1.0
+      "target": "remote_control_py_path"
     },
     {
       "relation": "references",
@@ -35113,9 +35183,9 @@
       "source_file": "remote_control.py",
       "source_location": "L207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_agent_trace_from_transcript",
-      "target": "remote_control_py_any",
-      "confidence_score": 1.0
+      "target": "remote_control_py_any"
     },
     {
       "relation": "references",
@@ -35168,9 +35238,9 @@
       "source_file": "remote_control.py",
       "source_location": "L229",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_packet_trace_from_file",
-      "target": "remote_control_py_any",
-      "confidence_score": 1.0
+      "target": "remote_control_py_any"
     },
     {
       "relation": "references",
@@ -35299,9 +35369,9 @@
       "source_file": "remote_control.py",
       "source_location": "L262",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_trace_snapshot",
-      "target": "remote_control_py_any",
-      "confidence_score": 1.0
+      "target": "remote_control_py_any"
     },
     {
       "relation": "calls",
@@ -35387,9 +35457,9 @@
       "source_file": "remote_control.py",
       "source_location": "L223",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_agent_trace_from_transcript",
-      "target": "remote_control_compact_summary",
-      "confidence_score": 1.0
+      "target": "remote_control_compact_summary"
     },
     {
       "relation": "calls",
@@ -35398,9 +35468,9 @@
       "source_file": "remote_control.py",
       "source_location": "L213",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_agent_trace_from_transcript",
-      "target": "remote_control_signal_from_line",
-      "confidence_score": 1.0
+      "target": "remote_control_signal_from_line"
     },
     {
       "relation": "calls",
@@ -35409,9 +35479,9 @@
       "source_file": "remote_control.py",
       "source_location": "L217",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_agent_trace_from_transcript",
-      "target": "remote_control_remoteeventbuffer_append",
-      "confidence_score": 1.0
+      "target": "remote_control_remoteeventbuffer_append"
     },
     {
       "relation": "calls",
@@ -35420,9 +35490,9 @@
       "source_file": "remote_control.py",
       "source_location": "L264",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_trace_snapshot",
-      "target": "remote_control_agent_trace_from_transcript",
-      "confidence_score": 1.0
+      "target": "remote_control_agent_trace_from_transcript"
     },
     {
       "relation": "imports",
@@ -35431,9 +35501,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control",
-      "target": "remote_control_agent_trace_from_transcript",
-      "confidence_score": 1.0
+      "target": "remote_control_agent_trace_from_transcript"
     },
     {
       "relation": "calls",
@@ -35442,9 +35512,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L145",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_agent_trace_extracts_signals_and_handoff_targets",
-      "target": "remote_control_agent_trace_from_transcript",
-      "confidence_score": 1.0
+      "target": "remote_control_agent_trace_from_transcript"
     },
     {
       "relation": "calls",
@@ -35453,9 +35523,9 @@
       "source_file": "remote_control.py",
       "source_location": "L244",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_packet_trace_from_file",
-      "target": "remote_control_remoteeventbuffer_append",
-      "confidence_score": 1.0
+      "target": "remote_control_remoteeventbuffer_append"
     },
     {
       "relation": "calls",
@@ -35464,9 +35534,9 @@
       "source_file": "remote_control.py",
       "source_location": "L265",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_trace_snapshot",
-      "target": "remote_control_packet_trace_from_file",
-      "confidence_score": 1.0
+      "target": "remote_control_packet_trace_from_file"
     },
     {
       "relation": "imports",
@@ -35475,9 +35545,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control",
-      "target": "remote_control_packet_trace_from_file",
-      "confidence_score": 1.0
+      "target": "remote_control_packet_trace_from_file"
     },
     {
       "relation": "calls",
@@ -35486,9 +35556,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L188",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_packet_trace_reads_compact_packet_records",
-      "target": "remote_control_packet_trace_from_file",
-      "confidence_score": 1.0
+      "target": "remote_control_packet_trace_from_file"
     },
     {
       "relation": "calls",
@@ -35497,9 +35567,9 @@
       "source_file": "remote_control.py",
       "source_location": "L682",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remote_control_remotesession_snapshot",
-      "target": "remote_control_trace_snapshot",
-      "confidence_score": 1.0
+      "target": "remote_control_trace_snapshot"
     },
     {
       "relation": "imports",
@@ -35508,8 +35578,19 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control",
-      "target": "remote_control_trace_snapshot",
+      "target": "remote_control_trace_snapshot"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
+      "source_location": "L814",
+      "weight": 1.0,
+      "source": "remote_control_remotehandler_do_get",
+      "target": "remote_control_parse_query_int",
       "confidence_score": 1.0
     },
     {
@@ -35784,9 +35865,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L403",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "target": "remote_control_remoteeventbuffer",
-      "confidence_score": 1.0
+      "target": "remote_control_remoteeventbuffer"
     },
     {
       "relation": "calls",
@@ -37203,6 +37284,17 @@
       "confidence_score": 1.0,
       "source": "remote_control_remotebridgeserver_rotate_pair_code_for_operator",
       "target": "remote_control_remotebridgeserver_write_operator_status"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
+      "source_location": "L861",
+      "weight": 1.0,
+      "source": "remote_control_remotehandler_do_post",
+      "target": "remote_control_remotebridgeserver_write_operator_status",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -43643,9 +43735,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L131",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control",
-      "target": "tests_test_remote_control_test_agent_trace_extracts_signals_and_handoff_targets",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_test_agent_trace_extracts_signals_and_handoff_targets"
     },
     {
       "relation": "contains",
@@ -43703,9 +43795,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L166",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control",
-      "target": "tests_test_remote_control_test_packet_trace_reads_compact_packet_records",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_test_packet_trace_reads_compact_packet_records"
     },
     {
       "relation": "contains",
@@ -43761,6 +43853,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L321",
+      "weight": 1.0,
+      "source": "tests_test_remote_control",
+      "target": "tests_test_remote_control_test_remote_bridge_clamps_session_transcript_limit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L217",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -43776,6 +43878,16 @@
       "confidence_score": 1.0,
       "source": "tests_test_remote_control",
       "target": "tests_test_remote_control_test_remote_bridge_lists_projects_for_authorized_client"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L676",
+      "weight": 1.0,
+      "source": "tests_test_remote_control",
+      "target": "tests_test_remote_control_test_remote_bridge_pair_exchange_updates_operator_file",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -43801,11 +43913,41 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L300",
+      "weight": 1.0,
+      "source": "tests_test_remote_control",
+      "target": "tests_test_remote_control_test_remote_bridge_rejects_invalid_session_query",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L59",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_remote_control",
       "target": "tests_test_remote_control_test_remote_bridge_rejects_missing_bearer_token"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L365",
+      "weight": 1.0,
+      "source": "tests_test_remote_control",
+      "target": "tests_test_remote_control_test_remote_bridge_rejects_non_object_json_body",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L339",
+      "weight": 1.0,
+      "source": "tests_test_remote_control",
+      "target": "tests_test_remote_control_test_remote_bridge_rejects_oversized_json_body",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -43883,9 +44025,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L396",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control",
-      "target": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload"
     },
     {
       "relation": "contains",
@@ -44036,6 +44178,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L322",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_clamps_session_transcript_limit",
+      "target": "tests_test_remote_control_fakesession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L218",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44052,6 +44205,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_bridge_lists_projects_for_authorized_client",
       "target": "tests_test_remote_control_fakesession"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L678",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_pair_exchange_updates_operator_file",
+      "target": "tests_test_remote_control_fakesession",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -44080,11 +44244,44 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L301",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_rejects_invalid_session_query",
+      "target": "tests_test_remote_control_fakesession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L60",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_bridge_rejects_missing_bearer_token",
       "target": "tests_test_remote_control_fakesession"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L366",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_rejects_non_object_json_body",
+      "target": "tests_test_remote_control_fakesession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L340",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_rejects_oversized_json_body",
+      "target": "tests_test_remote_control_fakesession",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -44203,9 +44400,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L427",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "target": "tests_test_remote_control_fakesession_snapshot",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_fakesession_snapshot"
     },
     {
       "relation": "calls",
@@ -44287,9 +44484,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L404",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "target": "tests_test_remote_control_blockingfakeapp",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_blockingfakeapp"
     },
     {
       "relation": "calls",
@@ -44375,9 +44572,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L166",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_packet_trace_reads_compact_packet_records",
-      "target": "tests_test_remote_control_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_py_path"
     },
     {
       "relation": "references",
@@ -44406,6 +44603,17 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L676",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_pair_exchange_updates_operator_file",
+      "target": "tests_test_remote_control_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L290",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44419,9 +44627,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L396",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "target": "tests_test_remote_control_py_path",
-      "confidence_score": 1.0
+      "target": "tests_test_remote_control_py_path"
     },
     {
       "relation": "references",
@@ -44463,9 +44671,9 @@
       "source_file": "tests/test_remote_control.py",
       "source_location": "L404",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "target": "event",
-      "confidence_score": 1.0
+      "target": "event"
     },
     {
       "relation": "calls",
@@ -44548,6 +44756,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L323",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_clamps_session_transcript_limit",
+      "target": "tests_test_remote_control_run_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L218",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -44564,6 +44783,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_bridge_lists_projects_for_authorized_client",
       "target": "tests_test_remote_control_run_server"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L678",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_pair_exchange_updates_operator_file",
+      "target": "tests_test_remote_control_run_server",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -44592,11 +44822,44 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L301",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_rejects_invalid_session_query",
+      "target": "tests_test_remote_control_run_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L60",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_bridge_rejects_missing_bearer_token",
       "target": "tests_test_remote_control_run_server"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L366",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_rejects_non_object_json_body",
+      "target": "tests_test_remote_control_run_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L340",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_bridge_rejects_oversized_json_body",
+      "target": "tests_test_remote_control_run_server",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -51269,5 +51532,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "cbe3bbf9d5a4cf85b2881b16935f673970baeb4f"
+  "built_at_commit": "85113bb1e90d0ad6700cd87c7b6ed58ee77bd9d0"
 }

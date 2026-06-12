@@ -35,9 +35,11 @@ from ui.stream import Stream
 
 
 TRANSCRIPT_LIMIT = 120
+MAX_TRANSCRIPT_LIMIT = TRANSCRIPT_LIMIT
 COMMAND_MAX_CHARS = 6000
 REMOTE_PROPOSAL_RAW_LIMIT = 4000
 TRACE_SUMMARY_LIMIT = 140
+MAX_JSON_BODY_BYTES = 64 * 1024
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
@@ -264,6 +266,26 @@ def trace_snapshot(messages: list[dict[str, Any]], packet_path: Path | None) -> 
         "agent": agent_trace_from_transcript(messages),
         "packets": packet_trace_from_file(packet_path),
     }
+
+
+def parse_query_int(
+    query: dict[str, list[str]],
+    name: str,
+    default: int,
+    *,
+    minimum: int = 0,
+    maximum: int | None = None,
+) -> int:
+    raw = query.get(name, [str(default)])[0]
+    try:
+        value = int(raw or default)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Query parameter '{name}' must be an integer.") from exc
+    if value < minimum:
+        raise ValueError(f"Query parameter '{name}' must be at least {minimum}.")
+    if maximum is not None and value > maximum:
+        return maximum
+    return value
 
 
 def git_environment(proj_path: Path | None) -> dict[str, Any] | None:
@@ -788,8 +810,12 @@ class RemoteHandler(BaseHTTPRequestHandler):
             if not self.authorized():
                 return
             query = urllib.parse.parse_qs(parsed.query)
-            cursor = int(query.get("cursor", ["0"])[0] or 0)
-            limit = int(query.get("limit", [str(TRANSCRIPT_LIMIT)])[0] or TRANSCRIPT_LIMIT)
+            try:
+                cursor = parse_query_int(query, "cursor", 0)
+                limit = parse_query_int(query, "limit", TRANSCRIPT_LIMIT, maximum=MAX_TRANSCRIPT_LIMIT)
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                return
             self.respond_json(self.server.session.snapshot(cursor=cursor, transcript_limit=limit))
             return
         if parsed.path == "/api/projects":
@@ -832,6 +858,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 return
             pair_code = str(payload.get("pair_code") or "")
             result = self.server.auth.exchange_pair_code(pair_code)
+            self.server.write_operator_status()
             if result is None:
                 self.respond_error(HTTPStatus.FORBIDDEN, "Invalid or expired pairing code")
                 return
@@ -907,11 +934,20 @@ class RemoteHandler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError as exc:
             raise ValueError("Invalid Content-Length") from exc
+        if length < 0:
+            raise ValueError("Invalid Content-Length")
+        if length > MAX_JSON_BODY_BYTES:
+            raise ValueError(f"Request body exceeds {MAX_JSON_BODY_BYTES} bytes.")
         raw = self.rfile.read(length) if length > 0 else b""
         try:
-            return json.loads(raw.decode("utf-8") or "{}")
+            payload = json.loads(raw.decode("utf-8") or "{}")
         except json.JSONDecodeError as exc:
             raise ValueError("Request body must be valid JSON.") from exc
+        except UnicodeDecodeError as exc:
+            raise ValueError("Request body must be UTF-8 JSON.") from exc
+        if not isinstance(payload, dict):
+            raise ValueError("Request body must be a JSON object.")
+        return payload
 
     def respond_json(self, payload: dict[str, Any], status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(payload).encode("utf-8")
