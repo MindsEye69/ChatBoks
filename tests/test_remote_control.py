@@ -13,6 +13,9 @@ from remote_control import (
     RemoteBridgeServer,
     RemoteHandler,
     RemoteSession,
+    build_token_usage,
+    codegraph_stats,
+    git_environment,
     is_allowed_bind_host,
     is_allowed_app_origin,
     is_tailnet_ipv4_host,
@@ -26,6 +29,15 @@ class FakeSession:
         self.commands: list[str] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
+
+    def workbench_status(self) -> dict[str, object]:
+        return {
+            "project": self.project,
+            "generated_at": "12:00:00",
+            "environment": {"branch": "main", "staged": 0, "unstaged": 2, "clean": False},
+            "graph": {"healthy": True, "files": 52, "nodes": 1363, "edges": 1545},
+            "monitor": {"pid": 1234},
+        }
 
     def snapshot(self, cursor: int = 0, transcript_limit: int = 120) -> dict[str, object]:
         del transcript_limit
@@ -478,6 +490,134 @@ def test_remote_bridge_session_token_cannot_rotate_pair_code():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: session tokens cannot rotate bridge pairing codes")
+
+
+def test_remote_bridge_serves_workbench_static_files():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        with urllib.request.urlopen(f"{base}/workbench", timeout=5) as response:
+            body = response.read().decode("utf-8")
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/html")
+            assert "Content-Security-Policy" in response.headers
+            assert "workbench.js" in body
+
+        with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/javascript")
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+        with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/css")
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge serves the workbench shell, script, and styles")
+
+
+def test_remote_bridge_rejects_paths_outside_static_allowlist():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        for path in (
+            "/assets/../remote_control.py",
+            "/workbench.html",
+            "/assets/unknown.png",
+            "/../config.yaml",
+        ):
+            try:
+                urllib.request.urlopen(f"{base}{path}", timeout=5)
+                assert False, f"expected 404 for {path}"
+            except urllib.error.HTTPError as exc:
+                assert exc.code == 404, f"expected 404 for {path}, got {exc.code}"
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge serves only the exact static allowlist")
+
+
+def test_workbench_api_requires_token_and_returns_status():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        try:
+            urllib.request.urlopen(f"{base}/api/workbench", timeout=5)
+            assert False, "expected auth failure"
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/workbench",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert payload["project"] == "chatboks"
+        assert payload["environment"]["branch"] == "main"
+        assert payload["graph"]["files"] == 52
+        assert "monitor" in payload
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: workbench status API requires a token and returns structured status")
+
+
+def test_build_token_usage_orders_main_agents_and_computes_percent():
+    usage = build_token_usage(
+        {"codex": 60_000, "agent_zero": 500},
+        {
+            "claude": {"token_limit": 180_000, "token_warning": 150_000},
+            "codex": {"token_limit": 120_000, "token_warning": 100_000},
+        },
+        ["claude", "codex"],
+    )
+
+    assert [entry["agent"] for entry in usage] == ["claude", "codex", "agent_zero"]
+    assert usage[0] == {"agent": "claude", "used": 0, "limit": 180_000, "warning": 150_000, "percent": 0.0}
+    assert usage[1]["percent"] == 50.0
+    assert usage[2]["percent"] is None
+    print("PASS: token usage payload keeps roster order and computes percentages")
+
+
+def test_git_environment_returns_none_for_non_repo(tmp_path: Path):
+    assert git_environment(None) is None
+    assert git_environment(tmp_path) is None
+    print("PASS: git environment is fail-soft outside a repository")
+
+
+def test_codegraph_stats_reads_counts_from_database(tmp_path: Path):
+    import sqlite3
+
+    assert codegraph_stats(None) is None
+    assert codegraph_stats(tmp_path) is None
+
+    db_dir = tmp_path / ".codegraph"
+    db_dir.mkdir()
+    connection = sqlite3.connect(db_dir / "codegraph.db")
+    connection.executescript(
+        """
+        CREATE TABLE files (path TEXT);
+        CREATE TABLE nodes (id INTEGER);
+        CREATE TABLE edges (id INTEGER);
+        INSERT INTO files VALUES ('a.py'), ('b.py');
+        INSERT INTO nodes VALUES (1), (2), (3);
+        INSERT INTO edges VALUES (1);
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    stats = codegraph_stats(tmp_path)
+
+    assert stats is not None
+    assert stats["healthy"] is True
+    assert stats["files"] == 2
+    assert stats["nodes"] == 3
+    assert stats["edges"] == 1
+    assert stats["last_indexed"]
+    print("PASS: codegraph stats read counts from the index database")
 
 
 def test_rotate_pair_code_helper_uses_operator_file(tmp_path: Path, capsys):

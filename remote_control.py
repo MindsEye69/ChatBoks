@@ -14,6 +14,9 @@ import ipaddress
 import json
 import os
 import secrets
+import socket
+import sqlite3
+import subprocess
 import threading
 import time
 import urllib.error
@@ -36,6 +39,17 @@ PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
 OPERATOR_STATUS_FILENAME = "remote_bridge.json"
+WORKBENCH_STATUS_CACHE_SECONDS = 5.0
+WORKBENCH_WWW_ROOT = Path(__file__).resolve().parent / "mobile_remote" / "www"
+# Exact-match allowlist: request paths never touch the filesystem directly,
+# so traversal sequences in a URL can only miss the map and return 404.
+WORKBENCH_STATIC_ROUTES = {
+    "/workbench": ("workbench.html", "text/html; charset=utf-8"),
+    "/workbench.css": ("workbench.css", "text/css; charset=utf-8"),
+    "/workbench.js": ("workbench.js", "text/javascript; charset=utf-8"),
+    "/assets/chatboks-logo.png": ("assets/chatboks-logo.png", "image/png"),
+    "/assets/chatboks-mark.png": ("assets/chatboks-mark.png", "image/png"),
+}
 ALLOWED_APP_ORIGINS = {
     "capacitor://localhost",
     "http://localhost",
@@ -115,6 +129,166 @@ def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[d
     for index, message in enumerate(messages[-limit:], start=max(0, len(messages) - limit)):
         trimmed.append({"id": index, "sender": message["sender"], "text": message["text"].strip()})
     return trimmed
+
+
+def build_token_usage(
+    token_counts: dict[str, int],
+    agent_config: dict[str, Any],
+    main_agents: list[str],
+) -> list[dict[str, Any]]:
+    ordered = list(main_agents)
+    for agent_name in token_counts:
+        if agent_name not in ordered:
+            ordered.append(agent_name)
+    usage: list[dict[str, Any]] = []
+    for agent_name in ordered:
+        config = agent_config.get(agent_name) or {}
+        used = int(token_counts.get(agent_name, 0))
+        limit = int(config.get("token_limit", 0) or 0)
+        warning = int(config.get("token_warning", 0) or 0)
+        percent = round(used * 100.0 / limit, 1) if limit > 0 else None
+        usage.append(
+            {
+                "agent": agent_name,
+                "used": used,
+                "limit": limit,
+                "warning": warning,
+                "percent": percent,
+            }
+        )
+    return usage
+
+
+def git_environment(proj_path: Path | None) -> dict[str, Any] | None:
+    if proj_path is None:
+        return None
+    root = Path(proj_path)
+    if not (root / ".git").exists():
+        return None
+
+    def run_git(*args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr.strip() or f"git {' '.join(args)} failed")
+        return result.stdout.strip()
+
+    try:
+        branch = run_git("rev-parse", "--abbrev-ref", "HEAD")
+        status_lines = [line for line in run_git("status", "--porcelain").splitlines() if line.strip()]
+        staged = sum(1 for line in status_lines if line[:1] not in {" ", "?"})
+        unstaged = sum(1 for line in status_lines if len(line) > 1 and line[1] != " ")
+        commit_hash, _, commit_age = run_git("log", "-1", "--format=%h|%cr").partition("|")
+        return {
+            "branch": branch,
+            "staged": staged,
+            "unstaged": unstaged,
+            "clean": not status_lines,
+            "last_commit": commit_hash,
+            "last_commit_age": commit_age,
+        }
+    except (OSError, RuntimeError, subprocess.TimeoutExpired):
+        return None
+
+
+def codegraph_stats(proj_path: Path | None) -> dict[str, Any] | None:
+    if proj_path is None:
+        return None
+    root = Path(proj_path)
+    candidates = [
+        root / "codegraph.db",
+        root / ".codegraph" / "codegraph.db",
+        root / ".codegraph" / "index.db",
+    ]
+    db_path = next((candidate for candidate in candidates if candidate.exists()), None)
+    if db_path is None:
+        return None
+    try:
+        connection = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True, timeout=1.0)
+    except sqlite3.Error:
+        return None
+    try:
+        tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if not {"nodes", "edges", "files"} <= tables:
+            return None
+        counts = {
+            table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+            for table in ("files", "nodes", "edges")
+        }
+        return {
+            "healthy": True,
+            "files": counts["files"],
+            "nodes": counts["nodes"],
+            "edges": counts["edges"],
+            "last_indexed": time.strftime("%H:%M:%S", time.localtime(db_path.stat().st_mtime)),
+        }
+    except (sqlite3.Error, OSError):
+        return None
+    finally:
+        connection.close()
+
+
+def system_memory_percent() -> float | None:
+    try:
+        import psutil  # type: ignore[import-not-found]
+
+        return float(psutil.virtual_memory().percent)
+    except ImportError:
+        pass
+    if os.name == "nt":
+        import ctypes
+
+        class MemoryStatusEx(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = MemoryStatusEx()
+        status.dwLength = ctypes.sizeof(MemoryStatusEx)
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            return float(status.dwMemoryLoad)
+    return None
+
+
+def detect_tailnet_ip() -> str | None:
+    try:
+        entries = socket.getaddrinfo(socket.gethostname(), None, family=socket.AF_INET)
+    except OSError:
+        return None
+    for entry in entries:
+        address = entry[4][0]
+        if is_tailnet_ipv4_host(address):
+            return address
+    return None
+
+
+def monitor_stats() -> dict[str, Any]:
+    stats: dict[str, Any] = {"pid": os.getpid()}
+    memory = system_memory_percent()
+    if memory is not None:
+        stats["ram_percent"] = memory
+    try:
+        import psutil  # type: ignore[import-not-found]
+
+        stats["cpu_percent"] = float(psutil.cpu_percent(interval=None))
+    except ImportError:
+        pass
+    tailnet_ip = detect_tailnet_ip()
+    if tailnet_ip:
+        stats["tailnet_ip"] = tailnet_ip
+    return stats
 
 
 class RemoteEventBuffer:
@@ -287,6 +461,7 @@ class RemoteSession:
         self.lock = threading.RLock()
         self._command_thread: threading.Thread | None = None
         self._command_text: str | None = None
+        self._workbench_cache: tuple[float, dict[str, Any]] | None = None
         self.events = RemoteEventBuffer()
         self.app.stream = RemoteStream(
             self.app.config.get("agents", {}),
@@ -319,6 +494,7 @@ class RemoteSession:
             self.app = Chatboks(target, trigger="manual", config_path=self.config_path)
             self._command_thread = None
             self._command_text = None
+            self._workbench_cache = None
             self.events = RemoteEventBuffer()
             self.app.stream = RemoteStream(
                 self.app.config.get("agents", {}),
@@ -366,27 +542,56 @@ class RemoteSession:
             self.app.state = self.app.load_state()
             context = self.app.state.get("context") or {}
             token_counts = dict(context.get("token_counts") or {})
-            token_line = self.app.stream.build_token_usage_line(token_counts, self.app.session_token_budget())
+            session_budget = self.app.session_token_budget()
+            token_line = self.app.stream.build_token_usage_line(token_counts, session_budget)
+            app_config = getattr(self.app, "config", None)
+            agent_config = (app_config.get("agents") if isinstance(app_config, dict) else None) or {}
+            proj_config = getattr(self.app, "proj_config", None) or {}
+            main_agents = list(proj_config.get("agents") or [])
             return {
                 "project": self.app.project,
                 "projects": self.available_projects(),
+                "session": self.app.state.get("session"),
                 "status": self.app.state.get("status"),
                 "active_task": self.app.state.get("active_task"),
                 "next_agent": self.app.state.get("next_agent"),
                 "last_agent": self.app.state.get("last_agent"),
+                "round": self.app.state.get("round"),
+                "expected_agents": list(self.app.state.get("expected_agents") or []),
+                "completed_agents": list(self.app.state.get("completed_agents") or []),
                 "collaboration_mode": self.app.state.get("collaboration_mode"),
                 "context_mode": self.app.state.get("context_mode"),
                 "command_running": self.command_running(),
                 "command_text": self._command_text,
+                "agents": main_agents,
+                "direct_agents": sorted(proj_config.get("direct_agents") or []),
                 "token_line": token_line,
+                "token_usage": build_token_usage(token_counts, agent_config, main_agents),
+                "session_budget": session_budget if isinstance(session_budget, dict) else None,
                 "transcript": parse_chatboks_messages(self.app.chatboks_md, limit=transcript_limit),
                 "events": self.events.since(cursor),
             }
 
+    def workbench_status(self) -> dict[str, Any]:
+        now = time.time()
+        cached = getattr(self, "_workbench_cache", None)
+        if cached is not None and now - cached[0] < WORKBENCH_STATUS_CACHE_SECONDS:
+            return cached[1]
+        proj_path = getattr(self.app, "proj_path", None)
+        payload = {
+            "project": getattr(self.app, "project", self.project),
+            "generated_at": time.strftime("%H:%M:%S"),
+            "environment": git_environment(proj_path),
+            "graph": codegraph_stats(proj_path),
+            "monitor": monitor_stats(),
+        }
+        self._workbench_cache = (now, payload)
+        return payload
+
 
 class RemoteBridgeServer(ThreadingHTTPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    allow_reuse_address = False
 
     def __init__(
         self,
@@ -457,6 +662,17 @@ class RemoteHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/":
             self.respond_html(build_mobile_shell(self.server.session.app.project))
+            return
+        if parsed.path in WORKBENCH_STATIC_ROUTES:
+            relative_path, content_type = WORKBENCH_STATIC_ROUTES[parsed.path]
+            self.respond_static(relative_path, content_type)
+            return
+        if parsed.path == "/api/workbench":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            self.respond_json(self.server.session.workbench_status())
             return
         if parsed.path == "/api/session":
             if not self.origin_allowed():
@@ -606,6 +822,21 @@ class RemoteHandler(BaseHTTPRequestHandler):
         self.write_cors_headers(self.request_origin())
         self.write_security_headers(include_csp=True)
         self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def respond_static(self, relative_path: str, content_type: str) -> None:
+        file_path = WORKBENCH_WWW_ROOT / relative_path
+        try:
+            body = file_path.read_bytes()
+        except OSError:
+            self.respond_error(HTTPStatus.NOT_FOUND, "Not found")
+            return
+        self.send_response(HTTPStatus.OK)
+        self.write_security_headers(include_csp=content_type.startswith("text/html"))
+        self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -1080,6 +1311,7 @@ def main() -> int:
 
     print(f"ChatBoks remote bridge for project '{args.project}'")
     print(f"Listening on http://{args.host}:{args.port}/")
+    print(f"Workbench UI: http://{args.host}:{args.port}/workbench")
     print("Security defaults:")
     if is_loopback_host(args.host):
         print("- loopback bind only")

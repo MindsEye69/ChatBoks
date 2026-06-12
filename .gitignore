@@ -26,6 +26,7 @@ __pypackages__/
 # Build / distribution
 build/
 dist/
+output/apk/
 develop-eggs/
 downloads/
 eggs/

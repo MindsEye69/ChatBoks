@@ -24,7 +24,7 @@
 body {
   margin: 0;
   overflow-x: hidden;
-  padding-bottom: calc(var(--composer-reserved-height) + var(--keyboard-offset) + 16px);
+  padding-bottom: calc(var(--composer-reserved-height) + var(--keyboard-offset) + env(safe-area-inset-bottom, 0px) + 16px);
   background: var(--bg);
   color: var(--text);
   font-family: Inter, system-ui, sans-serif;
@@ -35,7 +35,7 @@ body {
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
@@ -43,9 +43,27 @@ body {
   background: rgba(17, 18, 20, 0.96);
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: white;
+  object-fit: cover;
+}
+
 .topbar h1 {
   margin: 0;
   font-size: 20px;
+  line-height: 1.1;
+  min-width: 0;
 }
 
 .topbar-actions {
@@ -318,7 +336,12 @@ button.compact {
   }
 
   .topbar h1 {
-    font-size: 18px;
+    font-size: 17px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
   }
 }
 

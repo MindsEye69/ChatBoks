@@ -10,15 +10,15 @@
   <div class="workbench-shell">
     <aside class="left-rail" aria-label="Workspace navigation">
       <header class="brand-row">
-        <div class="brand-mark">CB</div>
+        <div class="brand-mark"><img src="./assets/chatboks-mark.png" alt="ChatBoks logo"></div>
         <div>
           <h1>ChatBoks</h1>
           <p>multi-agent workbench</p>
         </div>
-        <button class="icon-button" type="button" aria-label="Collapse projects pane" title="Collapse projects pane">||</button>
+        <button id="themeToggleRail" class="icon-button" type="button" aria-label="Collapse project rail" title="Collapse project rail">||</button>
       </header>
 
-      <button class="new-task-button" type="button">
+      <button id="newTaskButton" class="new-task-button" type="button">
         <span>+</span>
         <span>New Task</span>
         <kbd>Ctrl+N</kbd>
@@ -26,80 +26,24 @@
 
       <nav class="rail-section" aria-label="Projects">
         <div class="section-label">Projects</div>
-        <a class="rail-item active" href="#">
-          <span class="folder-icon"></span>
-          <span>chatboks</span>
-          <span class="rail-menu">...</span>
-        </a>
-        <a class="rail-item" href="#">
-          <span class="folder-icon"></span>
-          <span>gracious-eagle-otel</span>
-        </a>
-        <a class="rail-item" href="#">
-          <span class="folder-icon"></span>
-          <span>romantic-otter-otel-7</span>
-        </a>
-        <a class="rail-item" href="#">
-          <span class="folder-icon"></span>
-          <span>chatboks_2.0</span>
-        </a>
-        <a class="rail-item subdued" href="#">
-          <span>+</span>
-          <span>Add Project</span>
-        </a>
+        <div id="projectList"></div>
       </nav>
 
       <nav class="rail-section" aria-label="Recent sessions">
         <div class="section-label">Recent Sessions</div>
-        <a class="rail-item active" href="#">
-          <span class="folder-icon"></span>
-          <span>multi-agent-refactor</span>
-          <time>2m ago</time>
-        </a>
-        <a class="rail-item" href="#">
-          <span class="folder-icon"></span>
-          <span>remote-control-impl</span>
-          <time>15m ago</time>
-        </a>
-        <a class="rail-item" href="#">
-          <span class="folder-icon"></span>
-          <span>io-tools-integration</span>
-          <time>1h ago</time>
-        </a>
-        <a class="rail-item" href="#">
-          <span class="folder-icon"></span>
-          <span>graphify-phase5</span>
-          <time>1d ago</time>
-        </a>
+        <div id="sessionList"></div>
       </nav>
 
       <section class="token-card" aria-label="Token balances">
         <div class="section-label">Token Balances</div>
-        <div class="token-row claude">
-          <span class="agent-glyph">CL</span>
-          <span>Claude</span>
-          <span>42%</span>
-          <div class="meter"><span style="width: 42%"></span></div>
-        </div>
-        <div class="token-row codex">
-          <span class="agent-glyph">CX</span>
-          <span>Codex</span>
-          <span>26%</span>
-          <div class="meter"><span style="width: 26%"></span></div>
-        </div>
-        <div class="token-row gemini">
-          <span class="agent-glyph">GM</span>
-          <span>Gemini</span>
-          <span>86%</span>
-          <div class="meter"><span style="width: 86%"></span></div>
-        </div>
+        <div id="tokenBalances"></div>
       </section>
 
       <footer class="rail-footer">
-        <button class="ghost-button" type="button">Settings</button>
+        <button id="settingsButton" class="ghost-button" type="button">Connection</button>
         <div class="system-strip">
-          <span>CPU 8%</span>
-          <span>RAM 42%</span>
+          <span id="stripCpu">CPU --</span>
+          <span id="stripRam">RAM --</span>
         </div>
       </footer>
     </aside>
@@ -108,149 +52,61 @@
       <header class="workspace-topbar">
         <div class="session-title">
           <span class="eyebrow">Project</span>
-          <strong>chatboks</strong>
+          <strong id="topbarProject">-</strong>
           <span class="dot"></span>
           <span class="eyebrow">Session</span>
-          <strong>multi-agent-refactor</strong>
-          <span class="status-pill">Active</span>
+          <strong id="topbarSession">-</strong>
+          <span id="topbarStatus" class="status-pill muted-pill">Offline</span>
         </div>
         <div class="topbar-actions">
-          <button class="status-button" type="button"><span class="live-dot"></span> Live</button>
+          <button id="liveButton" class="status-button" type="button"><span id="liveDot" class="live-dot offline"></span> <span id="liveLabel">Offline</span></button>
           <button class="ghost-button" type="button">Session</button>
-          <button class="ghost-button" type="button">Connection v</button>
+          <button id="connectionToggle" class="ghost-button" type="button">Connection v</button>
           <button id="themeToggle" class="ghost-button" type="button">Light</button>
         </div>
       </header>
 
       <div class="center-grid">
-        <section class="agent-lanes" aria-label="Agent lanes">
-          <article class="agent-pane claude-pane">
-            <header class="agent-header">
-              <div class="agent-logo claude-logo">CL</div>
-              <div>
-                <h2>Claude</h2>
-                <p><span class="live-dot"></span> Online</p>
-              </div>
-              <button class="icon-button menu-button" type="button" aria-label="Claude menu">...</button>
-            </header>
-            <div class="agent-stream">
-              <div class="event-meta"><time>12:02:31</time><span>Claude</span></div>
-              <section class="message-card">
-                <h3>Claude - Architecture, Security, and Synthesis</h3>
-                <p>Present and indexed. CodeGraph shows 46 files, 1055 nodes, 1032 edges - healthy.</p>
-                <p>Current branch: <code>main</code>. Pending uncommitted changes across tests and mobile remote.</p>
-              </section>
-              <section class="message-card info-card">
-                <span class="card-kicker">Add</span>
-                <p>Focus areas: architecture, risk analysis, synthesis, and coordination.</p>
-              </section>
-              <section class="handoff-card">
-                <span>-></span>
-                <strong>HANDOFF >> Codex</strong>
-                <time>12:05:18</time>
-              </section>
+        <section id="connectionPanel" class="connection-card hidden" aria-label="Bridge connection">
+          <h2>Bridge connection</h2>
+          <p class="connection-hint">Pair with the one-time code shown in the desktop bridge console, or paste a saved session token. Tokens stay in this browser only.</p>
+          <div class="connection-grid">
+            <input id="bridgeUrl" type="url" placeholder="Bridge URL, e.g. http://127.0.0.1:8765">
+            <input id="pairCode" type="text" placeholder="One-time pairing code" autocomplete="one-time-code" spellcheck="false">
+            <input id="token" type="password" placeholder="Session token (filled after pairing)">
+            <div class="connection-actions">
+              <button id="pairButton" class="ghost-button" type="button">Pair</button>
+              <button id="connectButton" class="ghost-button" type="button">Connect</button>
+              <button id="forgetButton" class="ghost-button" type="button">Forget token</button>
             </div>
-          </article>
-
-          <article class="agent-pane codex-pane">
-            <header class="agent-header">
-              <div class="agent-logo codex-logo">CX</div>
-              <div>
-                <h2>Codex</h2>
-                <p><span class="live-dot"></span> Online</p>
-              </div>
-              <button class="icon-button menu-button" type="button" aria-label="Codex menu">...</button>
-            </header>
-            <div class="agent-stream">
-              <div class="event-meta"><time>12:05:19</time><span>Codex</span></div>
-              <section class="message-card">
-                <p>Received handoff from Claude. Starting implementation tasks.</p>
-                <ul>
-                  <li>Added tailnet fallback build</li>
-                  <li>Fixed minor import paths</li>
-                  <li>Added tests for remote control</li>
-                  <li>Updated docs and README</li>
-                </ul>
-              </section>
-              <section class="message-card verify-card">
-                <span class="card-kicker">Verify</span>
-                <p>Changes applied and tests added.</p>
-                <time>12:08:44</time>
-              </section>
-              <section class="message-card">
-                <p>Implementation complete. All tests passing locally.</p>
-              </section>
-              <section class="handoff-card">
-                <span>-></span>
-                <strong>HANDOFF >> Gemini</strong>
-                <time>12:06:18</time>
-              </section>
-            </div>
-          </article>
-
-          <article class="agent-pane gemini-pane">
-            <header class="agent-header">
-              <div class="agent-logo gemini-logo">GM</div>
-              <div>
-                <h2>Gemini</h2>
-                <p><span class="live-dot"></span> Online</p>
-              </div>
-              <button class="icon-button menu-button" type="button" aria-label="Gemini menu">...</button>
-            </header>
-            <div class="agent-stream">
-              <div class="event-meta"><time>12:08:49</time><span>Gemini</span></div>
-              <section class="message-card">
-                <p>Received handoff from Codex. Running verification and integration checks.</p>
-                <ul>
-                  <li>Verified remote control flows</li>
-                  <li>Graph status consistent</li>
-                  <li>Sleep memory features intact</li>
-                  <li>No regressions detected</li>
-                </ul>
-              </section>
-              <section class="message-card verify-card">
-                <p>All checks passed.</p>
-                <time>12:12:03</time>
-              </section>
-              <section class="message-card">
-                <p>Integration verified. Ready for final report.</p>
-              </section>
-              <section class="complete-card">
-                <span>FLAG</span>
-                <strong>>>> TASK_COMPLETE</strong>
-                <time>12:12:05</time>
-              </section>
-            </div>
-          </article>
+          </div>
+          <div id="errorBox" class="error-box hidden"></div>
         </section>
 
-        <section class="coordinator-card" aria-label="Agent Zero coordinator">
+        <section class="agent-lanes" id="agentLanes" aria-label="Agent lanes"></section>
+
+        <section class="coordinator-card" aria-label="System coordinator">
           <header class="coordinator-header">
-            <div class="agent-logo zero-logo">AZ</div>
+            <div class="agent-logo zero-logo">SY</div>
             <div class="coordinator-title">
-              <h2>Agent Zero <span>(Coordinator)</span></h2>
-              <p><span class="live-dot"></span> Online</p>
+              <h2>System <span>(Coordinator)</span></h2>
+              <p><span id="coordDot" class="live-dot offline"></span> <span id="coordState">Offline</span></p>
             </div>
             <div class="coordinator-actions">
-              <button class="ghost-button" type="button">Run Summary</button>
-              <button class="ghost-button" type="button">Logs</button>
+              <button id="roleCallButton" class="ghost-button" type="button">Role Call</button>
+              <button id="logsButton" class="ghost-button" type="button">Logs</button>
             </div>
           </header>
           <div class="summary-grid">
             <div class="summary-copy">
-              <div class="event-meta"><time>12:12:06</time><span>Summary Packet</span></div>
-              <p>Summary: Refactor and integration tasks completed across agents.</p>
-              <ul>
-                <li>Scope: remote control implementation, tests, docs, and verification</li>
-                <li>Results: all tests passing, no regressions, CodeGraph healthy</li>
-                <li>Next: monitor for any issues, then consider committing changes</li>
-              </ul>
+              <div class="event-meta"><time id="coordTime"></time><span>System Feed</span></div>
+              <div id="coordFeed" class="coord-feed"></div>
             </div>
             <dl class="summary-stats">
-              <div><dt>Handoffs</dt><dd>2</dd></div>
-              <div><dt>Duration</dt><dd>9m 47s</dd></div>
-              <div><dt>Agents</dt><dd>3 / 3 online</dd></div>
-              <div><dt>Status</dt><dd><span class="status-pill">Complete</span></dd></div>
+              <div><dt>Round</dt><dd id="statRound">-</dd></div>
+              <div><dt>Mode</dt><dd id="statMode">-</dd></div>
+              <div><dt>Next agent</dt><dd id="statNext">-</dd></div>
+              <div><dt>Status</dt><dd><span id="statStatus" class="status-pill muted-pill">-</span></dd></div>
             </dl>
           </div>
         </section>
@@ -263,9 +119,9 @@
           <div class="composer-toolbar">
             <button class="ghost-button" type="button">Upload</button>
             <button class="ghost-button" type="button">Auto v</button>
-            <span>Uses best available model</span>
-            <button class="icon-button mic-button" type="button" aria-label="Voice input">mic</button>
-            <button class="send-button" type="button">Send</button>
+            <span id="sendStatus">Uses best available model</span>
+            <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
+            <button id="sendButton" class="send-button" type="button">Send</button>
           </div>
         </section>
       </div>
@@ -275,39 +131,33 @@
       <section class="side-card environment-card">
         <header>
           <h2>Environment</h2>
-          <button class="icon-button" type="button" aria-label="Environment settings">gear</button>
+          <span id="envProject" class="status-pill muted-pill">gear</span>
         </header>
         <dl class="detail-list">
-          <div><dt>Branch</dt><dd>main</dd></div>
-          <div><dt>Local</dt><dd><span class="live-dot"></span> Clean</dd></div>
-          <div><dt>Changes</dt><dd>0 staged, 0 unstaged</dd></div>
-          <div><dt>Last Commit</dt><dd>a1b2c3d <span>2h ago</span></dd></div>
+          <div><dt>Branch</dt><dd id="envBranch">-</dd></div>
+          <div><dt>Local</dt><dd><span id="envCleanDot" class="live-dot offline"></span> <span id="envClean">-</span></dd></div>
+          <div><dt>Changes</dt><dd id="envChanges">-</dd></div>
+          <div><dt>Last Commit</dt><dd id="envCommit">-</dd></div>
         </dl>
       </section>
 
       <section class="side-card">
         <h2>Progress</h2>
-        <ol class="progress-list">
-          <li>Inspect response handling and signal parsing</li>
-          <li>Add packet parser / storage</li>
-          <li>Feed packets into deep summarizer</li>
-          <li>Add focused tests</li>
-          <li>Run tests, sync graphs / status</li>
-        </ol>
+        <ol id="progressList" class="progress-list"></ol>
         <div class="progress-footer">
-          <span>5 / 5 complete</span>
-          <span class="status-pill">100%</span>
+          <span id="progressCount">-</span>
+          <span id="progressPercent" class="status-pill muted-pill">-</span>
         </div>
       </section>
 
       <section class="side-card">
         <h2>Graph Status</h2>
         <dl class="detail-list compact-list">
-          <div><dt>CodeGraph</dt><dd><span class="live-dot"></span> Healthy</dd></div>
-          <div><dt>Files</dt><dd>46</dd></div>
-          <div><dt>Nodes</dt><dd>1,055</dd></div>
-          <div><dt>Edges</dt><dd>1,032</dd></div>
-          <div><dt>Last Indexed</dt><dd>12:01:17</dd></div>
+          <div><dt>CodeGraph</dt><dd><span id="graphDot" class="live-dot offline"></span> <span id="graphHealth">-</span></dd></div>
+          <div><dt>Files</dt><dd id="graphFiles">-</dd></div>
+          <div><dt>Nodes</dt><dd id="graphNodes">-</dd></div>
+          <div><dt>Edges</dt><dd id="graphEdges">-</dd></div>
+          <div><dt>Last Indexed</dt><dd id="graphIndexed">-</dd></div>
         </dl>
       </section>
 
@@ -316,16 +166,16 @@
         <div class="monitor-grid">
           <div class="monitor-metric">
             <span>Tailscale</span>
-            <strong>100.94.205.69</strong>
+            <strong id="monTailscale">-</strong>
           </div>
           <div class="monitor-metric">
             <span>CPU</span>
-            <strong>8%</strong>
+            <strong id="monCpu">-</strong>
             <div class="sparkline"></div>
           </div>
           <div class="monitor-metric">
             <span>RAM</span>
-            <strong>42%</strong>
+            <strong id="monRam">-</strong>
             <div class="sparkline alt"></div>
           </div>
         </div>
@@ -340,7 +190,7 @@
           </div>
         </header>
         <button id="terminalFocus" class="terminal-screen" type="button" aria-label="Focus mini terminal">
-          <span class="terminal-caption">terminal idle - click to focus</span>
+          <span id="terminalCaption" class="terminal-caption">bridge idle - click to focus</span>
           <span class="cube-art" aria-hidden="true">
             <span></span><span></span><span></span><span></span>
             <span></span><span></span><span></span><span></span>
