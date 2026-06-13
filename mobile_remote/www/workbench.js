@@ -1083,33 +1083,88 @@ function renderOfflineWorkbench() {
   els.terminalCaption.textContent = "bridge idle - click to focus";
 }
 
+function progressItem(label, state = "done") {
+  const item = document.createElement("li");
+  item.className = state === "done" ? "" : state;
+  item.textContent = label;
+  return item;
+}
+
+function latestTerminalSignal(trace = {}) {
+  const agentTrace = Array.isArray(trace.agent) ? trace.agent : [];
+  for (const item of agentTrace.slice().reverse()) {
+    const signal = String(item.signal || "").toUpperCase();
+    if (["TASK_COMPLETE", "BLOCKED", "QUESTION"].includes(signal)) {
+      return signal;
+    }
+  }
+  return "";
+}
+
 function renderProgress(data) {
   const expected = uniqueAgents(data.expected_agents || []);
   const completed = new Set(uniqueAgents(data.completed_agents || []));
+  const nextAgent = canonicalAgent(data.next_agent || "");
+  const status = String(data.status || "idle");
+  const awaitingApproval = status === "awaiting_approval" && data.proposal;
+  const terminalSignal = data.command_running || awaitingApproval ? "" : latestTerminalSignal(data.trace || {});
+  const rows = [];
+  let done = 0;
+  let total = 0;
+
+  if (data.command_text || data.active_task) {
+    rows.push(progressItem(`Command accepted: ${(data.command_text || data.active_task || "").slice(0, 52)}`));
+  }
+
+  if (awaitingApproval) {
+    total += 1;
+    rows.push(progressItem(`Approval needed: ${data.proposal.summary || "review proposal"}`, "active"));
+  }
+
+  if (expected.length) {
+    total += expected.length;
+    for (const agent of expected) {
+      const canonical = canonicalAgent(agent);
+      const isDone = completed.has(canonical);
+      if (isDone) {
+        done += 1;
+      }
+      const state = isDone ? "done" : canonical === nextAgent || (data.command_running && !nextAgent) ? "active" : "pending";
+      rows.push(progressItem(`${agentDisplayName(agent)} ${isDone ? "responded" : state === "active" ? "working" : "pending"}`, state));
+    }
+  } else if (data.command_running && !awaitingApproval) {
+    total += 1;
+    rows.push(progressItem("Routing command to an agent", "active"));
+  }
+
+  if (terminalSignal === "TASK_COMPLETE") {
+    rows.push(progressItem("Terminal signal: TASK COMPLETE"));
+  } else if (terminalSignal === "BLOCKED") {
+    rows.push(progressItem("Terminal signal: BLOCKED", "blocked"));
+  } else if (terminalSignal === "QUESTION") {
+    rows.push(progressItem("Terminal signal: QUESTION", "active"));
+  } else if (!rows.length) {
+    rows.push(progressItem("Idle. No active task.", "pending"));
+  }
+
   els.progressList.innerHTML = "";
-  if (!expected.length) {
-    const item = document.createElement("li");
-    item.className = "pending";
-    item.textContent = "No active round.";
-    els.progressList.appendChild(item);
-    els.progressCount.textContent = "idle";
-    els.progressPercent.textContent = "-";
+  for (const row of rows) {
+    els.progressList.appendChild(row);
+  }
+
+  if (awaitingApproval) {
+    els.progressCount.textContent = "approval needed";
+    els.progressPercent.textContent = "hold";
     return;
   }
-  let done = 0;
-  for (const agent of expected) {
-    const item = document.createElement("li");
-    const isDone = completed.has(canonicalAgent(agent));
-    if (isDone) {
-      done += 1;
-    } else {
-      item.className = "pending";
-    }
-    item.textContent = `${agentDisplayName(agent)} ${isDone ? "responded" : "pending"}`;
-    els.progressList.appendChild(item);
+  if (!total) {
+    els.progressCount.textContent = terminalSignal === "TASK_COMPLETE" ? "complete" : "idle";
+    els.progressPercent.textContent = terminalSignal === "TASK_COMPLETE" ? "100%" : "-";
+    return;
   }
-  els.progressCount.textContent = `${done} / ${expected.length} complete`;
-  els.progressPercent.textContent = `${Math.round((done * 100) / expected.length)}%`;
+  const percent = Math.round((done * 100) / total);
+  els.progressCount.textContent = `${done} / ${total} complete`;
+  els.progressPercent.textContent = `${percent}%`;
 }
 
 function traceSignalLabel(item) {

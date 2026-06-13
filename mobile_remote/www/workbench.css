@@ -1409,6 +1409,23 @@ dd {
   background: rgba(129, 149, 164, 0.4);
 }
 
+.progress-list li.active {
+  color: var(--text);
+}
+
+.progress-list li.active::before {
+  background: var(--accent);
+  box-shadow: 0 0 12px rgba(244, 163, 64, 0.45);
+}
+
+.progress-list li.blocked {
+  color: #fca5a5;
+}
+
+.progress-list li.blocked::before {
+  background: #ef4444;
+}
+
 .rail-item {
   cursor: pointer;
   background: none;
