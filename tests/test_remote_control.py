@@ -820,7 +820,23 @@ def test_operator_file_guard_ignores_stale_operator_file(tmp_path: Path, capsys)
     output = capsys.readouterr().out
     assert "Ignoring stale remote bridge operator file" in output
     assert "no bridge answered" in output
+    assert not operator_file.exists()
     print("PASS: operator file guard ignores unreachable stale metadata")
+
+
+def test_remote_bridge_server_close_removes_operator_file(tmp_path: Path):
+    operator_file = tmp_path / "remote_bridge.json"
+    server, thread, _base = run_server(FakeSession(), "admin-token", operator_file)
+    try:
+        server.write_operator_status()
+        assert operator_file.exists()
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+    assert not operator_file.exists()
+    print("PASS: remote bridge removes the operator file on normal shutdown")
 
 
 def test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file(tmp_path: Path):

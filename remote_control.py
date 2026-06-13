@@ -981,6 +981,18 @@ class RemoteBridgeServer(ThreadingHTTPServer):
         tmp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         tmp_path.replace(self.operator_status_path)
 
+    def clear_operator_status(self) -> None:
+        if self.operator_status_path is None:
+            return
+        try:
+            self.operator_status_path.unlink(missing_ok=True)
+        except OSError as exc:
+            print(f"Could not remove remote bridge operator file {self.operator_status_path}: {exc}")
+
+    def server_close(self) -> None:
+        self.clear_operator_status()
+        super().server_close()
+
     def rotate_pair_code_for_operator(self) -> tuple[str, int]:
         pair_code, pair_ttl = self.auth.rotate_pair_code()
         self.write_operator_status()
@@ -1256,6 +1268,14 @@ def read_operator_status_payload(path: Path) -> tuple[dict[str, Any] | None, str
     return payload, None
 
 
+def discard_stale_operator_file(path: Path, detail: str) -> None:
+    print(f"Ignoring stale remote bridge operator file: {detail}")
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as exc:
+        print(f"Could not remove stale remote bridge operator file {path}: {exc}")
+
+
 def probe_operator_bridge(
     payload: dict[str, Any],
     *,
@@ -1309,11 +1329,14 @@ def ensure_operator_file_available(path: Path) -> None:
     if error == "missing":
         return
     if payload is None:
-        print(f"Ignoring stale remote bridge operator file: {error}")
+        discard_stale_operator_file(path, str(error))
+        return
+    if payload.get("status") and payload.get("status") != "running":
+        discard_stale_operator_file(path, f"operator status is {payload.get('status')}")
         return
     active, detail = probe_operator_bridge(payload)
     if not active:
-        print(f"Ignoring stale remote bridge operator file: {detail}")
+        discard_stale_operator_file(path, detail)
         return
     raise RuntimeError(
         f"An active ChatBoks remote bridge already owns {path}: {detail}. "

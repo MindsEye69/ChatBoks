@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1781267562.162588,
-    "ast_hash": "9be9cfbd2ecabc736049315e6d76e3f2",
+    "mtime": 1781298974.2037177,
+    "ast_hash": "506cfc3a6fd86fd1f211b641e7d387f1",
     "semantic_hash": ""
   },
   "router.py": {
@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "tests/test_modes.py": {
-    "mtime": 1781176320.754897,
-    "ast_hash": "03c443e820b14e37846cac58cf50b446",
+    "mtime": 1781299016.212896,
+    "ast_hash": "df687d194352d09eee41ef0cf16cfddf",
     "semantic_hash": ""
   },
   "tests/test_outcomes.py": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781295291.7006893,
-    "ast_hash": "a24d90ab952f49c475adbd6b1e4471f9",
+    "mtime": 1781316802.1130254,
+    "ast_hash": "d6540ebfdb7a9c874f1fd250be7eeeb1",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781295321.6441574,
-    "ast_hash": "4a4a1b2ffd2f41b1fb0c2f8a5bfe1082",
+    "mtime": 1781316814.2323785,
+    "ast_hash": "e06a9029654d1cb2b0b5a04ce1271393",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -675,8 +675,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.js": {
-    "mtime": 1781295304.8056927,
-    "ast_hash": "2a4046724eda1fd625d52b1d82cfc555",
+    "mtime": 1781307720.7049487,
+    "ast_hash": "c1dfeb23a31fb939bc6b0f944c3aa93b",
     "semantic_hash": ""
   },
   "INTERFACE_HANDOFF.md": {
@@ -690,8 +690,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.html": {
-    "mtime": 1781271341.8928204,
-    "ast_hash": "3c63a1cdde43c12361b2858c9d56fc04",
+    "mtime": 1781307573.6627727,
+    "ast_hash": "a3e97dffa9f0537ba7cd922ed922db57",
     "semantic_hash": ""
   },
   ".claude/launch.json": {
