@@ -790,6 +790,34 @@ def test_remote_bridge_admin_status_reports_running_bridge(tmp_path: Path):
     print("PASS: remote bridge admin status reports the running bridge")
 
 
+def test_remote_workbench_reports_bridge_health_without_secrets(tmp_path: Path):
+    operator_file = tmp_path / "remote_bridge.json"
+    server, thread, base = run_server(FakeSession(), "admin-token", operator_file)
+    try:
+        server.write_operator_status()
+        session_token, _ttl = server.auth.exchange_pair_code(server.auth.current_pair_code()[0])
+        request = urllib.request.Request(
+            f"{base}/api/workbench",
+            headers={"Authorization": f"Bearer {session_token}"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        bridge = payload["bridge"]
+        assert bridge["status"] == "running"
+        assert bridge["base_url"] == base
+        assert bridge["pid"]
+        assert bridge["operator_file_exists"] is True
+        assert bridge["pair_code_ttl_seconds"] >= 0
+        assert "pair_code" not in bridge
+        assert "admin_token" not in bridge
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: workbench reports bridge health without exposing operator secrets")
+
+
 def test_operator_file_guard_rejects_active_bridge(tmp_path: Path):
     operator_file = tmp_path / "remote_bridge.json"
     server, thread, _base = run_server(FakeSession(), "admin-token", operator_file)

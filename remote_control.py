@@ -972,6 +972,19 @@ class RemoteBridgeServer(ThreadingHTTPServer):
             payload["admin_token"] = self.auth.admin_token
         return payload
 
+    def bridge_status_payload(self) -> dict[str, Any]:
+        _pair_code, pair_ttl = self.auth.current_pair_code()
+        operator_exists = self.operator_status_path.exists() if self.operator_status_path else False
+        return {
+            "status": "running",
+            "pid": os.getpid(),
+            "base_url": f"http://{self.server_address[0]}:{self.server_address[1]}",
+            "pair_code_ttl_seconds": pair_ttl,
+            "session_token_ttl_seconds": SESSION_TOKEN_TTL_SECONDS,
+            "operator_file": str(self.operator_status_path) if self.operator_status_path else "",
+            "operator_file_exists": operator_exists,
+        }
+
     def write_operator_status(self) -> None:
         if self.operator_status_path is None:
             return
@@ -1039,7 +1052,9 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 return
             if not self.authorized():
                 return
-            self.respond_json(self.server.session.workbench_status())
+            payload = dict(self.server.session.workbench_status())
+            payload["bridge"] = self.server.bridge_status_payload()
+            self.respond_json(payload)
             return
         if parsed.path == "/api/session":
             if not self.origin_allowed():

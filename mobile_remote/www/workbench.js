@@ -123,6 +123,7 @@ for (const id of [
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
     "workbenchPrompt", "sendStatus", "sendButton",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
+  "bridgeDot", "bridgePid", "bridgePairTtl", "bridgeOperator",
   "progressList", "progressCount", "progressPercent",
   "graphDot", "graphHealth", "graphFiles", "graphNodes", "graphEdges", "graphIndexed",
   "monTailscale", "monCpu", "monRam",
@@ -474,6 +475,7 @@ async function refreshSession() {
 async function refreshWorkbench() {
   const data = await apiFetch("/api/workbench");
   renderEnvironment(data.environment);
+  renderBridge(data.bridge);
   renderGraph(data.graph);
   renderMonitor(data.monitor);
   els.envProject.textContent = data.project || "-";
@@ -1027,6 +1029,37 @@ function renderEnvironment(environment) {
     : "-";
 }
 
+function formatSeconds(seconds) {
+  const value = Number(seconds);
+  if (!Number.isFinite(value) || value < 0) {
+    return "-";
+  }
+  if (value >= 60) {
+    const minutes = Math.floor(value / 60);
+    const remainder = Math.round(value % 60);
+    return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
+  }
+  return `${Math.round(value)}s`;
+}
+
+function renderBridge(bridge) {
+  if (!bridge) {
+    els.bridgeDot.classList.add("offline");
+    els.bridgePid.textContent = "unknown";
+    els.bridgePairTtl.textContent = "-";
+    els.bridgeOperator.textContent = "-";
+    return;
+  }
+
+  const running = bridge.status === "running";
+  els.bridgeDot.classList.toggle("offline", !running);
+  els.bridgePid.textContent = running ? `PID ${bridge.pid || "-"}` : bridge.status || "offline";
+  els.bridgePairTtl.textContent = bridge.pair_code_ttl_seconds !== undefined
+    ? `${formatSeconds(bridge.pair_code_ttl_seconds)} remaining`
+    : "-";
+  els.bridgeOperator.textContent = bridge.operator_file_exists ? "Fresh" : "Missing";
+}
+
 function renderGraph(graph) {
   if (!graph) {
     els.graphHealth.textContent = "not found";
@@ -1064,6 +1097,7 @@ function renderOfflineWorkbench() {
     last_commit: "a1b2c3d",
     last_commit_age: "2h ago",
   });
+  renderBridge(null);
   renderGraph({
     healthy: true,
     files: 52,

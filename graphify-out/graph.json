@@ -110,7 +110,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "agents_base_tokenexhaustionerror",
-      "community": 47,
+      "community": 58,
       "norm_label": "tokenexhaustionerror"
     },
     {
@@ -140,7 +140,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "agents_base_agenttimeouterror_init",
-      "community": 47,
+      "community": 58,
       "norm_label": ".__init__()"
     },
     {
@@ -150,7 +150,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "agents_base_baseagent",
-      "community": 1,
+      "community": 58,
       "norm_label": "baseagent"
     },
     {
@@ -160,7 +160,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "agents_base_baseagent_init",
-      "community": 47,
+      "community": 58,
       "norm_label": ".__init__()"
     },
     {
@@ -170,7 +170,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "agents_base_py_path",
-      "community": 47,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -180,7 +180,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "agents_base_py_any",
-      "community": 1,
+      "community": 58,
       "norm_label": "any"
     },
     {
@@ -190,7 +190,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "agents_base_baseagent_initialize",
-      "community": 1,
+      "community": 58,
       "norm_label": ".initialize()"
     },
     {
@@ -200,7 +200,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "agents_base_baseagent_call",
-      "community": 1,
+      "community": 58,
       "norm_label": ".call()"
     },
     {
@@ -210,7 +210,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "agents_base_baseagent_reinitialize",
-      "community": 1,
+      "community": 58,
       "norm_label": ".reinitialize()"
     },
     {
@@ -220,7 +220,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "agents_base_baseagent_execute",
-      "community": 1,
+      "community": 58,
       "norm_label": ".execute()"
     },
     {
@@ -230,7 +230,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "agents_base_baseagent_build_prompt",
-      "community": 1,
+      "community": 58,
       "norm_label": ".build_prompt()"
     },
     {
@@ -240,7 +240,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "agents_base_baseagent_command",
-      "community": 1,
+      "community": 58,
       "norm_label": ".command()"
     },
     {
@@ -250,7 +250,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_args",
-      "community": 1,
+      "community": 58,
       "norm_label": ".adapter_args()"
     },
     {
@@ -260,7 +260,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_run_plan",
-      "community": 1,
+      "community": 58,
       "norm_label": ".adapter_run_plan()"
     },
     {
@@ -270,7 +270,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "agents_base_baseagent_expand_adapter_arg",
-      "community": 1,
+      "community": 58,
       "norm_label": ".expand_adapter_arg()"
     },
     {
@@ -280,7 +280,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli",
-      "community": 1,
+      "community": 58,
       "norm_label": ".run_cli()"
     },
     {
@@ -290,7 +290,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli_once",
-      "community": 1,
+      "community": 58,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -300,7 +300,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "agents_base_baseagent_drain_output",
-      "community": 1,
+      "community": 58,
       "norm_label": ".drain_output()"
     },
     {
@@ -310,7 +310,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "queue",
-      "community": 1,
+      "community": 58,
       "norm_label": "queue"
     },
     {
@@ -320,7 +320,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "popen",
-      "community": 1,
+      "community": 58,
       "norm_label": "popen"
     },
     {
@@ -330,7 +330,7 @@
       "source_location": "L426",
       "_origin": "ast",
       "id": "agents_base_baseagent_record_cli_latency",
-      "community": 1,
+      "community": 58,
       "norm_label": ".record_cli_latency()"
     },
     {
@@ -340,7 +340,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "agents_base_baseagent_resolve_timeouts",
-      "community": 1,
+      "community": 58,
       "norm_label": ".resolve_timeouts()"
     },
     {
@@ -350,7 +350,7 @@
       "source_location": "L510",
       "_origin": "ast",
       "id": "agents_base_baseagent_terminate_process",
-      "community": 1,
+      "community": 58,
       "norm_label": ".terminate_process()"
     },
     {
@@ -360,7 +360,7 @@
       "source_location": "L533",
       "_origin": "ast",
       "id": "agents_base_baseagent_short_codegraph_status",
-      "community": 1,
+      "community": 58,
       "norm_label": ".short_codegraph_status()"
     },
     {
@@ -370,7 +370,7 @@
       "source_location": "L540",
       "_origin": "ast",
       "id": "agents_base_baseagent_is_token_exhaustion",
-      "community": 1,
+      "community": 58,
       "norm_label": ".is_token_exhaustion()"
     },
     {
@@ -380,7 +380,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "agents_base_rationale_16",
-      "community": 47,
+      "community": 58,
       "norm_label": "raised when an agent cli rejects a prompt because the context is too large."
     },
     {
@@ -3897,7 +3897,7 @@
       "label": "loadSettings()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L136",
+      "source_location": "L137",
       "_origin": "ast",
       "id": "www_workbench_loadsettings",
       "community": 63,
@@ -3907,7 +3907,7 @@
       "label": "saveSettings()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L150",
+      "source_location": "L151",
       "_origin": "ast",
       "id": "www_workbench_savesettings",
       "community": 63,
@@ -3917,7 +3917,7 @@
       "label": "setTheme()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L154",
+      "source_location": "L155",
       "_origin": "ast",
       "id": "www_workbench_settheme",
       "community": 63,
@@ -3927,7 +3927,7 @@
       "label": "enforceLeftToRightText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L161",
+      "source_location": "L162",
       "_origin": "ast",
       "id": "www_workbench_enforcelefttorighttext",
       "community": 63,
@@ -3937,7 +3937,7 @@
       "label": "showError()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L173",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "www_workbench_showerror",
       "community": 63,
@@ -3947,7 +3947,7 @@
       "label": "setConnectionState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L182",
+      "source_location": "L183",
       "_origin": "ast",
       "id": "www_workbench_setconnectionstate",
       "community": 63,
@@ -3957,7 +3957,7 @@
       "label": "setConnectionPanel()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L190",
+      "source_location": "L191",
       "_origin": "ast",
       "id": "www_workbench_setconnectionpanel",
       "community": 63,
@@ -3967,7 +3967,7 @@
       "label": "setConnectionRecovery()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L194",
+      "source_location": "L195",
       "_origin": "ast",
       "id": "www_workbench_setconnectionrecovery",
       "community": 63,
@@ -3977,7 +3977,7 @@
       "label": "setConnectionBusy()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L212",
+      "source_location": "L213",
       "_origin": "ast",
       "id": "www_workbench_setconnectionbusy",
       "community": 63,
@@ -3987,7 +3987,7 @@
       "label": "setConnected()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L220",
+      "source_location": "L221",
       "_origin": "ast",
       "id": "www_workbench_setconnected",
       "community": 63,
@@ -3997,7 +3997,7 @@
       "label": "isAuthError()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L233",
+      "source_location": "L234",
       "_origin": "ast",
       "id": "www_workbench_isautherror",
       "community": 63,
@@ -4007,7 +4007,7 @@
       "label": "apiUrl()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L237",
+      "source_location": "L238",
       "_origin": "ast",
       "id": "www_workbench_apiurl",
       "community": 63,
@@ -4017,7 +4017,7 @@
       "label": "friendlyFetchError()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L250",
+      "source_location": "L251",
       "_origin": "ast",
       "id": "www_workbench_friendlyfetcherror",
       "community": 63,
@@ -4027,7 +4027,7 @@
       "label": "connectionRecoveryFor()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L270",
+      "source_location": "L271",
       "_origin": "ast",
       "id": "www_workbench_connectionrecoveryfor",
       "community": 63,
@@ -4037,7 +4037,7 @@
       "label": "apiFetch()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L319",
+      "source_location": "L320",
       "_origin": "ast",
       "id": "www_workbench_apifetch",
       "community": 63,
@@ -4047,7 +4047,7 @@
       "label": "pairDevice()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L342",
+      "source_location": "L343",
       "_origin": "ast",
       "id": "www_workbench_pairdevice",
       "community": 63,
@@ -4057,7 +4057,7 @@
       "label": "connect()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L373",
+      "source_location": "L374",
       "_origin": "ast",
       "id": "www_workbench_connect",
       "community": 63,
@@ -4067,7 +4067,7 @@
       "label": "resetSessionState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L393",
+      "source_location": "L394",
       "_origin": "ast",
       "id": "www_workbench_resetsessionstate",
       "community": 63,
@@ -4077,7 +4077,7 @@
       "label": "startPolling()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L403",
+      "source_location": "L404",
       "_origin": "ast",
       "id": "www_workbench_startpolling",
       "community": 63,
@@ -4087,7 +4087,7 @@
       "label": "stopPolling()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L411",
+      "source_location": "L412",
       "_origin": "ast",
       "id": "www_workbench_stoppolling",
       "community": 63,
@@ -4097,7 +4097,7 @@
       "label": "scheduleSessionPoll()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L422",
+      "source_location": "L423",
       "_origin": "ast",
       "id": "www_workbench_schedulesessionpoll",
       "community": 63,
@@ -4107,7 +4107,7 @@
       "label": "refreshSession()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L444",
+      "source_location": "L445",
       "_origin": "ast",
       "id": "www_workbench_refreshsession",
       "community": 63,
@@ -4117,7 +4117,7 @@
       "label": "refreshWorkbench()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L474",
+      "source_location": "L475",
       "_origin": "ast",
       "id": "www_workbench_refreshworkbench",
       "community": 63,
@@ -4127,7 +4127,7 @@
       "label": "splitSignals()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L484",
+      "source_location": "L486",
       "_origin": "ast",
       "id": "www_workbench_splitsignals",
       "community": 63,
@@ -4137,7 +4137,7 @@
       "label": "signalCard()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L493",
+      "source_location": "L495",
       "_origin": "ast",
       "id": "www_workbench_signalcard",
       "community": 63,
@@ -4147,7 +4147,7 @@
       "label": "messageCard()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L511",
+      "source_location": "L513",
       "_origin": "ast",
       "id": "www_workbench_messagecard",
       "community": 63,
@@ -4157,7 +4157,7 @@
       "label": "agentDisplayName()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L531",
+      "source_location": "L533",
       "_origin": "ast",
       "id": "www_workbench_agentdisplayname",
       "community": 63,
@@ -4167,7 +4167,7 @@
       "label": "agentGlyph()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L539",
+      "source_location": "L541",
       "_origin": "ast",
       "id": "www_workbench_agentglyph",
       "community": 63,
@@ -4177,7 +4177,7 @@
       "label": "laneDisplayName()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L551",
+      "source_location": "L553",
       "_origin": "ast",
       "id": "www_workbench_lanedisplayname",
       "community": 63,
@@ -4187,7 +4187,7 @@
       "label": "laneGlyph()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L556",
+      "source_location": "L558",
       "_origin": "ast",
       "id": "www_workbench_laneglyph",
       "community": 63,
@@ -4197,7 +4197,7 @@
       "label": "laneEmptyText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L561",
+      "source_location": "L563",
       "_origin": "ast",
       "id": "www_workbench_laneemptytext",
       "community": 63,
@@ -4207,7 +4207,7 @@
       "label": "laneStyleClass()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L568",
+      "source_location": "L570",
       "_origin": "ast",
       "id": "www_workbench_lanestyleclass",
       "community": 63,
@@ -4217,7 +4217,7 @@
       "label": "canonicalAgent()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L573",
+      "source_location": "L575",
       "_origin": "ast",
       "id": "www_workbench_canonicalagent",
       "community": 63,
@@ -4227,7 +4227,7 @@
       "label": "uniqueAgents()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L584",
+      "source_location": "L586",
       "_origin": "ast",
       "id": "www_workbench_uniqueagents",
       "community": 63,
@@ -4237,7 +4237,7 @@
       "label": "agentStatusValue()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L598",
+      "source_location": "L600",
       "_origin": "ast",
       "id": "www_workbench_agentstatusvalue",
       "community": 63,
@@ -4247,7 +4247,7 @@
       "label": "agentIsLive()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L607",
+      "source_location": "L609",
       "_origin": "ast",
       "id": "www_workbench_agentislive",
       "community": 63,
@@ -4257,7 +4257,7 @@
       "label": "deriveLaneAgents()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L611",
+      "source_location": "L613",
       "_origin": "ast",
       "id": "www_workbench_derivelaneagents",
       "community": 63,
@@ -4267,7 +4267,7 @@
       "label": "ensureLanes()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L643",
+      "source_location": "L645",
       "_origin": "ast",
       "id": "www_workbench_ensurelanes",
       "community": 63,
@@ -4277,7 +4277,7 @@
       "label": "renderLanes()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L691",
+      "source_location": "L693",
       "_origin": "ast",
       "id": "www_workbench_renderlanes",
       "community": 63,
@@ -4287,7 +4287,7 @@
       "label": "updateLaneActivity()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L726",
+      "source_location": "L728",
       "_origin": "ast",
       "id": "www_workbench_updatelaneactivity",
       "community": 63,
@@ -4297,7 +4297,7 @@
       "label": "ingestEvents()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L737",
+      "source_location": "L739",
       "_origin": "ast",
       "id": "www_workbench_ingestevents",
       "community": 63,
@@ -4307,7 +4307,7 @@
       "label": "renderCoordinator()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L773",
+      "source_location": "L775",
       "_origin": "ast",
       "id": "www_workbench_rendercoordinator",
       "community": 63,
@@ -4317,7 +4317,7 @@
       "label": "formatExecutionEstimate()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L812",
+      "source_location": "L814",
       "_origin": "ast",
       "id": "www_workbench_formatexecutionestimate",
       "community": 63,
@@ -4327,7 +4327,7 @@
       "label": "setApprovalStatus()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L835",
+      "source_location": "L837",
       "_origin": "ast",
       "id": "www_workbench_setapprovalstatus",
       "community": 63,
@@ -4337,7 +4337,7 @@
       "label": "setApprovalControls()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L842",
+      "source_location": "L844",
       "_origin": "ast",
       "id": "www_workbench_setapprovalcontrols",
       "community": 63,
@@ -4347,7 +4347,7 @@
       "label": "approvalCommandFor()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L851",
+      "source_location": "L853",
       "_origin": "ast",
       "id": "www_workbench_approvalcommandfor",
       "community": 63,
@@ -4357,7 +4357,7 @@
       "label": "updateApprovalActionState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L862",
+      "source_location": "L864",
       "_origin": "ast",
       "id": "www_workbench_updateapprovalactionstate",
       "community": 63,
@@ -4367,7 +4367,7 @@
       "label": "proposalRawText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L868",
+      "source_location": "L870",
       "_origin": "ast",
       "id": "www_workbench_proposalrawtext",
       "community": 63,
@@ -4377,7 +4377,7 @@
       "label": "renderApproval()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L876",
+      "source_location": "L878",
       "_origin": "ast",
       "id": "www_workbench_renderapproval",
       "community": 63,
@@ -4387,7 +4387,7 @@
       "label": "renderProjects()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L909",
+      "source_location": "L911",
       "_origin": "ast",
       "id": "www_workbench_renderprojects",
       "community": 63,
@@ -4397,7 +4397,7 @@
       "label": "renderSession()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L929",
+      "source_location": "L931",
       "_origin": "ast",
       "id": "www_workbench_rendersession",
       "community": 63,
@@ -4407,7 +4407,7 @@
       "label": "formatTokens()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L948",
+      "source_location": "L950",
       "_origin": "ast",
       "id": "www_workbench_formattokens",
       "community": 63,
@@ -4417,7 +4417,7 @@
       "label": "tokenRow()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L958",
+      "source_location": "L960",
       "_origin": "ast",
       "id": "www_workbench_tokenrow",
       "community": 63,
@@ -4427,7 +4427,7 @@
       "label": "renderTokenBalances()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L987",
+      "source_location": "L989",
       "_origin": "ast",
       "id": "www_workbench_rendertokenbalances",
       "community": 63,
@@ -4437,17 +4437,37 @@
       "label": "renderEnvironment()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1012",
+      "source_location": "L1014",
       "_origin": "ast",
       "id": "www_workbench_renderenvironment",
       "community": 63,
       "norm_label": "renderenvironment()"
     },
     {
+      "label": "formatSeconds()",
+      "file_type": "code",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1032",
+      "_origin": "ast",
+      "id": "www_workbench_formatseconds",
+      "community": 63,
+      "norm_label": "formatseconds()"
+    },
+    {
+      "label": "renderBridge()",
+      "file_type": "code",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1045",
+      "_origin": "ast",
+      "id": "www_workbench_renderbridge",
+      "community": 63,
+      "norm_label": "renderbridge()"
+    },
+    {
       "label": "renderGraph()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1030",
+      "source_location": "L1063",
       "_origin": "ast",
       "id": "www_workbench_rendergraph",
       "community": 63,
@@ -4457,7 +4477,7 @@
       "label": "renderMonitor()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1047",
+      "source_location": "L1080",
       "_origin": "ast",
       "id": "www_workbench_rendermonitor",
       "community": 63,
@@ -4467,7 +4487,7 @@
       "label": "renderOfflineWorkbench()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1057",
+      "source_location": "L1090",
       "_origin": "ast",
       "id": "www_workbench_renderofflineworkbench",
       "community": 63,
@@ -4477,7 +4497,7 @@
       "label": "progressItem()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1086",
+      "source_location": "L1120",
       "_origin": "ast",
       "id": "www_workbench_progressitem",
       "community": 63,
@@ -4487,7 +4507,7 @@
       "label": "latestTerminalSignal()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1093",
+      "source_location": "L1127",
       "_origin": "ast",
       "id": "www_workbench_latestterminalsignal",
       "community": 63,
@@ -4497,7 +4517,7 @@
       "label": "renderProgress()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1104",
+      "source_location": "L1138",
       "_origin": "ast",
       "id": "www_workbench_renderprogress",
       "community": 63,
@@ -4507,7 +4527,7 @@
       "label": "traceSignalLabel()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1170",
+      "source_location": "L1204",
       "_origin": "ast",
       "id": "www_workbench_tracesignallabel",
       "community": 63,
@@ -4517,7 +4537,7 @@
       "label": "renderTraceList()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1176",
+      "source_location": "L1210",
       "_origin": "ast",
       "id": "www_workbench_rendertracelist",
       "community": 63,
@@ -4527,7 +4547,7 @@
       "label": "appendTraceText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1193",
+      "source_location": "L1227",
       "_origin": "ast",
       "id": "www_workbench_appendtracetext",
       "community": 63,
@@ -4537,7 +4557,7 @@
       "label": "renderTrace()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1200",
+      "source_location": "L1234",
       "_origin": "ast",
       "id": "www_workbench_rendertrace",
       "community": 63,
@@ -4547,7 +4567,7 @@
       "label": "applySession()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1223",
+      "source_location": "L1257",
       "_origin": "ast",
       "id": "www_workbench_applysession",
       "community": 63,
@@ -4557,7 +4577,7 @@
       "label": "setSendState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1276",
+      "source_location": "L1310",
       "_origin": "ast",
       "id": "www_workbench_setsendstate",
       "community": 63,
@@ -4567,7 +4587,7 @@
       "label": "sendPrompt()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1284",
+      "source_location": "L1318",
       "_origin": "ast",
       "id": "www_workbench_sendprompt",
       "community": 63,
@@ -4577,7 +4597,7 @@
       "label": "submitApproval()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1310",
+      "source_location": "L1344",
       "_origin": "ast",
       "id": "www_workbench_submitapproval",
       "community": 63,
@@ -4587,7 +4607,7 @@
       "label": "switchProject()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1340",
+      "source_location": "L1374",
       "_origin": "ast",
       "id": "www_workbench_switchproject",
       "community": 63,
@@ -6660,7 +6680,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "remote_control_is_tailnet_ipv4_host",
-      "community": 65,
+      "community": 73,
       "norm_label": "is_tailnet_ipv4_host()"
     },
     {
@@ -7100,7 +7120,7 @@
       "source_location": "L698",
       "_origin": "ast",
       "id": "remote_control_remotestream_init",
-      "community": 73,
+      "community": 13,
       "norm_label": ".__init__()"
     },
     {
@@ -7290,7 +7310,7 @@
       "source_location": "L767",
       "_origin": "ast",
       "id": "remote_control_remotesession",
-      "community": 49,
+      "community": 13,
       "norm_label": "remotesession"
     },
     {
@@ -7300,7 +7320,7 @@
       "source_location": "L768",
       "_origin": "ast",
       "id": "remote_control_remotesession_init",
-      "community": 49,
+      "community": 13,
       "norm_label": ".__init__()"
     },
     {
@@ -7310,7 +7330,7 @@
       "source_location": "L784",
       "_origin": "ast",
       "id": "remote_control_remotesession_available_projects",
-      "community": 49,
+      "community": 13,
       "norm_label": ".available_projects()"
     },
     {
@@ -7320,7 +7340,7 @@
       "source_location": "L787",
       "_origin": "ast",
       "id": "remote_control_remotesession_prepare",
-      "community": 49,
+      "community": 13,
       "norm_label": ".prepare()"
     },
     {
@@ -7330,7 +7350,7 @@
       "source_location": "L795",
       "_origin": "ast",
       "id": "remote_control_remotesession_switch_project",
-      "community": 49,
+      "community": 13,
       "norm_label": ".switch_project()"
     },
     {
@@ -7340,7 +7360,7 @@
       "source_location": "L819",
       "_origin": "ast",
       "id": "remote_control_remotesession_command_running",
-      "community": 49,
+      "community": 13,
       "norm_label": ".command_running()"
     },
     {
@@ -7350,7 +7370,7 @@
       "source_location": "L822",
       "_origin": "ast",
       "id": "remote_control_remotesession_submit",
-      "community": 49,
+      "community": 13,
       "norm_label": ".submit()"
     },
     {
@@ -7360,7 +7380,7 @@
       "source_location": "L842",
       "_origin": "ast",
       "id": "remote_control_remotesession_run_command",
-      "community": 49,
+      "community": 13,
       "norm_label": "._run_command()"
     },
     {
@@ -7410,7 +7430,7 @@
       "source_location": "L940",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_init",
-      "community": 73,
+      "community": 13,
       "norm_label": ".__init__()"
     },
     {
@@ -7420,7 +7440,7 @@
       "source_location": "L940",
       "_origin": "ast",
       "id": "basehttprequesthandler",
-      "community": 73,
+      "community": 13,
       "norm_label": "basehttprequesthandler"
     },
     {
@@ -7434,10 +7454,20 @@
       "norm_label": ".operator_status_payload()"
     },
     {
-      "label": ".write_operator_status()",
+      "label": ".bridge_status_payload()",
       "file_type": "code",
       "source_file": "remote_control.py",
       "source_location": "L975",
+      "_origin": "ast",
+      "id": "remote_control_remotebridgeserver_bridge_status_payload",
+      "community": 73,
+      "norm_label": ".bridge_status_payload()"
+    },
+    {
+      "label": ".write_operator_status()",
+      "file_type": "code",
+      "source_file": "remote_control.py",
+      "source_location": "L988",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_write_operator_status",
       "community": 73,
@@ -7447,7 +7477,7 @@
       "label": ".clear_operator_status()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L984",
+      "source_location": "L997",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_clear_operator_status",
       "community": 73,
@@ -7457,7 +7487,7 @@
       "label": ".server_close()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L992",
+      "source_location": "L1005",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_server_close",
       "community": 73,
@@ -7467,7 +7497,7 @@
       "label": ".rotate_pair_code_for_operator()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L996",
+      "source_location": "L1009",
       "_origin": "ast",
       "id": "remote_control_remotebridgeserver_rotate_pair_code_for_operator",
       "community": 73,
@@ -7477,7 +7507,7 @@
       "label": "RemoteHandler",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1002",
+      "source_location": "L1015",
       "_origin": "ast",
       "id": "remote_control_remotehandler",
       "community": 51,
@@ -7487,7 +7517,7 @@
       "label": ".do_OPTIONS()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1005",
+      "source_location": "L1018",
       "_origin": "ast",
       "id": "remote_control_remotehandler_do_options",
       "community": 51,
@@ -7497,7 +7527,7 @@
       "label": ".do_GET()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1023",
+      "source_location": "L1036",
       "_origin": "ast",
       "id": "remote_control_remotehandler_do_get",
       "community": 51,
@@ -7507,7 +7537,7 @@
       "label": ".do_POST()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1072",
+      "source_location": "L1087",
       "_origin": "ast",
       "id": "remote_control_remotehandler_do_post",
       "community": 51,
@@ -7517,7 +7547,7 @@
       "label": ".log_message()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1138",
+      "source_location": "L1153",
       "_origin": "ast",
       "id": "remote_control_remotehandler_log_message",
       "community": 51,
@@ -7527,7 +7557,7 @@
       "label": ".authorized()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1141",
+      "source_location": "L1156",
       "_origin": "ast",
       "id": "remote_control_remotehandler_authorized",
       "community": 51,
@@ -7537,7 +7567,7 @@
       "label": ".admin_authorized()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1155",
+      "source_location": "L1170",
       "_origin": "ast",
       "id": "remote_control_remotehandler_admin_authorized",
       "community": 51,
@@ -7547,7 +7577,7 @@
       "label": ".read_json_body()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1169",
+      "source_location": "L1184",
       "_origin": "ast",
       "id": "remote_control_remotehandler_read_json_body",
       "community": 51,
@@ -7557,7 +7587,7 @@
       "label": ".respond_json()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1189",
+      "source_location": "L1204",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_json",
       "community": 51,
@@ -7567,7 +7597,7 @@
       "label": "HTTPStatus",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1189",
+      "source_location": "L1204",
       "_origin": "ast",
       "id": "httpstatus",
       "community": 51,
@@ -7577,7 +7607,7 @@
       "label": ".respond_html()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1200",
+      "source_location": "L1215",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_html",
       "community": 51,
@@ -7587,7 +7617,7 @@
       "label": ".respond_static()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1211",
+      "source_location": "L1226",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_static",
       "community": 51,
@@ -7597,7 +7627,7 @@
       "label": ".respond_error()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1226",
+      "source_location": "L1241",
       "_origin": "ast",
       "id": "remote_control_remotehandler_respond_error",
       "community": 51,
@@ -7607,7 +7637,7 @@
       "label": ".request_origin()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1229",
+      "source_location": "L1244",
       "_origin": "ast",
       "id": "remote_control_remotehandler_request_origin",
       "community": 51,
@@ -7617,7 +7647,7 @@
       "label": ".origin_allowed()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1233",
+      "source_location": "L1248",
       "_origin": "ast",
       "id": "remote_control_remotehandler_origin_allowed",
       "community": 51,
@@ -7627,7 +7657,7 @@
       "label": ".write_cors_headers()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1240",
+      "source_location": "L1255",
       "_origin": "ast",
       "id": "remote_control_remotehandler_write_cors_headers",
       "community": 51,
@@ -7637,7 +7667,7 @@
       "label": ".write_security_headers()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1247",
+      "source_location": "L1262",
       "_origin": "ast",
       "id": "remote_control_remotehandler_write_security_headers",
       "community": 51,
@@ -7647,7 +7677,7 @@
       "label": "default_operator_status_path()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1255",
+      "source_location": "L1270",
       "_origin": "ast",
       "id": "remote_control_default_operator_status_path",
       "community": 73,
@@ -7657,7 +7687,7 @@
       "label": "read_operator_status_payload()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1259",
+      "source_location": "L1274",
       "_origin": "ast",
       "id": "remote_control_read_operator_status_payload",
       "community": 65,
@@ -7667,7 +7697,7 @@
       "label": "discard_stale_operator_file()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1271",
+      "source_location": "L1286",
       "_origin": "ast",
       "id": "remote_control_discard_stale_operator_file",
       "community": 65,
@@ -7677,7 +7707,7 @@
       "label": "probe_operator_bridge()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1279",
+      "source_location": "L1294",
       "_origin": "ast",
       "id": "remote_control_probe_operator_bridge",
       "community": 65,
@@ -7687,7 +7717,7 @@
       "label": "ensure_operator_file_available()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1327",
+      "source_location": "L1342",
       "_origin": "ast",
       "id": "remote_control_ensure_operator_file_available",
       "community": 65,
@@ -7697,7 +7727,7 @@
       "label": "rotate_pair_code_from_operator_file()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1347",
+      "source_location": "L1362",
       "_origin": "ast",
       "id": "remote_control_rotate_pair_code_from_operator_file",
       "community": 65,
@@ -7707,7 +7737,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "remote_control.py",
-      "source_location": "L1391",
+      "source_location": "L1406",
       "_origin": "ast",
       "id": "remote_control_main",
       "community": 73,
@@ -8130,7 +8160,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_base_agent_streaming.py"
     },
     {
@@ -8140,7 +8170,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_scriptagent",
-      "community": 47,
+      "community": 58,
       "norm_label": "scriptagent"
     },
     {
@@ -8150,7 +8180,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_scriptagent_init",
-      "community": 47,
+      "community": 58,
       "norm_label": ".__init__()"
     },
     {
@@ -8160,7 +8190,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_py_path",
-      "community": 47,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -8170,7 +8200,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_scriptagent_command",
-      "community": 47,
+      "community": 58,
       "norm_label": ".command()"
     },
     {
@@ -8180,7 +8210,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_fallbackagent",
-      "community": 47,
+      "community": 58,
       "norm_label": "fallbackagent"
     },
     {
@@ -8190,7 +8220,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_fallbackagent_init",
-      "community": 47,
+      "community": 58,
       "norm_label": ".__init__()"
     },
     {
@@ -8200,7 +8230,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_fallbackagent_run_cli_once",
-      "community": 47,
+      "community": 58,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -8210,7 +8240,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_run_script",
-      "community": 47,
+      "community": 58,
       "norm_label": "run_script()"
     },
     {
@@ -8220,7 +8250,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_returns_successful_stdout",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_returns_successful_stdout()"
     },
     {
@@ -8230,7 +8260,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_forces_utf8_child_environment",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_forces_utf8_child_environment()"
     },
     {
@@ -8240,7 +8270,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_records_latency_splits",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_records_latency_splits()"
     },
     {
@@ -8250,7 +8280,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_invokes_stdout_callback",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_invokes_stdout_callback()"
     },
     {
@@ -8260,7 +8290,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_idle_timeout_resets_on_output",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_idle_timeout_resets_on_output()"
     },
     {
@@ -8270,7 +8300,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_enforces_absolute_max_timeout",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_enforces_absolute_max_timeout()"
     },
     {
@@ -8280,7 +8310,7 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_dynamic_idle_timeout_scales_with_prompt_size",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_dynamic_idle_timeout_scales_with_prompt_size()"
     },
     {
@@ -8290,7 +8320,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_reports_nonzero_stderr",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_reports_nonzero_stderr()"
     },
     {
@@ -8300,7 +8330,7 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_streaming_run_cli_detects_token_exhaustion_on_failure",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_streaming_run_cli_detects_token_exhaustion_on_failure()"
     },
     {
@@ -8310,7 +8340,7 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_call_uses_extended_max_timeout_for_streaming_heartbeat",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_call_uses_extended_max_timeout_for_streaming_heartbeat()"
     },
     {
@@ -8320,7 +8350,7 @@
       "source_location": "L252",
       "_origin": "ast",
       "id": "tests_test_base_agent_streaming_test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion",
-      "community": 47,
+      "community": 58,
       "norm_label": "test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion()"
     },
     {
@@ -9930,7 +9960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_outcomes",
-      "community": 42,
+      "community": 61,
       "norm_label": "test_outcomes.py"
     },
     {
@@ -9940,7 +9970,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_make_app",
-      "community": 42,
+      "community": 61,
       "norm_label": "_make_app()"
     },
     {
@@ -9950,7 +9980,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_py_path",
-      "community": 42,
+      "community": 61,
       "norm_label": "path"
     },
     {
@@ -9960,7 +9990,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_outcomes_py_chatboks",
-      "community": 42,
+      "community": 61,
       "norm_label": "chatboks"
     },
     {
@@ -9970,7 +10000,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_win_command_records_jsonl_without_agent_round",
-      "community": 42,
+      "community": 61,
       "norm_label": "test_win_command_records_jsonl_without_agent_round()"
     },
     {
@@ -9980,7 +10010,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_outcomes_summary_reads_jsonl",
-      "community": 42,
+      "community": 61,
       "norm_label": "test_outcomes_summary_reads_jsonl()"
     },
     {
@@ -9990,7 +10020,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "tests_test_outcomes_test_suggest_outcome_uses_coordinator_without_recording_jsonl",
-      "community": 42,
+      "community": 61,
       "norm_label": "test_suggest_outcome_uses_coordinator_without_recording_jsonl()"
     },
     {
@@ -10000,7 +10030,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_outcomes_rationale_1",
-      "community": 42,
+      "community": 61,
       "norm_label": "smoke tests for manual collaboration outcome tracking."
     },
     {
@@ -10290,7 +10320,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_snapshot",
-      "community": 13,
+      "community": 16,
       "norm_label": ".snapshot()"
     },
     {
@@ -10300,7 +10330,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_submit",
-      "community": 13,
+      "community": 16,
       "norm_label": ".submit()"
     },
     {
@@ -10320,7 +10350,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "tests_test_remote_control_fakesession_switch_project",
-      "community": 13,
+      "community": 16,
       "norm_label": ".switch_project()"
     },
     {
@@ -10520,7 +10550,7 @@
       "source_location": "L283",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses",
-      "community": 65,
+      "community": 73,
       "norm_label": "test_tailnet_bind_guard_accepts_only_tailscale_cgnat_addresses()"
     },
     {
@@ -10630,7 +10660,7 @@
       "source_location": "L491",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_session_snapshot_returns_while_command_is_running",
-      "community": 13,
+      "community": 16,
       "norm_label": "test_remote_session_snapshot_returns_while_command_is_running()"
     },
     {
@@ -10650,7 +10680,7 @@
       "source_location": "L549",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_session_snapshot_includes_trace_payload",
-      "community": 13,
+      "community": 16,
       "norm_label": "test_remote_session_snapshot_includes_trace_payload()"
     },
     {
@@ -10734,10 +10764,20 @@
       "norm_label": "test_remote_bridge_admin_status_reports_running_bridge()"
     },
     {
-      "label": "test_operator_file_guard_rejects_active_bridge()",
+      "label": "test_remote_workbench_reports_bridge_health_without_secrets()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
       "source_location": "L793",
+      "_origin": "ast",
+      "id": "tests_test_remote_control_test_remote_workbench_reports_bridge_health_without_secrets",
+      "community": 16,
+      "norm_label": "test_remote_workbench_reports_bridge_health_without_secrets()"
+    },
+    {
+      "label": "test_operator_file_guard_rejects_active_bridge()",
+      "file_type": "code",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L821",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_operator_file_guard_rejects_active_bridge",
       "community": 16,
@@ -10747,7 +10787,7 @@
       "label": "test_operator_file_guard_ignores_stale_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L811",
+      "source_location": "L839",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_operator_file_guard_ignores_stale_operator_file",
       "community": 16,
@@ -10757,7 +10797,7 @@
       "label": "test_remote_bridge_server_close_removes_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L827",
+      "source_location": "L855",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_server_close_removes_operator_file",
       "community": 16,
@@ -10767,7 +10807,7 @@
       "label": "test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L842",
+      "source_location": "L870",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_admin_can_rotate_pair_code_and_update_operator_file",
       "community": 16,
@@ -10777,7 +10817,7 @@
       "label": "test_remote_bridge_session_token_cannot_rotate_pair_code()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L874",
+      "source_location": "L902",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_session_token_cannot_rotate_pair_code",
       "community": 16,
@@ -10787,7 +10827,7 @@
       "label": "test_remote_bridge_serves_static_ui_files()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L911",
+      "source_location": "L939",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_serves_static_ui_files",
       "community": 16,
@@ -10797,7 +10837,7 @@
       "label": "test_remote_bridge_rejects_paths_outside_static_allowlist()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L956",
+      "source_location": "L984",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_remote_bridge_rejects_paths_outside_static_allowlist",
       "community": 16,
@@ -10807,7 +10847,7 @@
       "label": "test_workbench_api_requires_token_and_returns_status()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L978",
+      "source_location": "L1006",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_workbench_api_requires_token_and_returns_status",
       "community": 16,
@@ -10817,7 +10857,7 @@
       "label": "test_build_token_usage_orders_main_agents_and_computes_percent()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L1004",
+      "source_location": "L1032",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_build_token_usage_orders_main_agents_and_computes_percent",
       "community": 65,
@@ -10827,7 +10867,7 @@
       "label": "test_git_environment_returns_none_for_non_repo()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L1021",
+      "source_location": "L1049",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_git_environment_returns_none_for_non_repo",
       "community": 16,
@@ -10837,7 +10877,7 @@
       "label": "test_codegraph_stats_reads_counts_from_database()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L1027",
+      "source_location": "L1055",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_codegraph_stats_reads_counts_from_database",
       "community": 16,
@@ -10847,7 +10887,7 @@
       "label": "test_rotate_pair_code_helper_uses_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L1060",
+      "source_location": "L1088",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_rotate_pair_code_helper_uses_operator_file",
       "community": 16,
@@ -10857,7 +10897,7 @@
       "label": "test_rotate_pair_code_helper_reports_stale_operator_file()",
       "file_type": "code",
       "source_file": "tests/test_remote_control.py",
-      "source_location": "L1080",
+      "source_location": "L1108",
       "_origin": "ast",
       "id": "tests_test_remote_control_test_rotate_pair_code_helper_reports_stale_operator_file",
       "community": 16,
@@ -26662,6 +26702,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1032",
+      "weight": 1.0,
+      "source": "www_workbench",
+      "target": "www_workbench_formatseconds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L482",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -26774,9 +26824,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L1093",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_latestterminalsignal",
-      "confidence_score": 1.0
+      "target": "www_workbench_latestterminalsignal"
     },
     {
       "relation": "contains",
@@ -26824,9 +26874,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L1086",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_progressitem",
-      "confidence_score": 1.0
+      "target": "www_workbench_progressitem"
     },
     {
       "relation": "contains",
@@ -26867,6 +26917,16 @@
       "confidence_score": 1.0,
       "source": "www_workbench",
       "target": "www_workbench_renderapproval"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1045",
+      "weight": 1.0,
+      "source": "www_workbench",
+      "target": "www_workbench_renderbridge",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -27704,6 +27764,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L478",
+      "weight": 1.0,
+      "source": "www_workbench_refreshworkbench",
+      "target": "www_workbench_renderbridge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L223",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -28408,6 +28479,28 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1058",
+      "weight": 1.0,
+      "source": "www_workbench_renderbridge",
+      "target": "www_workbench_formatseconds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1100",
+      "weight": 1.0,
+      "source": "www_workbench_renderofflineworkbench",
+      "target": "www_workbench_renderbridge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L693",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -28443,9 +28536,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L1116",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_renderprogress",
-      "target": "www_workbench_progressitem",
-      "confidence_score": 1.0
+      "target": "www_workbench_progressitem"
     },
     {
       "relation": "calls",
@@ -28454,9 +28547,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L1110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_renderprogress",
-      "target": "www_workbench_latestterminalsignal",
-      "confidence_score": 1.0
+      "target": "www_workbench_latestterminalsignal"
     },
     {
       "relation": "calls",
@@ -37297,6 +37390,17 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "remote_control.py",
+      "source_location": "L975",
+      "weight": 1.0,
+      "source": "remote_control_remotebridgeserver_bridge_status_payload",
+      "target": "remote_control_py_any",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
       "source_location": "L743",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -38743,6 +38847,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "remote_control.py",
+      "source_location": "L976",
+      "weight": 1.0,
+      "source": "remote_control_remotebridgeserver_bridge_status_payload",
+      "target": "remote_control_remoteauth_current_pair_code",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
       "source_location": "L744",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -39452,6 +39567,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "remote_control.py",
+      "source_location": "L975",
+      "weight": 1.0,
+      "source": "remote_control_remotebridgeserver",
+      "target": "remote_control_remotebridgeserver_bridge_status_payload",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
       "source_location": "L984",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -39662,6 +39787,17 @@
       "confidence_score": 1.0,
       "source": "remote_control_remotehandler_do_get",
       "target": "remote_control_remotebridgeserver_operator_status_payload"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "remote_control.py",
+      "source_location": "L1056",
+      "weight": 1.0,
+      "source": "remote_control_remotehandler_do_get",
+      "target": "remote_control_remotebridgeserver_bridge_status_payload",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -46772,6 +46908,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L793",
+      "weight": 1.0,
+      "source": "tests_test_remote_control",
+      "target": "tests_test_remote_control_test_remote_workbench_reports_bridge_health_without_secrets",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L1006",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -47109,6 +47255,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_bridge_switches_project_for_authorized_client",
       "target": "tests_test_remote_control_fakesession"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L795",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_workbench_reports_bridge_health_without_secrets",
+      "target": "tests_test_remote_control_fakesession",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -47463,6 +47620,17 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_remote_control.py",
+      "source_location": "L793",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_workbench_reports_bridge_health_without_secrets",
+      "target": "tests_test_remote_control_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
       "source_location": "L1006",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -47775,6 +47943,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_remote_control_test_remote_bridge_switches_project_for_authorized_client",
       "target": "tests_test_remote_control_run_server"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_remote_control.py",
+      "source_location": "L795",
+      "weight": 1.0,
+      "source": "tests_test_remote_control_test_remote_workbench_reports_bridge_health_without_secrets",
+      "target": "tests_test_remote_control_run_server",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -54246,5 +54425,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "46562f96642134ba2f0cd5e23550df4922cb2187"
+  "built_at_commit": "4a0b6aa6440951388ed28410bf60a31b46d9e255"
 }
