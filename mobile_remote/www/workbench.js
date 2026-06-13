@@ -117,7 +117,8 @@ for (const id of [
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
   "agentLanes", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
-  "approvalRaw", "approvalModification", "approvalStatus", "approveButton", "modifyButton", "rejectButton",
+  "approvalHelper", "approvalRaw", "approvalModification", "approvalStatus", "approvalCommandPreview",
+  "approveButton", "modifyButton", "rejectButton", "dismissButton",
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
     "workbenchPrompt", "sendStatus", "sendButton",
@@ -841,9 +842,27 @@ function setApprovalStatus(message, tone = "muted") {
 function setApprovalControls(disabled) {
   state.approvalSubmitting = disabled;
   els.approveButton.disabled = disabled;
-  els.modifyButton.disabled = disabled;
   els.rejectButton.disabled = disabled;
+  els.dismissButton.disabled = disabled;
   els.approvalModification.disabled = disabled;
+  updateApprovalActionState();
+}
+
+function approvalCommandFor(action) {
+  const note = els.approvalModification.value.trim();
+  if (action === "MODIFY") {
+    return note ? `MODIFY ${note}` : "MODIFY <note required>";
+  }
+  if (action === "DISMISS") {
+    return "/dismiss";
+  }
+  return action;
+}
+
+function updateApprovalActionState(action = "APPROVE") {
+  const note = els.approvalModification.value.trim();
+  els.modifyButton.disabled = state.approvalSubmitting || !note;
+  els.approvalCommandPreview.textContent = `Sends: ${approvalCommandFor(action)}`;
 }
 
 function proposalRawText(proposal) {
@@ -863,6 +882,8 @@ function renderApproval(data) {
     state.approvalProposalId = "";
     setApprovalControls(false);
     setApprovalStatus("");
+    els.approvalCommandPreview.textContent = "";
+    els.approvalHelper.textContent = "";
     return;
   }
   const proposalId = String(proposal.id || `${proposal.proposed_by || "agent"}:${proposal.summary || ""}`);
@@ -876,6 +897,9 @@ function renderApproval(data) {
   els.approvalMeta.textContent = `${proposer} proposal`;
   els.approvalSummary.textContent = proposal.summary || "Review proposal";
   els.approvalEstimate.textContent = formatExecutionEstimate(proposal.execution_estimate);
+  els.approvalHelper.textContent = `Responding to ${
+    proposal.id ? `proposal ${proposal.id}` : "the active proposal"
+  }. Modify requires a note; Dismiss closes the gate without execution.`;
   els.approvalRaw.textContent = proposalRawText(proposal);
   setApprovalControls(false);
 }
@@ -1239,8 +1263,14 @@ async function submitApproval(action) {
     els.approvalModification.focus();
     return;
   }
-  const command = action === "MODIFY" ? `MODIFY ${note}` : action;
-  const label = action === "APPROVE" ? "Approval" : action === "REJECT" ? "Rejection" : "Modification";
+  const command = approvalCommandFor(action);
+  const label = action === "APPROVE"
+    ? "Approval"
+    : action === "REJECT"
+      ? "Rejection"
+      : action === "DISMISS"
+        ? "Dismissal"
+        : "Modification";
   setApprovalControls(true);
   setApprovalStatus(`${label} sent. Waiting for ChatBoks...`, "warning");
   const sent = await sendPrompt(command);
@@ -1355,6 +1385,7 @@ for (const textField of [els.workbenchPrompt, els.approvalModification]) {
   textField.addEventListener("input", () => enforceLeftToRightText(textField));
   textField.addEventListener("compositionend", () => enforceLeftToRightText(textField));
 }
+els.approvalModification.addEventListener("input", () => updateApprovalActionState("MODIFY"));
 els.workbenchPrompt.addEventListener("keydown", (event) => {
   enforceLeftToRightText(els.workbenchPrompt);
   if (event.key === "Enter" && !event.shiftKey) {
@@ -1374,9 +1405,14 @@ els.terminalFocus.addEventListener("click", () => {
 });
 
 els.roleCallButton.addEventListener("click", () => sendPrompt("@coordinator role call"));
+els.approveButton.addEventListener("focus", () => updateApprovalActionState("APPROVE"));
+els.modifyButton.addEventListener("focus", () => updateApprovalActionState("MODIFY"));
+els.rejectButton.addEventListener("focus", () => updateApprovalActionState("REJECT"));
+els.dismissButton.addEventListener("focus", () => updateApprovalActionState("DISMISS"));
 els.approveButton.addEventListener("click", () => submitApproval("APPROVE"));
 els.rejectButton.addEventListener("click", () => submitApproval("REJECT"));
 els.modifyButton.addEventListener("click", () => submitApproval("MODIFY"));
+els.dismissButton.addEventListener("click", () => submitApproval("DISMISS"));
 els.systemFeedButton.addEventListener("click", () => {
   state.showSystemFeed = !state.showSystemFeed;
   renderCoordinator({ command_running: state.commandRunning, command_text: "" });

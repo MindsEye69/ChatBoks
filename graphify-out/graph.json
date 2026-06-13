@@ -120,7 +120,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "runtimeerror",
-      "community": 49,
+      "community": 47,
       "norm_label": "runtimeerror"
     },
     {
@@ -130,7 +130,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "agents_base_agenttimeouterror",
-      "community": 0,
+      "community": 47,
       "norm_label": "agenttimeouterror"
     },
     {
@@ -390,7 +390,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "agents_base_rationale_20",
-      "community": 0,
+      "community": 47,
       "norm_label": "raised when an agent cli exceeds its idle or wall-clock timeout."
     },
     {
@@ -3897,7 +3897,7 @@
       "label": "loadSettings()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L135",
+      "source_location": "L136",
       "_origin": "ast",
       "id": "www_workbench_loadsettings",
       "community": 63,
@@ -3907,7 +3907,7 @@
       "label": "saveSettings()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L149",
+      "source_location": "L150",
       "_origin": "ast",
       "id": "www_workbench_savesettings",
       "community": 63,
@@ -3917,7 +3917,7 @@
       "label": "setTheme()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L153",
+      "source_location": "L154",
       "_origin": "ast",
       "id": "www_workbench_settheme",
       "community": 63,
@@ -3927,7 +3927,7 @@
       "label": "enforceLeftToRightText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L160",
+      "source_location": "L161",
       "_origin": "ast",
       "id": "www_workbench_enforcelefttorighttext",
       "community": 63,
@@ -3937,7 +3937,7 @@
       "label": "showError()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L172",
+      "source_location": "L173",
       "_origin": "ast",
       "id": "www_workbench_showerror",
       "community": 63,
@@ -3947,7 +3947,7 @@
       "label": "setConnectionState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L181",
+      "source_location": "L182",
       "_origin": "ast",
       "id": "www_workbench_setconnectionstate",
       "community": 63,
@@ -3957,7 +3957,7 @@
       "label": "setConnectionPanel()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L189",
+      "source_location": "L190",
       "_origin": "ast",
       "id": "www_workbench_setconnectionpanel",
       "community": 63,
@@ -3967,7 +3967,7 @@
       "label": "setConnectionRecovery()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L193",
+      "source_location": "L194",
       "_origin": "ast",
       "id": "www_workbench_setconnectionrecovery",
       "community": 63,
@@ -3977,7 +3977,7 @@
       "label": "setConnectionBusy()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L211",
+      "source_location": "L212",
       "_origin": "ast",
       "id": "www_workbench_setconnectionbusy",
       "community": 63,
@@ -3987,7 +3987,7 @@
       "label": "setConnected()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L219",
+      "source_location": "L220",
       "_origin": "ast",
       "id": "www_workbench_setconnected",
       "community": 63,
@@ -3997,7 +3997,7 @@
       "label": "isAuthError()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L232",
+      "source_location": "L233",
       "_origin": "ast",
       "id": "www_workbench_isautherror",
       "community": 63,
@@ -4007,7 +4007,7 @@
       "label": "apiUrl()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L236",
+      "source_location": "L237",
       "_origin": "ast",
       "id": "www_workbench_apiurl",
       "community": 63,
@@ -4017,7 +4017,7 @@
       "label": "friendlyFetchError()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L249",
+      "source_location": "L250",
       "_origin": "ast",
       "id": "www_workbench_friendlyfetcherror",
       "community": 63,
@@ -4027,7 +4027,7 @@
       "label": "connectionRecoveryFor()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L269",
+      "source_location": "L270",
       "_origin": "ast",
       "id": "www_workbench_connectionrecoveryfor",
       "community": 63,
@@ -4037,7 +4037,7 @@
       "label": "apiFetch()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L318",
+      "source_location": "L319",
       "_origin": "ast",
       "id": "www_workbench_apifetch",
       "community": 63,
@@ -4047,7 +4047,7 @@
       "label": "pairDevice()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L341",
+      "source_location": "L342",
       "_origin": "ast",
       "id": "www_workbench_pairdevice",
       "community": 63,
@@ -4057,7 +4057,7 @@
       "label": "connect()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L372",
+      "source_location": "L373",
       "_origin": "ast",
       "id": "www_workbench_connect",
       "community": 63,
@@ -4067,7 +4067,7 @@
       "label": "resetSessionState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L392",
+      "source_location": "L393",
       "_origin": "ast",
       "id": "www_workbench_resetsessionstate",
       "community": 63,
@@ -4077,7 +4077,7 @@
       "label": "startPolling()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L402",
+      "source_location": "L403",
       "_origin": "ast",
       "id": "www_workbench_startpolling",
       "community": 63,
@@ -4087,7 +4087,7 @@
       "label": "stopPolling()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L410",
+      "source_location": "L411",
       "_origin": "ast",
       "id": "www_workbench_stoppolling",
       "community": 63,
@@ -4097,7 +4097,7 @@
       "label": "scheduleSessionPoll()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L421",
+      "source_location": "L422",
       "_origin": "ast",
       "id": "www_workbench_schedulesessionpoll",
       "community": 63,
@@ -4107,7 +4107,7 @@
       "label": "refreshSession()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L443",
+      "source_location": "L444",
       "_origin": "ast",
       "id": "www_workbench_refreshsession",
       "community": 63,
@@ -4117,7 +4117,7 @@
       "label": "refreshWorkbench()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L473",
+      "source_location": "L474",
       "_origin": "ast",
       "id": "www_workbench_refreshworkbench",
       "community": 63,
@@ -4127,7 +4127,7 @@
       "label": "splitSignals()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L483",
+      "source_location": "L484",
       "_origin": "ast",
       "id": "www_workbench_splitsignals",
       "community": 63,
@@ -4137,7 +4137,7 @@
       "label": "signalCard()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L492",
+      "source_location": "L493",
       "_origin": "ast",
       "id": "www_workbench_signalcard",
       "community": 63,
@@ -4147,7 +4147,7 @@
       "label": "messageCard()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L510",
+      "source_location": "L511",
       "_origin": "ast",
       "id": "www_workbench_messagecard",
       "community": 63,
@@ -4157,7 +4157,7 @@
       "label": "agentDisplayName()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L530",
+      "source_location": "L531",
       "_origin": "ast",
       "id": "www_workbench_agentdisplayname",
       "community": 63,
@@ -4167,7 +4167,7 @@
       "label": "agentGlyph()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L538",
+      "source_location": "L539",
       "_origin": "ast",
       "id": "www_workbench_agentglyph",
       "community": 63,
@@ -4177,7 +4177,7 @@
       "label": "laneDisplayName()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L550",
+      "source_location": "L551",
       "_origin": "ast",
       "id": "www_workbench_lanedisplayname",
       "community": 63,
@@ -4187,7 +4187,7 @@
       "label": "laneGlyph()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L555",
+      "source_location": "L556",
       "_origin": "ast",
       "id": "www_workbench_laneglyph",
       "community": 63,
@@ -4197,7 +4197,7 @@
       "label": "laneEmptyText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L560",
+      "source_location": "L561",
       "_origin": "ast",
       "id": "www_workbench_laneemptytext",
       "community": 63,
@@ -4207,7 +4207,7 @@
       "label": "laneStyleClass()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L567",
+      "source_location": "L568",
       "_origin": "ast",
       "id": "www_workbench_lanestyleclass",
       "community": 63,
@@ -4217,7 +4217,7 @@
       "label": "canonicalAgent()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L572",
+      "source_location": "L573",
       "_origin": "ast",
       "id": "www_workbench_canonicalagent",
       "community": 63,
@@ -4227,7 +4227,7 @@
       "label": "uniqueAgents()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L583",
+      "source_location": "L584",
       "_origin": "ast",
       "id": "www_workbench_uniqueagents",
       "community": 63,
@@ -4237,7 +4237,7 @@
       "label": "agentStatusValue()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L597",
+      "source_location": "L598",
       "_origin": "ast",
       "id": "www_workbench_agentstatusvalue",
       "community": 63,
@@ -4247,7 +4247,7 @@
       "label": "agentIsLive()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L606",
+      "source_location": "L607",
       "_origin": "ast",
       "id": "www_workbench_agentislive",
       "community": 63,
@@ -4257,7 +4257,7 @@
       "label": "deriveLaneAgents()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L610",
+      "source_location": "L611",
       "_origin": "ast",
       "id": "www_workbench_derivelaneagents",
       "community": 63,
@@ -4267,7 +4267,7 @@
       "label": "ensureLanes()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L642",
+      "source_location": "L643",
       "_origin": "ast",
       "id": "www_workbench_ensurelanes",
       "community": 63,
@@ -4277,7 +4277,7 @@
       "label": "renderLanes()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L690",
+      "source_location": "L691",
       "_origin": "ast",
       "id": "www_workbench_renderlanes",
       "community": 63,
@@ -4287,7 +4287,7 @@
       "label": "updateLaneActivity()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L725",
+      "source_location": "L726",
       "_origin": "ast",
       "id": "www_workbench_updatelaneactivity",
       "community": 63,
@@ -4297,7 +4297,7 @@
       "label": "ingestEvents()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L736",
+      "source_location": "L737",
       "_origin": "ast",
       "id": "www_workbench_ingestevents",
       "community": 63,
@@ -4307,7 +4307,7 @@
       "label": "renderCoordinator()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L772",
+      "source_location": "L773",
       "_origin": "ast",
       "id": "www_workbench_rendercoordinator",
       "community": 63,
@@ -4317,7 +4317,7 @@
       "label": "formatExecutionEstimate()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L811",
+      "source_location": "L812",
       "_origin": "ast",
       "id": "www_workbench_formatexecutionestimate",
       "community": 63,
@@ -4327,7 +4327,7 @@
       "label": "setApprovalStatus()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L834",
+      "source_location": "L835",
       "_origin": "ast",
       "id": "www_workbench_setapprovalstatus",
       "community": 63,
@@ -4337,17 +4337,37 @@
       "label": "setApprovalControls()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L841",
+      "source_location": "L842",
       "_origin": "ast",
       "id": "www_workbench_setapprovalcontrols",
       "community": 63,
       "norm_label": "setapprovalcontrols()"
     },
     {
+      "label": "approvalCommandFor()",
+      "file_type": "code",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L851",
+      "_origin": "ast",
+      "id": "www_workbench_approvalcommandfor",
+      "community": 63,
+      "norm_label": "approvalcommandfor()"
+    },
+    {
+      "label": "updateApprovalActionState()",
+      "file_type": "code",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L862",
+      "_origin": "ast",
+      "id": "www_workbench_updateapprovalactionstate",
+      "community": 63,
+      "norm_label": "updateapprovalactionstate()"
+    },
+    {
       "label": "proposalRawText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L849",
+      "source_location": "L868",
       "_origin": "ast",
       "id": "www_workbench_proposalrawtext",
       "community": 63,
@@ -4357,7 +4377,7 @@
       "label": "renderApproval()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L857",
+      "source_location": "L876",
       "_origin": "ast",
       "id": "www_workbench_renderapproval",
       "community": 63,
@@ -4367,7 +4387,7 @@
       "label": "renderProjects()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L885",
+      "source_location": "L909",
       "_origin": "ast",
       "id": "www_workbench_renderprojects",
       "community": 63,
@@ -4377,7 +4397,7 @@
       "label": "renderSession()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L905",
+      "source_location": "L929",
       "_origin": "ast",
       "id": "www_workbench_rendersession",
       "community": 63,
@@ -4387,7 +4407,7 @@
       "label": "formatTokens()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L924",
+      "source_location": "L948",
       "_origin": "ast",
       "id": "www_workbench_formattokens",
       "community": 63,
@@ -4397,7 +4417,7 @@
       "label": "tokenRow()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L934",
+      "source_location": "L958",
       "_origin": "ast",
       "id": "www_workbench_tokenrow",
       "community": 63,
@@ -4407,7 +4427,7 @@
       "label": "renderTokenBalances()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L963",
+      "source_location": "L987",
       "_origin": "ast",
       "id": "www_workbench_rendertokenbalances",
       "community": 63,
@@ -4417,7 +4437,7 @@
       "label": "renderEnvironment()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L988",
+      "source_location": "L1012",
       "_origin": "ast",
       "id": "www_workbench_renderenvironment",
       "community": 63,
@@ -4427,7 +4447,7 @@
       "label": "renderGraph()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1006",
+      "source_location": "L1030",
       "_origin": "ast",
       "id": "www_workbench_rendergraph",
       "community": 63,
@@ -4437,7 +4457,7 @@
       "label": "renderMonitor()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1023",
+      "source_location": "L1047",
       "_origin": "ast",
       "id": "www_workbench_rendermonitor",
       "community": 63,
@@ -4447,7 +4467,7 @@
       "label": "renderOfflineWorkbench()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1033",
+      "source_location": "L1057",
       "_origin": "ast",
       "id": "www_workbench_renderofflineworkbench",
       "community": 63,
@@ -4457,7 +4477,7 @@
       "label": "renderProgress()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1062",
+      "source_location": "L1086",
       "_origin": "ast",
       "id": "www_workbench_renderprogress",
       "community": 63,
@@ -4467,7 +4487,7 @@
       "label": "traceSignalLabel()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1091",
+      "source_location": "L1115",
       "_origin": "ast",
       "id": "www_workbench_tracesignallabel",
       "community": 63,
@@ -4477,7 +4497,7 @@
       "label": "renderTraceList()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1097",
+      "source_location": "L1121",
       "_origin": "ast",
       "id": "www_workbench_rendertracelist",
       "community": 63,
@@ -4487,7 +4507,7 @@
       "label": "appendTraceText()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1114",
+      "source_location": "L1138",
       "_origin": "ast",
       "id": "www_workbench_appendtracetext",
       "community": 63,
@@ -4497,7 +4517,7 @@
       "label": "renderTrace()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1121",
+      "source_location": "L1145",
       "_origin": "ast",
       "id": "www_workbench_rendertrace",
       "community": 63,
@@ -4507,7 +4527,7 @@
       "label": "applySession()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1144",
+      "source_location": "L1168",
       "_origin": "ast",
       "id": "www_workbench_applysession",
       "community": 63,
@@ -4517,7 +4537,7 @@
       "label": "setSendState()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1197",
+      "source_location": "L1221",
       "_origin": "ast",
       "id": "www_workbench_setsendstate",
       "community": 63,
@@ -4527,7 +4547,7 @@
       "label": "sendPrompt()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1205",
+      "source_location": "L1229",
       "_origin": "ast",
       "id": "www_workbench_sendprompt",
       "community": 63,
@@ -4537,7 +4557,7 @@
       "label": "submitApproval()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1231",
+      "source_location": "L1255",
       "_origin": "ast",
       "id": "www_workbench_submitapproval",
       "community": 63,
@@ -4547,7 +4567,7 @@
       "label": "switchProject()",
       "file_type": "code",
       "source_file": "mobile_remote/www/workbench.js",
-      "source_location": "L1255",
+      "source_location": "L1285",
       "_origin": "ast",
       "id": "www_workbench_switchproject",
       "community": 63,
@@ -6280,7 +6300,7 @@
       "source_location": "L3213",
       "_origin": "ast",
       "id": "agenttimeouterror",
-      "community": 0,
+      "community": 47,
       "norm_label": "agenttimeouterror"
     },
     {
@@ -7240,7 +7260,7 @@
       "source_location": "L763",
       "_origin": "ast",
       "id": "remote_control_remotestream_prompt",
-      "community": 49,
+      "community": 47,
       "norm_label": ".prompt()"
     },
     {
@@ -7860,7 +7880,7 @@
       "source_location": "L328",
       "_origin": "ast",
       "id": "router_router_get_agent",
-      "community": 1,
+      "community": 4,
       "norm_label": ".get_agent()"
     },
     {
@@ -7870,7 +7890,7 @@
       "source_location": "L339",
       "_origin": "ast",
       "id": "router_router_load_role",
-      "community": 1,
+      "community": 4,
       "norm_label": ".load_role()"
     },
     {
@@ -7880,7 +7900,7 @@
       "source_location": "L359",
       "_origin": "ast",
       "id": "router_router_shared_protocol",
-      "community": 1,
+      "community": 4,
       "norm_label": ".shared_protocol()"
     },
     {
@@ -7890,7 +7910,7 @@
       "source_location": "L366",
       "_origin": "ast",
       "id": "router_router_with_shared_protocol",
-      "community": 1,
+      "community": 4,
       "norm_label": ".with_shared_protocol()"
     },
     {
@@ -10390,7 +10410,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "remotebridgeserver",
-      "community": 13,
+      "community": 73,
       "norm_label": "remotebridgeserver"
     },
     {
@@ -10400,7 +10420,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "thread",
-      "community": 73,
+      "community": 13,
       "norm_label": "thread"
     },
     {
@@ -12050,7 +12070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_signal_state",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_signal_state.py"
     },
     {
@@ -12060,7 +12080,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_signal_state_make_app",
-      "community": 0,
+      "community": 47,
       "norm_label": "_make_app()"
     },
     {
@@ -12070,7 +12090,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_signal_state_py_path",
-      "community": 0,
+      "community": 47,
       "norm_label": "path"
     },
     {
@@ -12080,7 +12100,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_signal_state_py_chatboks",
-      "community": 0,
+      "community": 47,
       "norm_label": "chatboks"
     },
     {
@@ -12090,7 +12110,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_parse_signal_uses_declared_priority",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_parse_signal_uses_declared_priority()"
     },
     {
@@ -12100,7 +12120,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_execute_proposal_clears_active_proposal",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_execute_proposal_clears_active_proposal()"
     },
     {
@@ -12110,7 +12130,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_handle_proposal_includes_execution_cost_estimate_when_configured",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_handle_proposal_includes_execution_cost_estimate_when_configured()"
     },
     {
@@ -12120,7 +12140,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_handle_proposal_marks_cost_unavailable_when_rates_missing",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_handle_proposal_marks_cost_unavailable_when_rates_missing()"
     },
     {
@@ -12130,7 +12150,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_check_token_limit_uses_default_warning_threshold",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_check_token_limit_uses_default_warning_threshold()"
     },
     {
@@ -12140,7 +12160,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_update_token_count_refreshes_session_token_display",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_update_token_count_refreshes_session_token_display()"
     },
     {
@@ -12150,7 +12170,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_session_token_budget_emits_warning_once",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_session_token_budget_emits_warning_once()"
     },
     {
@@ -12160,7 +12180,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_session_token_budget_blocks_new_work_at_hard_cap",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_session_token_budget_blocks_new_work_at_hard_cap()"
     },
     {
@@ -12170,7 +12190,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_handle_approval_accepts_common_affirmatives",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_handle_approval_accepts_common_affirmatives()"
     },
     {
@@ -12180,7 +12200,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_dismiss_command_clears_active_proposal_without_agent_round",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_dismiss_command_clears_active_proposal_without_agent_round()"
     },
     {
@@ -12190,7 +12210,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_load_state_accepts_utf8_bom",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_load_state_accepts_utf8_bom()"
     },
     {
@@ -12200,7 +12220,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_coordinator_strips_prefixed_signal_lines_from_body",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_coordinator_strips_prefixed_signal_lines_from_body()"
     },
     {
@@ -12210,7 +12230,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_call_shows_activity_until_response_returns",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_agent_call_shows_activity_until_response_returns()"
     },
     {
@@ -12220,7 +12240,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_streamed_agent_response_is_persisted_without_duplicate_render",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_streamed_agent_response_is_persisted_without_duplicate_render()"
     },
     {
@@ -12230,7 +12250,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_recovery_checkpoints_partial_output_and_retries",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_agent_timeout_recovery_checkpoints_partial_output_and_retries()"
     },
     {
@@ -12240,7 +12260,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_recover_token_exhaustion_writes_bounded_summary_checkpoint",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_recover_token_exhaustion_writes_bounded_summary_checkpoint()"
     },
     {
@@ -12250,7 +12270,7 @@
       "source_location": "L318",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_recovery_blocks_after_retry_budget",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_agent_timeout_recovery_blocks_after_retry_budget()"
     },
     {
@@ -12260,7 +12280,7 @@
       "source_location": "L345",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_loop_detection_uses_changed_line_overlap",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_agent_timeout_loop_detection_uses_changed_line_overlap()"
     },
     {
@@ -12270,7 +12290,7 @@
       "source_location": "L373",
       "_origin": "ast",
       "id": "tests_test_signal_state_test_agent_timeout_recovery_blocks_when_git_diff_repeats",
-      "community": 0,
+      "community": 47,
       "norm_label": "test_agent_timeout_recovery_blocks_when_git_diff_repeats()"
     },
     {
@@ -12280,7 +12300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_signal_state_rationale_1",
-      "community": 0,
+      "community": 47,
       "norm_label": "regression tests for signal parsing and proposal state cleanup."
     },
     {
@@ -26522,6 +26542,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L851",
+      "weight": 1.0,
+      "source": "www_workbench",
+      "target": "www_workbench_approvalcommandfor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L452",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -26544,9 +26574,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L269",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_connectionrecoveryfor",
-      "confidence_score": 1.0
+      "target": "www_workbench_connectionrecoveryfor"
     },
     {
       "relation": "contains",
@@ -26994,9 +27024,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L211",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_setconnectionbusy",
-      "confidence_score": 1.0
+      "target": "www_workbench_setconnectionbusy"
     },
     {
       "relation": "contains",
@@ -27014,9 +27044,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L193",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench",
-      "target": "www_workbench_setconnectionrecovery",
-      "confidence_score": 1.0
+      "target": "www_workbench_setconnectionrecovery"
     },
     {
       "relation": "contains",
@@ -27157,6 +27187,16 @@
       "confidence_score": 1.0,
       "source": "www_workbench",
       "target": "www_workbench_uniqueagents"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L862",
+      "weight": 1.0,
+      "source": "www_workbench",
+      "target": "www_workbench_updateapprovalactionstate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -27318,9 +27358,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L451",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_refreshsession",
-      "target": "www_workbench_setconnectionrecovery",
-      "confidence_score": 1.0
+      "target": "www_workbench_setconnectionrecovery"
     },
     {
       "relation": "calls",
@@ -27340,9 +27380,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L299",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_connectionrecoveryfor",
-      "target": "www_workbench_isautherror",
-      "confidence_score": 1.0
+      "target": "www_workbench_isautherror"
     },
     {
       "relation": "calls",
@@ -27450,9 +27490,9 @@
       "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L458",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "www_workbench_refreshsession",
-      "target": "www_workbench_connectionrecoveryfor",
-      "confidence_score": 1.0
+      "target": "www_workbench_connectionrecoveryfor"
     },
     {
       "relation": "calls",
@@ -28196,11 +28236,44 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L848",
+      "weight": 1.0,
+      "source": "www_workbench_setapprovalcontrols",
+      "target": "www_workbench_updateapprovalactionstate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
       "source_location": "L1026",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "www_workbench_submitapproval",
       "target": "www_workbench_setapprovalcontrols"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L1266",
+      "weight": 1.0,
+      "source": "www_workbench_submitapproval",
+      "target": "www_workbench_approvalcommandfor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mobile_remote/www/workbench.js",
+      "source_location": "L865",
+      "weight": 1.0,
+      "source": "www_workbench_updateapprovalactionstate",
+      "target": "www_workbench_approvalcommandfor",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -54111,5 +54184,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5941128eb88aa1534e8e9d9e7bcdd174e70a0e89"
+  "built_at_commit": "f4182461d5c5c6bf32f3a5500f2152534c1986fc"
 }

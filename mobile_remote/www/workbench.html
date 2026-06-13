@@ -106,18 +106,24 @@
               <div class="event-meta"><span id="approvalMeta">Proposal</span></div>
               <h3 id="approvalSummary">Awaiting approval</h3>
               <p id="approvalEstimate"></p>
+              <p id="approvalHelper" class="approval-helper"></p>
               <details class="approval-details">
                 <summary>Proposal details</summary>
                 <pre id="approvalRaw"></pre>
               </details>
             </div>
-            <textarea id="approvalModification" rows="2" placeholder="Modification note..."></textarea>
+            <label class="approval-note">
+              <span>Modification note</span>
+              <textarea id="approvalModification" rows="2" placeholder="Required for Modify"></textarea>
+            </label>
             <div>
               <div id="approvalStatus" class="approval-status" aria-live="polite"></div>
+              <div id="approvalCommandPreview" class="approval-command-preview"></div>
               <div class="approval-actions">
                 <button id="approveButton" class="approval-button approve-action" type="button">Approve</button>
                 <button id="modifyButton" class="approval-button modify-action" type="button">Modify</button>
                 <button id="rejectButton" class="approval-button reject-action" type="button">Reject</button>
+                <button id="dismissButton" class="approval-button dismiss-action" type="button">Dismiss</button>
               </div>
             </div>
           </section>

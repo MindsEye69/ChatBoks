@@ -675,8 +675,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.js": {
-    "mtime": 1781317268.5572739,
-    "ast_hash": "77f0209e48c2eb4f6c4ae7fe2d0fb7c7",
+    "mtime": 1781320148.766399,
+    "ast_hash": "05c7d33b27aaa60a67917e0b74917178",
     "semantic_hash": ""
   },
   "INTERFACE_HANDOFF.md": {
@@ -690,8 +690,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/workbench.html": {
-    "mtime": 1781317121.0664122,
-    "ast_hash": "65d5cbaf86139a901917192e463a1427",
+    "mtime": 1781320063.6198294,
+    "ast_hash": "5784a6c3e23e9753a0118296aef5921a",
     "semantic_hash": ""
   },
   ".claude/launch.json": {

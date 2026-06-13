@@ -668,6 +668,19 @@ kbd {
   font-size: 12px;
 }
 
+.approval-helper {
+  margin-top: 6px !important;
+}
+
+.approval-note {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .approval-details {
   margin-top: 8px;
   color: var(--muted);
@@ -710,6 +723,7 @@ kbd {
 
 .approval-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -719,6 +733,14 @@ kbd {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.35;
+}
+
+.approval-command-preview {
+  min-height: 16px;
+  margin-bottom: 8px;
+  color: var(--faint);
+  font: 11px/1.35 ui-monospace, SFMono-Regular, Consolas, monospace;
+  word-break: break-word;
 }
 
 .approval-status.success {
@@ -762,6 +784,10 @@ kbd {
 .reject-action {
   border-color: rgba(239, 68, 68, 0.42);
   color: #fca5a5;
+}
+
+.dismiss-action {
+  color: var(--muted);
 }
 
 .summary-grid {
