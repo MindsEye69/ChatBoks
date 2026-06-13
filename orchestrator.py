@@ -227,6 +227,12 @@ class Chatboks:
         self.stream.ready()
         self.refresh_token_usage_display()
 
+        if self.state.get("status") == "handoff":
+            self.stream.system("Pending handoff detected.")
+            self.handle_handoff()
+            if once or self.trigger == "commit":
+                return
+
         if self.trigger == "commit":
             self.handle_commit_trigger()
             return

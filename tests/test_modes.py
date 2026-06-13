@@ -84,6 +84,39 @@ def test_round_context_includes_mode_instruction():
     print("PASS: round context includes collaboration mode")
 
 
+def test_start_resumes_pending_handoff_before_input_loop():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["status"] = "handoff"
+        app.ensure_project_files = MagicMock()
+        app.refresh_token_usage_display = MagicMock()
+        app.handle_handoff = MagicMock(side_effect=lambda: app.state.update({"status": "idle"}))
+        app.run_input_loop = MagicMock()
+
+        app.start()
+
+        app.stream.system.assert_any_call("Pending handoff detected.")
+        app.handle_handoff.assert_called_once()
+        app.run_input_loop.assert_called_once()
+        print("PASS: startup resumes pending handoff before entering input loop")
+
+
+def test_start_once_resumes_pending_handoff_without_extra_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["status"] = "handoff"
+        app.ensure_project_files = MagicMock()
+        app.refresh_token_usage_display = MagicMock()
+        app.handle_handoff = MagicMock(side_effect=lambda: app.state.update({"status": "idle"}))
+        app.run_agent_round = MagicMock()
+
+        app.start(once=True)
+
+        app.handle_handoff.assert_called_once()
+        app.run_agent_round.assert_not_called()
+        print("PASS: once startup resumes handoff without launching an unrelated round")
+
+
 def test_handle_user_input_records_first_role_routed_agent_as_next():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -542,6 +575,8 @@ if __name__ == "__main__":
     test_mode_command_updates_state_without_agent_round()
     test_mode_status_lists_available_modes()
     test_round_context_includes_mode_instruction()
+    test_start_resumes_pending_handoff_before_input_loop()
+    test_start_once_resumes_pending_handoff_without_extra_round()
     test_handle_user_input_records_first_role_routed_agent_as_next()
     test_handle_user_input_records_mode_strategy_agent_as_next()
     test_broad_multi_agent_prompt_triggers_criteria_gate()
