@@ -191,6 +191,12 @@ button {
   font-size: 12px;
 }
 
+.ghost-button:disabled,
+.status-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .new-task-button,
 .send-button {
   border: 0;
@@ -1213,6 +1219,27 @@ dd {
   border-color: rgba(239, 68, 68, 0.45);
   background: rgba(239, 68, 68, 0.12);
   color: #fda4a4;
+}
+
+.connection-recovery {
+  padding: 10px 12px;
+  border: 1px solid rgba(101, 164, 255, 0.28);
+  border-radius: 7px;
+  background: rgba(101, 164, 255, 0.08);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.connection-recovery strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text);
+}
+
+.connection-recovery ul {
+  margin: 0;
+  padding-left: 17px;
 }
 
 .error-box {

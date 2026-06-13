@@ -114,7 +114,7 @@ for (const id of [
   "tokenBalances", "settingsButton", "stripCpu", "stripRam",
   "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
-  "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState",
+  "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
   "agentLanes", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalRaw", "approvalModification", "approvalStatus", "approveButton", "modifyButton", "rejectButton",
@@ -190,6 +190,32 @@ function setConnectionPanel(visible) {
   els.connectionPanel.classList.toggle("hidden", !visible);
 }
 
+function setConnectionRecovery(title = "", steps = []) {
+  els.connectionRecovery.innerHTML = "";
+  els.connectionRecovery.classList.toggle("hidden", !steps.length);
+  if (!steps.length) {
+    return;
+  }
+  const label = document.createElement("strong");
+  label.textContent = title || "Try this next";
+  const list = document.createElement("ul");
+  for (const step of steps) {
+    const item = document.createElement("li");
+    item.textContent = step;
+    list.appendChild(item);
+  }
+  els.connectionRecovery.appendChild(label);
+  els.connectionRecovery.appendChild(list);
+}
+
+function setConnectionBusy(button, busy, busyText) {
+  if (!button.dataset.idleText) {
+    button.dataset.idleText = button.textContent;
+  }
+  button.disabled = busy;
+  button.textContent = busy ? busyText : button.dataset.idleText;
+}
+
 function setConnected(connected) {
   state.connected = connected;
   els.liveDot.classList.toggle("offline", !connected);
@@ -221,20 +247,72 @@ function apiUrl(path) {
 }
 
 function friendlyFetchError(error) {
+  if (error && error.context === "pair") {
+    return "Pairing code was invalid, expired, or already used. Generate a fresh code on the desktop bridge, paste it here, then Pair again.";
+  }
   if (error && error.status === 0) {
     return error.message;
   }
   if (error && /pair with/i.test(error.message || "")) {
-    return error.message;
+    return "No session token is saved. Enter a fresh pairing code from the desktop bridge, or paste a saved session token.";
   }
   if (isAuthError(error)) {
-    return "Session token was rejected or expired. Use Forget token, then pair with a fresh desktop code.";
+    return "Saved session token was rejected or expired. Click Forget token, then pair with a fresh desktop code.";
   }
   if (error instanceof TypeError && /fetch/i.test(error.message || "")) {
     const target = (els.bridgeUrl.value || state.bridgeUrl || window.location.origin || "the bridge").trim();
     return `Could not reach the bridge at ${target}. Confirm remote_control.py is running, Tailscale is connected if needed, and use the bridge URL shown in its console.`;
   }
   return error && error.message ? error.message : String(error);
+}
+
+function connectionRecoveryFor(error) {
+  if (error && error.context === "pair") {
+    return {
+      title: "Pairing code recovery",
+      steps: [
+        "Generate a fresh code on the desktop bridge.",
+        "Paste it before the five-minute timer expires.",
+        "If a token is already saved, click Forget token before pairing again.",
+      ],
+    };
+  }
+  if (error instanceof TypeError && /fetch/i.test(error.message || "")) {
+    return {
+      title: "Bridge reachability",
+      steps: [
+        "Confirm the desktop bridge is running.",
+        "Use the exact Workbench or bridge URL printed by the bridge.",
+        "If you are off-device, confirm Tailscale is connected and the bridge URL is reachable.",
+      ],
+    };
+  }
+  if (error && /pair with|session token/i.test(error.message || "")) {
+    return {
+      title: "Connect with a token",
+      steps: [
+        "Paste a fresh one-time pairing code from the desktop bridge.",
+        "Click Pair; the session token will be filled automatically.",
+      ],
+    };
+  }
+  if (isAuthError(error)) {
+    return {
+      title: "Token recovery",
+      steps: [
+        "Click Forget token to clear the stale browser token.",
+        "Generate a fresh pairing code on the desktop bridge.",
+        "Paste the code and click Pair.",
+      ],
+    };
+  }
+  return {
+    title: "Connection recovery",
+    steps: [
+      "Open the connection panel and verify the bridge URL.",
+      "If the bridge was restarted, pair again with a fresh code.",
+    ],
+  };
 }
 
 async function apiFetch(path, options = {}) {
@@ -265,7 +343,9 @@ async function pairDevice() {
   saveSettings();
   const code = els.pairCode.value.trim().toUpperCase();
   if (!code) {
-    throw new Error("Enter the one-time pairing code from the desktop bridge console.");
+    const error = new Error("Enter the one-time pairing code from the desktop bridge console.");
+    error.context = "pair";
+    throw error;
   }
   setConnectionState("Pairing with desktop bridge...", "warning");
   const response = await fetch(apiUrl("/api/pair"), {
@@ -275,7 +355,10 @@ async function pairDevice() {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error || `Pairing failed (${response.status})`);
+    const error = new Error(body.error || `Pairing failed (${response.status})`);
+    error.status = response.status;
+    error.context = "pair";
+    throw error;
   }
   state.token = body.session_token || "";
   els.token.value = state.token;
@@ -365,12 +448,15 @@ async function refreshSession() {
     state.authBlocked = false;
     setConnected(true);
     setConnectionState("Connected to bridge.", "success");
+    setConnectionRecovery();
     showError("");
     return true;
   } catch (error) {
     state.connectionFailures += 1;
     setConnected(false);
     const detail = friendlyFetchError(error);
+    const recovery = connectionRecoveryFor(error);
+    setConnectionRecovery(recovery.title, recovery.steps);
     showError(detail);
     if (isAuthError(error)) {
       state.authBlocked = true;
@@ -1201,29 +1287,45 @@ els.connectionToggle.addEventListener("click", () => {
 els.settingsButton.addEventListener("click", () => setConnectionPanel(true));
 
 els.pairButton.addEventListener("click", async () => {
+  setConnectionBusy(els.pairButton, true, "Pairing...");
+  setConnectionBusy(els.connectButton, true, "Connect");
   try {
     await pairDevice();
     if (await connect()) {
+      setConnectionRecovery();
       showError("Paired and connected. Session token saved in this browser.", "success");
       setSendState(false, "Paired and connected.");
     }
   } catch (error) {
     const detail = friendlyFetchError(error);
+    const recovery = connectionRecoveryFor(error);
+    setConnectionRecovery(recovery.title, recovery.steps);
     setConnectionState(detail, "error");
     showError(detail);
+  } finally {
+    setConnectionBusy(els.pairButton, false, "Pairing...");
+    setConnectionBusy(els.connectButton, false, "Connect");
   }
 });
 
 els.connectButton.addEventListener("click", async () => {
+  setConnectionBusy(els.connectButton, true, "Connecting...");
+  setConnectionBusy(els.pairButton, true, "Pair");
   try {
     if (await connect()) {
+      setConnectionRecovery();
       showError("Connected to the bridge.", "success");
       setSendState(false, "Connected to bridge.");
     }
   } catch (error) {
     const detail = friendlyFetchError(error);
+    const recovery = connectionRecoveryFor(error);
+    setConnectionRecovery(recovery.title, recovery.steps);
     setConnectionState(detail, "error");
     showError(detail);
+  } finally {
+    setConnectionBusy(els.connectButton, false, "Connecting...");
+    setConnectionBusy(els.pairButton, false, "Pair");
   }
 });
 
@@ -1239,6 +1341,7 @@ els.forgetButton.addEventListener("click", () => {
   setConnectionPanel(true);
   state.connectionFailures = 0;
   state.authBlocked = false;
+  setConnectionRecovery();
   setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
   setSendState(false, "Session token forgotten.");
   showError("Session token forgotten. Pair again with a fresh desktop code before reconnecting.", "success");
