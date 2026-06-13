@@ -39,6 +39,7 @@ const state = {
   streams: {},
   coordItems: [],
   coordExpanded: false,
+  showSystemFeed: false,
   currentProject: "",
   lastActivity: "",
   connectionFailures: 0,
@@ -114,7 +115,7 @@ for (const id of [
   "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState",
-  "agentLanes", "coordDot", "coordState", "roleCallButton", "logsButton",
+  "agentLanes", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalRaw", "approvalModification", "approvalStatus", "approveButton", "modifyButton", "rejectButton",
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
@@ -154,6 +155,16 @@ function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   els.themeToggle.textContent = theme === "dark" ? "Light" : "Dark";
   saveSettings();
+}
+
+function enforceLeftToRightText(element) {
+  if (!element) {
+    return;
+  }
+  element.dir = "ltr";
+  element.style.direction = "ltr";
+  element.style.textAlign = "left";
+  element.style.unicodeBidi = "plaintext";
 }
 
 /* ---------- connection ---------- */
@@ -674,12 +685,17 @@ function ingestEvents(events) {
 
 function renderCoordinator(data) {
   const limit = state.coordExpanded ? COORD_FEED_EXPANDED_LIMIT : COORD_FEED_LIMIT;
-  const items = state.coordItems.slice(-limit);
+  const visibleItems = state.showSystemFeed
+    ? state.coordItems
+    : state.coordItems.filter((item) => canonicalAgent(item.sender) !== "system");
+  const items = visibleItems.slice(-limit);
   els.coordFeed.innerHTML = "";
   if (!items.length) {
     const empty = document.createElement("p");
     empty.className = "lane-empty";
-    empty.textContent = "No system events yet.";
+    empty.textContent = state.showSystemFeed
+      ? "No system events yet."
+      : "No coordinator responses yet. Click System to show setup and routing events.";
     els.coordFeed.appendChild(empty);
   }
   for (const item of items) {
@@ -698,6 +714,9 @@ function renderCoordinator(data) {
   els.coordFeed.scrollTop = els.coordFeed.scrollHeight;
   const latest = items[items.length - 1];
   els.coordTime.textContent = latest ? latest.timestamp || "" : "";
+  els.systemFeedButton.classList.toggle("is-active", state.showSystemFeed);
+  els.systemFeedButton.setAttribute("aria-pressed", state.showSystemFeed ? "true" : "false");
+  els.systemFeedButton.textContent = state.showSystemFeed ? "Hide System" : "System";
   els.coordState.textContent = data.command_running
     ? `Running: ${(data.command_text || "").slice(0, 60) || "command"}`
     : "Idle";
@@ -1226,7 +1245,15 @@ els.forgetButton.addEventListener("click", () => {
 });
 
 els.sendButton.addEventListener("click", () => sendPrompt(els.workbenchPrompt.value));
+for (const textField of [els.workbenchPrompt, els.approvalModification]) {
+  enforceLeftToRightText(textField);
+  textField.addEventListener("focus", () => enforceLeftToRightText(textField));
+  textField.addEventListener("click", () => enforceLeftToRightText(textField));
+  textField.addEventListener("input", () => enforceLeftToRightText(textField));
+  textField.addEventListener("compositionend", () => enforceLeftToRightText(textField));
+}
 els.workbenchPrompt.addEventListener("keydown", (event) => {
+  enforceLeftToRightText(els.workbenchPrompt);
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendPrompt(els.workbenchPrompt.value);
@@ -1247,6 +1274,10 @@ els.roleCallButton.addEventListener("click", () => sendPrompt("@coordinator role
 els.approveButton.addEventListener("click", () => submitApproval("APPROVE"));
 els.rejectButton.addEventListener("click", () => submitApproval("REJECT"));
 els.modifyButton.addEventListener("click", () => submitApproval("MODIFY"));
+els.systemFeedButton.addEventListener("click", () => {
+  state.showSystemFeed = !state.showSystemFeed;
+  renderCoordinator({ command_running: state.commandRunning, command_text: "" });
+});
 els.logsButton.addEventListener("click", () => {
   state.coordExpanded = !state.coordExpanded;
   els.logsButton.textContent = state.coordExpanded ? "Less" : "Logs";
@@ -1260,6 +1291,7 @@ els.liveButton.addEventListener("click", () => {
 
 /* ---------- boot ---------- */
 
+document.documentElement.dir = "ltr";
 loadSettings();
 setTheme(state.theme);
 if (state.token) {

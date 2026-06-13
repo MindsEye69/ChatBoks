@@ -65,6 +65,13 @@ textarea {
 }
 
 input,
+textarea {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
+input,
 textarea,
 pre,
 code,
@@ -621,7 +628,15 @@ kbd {
 
 .coordinator-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 10px;
+}
+
+.ghost-button.is-active {
+  border-color: rgba(81, 200, 120, 0.4);
+  background: var(--green-soft);
+  color: var(--green);
 }
 
 .approval-panel {
@@ -1235,8 +1250,10 @@ dd {
 }
 
 .msg-text {
+  direction: ltr;
   white-space: pre-wrap;
   word-break: break-word;
+  unicode-bidi: plaintext;
   margin: 0;
 }
 

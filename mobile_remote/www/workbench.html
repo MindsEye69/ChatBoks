@@ -96,6 +96,7 @@
             </div>
             <div class="coordinator-actions">
               <button id="roleCallButton" class="ghost-button" type="button">Role Call</button>
+              <button id="systemFeedButton" class="ghost-button" type="button" aria-pressed="false">System</button>
               <button id="logsButton" class="ghost-button" type="button">Logs</button>
             </div>
           </header>
@@ -121,7 +122,7 @@
           </section>
           <div class="summary-grid">
             <div class="summary-copy">
-              <div class="event-meta"><time id="coordTime"></time><span>System Feed</span></div>
+              <div class="event-meta"><time id="coordTime"></time><span>Coordinator Feed</span></div>
               <div id="coordFeed" class="coord-feed"></div>
             </div>
             <dl class="summary-stats">
@@ -152,7 +153,7 @@
         <section class="composer-card" aria-label="Prompt composer">
           <div class="composer-input">
             <label for="workbenchPrompt">YOU &gt;</label>
-            <textarea id="workbenchPrompt" rows="2" placeholder="Ask a question or give an instruction..."></textarea>
+            <textarea id="workbenchPrompt" rows="2" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
           </div>
           <div class="composer-toolbar">
             <button class="ghost-button" type="button">Upload</button>
