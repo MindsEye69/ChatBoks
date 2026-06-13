@@ -6,6 +6,7 @@ const LANE_MESSAGE_LIMIT = 10;
 const LANE_AGENT_LIMIT = 3;
 const COORD_FEED_LIMIT = 6;
 const COORD_FEED_EXPANDED_LIMIT = 40;
+const TRACE_ROW_LIMIT = 6;
 const DEFAULT_AGENTS = ["claude", "codex", "gemini"];
 
 const KNOWN_AGENT_STYLES = new Set(["claude", "codex", "gemini", "antigravity", "codex_spark", "coordinator"]);
@@ -40,6 +41,7 @@ const state = {
   coordItems: [],
   coordExpanded: false,
   showSystemFeed: false,
+  trace: {},
   currentProject: "",
   lastActivity: "",
   connectionFailures: 0,
@@ -395,6 +397,7 @@ function resetSessionState() {
   state.eventCursor = 0;
   state.streams = {};
   state.coordItems = [];
+  state.trace = {};
   state.lanes = {};
   els.agentLanes.innerHTML = "";
 }
@@ -772,11 +775,18 @@ function ingestEvents(events) {
   }
 }
 
+function isSystemFeedItem(item) {
+  return canonicalAgent(item.sender || "system") === "system";
+}
+
 function renderCoordinator(data) {
   const limit = state.coordExpanded ? COORD_FEED_EXPANDED_LIMIT : COORD_FEED_LIMIT;
   const visibleItems = state.showSystemFeed
     ? state.coordItems
-    : state.coordItems.filter((item) => canonicalAgent(item.sender) !== "system");
+    : state.coordItems.filter((item) => !isSystemFeedItem(item));
+  const hiddenSystemCount = state.showSystemFeed
+    ? 0
+    : state.coordItems.length - visibleItems.length;
   const items = visibleItems.slice(-limit);
   els.coordFeed.innerHTML = "";
   if (!items.length) {
@@ -805,7 +815,11 @@ function renderCoordinator(data) {
   els.coordTime.textContent = latest ? latest.timestamp || "" : "";
   els.systemFeedButton.classList.toggle("is-active", state.showSystemFeed);
   els.systemFeedButton.setAttribute("aria-pressed", state.showSystemFeed ? "true" : "false");
-  els.systemFeedButton.textContent = state.showSystemFeed ? "Hide System" : "System";
+  els.systemFeedButton.textContent = state.showSystemFeed
+    ? "Hide System"
+    : hiddenSystemCount
+      ? `System (${hiddenSystemCount})`
+      : "System";
   els.coordState.textContent = data.command_running
     ? `Running: ${(data.command_text || "").slice(0, 60) || "command"}`
     : "Idle";
@@ -1207,16 +1221,16 @@ function traceSignalLabel(item) {
   return `${signal}${target}`;
 }
 
-function renderTraceList(container, items, emptyText, rowBuilder) {
+function renderTraceList(container, items, emptyText, rowBuilder, limit = TRACE_ROW_LIMIT) {
   container.innerHTML = "";
-  if (!items.length) {
+  if (!items.length || limit <= 0) {
     const empty = document.createElement("p");
-    empty.className = "lane-empty";
+    empty.className = "trace-empty";
     empty.textContent = emptyText;
     container.appendChild(empty);
     return;
   }
-  for (const item of items.slice(-6)) {
+  for (const item of items.slice(-limit)) {
     const row = document.createElement("div");
     row.className = "trace-row";
     rowBuilder(row, item);
@@ -1234,14 +1248,15 @@ function appendTraceText(row, className, text) {
 function renderTrace(trace = {}) {
   const agents = trace.agent || [];
   const packets = trace.packets || [];
+  const limit = state.coordExpanded ? TRACE_ROW_LIMIT : 0;
   els.traceAgentCount.textContent = String(agents.length);
   els.tracePacketCount.textContent = String(packets.length);
-  renderTraceList(els.traceAgentList, agents, "No handoffs or terminal signals yet.", (row, item) => {
+  renderTraceList(els.traceAgentList, agents, state.coordExpanded ? "No handoffs or terminal signals yet." : "Open Logs to view handoffs and terminal signals.", (row, item) => {
     appendTraceText(row, "trace-kicker", agentDisplayName(String(item.agent || "unknown")));
     appendTraceText(row, "trace-title", traceSignalLabel(item));
     appendTraceText(row, "trace-summary", item.summary || `message #${item.message_id ?? "-"}`);
-  });
-  renderTraceList(els.tracePacketList, packets, "No thought packets captured yet.", (row, item) => {
+  }, limit);
+  renderTraceList(els.tracePacketList, packets, state.coordExpanded ? "No thought packets captured yet." : "Open Logs to view packet trace.", (row, item) => {
     appendTraceText(row, "trace-kicker", `${agentDisplayName(String(item.agent || "unknown"))} ${item.stance || ""}`.trim());
     appendTraceText(row, "trace-title", String(item.signal || "UNKNOWN").replace("_", " "));
     appendTraceText(
@@ -1249,7 +1264,7 @@ function renderTrace(trace = {}) {
       "trace-summary",
       `${item.observed_count || 0} observed / ${item.risk_count || 0} risks${item.next_action ? ` - ${item.next_action}` : ""}`,
     );
-  });
+  }, limit);
 }
 
 /* ---------- session apply ---------- */
@@ -1284,7 +1299,8 @@ function applySession(data) {
   renderCoordinator(data);
   renderApproval(data);
   renderProgress(data);
-  renderTrace(data.trace || {});
+  state.trace = data.trace || {};
+  renderTrace(state.trace);
 
   els.statRound.textContent = data.round === null || data.round === undefined ? "-" : String(data.round);
   els.statMode.textContent = data.collaboration_mode || "-";
@@ -1510,6 +1526,7 @@ els.logsButton.addEventListener("click", () => {
   state.coordExpanded = !state.coordExpanded;
   els.logsButton.textContent = state.coordExpanded ? "Less" : "Logs";
   renderCoordinator({ command_running: state.commandRunning, command_text: "" });
+  renderTrace(state.trace);
 });
 
 els.liveButton.addEventListener("click", () => {

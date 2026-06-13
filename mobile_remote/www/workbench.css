@@ -81,7 +81,8 @@ code,
 .complete-card,
 .approval-details,
 .trace-summary,
-.summary-copy {
+.coord-feed,
+.coord-item {
   user-select: text;
 }
 
@@ -1403,6 +1404,16 @@ dd {
   color: var(--faint);
   font-size: 11px;
   text-transform: uppercase;
+}
+
+.coord-item .msg-text {
+  user-select: text;
+}
+
+.coordinator-actions .ghost-button.is-active {
+  border-color: rgba(255, 173, 69, 0.5);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .progress-list li.pending::before {
