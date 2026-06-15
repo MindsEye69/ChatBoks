@@ -124,6 +124,8 @@ function setTokenCollapsed(collapsed) {
 function setSystemPanelCollapsed(collapsed) {
   els.systemPanel.classList.toggle("hidden", collapsed);
   els.systemFeedButton.classList.toggle("active", !collapsed);
+  renderSystemControls();
+  renderSystemToast();
 }
 
 function setSendState(isSending, message = "") {
@@ -280,6 +282,8 @@ function forgetSessionToken() {
   renderList(els.transcript, []);
   renderList(els.systemFeed, []);
   renderList(els.events, []);
+  renderSystemControls();
+  renderSystemToast();
   setSendState(false, "Session token forgotten.");
   setConnectionCollapsed(false);
   setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
@@ -316,9 +320,17 @@ function isSystemMessage(item) {
   return (item.sender || "").toLowerCase() === "system";
 }
 
+function isVisibleTranscriptMessage(item) {
+  return item.sender && !isTokenUsageMessage(item) && !isSystemMessage(item);
+}
+
 function isSystemFeedMessage(item) {
   const kind = item.kind || "";
   return isSystemMessage(item) && !isTokenUsageMessage(item) && !kind.startsWith("message_");
+}
+
+function visibleTranscript(items) {
+  return items.filter(isVisibleTranscriptMessage);
 }
 
 function visibleEvents(items) {
@@ -441,9 +453,10 @@ function latestResponseGroup(items) {
 
 function renderSystemToast() {
   const latest = state.systemItems[state.systemItems.length - 1];
+  const systemVisible = !els.systemPanel.classList.contains("hidden");
   els.systemToast.innerHTML = "";
-  els.systemToast.classList.toggle("hidden", !latest);
-  if (!latest) {
+  els.systemToast.classList.toggle("hidden", !latest || !systemVisible);
+  if (!latest || !systemVisible) {
     updateComposerReservedHeight();
     return;
   }
@@ -456,6 +469,18 @@ function renderSystemToast() {
   els.systemToast.appendChild(meta);
   els.systemToast.appendChild(text);
   updateComposerReservedHeight();
+}
+
+function renderSystemControls() {
+  const systemVisible = !els.systemPanel.classList.contains("hidden");
+  els.systemFeedButton.classList.toggle("active", systemVisible);
+  if (systemVisible) {
+    els.systemFeedButton.textContent = "Hide system";
+    return;
+  }
+  els.systemFeedButton.textContent = state.systemItems.length
+    ? `System (${state.systemItems.length})`
+    : "System";
 }
 
 function renderLatestResponse(items) {
@@ -731,7 +756,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   renderTrace(data.trace || {});
   const transcript = data.transcript || [];
   renderLatestResponse(transcript);
-  renderList(els.transcript, transcript);
+  renderList(els.transcript, visibleTranscript(transcript));
   const events = (data.events || []).filter((item) => Number(item.id || 0) > state.eventCursor);
   if (events.length) {
     state.eventCursor = events[events.length - 1].id;
@@ -743,6 +768,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   }
   renderList(els.events, visibleEvents(state.eventItems));
   renderList(els.systemFeed, state.systemItems);
+  renderSystemControls();
   renderSystemToast();
   renderLatestResponse(transcript);
   if (scrollLatest) {

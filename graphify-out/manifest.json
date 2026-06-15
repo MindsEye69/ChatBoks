@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781289398.895542,
-    "ast_hash": "fa7d41703aa859cf3181511d0142d314",
+    "mtime": 1781515880.725347,
+    "ast_hash": "c261cf98b1d418ef81d92fb0efede36a",
     "semantic_hash": ""
   },
   "remote_control.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781342552.2039535,
-    "ast_hash": "a19164de3aef06901b4a92c02daf04cc",
+    "mtime": 1781515892.1027021,
+    "ast_hash": "21a627cd6a57d130c6485b03d6475105",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -857,6 +857,11 @@
   ".playwright-cli/page-2026-06-12T13-40-05-642Z.yml": {
     "mtime": 1781271605.6426067,
     "ast_hash": "accfe53124221470e5a20ee871a2cfdb",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/57fff5c8-49c7-44c1-aba6-1bd3af74765f/1-Photo-1.jpg": {
+    "mtime": 1781515771.5445087,
+    "ast_hash": "430d5438217c0959e9a80085df5e5584",
     "semantic_hash": ""
   }
 }

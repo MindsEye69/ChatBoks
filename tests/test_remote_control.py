@@ -947,9 +947,12 @@ def test_remote_bridge_serves_static_ui_files():
             assert "app.js" in body
 
         with urllib.request.urlopen(f"{base}/app.js", timeout=5) as response:
+            body = response.read().decode("utf-8")
             assert response.status == 200
             assert response.headers["Content-Type"].startswith("text/javascript")
             assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert "function visibleTranscript" in body
+            assert "function renderSystemControls" in body
 
         with urllib.request.urlopen(f"{base}/styles.css", timeout=5) as response:
             assert response.status == 200
