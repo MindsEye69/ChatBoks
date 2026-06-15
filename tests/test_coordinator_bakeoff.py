@@ -157,6 +157,7 @@ def test_coordinator_bakeoff_runner_writes_mocked_result(tmp_path: Path) -> None
     assert records[0]["fixture_id"] == "route_remote_polish"
     assert records[0]["model"] == "mock-model"
     assert records[0]["output"] == "Route to Codex. >>> TASK_COMPLETE"
+    assert records[0]["normalized_output"] == "Route to Codex.\n>>> TASK_COMPLETE"
     assert records[0]["error"] == ""
     assert "must_include" in records[0]["expected"]
 

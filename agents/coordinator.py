@@ -44,8 +44,11 @@ class CoordinatorAgent(BaseAgent):
             "/agent. For model-switch validation, prefer @coordinator role call or @coordinator what's next "
             "for ChatBoks? as the next check. Do not suggest /context unless the user is "
             "explicitly asking about context mode. Do not invent commands such as /status. "
-            "Use >>> QUESTION only when you "
-            "include a specific question for the human in the response body. For outcome-scoring "
+            "For summaries, diffs, resume packets, or planning reviews, include the key evidence "
+            "when present: files changed, tests run, risks, and the next action. "
+            "Use >>> QUESTION only when the response body contains a direct question the human "
+            "must answer. If you are giving a recommendation, status, or next action without a "
+            "human question, use >>> TASK_COMPLETE. For outcome-scoring "
             "requests, suggest concrete /win or /fail commands but do not pretend to record them. "
             "If deep implementation, architecture, security "
             "review, vision, browser testing, or git work is needed, recommend the right agent "
@@ -131,8 +134,12 @@ class CoordinatorAgent(BaseAgent):
                         "model-switch validation, prefer @coordinator role call or @coordinator what's next "
                         "for ChatBoks? as the next check. Do not suggest /context unless the "
                         "user is explicitly asking about context mode. Do not invent commands "
-                        "such as /status. Use >>> QUESTION only with a "
-                        "specific question in the body. For outcome-scoring requests, suggest "
+                        "such as /status. For summaries, diffs, resume packets, or planning "
+                        "reviews, include key evidence when present: files changed, tests run, "
+                        "risks, and the next action. Use >>> QUESTION only when the response "
+                        "body contains a direct question the human must answer. If you are "
+                        "giving a recommendation, status, or next action without a human "
+                        "question, use >>> TASK_COMPLETE. For outcome-scoring requests, suggest "
                         "concrete /win or /fail commands but do not claim they were recorded. "
                         "End with exactly one of >>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
                     ),
@@ -240,6 +247,8 @@ class CoordinatorAgent(BaseAgent):
             body = self.rewrite_guidance("\n".join(body_lines).strip(), prompt)
             if not body and signal in {"QUESTION", "TASK_COMPLETE"}:
                 return self.fallback_for_bare_signal(prompt)
+            if signal == "QUESTION" and not self.body_has_direct_question(body):
+                signal = "TASK_COMPLETE"
             return f"{body}\n>>> {signal}" if body else f">>> {signal}"
         signal_lines = {f">>> {candidate}" for candidate in self.signals}
         body_lines = [
@@ -265,6 +274,33 @@ class CoordinatorAgent(BaseAgent):
             lowered.startswith("{")
             and ("read_file" in lowered or "tool" in lowered)
         )
+
+    @staticmethod
+    def body_has_direct_question(body: str) -> bool:
+        if "?" in body:
+            return True
+        question_starters = (
+            "what ",
+            "which ",
+            "who ",
+            "where ",
+            "when ",
+            "why ",
+            "how ",
+            "can you ",
+            "could you ",
+            "should i ",
+            "should we ",
+            "do you ",
+            "would you ",
+            "is there ",
+            "are there ",
+        )
+        for line in body.splitlines():
+            normalized = line.strip().lower()
+            if any(normalized.startswith(starter) for starter in question_starters):
+                return True
+        return False
 
     def fallback_for_bare_signal(self, prompt: str) -> str:
         current_request = self.extract_current_request(prompt)
@@ -327,6 +363,18 @@ class CoordinatorAgent(BaseAgent):
         if "/status" in lowered_body:
             body = re.sub(r"(?i)/status", "/agent", body)
             lowered_body = body.lower()
+        if self.is_system_noise_request(lowered_request) and not self.recommends_hidden_diagnostics(lowered_body):
+            return (
+                "Default the remote view to actual agent answers first. Hide system and bridge diagnostics "
+                "behind the System and Bridge controls unless the user explicitly opens them, and keep the "
+                "latest response/copy actions focused on the agent answer."
+            )
+        if self.is_exhausted_lane_request(lowered_request) and not self.recommends_live_lane_fallback(lowered_body):
+            return (
+                "Keep the three lanes reserved for live working agents. When Claude is exhausted, hide "
+                "Claude's lane, promote an eligible fallback such as Codex Spark or Gemma into that slot, "
+                "and restore Claude while demoting the fallback once the exhaustion reset expires."
+            )
         if self.is_model_switch_validation_request(lowered_request):
             if "/context" in lowered_body or "context before proceeding" in lowered_body:
                 return (
@@ -334,6 +382,38 @@ class CoordinatorAgent(BaseAgent):
                     "promptly on gemma3:4b without UI lag or invented commands."
                 )
         return body
+
+    @staticmethod
+    def is_system_noise_request(lowered_request: str) -> bool:
+        return (
+            "route" not in lowered_request
+            and ("system" in lowered_request or "bridge" in lowered_request)
+            and ("noise" in lowered_request or "mixed" in lowered_request or "separate" in lowered_request)
+            and ("agent" in lowered_request or "answer" in lowered_request or "response" in lowered_request)
+        )
+
+    @staticmethod
+    def recommends_hidden_diagnostics(lowered_body: str) -> bool:
+        return (
+            ("hide" in lowered_body or "hidden" in lowered_body)
+            and ("system" in lowered_body or "bridge" in lowered_body)
+        )
+
+    @staticmethod
+    def is_exhausted_lane_request(lowered_request: str) -> bool:
+        return (
+            ("exhausted" in lowered_request or "token" in lowered_request)
+            and ("lane" in lowered_request or "window" in lowered_request or "slot" in lowered_request)
+            and ("claude" in lowered_request or "agent" in lowered_request)
+        )
+
+    @staticmethod
+    def recommends_live_lane_fallback(lowered_body: str) -> bool:
+        return (
+            ("hide" in lowered_body or "remove" in lowered_body)
+            and ("promote" in lowered_body or "fallback" in lowered_body or "fill" in lowered_body)
+            and ("restore" in lowered_body or "return" in lowered_body)
+        )
 
     @staticmethod
     def is_model_switch_validation_request(lowered_request: str) -> bool:

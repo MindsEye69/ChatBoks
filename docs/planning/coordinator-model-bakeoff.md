@@ -169,6 +169,19 @@ The first live run should compare:
 - One Gemma 4 E4B QAT variant, if it can be installed locally without disturbing the current Coordinator.
 - DiffusionGemma only after confirming a supported local serving path. Do not assume Ollama compatibility.
 
+## 2026-06-15 Post-Normalization Run
+
+Coordinator output normalization now records both raw and normalized bakeoff output. The normalized path matches production behavior: evidence-focused summaries, no `>>> QUESTION` unless there is a direct human question, hidden diagnostics for system-noise requests, and live-lane fallback guidance for exhausted agents.
+
+Latest local Ollama runs:
+
+| Candidate | Fixtures | Errors | Average latency | Note |
+|---|---:|---:|---:|---|
+| `gemma3:4b` | 7 | 0 | ~7.5s | Still the safest installed Coordinator default after normalization. |
+| `llama3.2:3b` | 7 | 3 | ~43.3s | Timed out on security, pairing, and exhausted-lane fixtures; not reliable enough. |
+
+Keep `gemma3:4b` as the current Coordinator model unless a later candidate beats it on both reliability and latency.
+
 ## Open Questions
 
 - Which local runtime should own Gemma 4 E4B QAT if Ollama does not expose it cleanly?

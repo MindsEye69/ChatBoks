@@ -150,7 +150,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "agents_base_baseagent",
-      "community": 1,
+      "community": 47,
       "norm_label": "baseagent"
     },
     {
@@ -180,7 +180,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "agents_base_py_any",
-      "community": 1,
+      "community": 47,
       "norm_label": "any"
     },
     {
@@ -190,7 +190,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "agents_base_baseagent_initialize",
-      "community": 1,
+      "community": 47,
       "norm_label": ".initialize()"
     },
     {
@@ -200,7 +200,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "agents_base_baseagent_call",
-      "community": 1,
+      "community": 47,
       "norm_label": ".call()"
     },
     {
@@ -210,7 +210,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "agents_base_baseagent_reinitialize",
-      "community": 1,
+      "community": 47,
       "norm_label": ".reinitialize()"
     },
     {
@@ -220,7 +220,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "agents_base_baseagent_execute",
-      "community": 1,
+      "community": 47,
       "norm_label": ".execute()"
     },
     {
@@ -230,7 +230,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "agents_base_baseagent_build_prompt",
-      "community": 1,
+      "community": 47,
       "norm_label": ".build_prompt()"
     },
     {
@@ -240,7 +240,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "agents_base_baseagent_command",
-      "community": 1,
+      "community": 47,
       "norm_label": ".command()"
     },
     {
@@ -250,7 +250,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_args",
-      "community": 1,
+      "community": 47,
       "norm_label": ".adapter_args()"
     },
     {
@@ -260,7 +260,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "agents_base_baseagent_adapter_run_plan",
-      "community": 1,
+      "community": 47,
       "norm_label": ".adapter_run_plan()"
     },
     {
@@ -270,7 +270,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "agents_base_baseagent_expand_adapter_arg",
-      "community": 1,
+      "community": 47,
       "norm_label": ".expand_adapter_arg()"
     },
     {
@@ -280,7 +280,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli",
-      "community": 1,
+      "community": 47,
       "norm_label": ".run_cli()"
     },
     {
@@ -290,7 +290,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "agents_base_baseagent_run_cli_once",
-      "community": 1,
+      "community": 47,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -300,7 +300,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "agents_base_baseagent_drain_output",
-      "community": 1,
+      "community": 47,
       "norm_label": ".drain_output()"
     },
     {
@@ -310,7 +310,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "queue",
-      "community": 1,
+      "community": 47,
       "norm_label": "queue"
     },
     {
@@ -320,7 +320,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "popen",
-      "community": 1,
+      "community": 47,
       "norm_label": "popen"
     },
     {
@@ -330,7 +330,7 @@
       "source_location": "L426",
       "_origin": "ast",
       "id": "agents_base_baseagent_record_cli_latency",
-      "community": 1,
+      "community": 47,
       "norm_label": ".record_cli_latency()"
     },
     {
@@ -340,7 +340,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "agents_base_baseagent_resolve_timeouts",
-      "community": 1,
+      "community": 47,
       "norm_label": ".resolve_timeouts()"
     },
     {
@@ -350,7 +350,7 @@
       "source_location": "L510",
       "_origin": "ast",
       "id": "agents_base_baseagent_terminate_process",
-      "community": 1,
+      "community": 47,
       "norm_label": ".terminate_process()"
     },
     {
@@ -360,7 +360,7 @@
       "source_location": "L533",
       "_origin": "ast",
       "id": "agents_base_baseagent_short_codegraph_status",
-      "community": 1,
+      "community": 47,
       "norm_label": ".short_codegraph_status()"
     },
     {
@@ -370,7 +370,7 @@
       "source_location": "L540",
       "_origin": "ast",
       "id": "agents_base_baseagent_is_token_exhaustion",
-      "community": 1,
+      "community": 47,
       "norm_label": ".is_token_exhaustion()"
     },
     {
@@ -487,7 +487,7 @@
       "label": ".command()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L57",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_command",
       "community": 4,
@@ -497,7 +497,7 @@
       "label": ".call()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L60",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_call",
       "community": 4,
@@ -507,7 +507,7 @@
       "label": ".configured_model()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L71",
+      "source_location": "L74",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_configured_model",
       "community": 4,
@@ -517,7 +517,7 @@
       "label": ".endpoint()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L74",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_endpoint",
       "community": 4,
@@ -527,7 +527,7 @@
       "label": ".tags_endpoint()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L78",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_tags_endpoint",
       "community": 4,
@@ -537,7 +537,7 @@
       "label": "._is_loopback_endpoint()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L82",
+      "source_location": "L85",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_is_loopback_endpoint",
       "community": 4,
@@ -547,7 +547,7 @@
       "label": ".run_cli()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L96",
+      "source_location": "L99",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_run_cli",
       "community": 4,
@@ -557,7 +557,7 @@
       "label": ".read_ollama_response()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L174",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_read_ollama_response",
       "community": 4,
@@ -567,7 +567,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L174",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "agents_coordinator_py_any",
       "community": 4,
@@ -577,7 +577,7 @@
       "label": ".normalize_output()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L217",
+      "source_location": "L224",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_normalize_output",
       "community": 4,
@@ -587,17 +587,27 @@
       "label": ".looks_like_tool_call()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L259",
+      "source_location": "L268",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_looks_like_tool_call",
       "community": 4,
       "norm_label": ".looks_like_tool_call()"
     },
     {
+      "label": ".body_has_direct_question()",
+      "file_type": "code",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L279",
+      "_origin": "ast",
+      "id": "agents_coordinator_coordinatoragent_body_has_direct_question",
+      "community": 4,
+      "norm_label": ".body_has_direct_question()"
+    },
+    {
       "label": ".fallback_for_bare_signal()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L269",
+      "source_location": "L305",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_fallback_for_bare_signal",
       "community": 4,
@@ -607,17 +617,57 @@
       "label": ".rewrite_guidance()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L306",
+      "source_location": "L342",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_rewrite_guidance",
       "community": 4,
       "norm_label": ".rewrite_guidance()"
     },
     {
+      "label": ".is_system_noise_request()",
+      "file_type": "code",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L387",
+      "_origin": "ast",
+      "id": "agents_coordinator_coordinatoragent_is_system_noise_request",
+      "community": 4,
+      "norm_label": ".is_system_noise_request()"
+    },
+    {
+      "label": ".recommends_hidden_diagnostics()",
+      "file_type": "code",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L396",
+      "_origin": "ast",
+      "id": "agents_coordinator_coordinatoragent_recommends_hidden_diagnostics",
+      "community": 4,
+      "norm_label": ".recommends_hidden_diagnostics()"
+    },
+    {
+      "label": ".is_exhausted_lane_request()",
+      "file_type": "code",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L403",
+      "_origin": "ast",
+      "id": "agents_coordinator_coordinatoragent_is_exhausted_lane_request",
+      "community": 4,
+      "norm_label": ".is_exhausted_lane_request()"
+    },
+    {
+      "label": ".recommends_live_lane_fallback()",
+      "file_type": "code",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L411",
+      "_origin": "ast",
+      "id": "agents_coordinator_coordinatoragent_recommends_live_lane_fallback",
+      "community": 4,
+      "norm_label": ".recommends_live_lane_fallback()"
+    },
+    {
       "label": ".is_model_switch_validation_request()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L339",
+      "source_location": "L419",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_is_model_switch_validation_request",
       "community": 4,
@@ -627,7 +677,7 @@
       "label": ".is_next_step_request()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L345",
+      "source_location": "L425",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_is_next_step_request",
       "community": 4,
@@ -637,7 +687,7 @@
       "label": ".is_role_call_request()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L348",
+      "source_location": "L428",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_is_role_call_request",
       "community": 4,
@@ -647,7 +697,7 @@
       "label": ".is_join_request()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L352",
+      "source_location": "L432",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_is_join_request",
       "community": 4,
@@ -657,7 +707,7 @@
       "label": ".next_step_response()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L356",
+      "source_location": "L436",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_next_step_response",
       "community": 4,
@@ -667,7 +717,7 @@
       "label": ".join_response()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L382",
+      "source_location": "L462",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_join_response",
       "community": 4,
@@ -677,7 +727,7 @@
       "label": ".role_call_response()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L389",
+      "source_location": "L469",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_role_call_response",
       "community": 4,
@@ -687,7 +737,7 @@
       "label": ".extract_current_request()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L420",
+      "source_location": "L500",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_extract_current_request",
       "community": 4,
@@ -697,7 +747,7 @@
       "label": ".write_prompt_file()",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L431",
+      "source_location": "L511",
       "_origin": "ast",
       "id": "agents_coordinator_coordinatoragent_write_prompt_file",
       "community": 4,
@@ -707,7 +757,7 @@
       "label": "Path",
       "file_type": "code",
       "source_file": "agents/coordinator.py",
-      "source_location": "L431",
+      "source_location": "L511",
       "_origin": "ast",
       "id": "agents_coordinator_py_path",
       "community": 4,
@@ -1457,7 +1507,7 @@
       "label": "load_config()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L35",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "coordinator_bakeoff_load_config",
       "community": 78,
@@ -1467,7 +1517,7 @@
       "label": "Path",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L35",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "coordinator_bakeoff_py_path",
       "community": 78,
@@ -1477,7 +1527,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L35",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "coordinator_bakeoff_py_any",
       "community": 78,
@@ -1487,7 +1537,7 @@
       "label": "coordinator_config()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "_origin": "ast",
       "id": "coordinator_bakeoff_coordinator_config",
       "community": 78,
@@ -1497,7 +1547,7 @@
       "label": "load_fixtures()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L50",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "coordinator_bakeoff_load_fixtures",
       "community": 78,
@@ -1507,7 +1557,7 @@
       "label": "build_prompt()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L61",
+      "source_location": "L65",
       "_origin": "ast",
       "id": "coordinator_bakeoff_build_prompt",
       "community": 78,
@@ -1517,7 +1567,7 @@
       "label": "model_slug()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L77",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "coordinator_bakeoff_model_slug",
       "community": 78,
@@ -1527,7 +1577,7 @@
       "label": "result_path()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L82",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "coordinator_bakeoff_result_path",
       "community": 78,
@@ -1537,7 +1587,7 @@
       "label": "datetime",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L82",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "coordinator_bakeoff_py_datetime",
       "community": 78,
@@ -1547,7 +1597,7 @@
       "label": "ollama_payload()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L87",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "coordinator_bakeoff_ollama_payload",
       "community": 78,
@@ -1557,7 +1607,7 @@
       "label": "read_ollama_stream()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L112",
+      "source_location": "L116",
       "_origin": "ast",
       "id": "coordinator_bakeoff_read_ollama_stream",
       "community": 78,
@@ -1567,7 +1617,7 @@
       "label": "run_fixture()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L130",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "coordinator_bakeoff_run_fixture",
       "community": 78,
@@ -1577,7 +1627,7 @@
       "label": "write_results()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L183",
+      "source_location": "L190",
       "_origin": "ast",
       "id": "coordinator_bakeoff_write_results",
       "community": 78,
@@ -1587,7 +1637,7 @@
       "label": "append_result()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L190",
+      "source_location": "L197",
       "_origin": "ast",
       "id": "coordinator_bakeoff_append_result",
       "community": 78,
@@ -1597,7 +1647,7 @@
       "label": "parse_args()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L196",
+      "source_location": "L203",
       "_origin": "ast",
       "id": "coordinator_bakeoff_parse_args",
       "community": 78,
@@ -1607,7 +1657,7 @@
       "label": "Namespace",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L196",
+      "source_location": "L203",
       "_origin": "ast",
       "id": "namespace",
       "community": 78,
@@ -1617,7 +1667,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "coordinator_bakeoff.py",
-      "source_location": "L211",
+      "source_location": "L218",
       "_origin": "ast",
       "id": "coordinator_bakeoff_main",
       "community": 78,
@@ -5120,7 +5170,7 @@
       "source_location": "L548",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_criteria_gate",
-      "community": 45,
+      "community": 0,
       "norm_label": ".format_criteria_gate()"
     },
     {
@@ -5130,7 +5180,7 @@
       "source_location": "L570",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_local_command",
-      "community": 56,
+      "community": 45,
       "norm_label": ".handle_local_command()"
     },
     {
@@ -5140,7 +5190,7 @@
       "source_location": "L634",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_help_command",
-      "community": 52,
+      "community": 45,
       "norm_label": ".handle_help_command()"
     },
     {
@@ -5190,7 +5240,7 @@
       "source_location": "L781",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_wrong_owner_note",
-      "community": 45,
+      "community": 46,
       "norm_label": ".model_command_wrong_owner_note()"
     },
     {
@@ -5430,7 +5480,7 @@
       "source_location": "L1119",
       "_origin": "ast",
       "id": "orchestrator_py_completedprocess",
-      "community": 3,
+      "community": 44,
       "norm_label": "completedprocess"
     },
     {
@@ -5490,7 +5540,7 @@
       "source_location": "L1198",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_dismiss_command",
-      "community": 56,
+      "community": 45,
       "norm_label": ".handle_dismiss_command()"
     },
     {
@@ -5670,7 +5720,7 @@
       "source_location": "L1457",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_mode_command",
-      "community": 56,
+      "community": 45,
       "norm_label": ".handle_mode_command()"
     },
     {
@@ -5680,7 +5730,7 @@
       "source_location": "L1481",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_context_command",
-      "community": 56,
+      "community": 45,
       "norm_label": ".handle_context_command()"
     },
     {
@@ -5750,7 +5800,7 @@
       "source_location": "L1579",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_command",
-      "community": 56,
+      "community": 53,
       "norm_label": ".handle_outcome_command()"
     },
     {
@@ -6010,7 +6060,7 @@
       "source_location": "L2092",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_outcome_suggestion_command",
-      "community": 56,
+      "community": 45,
       "norm_label": ".handle_outcome_suggestion_command()"
     },
     {
@@ -6020,7 +6070,7 @@
       "source_location": "L2120",
       "_origin": "ast",
       "id": "orchestrator_chatboks_build_outcome_suggestion_prompt",
-      "community": 56,
+      "community": 82,
       "norm_label": ".build_outcome_suggestion_prompt()"
     },
     {
@@ -6030,7 +6080,7 @@
       "source_location": "L2160",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_outcome",
-      "community": 56,
+      "community": 53,
       "norm_label": ".append_outcome()"
     },
     {
@@ -6040,7 +6090,7 @@
       "source_location": "L2166",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_outcomes",
-      "community": 56,
+      "community": 82,
       "norm_label": ".show_outcomes()"
     },
     {
@@ -6050,7 +6100,7 @@
       "source_location": "L2198",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_outcomes",
-      "community": 56,
+      "community": 82,
       "norm_label": ".load_outcomes()"
     },
     {
@@ -6060,7 +6110,7 @@
       "source_location": "L2214",
       "_origin": "ast",
       "id": "orchestrator_chatboks_outcomes_path",
-      "community": 56,
+      "community": 82,
       "norm_label": ".outcomes_path()"
     },
     {
@@ -6070,7 +6120,7 @@
       "source_location": "L2217",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_recent_transcript_lines",
-      "community": 56,
+      "community": 82,
       "norm_label": ".load_recent_transcript_lines()"
     },
     {
@@ -6090,7 +6140,7 @@
       "source_location": "L2253",
       "_origin": "ast",
       "id": "orchestrator_chatboks_strip_signal_suffix",
-      "community": 56,
+      "community": 45,
       "norm_label": ".strip_signal_suffix()"
     },
     {
@@ -6100,7 +6150,7 @@
       "source_location": "L2261",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_counts",
-      "community": 56,
+      "community": 82,
       "norm_label": ".format_counts()"
     },
     {
@@ -6130,7 +6180,7 @@
       "source_location": "L2281",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_handoff",
-      "community": 45,
+      "community": 52,
       "norm_label": ".handle_handoff()"
     },
     {
@@ -6140,7 +6190,7 @@
       "source_location": "L2289",
       "_origin": "ast",
       "id": "orchestrator_chatboks_max_handoff_depth",
-      "community": 45,
+      "community": 81,
       "norm_label": ".max_handoff_depth()"
     },
     {
@@ -6150,7 +6200,7 @@
       "source_location": "L2295",
       "_origin": "ast",
       "id": "orchestrator_chatboks_select_handoff_target",
-      "community": 45,
+      "community": 81,
       "norm_label": ".select_handoff_target()"
     },
     {
@@ -6160,7 +6210,7 @@
       "source_location": "L2304",
       "_origin": "ast",
       "id": "orchestrator_chatboks_prepare_handoff",
-      "community": 45,
+      "community": 81,
       "norm_label": ".prepare_handoff()"
     },
     {
@@ -6170,7 +6220,7 @@
       "source_location": "L2339",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_mode_active",
-      "community": 45,
+      "community": 44,
       "norm_label": ".confirmation_mode_active()"
     },
     {
@@ -6180,7 +6230,7 @@
       "source_location": "L2344",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_repair_budget",
-      "community": 45,
+      "community": 44,
       "norm_label": ".confirmation_repair_budget()"
     },
     {
@@ -6200,7 +6250,7 @@
       "source_location": "L2365",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_request_text",
-      "community": 56,
+      "community": 45,
       "norm_label": ".confirmation_request_text()"
     },
     {
@@ -6340,7 +6390,7 @@
       "source_location": "L2754",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_proposal",
-      "community": 45,
+      "community": 81,
       "norm_label": ".handle_proposal()"
     },
     {
@@ -6360,7 +6410,7 @@
       "source_location": "L2779",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_agent_handoff",
-      "community": 45,
+      "community": 81,
       "norm_label": ".handle_agent_handoff()"
     },
     {
@@ -6390,7 +6440,7 @@
       "source_location": "L2827",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_cost",
-      "community": 44,
+      "community": 81,
       "norm_label": ".estimate_execution_cost()"
     },
     {
@@ -6410,7 +6460,7 @@
       "source_location": "L2866",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_execution_output_tokens",
-      "community": 44,
+      "community": 81,
       "norm_label": ".estimate_execution_output_tokens()"
     },
     {
@@ -6420,7 +6470,7 @@
       "source_location": "L2873",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_cost",
-      "community": 44,
+      "community": 81,
       "norm_label": ".estimate_token_cost()"
     },
     {
@@ -6430,7 +6480,7 @@
       "source_location": "L2886",
       "_origin": "ast",
       "id": "orchestrator_chatboks_estimate_token_count",
-      "community": 44,
+      "community": 81,
       "norm_label": ".estimate_token_count()"
     },
     {
@@ -6440,7 +6490,7 @@
       "source_location": "L2889",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_proposal_gate",
-      "community": 67,
+      "community": 81,
       "norm_label": ".format_proposal_gate()"
     },
     {
@@ -6450,7 +6500,7 @@
       "source_location": "L2915",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_usd",
-      "community": 67,
+      "community": 81,
       "norm_label": ".format_usd()"
     },
     {
@@ -6460,7 +6510,7 @@
       "source_location": "L2919",
       "_origin": "ast",
       "id": "orchestrator_chatboks_format_compact_number",
-      "community": 67,
+      "community": 81,
       "norm_label": ".format_compact_number()"
     },
     {
@@ -6700,7 +6750,7 @@
       "source_location": "L3332",
       "_origin": "ast",
       "id": "orchestrator_chatboks_all_expected_agents_completed",
-      "community": 45,
+      "community": 44,
       "norm_label": ".all_expected_agents_completed()"
     },
     {
@@ -6720,7 +6770,7 @@
       "source_location": "L3354",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_thought_packets",
-      "community": 82,
+      "community": 80,
       "norm_label": ".capture_thought_packets()"
     },
     {
@@ -6730,7 +6780,7 @@
       "source_location": "L3361",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_thought_packet",
-      "community": 82,
+      "community": 80,
       "norm_label": ".append_thought_packet()"
     },
     {
@@ -6740,7 +6790,7 @@
       "source_location": "L3361",
       "_origin": "ast",
       "id": "thoughtpacket",
-      "community": 82,
+      "community": 80,
       "norm_label": "thoughtpacket"
     },
     {
@@ -6750,7 +6800,7 @@
       "source_location": "L3375",
       "_origin": "ast",
       "id": "orchestrator_chatboks_packet_record_for_memory",
-      "community": 82,
+      "community": 80,
       "norm_label": ".packet_record_for_memory()"
     },
     {
@@ -6760,7 +6810,7 @@
       "source_location": "L3384",
       "_origin": "ast",
       "id": "orchestrator_chatboks_thought_packet_context",
-      "community": 82,
+      "community": 44,
       "norm_label": ".thought_packet_context()"
     },
     {
@@ -6770,7 +6820,7 @@
       "source_location": "L3414",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_packet_stage",
-      "community": 82,
+      "community": 44,
       "norm_label": ".confirmation_packet_stage()"
     },
     {
@@ -6780,7 +6830,7 @@
       "source_location": "L3431",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_context_value",
-      "community": 82,
+      "community": 44,
       "norm_label": ".truncate_context_value()"
     },
     {
@@ -6880,7 +6930,7 @@
       "source_location": "L3594",
       "_origin": "ast",
       "id": "orchestrator_chatboks_extract_first_line",
-      "community": 45,
+      "community": 81,
       "norm_label": ".extract_first_line()"
     },
     {
@@ -6900,7 +6950,7 @@
       "source_location": "L3612",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sender_tag",
-      "community": 45,
+      "community": 44,
       "norm_label": ".sender_tag()"
     },
     {
@@ -8210,7 +8260,7 @@
       "source_location": "L328",
       "_origin": "ast",
       "id": "router_router_get_agent",
-      "community": 1,
+      "community": 4,
       "norm_label": ".get_agent()"
     },
     {
@@ -8220,7 +8270,7 @@
       "source_location": "L339",
       "_origin": "ast",
       "id": "router_router_load_role",
-      "community": 1,
+      "community": 4,
       "norm_label": ".load_role()"
     },
     {
@@ -8230,7 +8280,7 @@
       "source_location": "L359",
       "_origin": "ast",
       "id": "router_router_shared_protocol",
-      "community": 1,
+      "community": 4,
       "norm_label": ".shared_protocol()"
     },
     {
@@ -8240,7 +8290,7 @@
       "source_location": "L366",
       "_origin": "ast",
       "id": "router_router_with_shared_protocol",
-      "community": 1,
+      "community": 4,
       "norm_label": ".with_shared_protocol()"
     },
     {
@@ -9707,7 +9757,7 @@
       "label": "test_coordinator_bakeoff_prompt_does_not_leak_expected_hints()",
       "file_type": "code",
       "source_file": "tests/test_coordinator_bakeoff.py",
-      "source_location": "L164",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_prompt_does_not_leak_expected_hints",
       "community": 78,
@@ -9934,10 +9984,60 @@
       "norm_label": "test_coordinator_prompt_lists_real_local_commands()"
     },
     {
-      "label": "test_coordinator_rewrites_model_switch_validation_away_from_context_mode()",
+      "label": "test_coordinator_prompt_requests_evidence_for_summaries_and_diffs()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
       "source_location": "L384",
+      "_origin": "ast",
+      "id": "tests_test_direct_agents_test_coordinator_prompt_requests_evidence_for_summaries_and_diffs",
+      "community": 4,
+      "norm_label": "test_coordinator_prompt_requests_evidence_for_summaries_and_diffs()"
+    },
+    {
+      "label": "test_coordinator_converts_unasked_question_signal_to_task_complete()",
+      "file_type": "code",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L402",
+      "_origin": "ast",
+      "id": "tests_test_direct_agents_test_coordinator_converts_unasked_question_signal_to_task_complete",
+      "community": 4,
+      "norm_label": "test_coordinator_converts_unasked_question_signal_to_task_complete()"
+    },
+    {
+      "label": "test_coordinator_preserves_actual_question_signal_without_question_mark()",
+      "file_type": "code",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L420",
+      "_origin": "ast",
+      "id": "tests_test_direct_agents_test_coordinator_preserves_actual_question_signal_without_question_mark",
+      "community": 4,
+      "norm_label": "test_coordinator_preserves_actual_question_signal_without_question_mark()"
+    },
+    {
+      "label": "test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics()",
+      "file_type": "code",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L438",
+      "_origin": "ast",
+      "id": "tests_test_direct_agents_test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics",
+      "community": 4,
+      "norm_label": "test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics()"
+    },
+    {
+      "label": "test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in()",
+      "file_type": "code",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L463",
+      "_origin": "ast",
+      "id": "tests_test_direct_agents_test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in",
+      "community": 4,
+      "norm_label": "test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in()"
+    },
+    {
+      "label": "test_coordinator_rewrites_model_switch_validation_away_from_context_mode()",
+      "file_type": "code",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L489",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_rewrites_model_switch_validation_away_from_context_mode",
       "community": 4,
@@ -9947,7 +10047,7 @@
       "label": "test_coordinator_rewrites_next_step_stub_into_useful_chatboks_action()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L410",
+      "source_location": "L515",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_rewrites_next_step_stub_into_useful_chatboks_action",
       "community": 4,
@@ -9957,7 +10057,7 @@
       "label": "test_coordinator_rewrites_next_step_agent_command_with_extra_text()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L426",
+      "source_location": "L531",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_rewrites_next_step_agent_command_with_extra_text",
       "community": 4,
@@ -9967,7 +10067,7 @@
       "label": "test_coordinator_rewrites_role_call_stub_into_real_role_call()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L442",
+      "source_location": "L547",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_rewrites_role_call_stub_into_real_role_call",
       "community": 4,
@@ -9977,7 +10077,7 @@
       "label": "test_coordinator_ignores_unknown_directive_lines_from_model()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L462",
+      "source_location": "L567",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_ignores_unknown_directive_lines_from_model",
       "community": 4,
@@ -9987,7 +10087,7 @@
       "label": "test_coordinator_preserves_body_after_leading_signal()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L481",
+      "source_location": "L586",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_preserves_body_after_leading_signal",
       "community": 4,
@@ -9997,7 +10097,7 @@
       "label": "test_coordinator_join_in_short_circuits_to_useful_response()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L500",
+      "source_location": "L605",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_join_in_short_circuits_to_useful_response",
       "community": 4,
@@ -10007,7 +10107,7 @@
       "label": "test_coordinator_join_in_fallback_handles_bare_signal()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L516",
+      "source_location": "L621",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_join_in_fallback_handles_bare_signal",
       "community": 4,
@@ -10017,7 +10117,7 @@
       "label": "test_coordinator_diagnostic_fallback_uses_active_task_only()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L531",
+      "source_location": "L636",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_diagnostic_fallback_uses_active_task_only",
       "community": 4,
@@ -10027,7 +10127,7 @@
       "label": "test_coordinator_role_call_fallback_handles_bare_signal()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L554",
+      "source_location": "L659",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_role_call_fallback_handles_bare_signal",
       "community": 4,
@@ -10037,7 +10137,7 @@
       "label": "test_coordinator_role_call_short_circuits_generation_with_tags_check()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L574",
+      "source_location": "L679",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_role_call_short_circuits_generation_with_tags_check",
       "community": 4,
@@ -10047,7 +10147,7 @@
       "label": "test_coordinator_defaults_to_gemma3_4b_when_model_is_omitted()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L602",
+      "source_location": "L707",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_defaults_to_gemma3_4b_when_model_is_omitted",
       "community": 4,
@@ -10057,7 +10157,7 @@
       "label": "test_coordinator_next_step_fallback_handles_bare_signal()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L624",
+      "source_location": "L729",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_next_step_fallback_handles_bare_signal",
       "community": 4,
@@ -10067,7 +10167,7 @@
       "label": "test_coordinator_next_step_call_short_circuits_generation()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L640",
+      "source_location": "L745",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_next_step_call_short_circuits_generation",
       "community": 4,
@@ -10077,7 +10177,7 @@
       "label": "test_coordinator_test_next_call_short_circuits_generation()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L657",
+      "source_location": "L762",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_test_next_call_short_circuits_generation",
       "community": 4,
@@ -10087,7 +10187,7 @@
       "label": "test_coordinator_diagnostic_fallback_allows_current_setup_task()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L675",
+      "source_location": "L780",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_diagnostic_fallback_allows_current_setup_task",
       "community": 4,
@@ -10097,7 +10197,7 @@
       "label": "test_coordinator_routing_policy_fallback_uses_active_task()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L697",
+      "source_location": "L802",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_coordinator_routing_policy_fallback_uses_active_task",
       "community": 4,
@@ -10107,7 +10207,7 @@
       "label": "test_routing_intelligence_can_auto_route_status_questions_to_coordinator()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L721",
+      "source_location": "L826",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_routing_intelligence_can_auto_route_status_questions_to_coordinator",
       "community": 4,
@@ -10117,7 +10217,7 @@
       "label": "test_routing_intelligence_can_auto_route_implementation_requests_to_codex()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L751",
+      "source_location": "L856",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_routing_intelligence_can_auto_route_implementation_requests_to_codex",
       "community": 4,
@@ -10127,7 +10227,7 @@
       "label": "test_routing_intelligence_can_auto_route_architecture_review_to_claude()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L781",
+      "source_location": "L886",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_routing_intelligence_can_auto_route_architecture_review_to_claude",
       "community": 4,
@@ -10137,7 +10237,7 @@
       "label": "test_routing_intelligence_defers_to_full_round_for_brainstorm_requests()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L811",
+      "source_location": "L916",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_routing_intelligence_defers_to_full_round_for_brainstorm_requests",
       "community": 4,
@@ -10147,7 +10247,7 @@
       "label": "test_mode_strategy_can_route_implement_mode_to_codex_solo()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L844",
+      "source_location": "L949",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_mode_strategy_can_route_implement_mode_to_codex_solo",
       "community": 4,
@@ -10157,7 +10257,7 @@
       "label": "test_mode_strategy_can_route_review_mode_to_claude_solo()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L877",
+      "source_location": "L982",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_mode_strategy_can_route_review_mode_to_claude_solo",
       "community": 4,
@@ -10167,7 +10267,7 @@
       "label": "test_mode_strategy_still_allows_coordinator_for_lightweight_diagnose_requests()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L910",
+      "source_location": "L1015",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_mode_strategy_still_allows_coordinator_for_lightweight_diagnose_requests",
       "community": 4,
@@ -10177,7 +10277,7 @@
       "label": "test_explicit_route_still_overrides_mode_strategy()",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
-      "source_location": "L942",
+      "source_location": "L1047",
       "_origin": "ast",
       "id": "tests_test_direct_agents_test_explicit_route_still_overrides_mode_strategy",
       "community": 4,
@@ -10690,7 +10790,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_model_commands",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_model_commands.py"
     },
     {
@@ -10700,7 +10800,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_model_commands_fakeagent",
-      "community": 47,
+      "community": 48,
       "norm_label": "fakeagent"
     },
     {
@@ -10710,7 +10810,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "tests_test_model_commands_fakeagent_init",
-      "community": 47,
+      "community": 48,
       "norm_label": ".__init__()"
     },
     {
@@ -10720,7 +10820,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "tests_test_model_commands_fakeagent_run_cli_once",
-      "community": 47,
+      "community": 48,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -10730,7 +10830,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "tests_test_model_commands_timeoutagent",
-      "community": 47,
+      "community": 48,
       "norm_label": "timeoutagent"
     },
     {
@@ -10740,7 +10840,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "tests_test_model_commands_timeoutagent_run_cli_once",
-      "community": 47,
+      "community": 48,
       "norm_label": ".run_cli_once()"
     },
     {
@@ -10750,7 +10850,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_model_commands_make_app",
-      "community": 47,
+      "community": 48,
       "norm_label": "_make_app()"
     },
     {
@@ -10760,7 +10860,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_model_commands_py_path",
-      "community": 47,
+      "community": 48,
       "norm_label": "path"
     },
     {
@@ -10770,7 +10870,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_model_commands_py_chatboks",
-      "community": 47,
+      "community": 48,
       "norm_label": "chatboks"
     },
     {
@@ -10780,7 +10880,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_registered_model_command_executes_for_owner",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_registered_model_command_executes_for_owner()"
     },
     {
@@ -10790,7 +10890,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_model_command_timeout_preserves_partial_output",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_model_command_timeout_preserves_partial_output()"
     },
     {
@@ -10800,7 +10900,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_wrong_model_command_owner_gets_hint_and_discussion_round",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_wrong_model_command_owner_gets_hint_and_discussion_round()"
     },
     {
@@ -10810,7 +10910,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_model_command_escape_forces_plain_prompt_text",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_model_command_escape_forces_plain_prompt_text()"
     },
     {
@@ -10820,7 +10920,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_unknown_model_slash_command_is_forwarded_as_text",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_unknown_model_slash_command_is_forwarded_as_text()"
     },
     {
@@ -10830,7 +10930,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_raw_model_slash_command_stays_chatboks_local",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_raw_model_slash_command_stays_chatboks_local()"
     },
     {
@@ -10840,7 +10940,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "tests_test_model_commands_test_model_commands_command_lists_registered_commands",
-      "community": 47,
+      "community": 48,
       "norm_label": "test_model_commands_command_lists_registered_commands()"
     },
     {
@@ -14030,7 +14130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_init",
-      "community": 3,
+      "community": 58,
       "norm_label": "__init__.py"
     },
     {
@@ -14040,7 +14140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_stream",
-      "community": 3,
+      "community": 58,
       "norm_label": "stream.py"
     },
     {
@@ -15814,10 +15914,20 @@
       "norm_label": "recommended first slice"
     },
     {
-      "label": "Open Questions",
+      "label": "2026-06-15 Post-Normalization Run",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L172",
+      "_origin": "ast",
+      "id": "planning_coordinator_model_bakeoff_2026_06_15_post_normalization_run",
+      "community": 57,
+      "norm_label": "2026-06-15 post-normalization run"
+    },
+    {
+      "label": "Open Questions",
+      "file_type": "document",
+      "source_file": "docs/planning/coordinator-model-bakeoff.md",
+      "source_location": "L185",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_open_questions",
       "community": 57,
@@ -18488,6 +18598,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "agents/coordinator.py",
+      "source_location": "L279",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent",
+      "target": "agents_coordinator_coordinatoragent_body_has_direct_question",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
       "source_location": "L26",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18558,6 +18678,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "agents/coordinator.py",
+      "source_location": "L403",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent",
+      "target": "agents_coordinator_coordinatoragent_is_exhausted_lane_request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
       "source_location": "L352",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18603,6 +18733,16 @@
       "confidence_score": 1.0,
       "source": "agents_coordinator_coordinatoragent",
       "target": "agents_coordinator_coordinatoragent_is_role_call_request"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L387",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent",
+      "target": "agents_coordinator_coordinatoragent_is_system_noise_request",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -18663,6 +18803,26 @@
       "confidence_score": 1.0,
       "source": "agents_coordinator_coordinatoragent",
       "target": "agents_coordinator_coordinatoragent_read_ollama_response"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L396",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent",
+      "target": "agents_coordinator_coordinatoragent_recommends_hidden_diagnostics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L411",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent",
+      "target": "agents_coordinator_coordinatoragent_recommends_live_lane_fallback",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -18764,6 +18924,17 @@
       "confidence_score": 0.5,
       "source": "coordinator_bakeoff_py_path",
       "target": "agents_coordinator_coordinatoragent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "coordinator_bakeoff.py",
+      "source_location": "L170",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_run_fixture",
+      "target": "agents_coordinator_coordinatoragent",
+      "confidence_score": 1.0
     },
     {
       "relation": "uses",
@@ -18944,6 +19115,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_direct_agents.py",
+      "source_location": "L404",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_converts_unasked_question_signal_to_task_complete",
+      "target": "agents_coordinator_coordinatoragent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
       "source_location": "L554",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -19043,6 +19225,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_direct_agents.py",
+      "source_location": "L422",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_preserves_actual_question_signal_without_question_mark",
+      "target": "agents_coordinator_coordinatoragent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
       "source_location": "L483",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -19059,6 +19252,28 @@
       "confidence_score": 1.0,
       "source": "tests_test_direct_agents_test_coordinator_prompt_lists_real_local_commands",
       "target": "agents_coordinator_coordinatoragent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L386",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_prompt_requests_evidence_for_summaries_and_diffs",
+      "target": "agents_coordinator_coordinatoragent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L465",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in",
+      "target": "agents_coordinator_coordinatoragent",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -19103,6 +19318,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_direct_agents_test_coordinator_rewrites_role_call_stub_into_real_role_call",
       "target": "agents_coordinator_coordinatoragent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L440",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics",
+      "target": "agents_coordinator_coordinatoragent",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -19468,6 +19694,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "agents/coordinator.py",
+      "source_location": "L250",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent_normalize_output",
+      "target": "agents_coordinator_coordinatoragent_body_has_direct_question",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
       "source_location": "L237",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -19600,6 +19837,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "agents/coordinator.py",
+      "source_location": "L372",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent_rewrite_guidance",
+      "target": "agents_coordinator_coordinatoragent_is_exhausted_lane_request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
       "source_location": "L314",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -19633,11 +19881,44 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "agents/coordinator.py",
+      "source_location": "L366",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent_rewrite_guidance",
+      "target": "agents_coordinator_coordinatoragent_is_system_noise_request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
       "source_location": "L312",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "agents_coordinator_coordinatoragent_rewrite_guidance",
       "target": "agents_coordinator_coordinatoragent_next_step_response"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L366",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent_rewrite_guidance",
+      "target": "agents_coordinator_coordinatoragent_recommends_hidden_diagnostics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "agents/coordinator.py",
+      "source_location": "L372",
+      "weight": 1.0,
+      "source": "agents_coordinator_coordinatoragent_rewrite_guidance",
+      "target": "agents_coordinator_coordinatoragent_recommends_live_lane_fallback",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -46224,6 +46505,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_direct_agents.py",
+      "source_location": "L402",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents",
+      "target": "tests_test_direct_agents_test_coordinator_converts_unasked_question_signal_to_task_complete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
       "source_location": "L552",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -46324,6 +46615,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_direct_agents.py",
+      "source_location": "L420",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents",
+      "target": "tests_test_direct_agents_test_coordinator_preserves_actual_question_signal_without_question_mark",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
       "source_location": "L481",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -46339,6 +46640,26 @@
       "confidence_score": 1.0,
       "source": "tests_test_direct_agents",
       "target": "tests_test_direct_agents_test_coordinator_prompt_lists_real_local_commands"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L384",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents",
+      "target": "tests_test_direct_agents_test_coordinator_prompt_requests_evidence_for_summaries_and_diffs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L463",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents",
+      "target": "tests_test_direct_agents_test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -46379,6 +46700,16 @@
       "confidence_score": 1.0,
       "source": "tests_test_direct_agents",
       "target": "tests_test_direct_agents_test_coordinator_rewrites_role_call_stub_into_real_role_call"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L438",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents",
+      "target": "tests_test_direct_agents_test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -46746,6 +47077,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_direct_agents.py",
+      "source_location": "L405",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_converts_unasked_question_signal_to_task_complete",
+      "target": "tests_test_direct_agents_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
       "source_location": "L555",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -46856,6 +47198,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_direct_agents.py",
+      "source_location": "L423",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_preserves_actual_question_signal_without_question_mark",
+      "target": "tests_test_direct_agents_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
       "source_location": "L484",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -46872,6 +47225,28 @@
       "confidence_score": 1.0,
       "source": "tests_test_direct_agents_test_coordinator_prompt_lists_real_local_commands",
       "target": "tests_test_direct_agents_py_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L387",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_prompt_requests_evidence_for_summaries_and_diffs",
+      "target": "tests_test_direct_agents_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L466",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in",
+      "target": "tests_test_direct_agents_py_path",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -46916,6 +47291,17 @@
       "confidence_score": 1.0,
       "source": "tests_test_direct_agents_test_coordinator_rewrites_role_call_stub_into_real_role_call",
       "target": "tests_test_direct_agents_py_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_direct_agents.py",
+      "source_location": "L441",
+      "weight": 1.0,
+      "source": "tests_test_direct_agents_test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics",
+      "target": "tests_test_direct_agents_py_path",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -57501,6 +57887,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
+      "source_location": "L172",
+      "weight": 1.0,
+      "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
+      "target": "planning_coordinator_model_bakeoff_2026_06_15_post_normalization_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L39",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -57839,5 +58235,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4202960a46adf2215fb7628e7fb8329ff72c9c55"
+  "built_at_commit": "6346a322fcaab5e9a152dbab760fb30e368ca322"
 }

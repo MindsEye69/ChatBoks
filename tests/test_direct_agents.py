@@ -381,6 +381,111 @@ def test_coordinator_prompt_lists_real_local_commands():
         print("PASS: Coordinator prompt names valid local commands")
 
 
+def test_coordinator_prompt_requests_evidence_for_summaries_and_diffs():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Coordinator role",
+        )
+
+        prompt = agent.build_prompt("Current context", mode="respond")
+
+        assert "For summaries, diffs, resume packets, or planning reviews" in prompt
+        assert "files changed" in prompt
+        assert "tests run" in prompt
+        assert "risks" in prompt
+        assert "next action" in prompt
+        print("PASS: Coordinator prompt asks for evidence in summaries and diffs")
+
+
+def test_coordinator_converts_unasked_question_signal_to_task_complete():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Coordinator role",
+        )
+
+        result = agent.normalize_output(
+            "Route this mobile polish to Codex solo and run the focused UI tests.\n>>> QUESTION",
+            "route mobile remote polish",
+        )
+
+        assert "Route this mobile polish" in result
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Coordinator converts empty question signals into task-complete status")
+
+
+def test_coordinator_preserves_actual_question_signal_without_question_mark():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Coordinator role",
+        )
+
+        result = agent.normalize_output(
+            "Could you provide Claude's reset time so I can choose the fallback lane.\n>>> QUESTION",
+            "claude is exhausted",
+        )
+
+        assert "Could you provide" in result
+        assert result.endswith(">>> QUESTION")
+        print("PASS: Coordinator preserves direct question signals")
+
+
+def test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Coordinator role",
+        )
+        prompt = (
+            "[ACTIVE TASK]\n"
+            "The mobile remote output is mixed with system noise and bridge messages. "
+            "I cannot separate each agent actual answer from system messages.\n"
+        )
+
+        result = agent.normalize_output(
+            "Show a verified label alongside system diagnostics in the feed.\n>>> TASK_COMPLETE",
+            prompt,
+        )
+
+        assert "actual agent answers first" in result
+        assert "Hide system and bridge diagnostics" in result
+        assert "System and Bridge controls" in result
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Coordinator rewrites system-noise advice toward hidden diagnostics")
+
+
+def test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks"},
+            "Coordinator role",
+        )
+        prompt = (
+            "[ACTIVE TASK]\n"
+            "Claude is exhausted. Only live agents should be in the three lanes, "
+            "with Codex Spark or Gemma filling Claude's window until reset.\n"
+        )
+
+        result = agent.normalize_output(
+            "Display Claude as Offline in the main seat lane until it is available.\n>>> TASK_COMPLETE",
+            prompt,
+        )
+
+        assert "live working agents" in result
+        assert "hide Claude's lane" in result
+        assert "promote an eligible fallback" in result
+        assert "restore Claude" in result
+        assert result.endswith(">>> TASK_COMPLETE")
+        print("PASS: Coordinator rewrites exhausted-lane advice toward live fallback lanes")
+
+
 def test_coordinator_rewrites_model_switch_validation_away_from_context_mode():
     with tempfile.TemporaryDirectory() as tmp:
         agent = CoordinatorAgent(
@@ -985,6 +1090,11 @@ if __name__ == "__main__":
     test_coordinator_ollama_payload_uses_configured_model_and_disables_thinking_by_default()
     test_coordinator_streams_ollama_deltas_to_stdout_callback()
     test_coordinator_prompt_lists_real_local_commands()
+    test_coordinator_prompt_requests_evidence_for_summaries_and_diffs()
+    test_coordinator_converts_unasked_question_signal_to_task_complete()
+    test_coordinator_preserves_actual_question_signal_without_question_mark()
+    test_coordinator_rewrites_system_noise_guidance_to_hide_diagnostics()
+    test_coordinator_rewrites_exhausted_lane_guidance_to_promote_fill_in()
     test_coordinator_rewrites_model_switch_validation_away_from_context_mode()
     test_coordinator_rewrites_next_step_stub_into_useful_chatboks_action()
     test_coordinator_rewrites_next_step_agent_command_with_extra_text()

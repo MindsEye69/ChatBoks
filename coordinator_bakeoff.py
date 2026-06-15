@@ -26,6 +26,10 @@ DEFAULT_CONFIG = ROOT / "config.yaml"
 SYSTEM_PROMPT = (
     "You are Coordinator in ChatBoks. You are local, tool-less, and low-authority. "
     "Answer in concise plain text. Recommend one concrete next action when possible. "
+    "For summaries, diffs, resume packets, or planning reviews, include key evidence "
+    "when present: files changed, tests run, risks, and the next action. "
+    "Use >>> QUESTION only when the response body contains a direct question the human "
+    "must answer; otherwise use >>> TASK_COMPLETE for recommendations and status. "
     "Do not claim to run tools, edit files, commit, browse, or inspect hidden state. "
     "Respect privacy and trust boundaries. End with exactly one signal: "
     ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
@@ -163,6 +167,8 @@ def run_fixture(
         error = str(exc)
     elapsed_ms = int((time.perf_counter() - started) * 1000)
     expected = fixture.get("expected") if isinstance(fixture.get("expected"), dict) else {}
+    normalizer = CoordinatorAgent(ROOT, {"cli": "ollama", "project_name": "chatboks"}, "Coordinator role")
+    normalized_output = normalizer.normalize_output(output, prompt) if output.strip() else ""
     return {
         "timestamp": dt.datetime.now(dt.UTC).isoformat(),
         "fixture_id": fixture["id"],
@@ -174,6 +180,7 @@ def run_fixture(
         "truncated": False,
         "error": error,
         "output": output.strip(),
+        "normalized_output": normalized_output,
         "raw_response": raw,
         "expected": expected,
         "notes": "",
