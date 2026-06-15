@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "resume_after_sleep",
+  "task": "Summarize a resumed ChatBoks session without preserving noisy transcript lines.",
+  "context": "Transcript excerpt: [YOU] Proceed with the mobile remote polish. [CODEX] Implemented refresh feedback. Tests: 335 passed. [SYSTEM] Remote bridge ready. [CODEX] Pushed commit 62c2edc. [YOU] Pairing succeeded. Current risk: phone may still show stale app.js until refresh. Next action: verify the phone pulls updated static files.",
+  "expected": {
+    "preferred_response_shape": "compact resume summary with decisions, evidence, risks, and next action",
+    "must_include": [
+      "refresh feedback implemented",
+      "335 passed",
+      "verify phone refresh"
+    ],
+    "must_avoid": [
+      "Remote bridge ready as a key achievement",
+      "invent a new commit",
+      "include secrets or pairing codes"
+    ],
+    "scoring_focus": [
+      "stability",
+      "correctness",
+      "brevity"
+    ]
+  },
+  "tags": [
+    "resume",
+    "summary",
+    "noise_filtering"
+  ]
+}

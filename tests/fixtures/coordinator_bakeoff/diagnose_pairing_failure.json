@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "diagnose_pairing_failure",
+  "task": "Recommend the next diagnostic step for a mobile pairing failure.",
+  "context": "Phone says: Invalid or expired pairing code. Desktop bridge process is running. Pairing codes are one-time and expire after 300 seconds. The user is remote over a private tunnel and can ask Codex to rotate a fresh code from the operator endpoint.",
+  "expected": {
+    "preferred_response_shape": "one diagnostic or recovery step plus reason",
+    "must_include": [
+      "rotate a fresh code",
+      "one-time or expires",
+      "do not restart unless needed"
+    ],
+    "must_avoid": [
+      "reuse the old code",
+      "expose admin token",
+      "public internet"
+    ],
+    "scoring_focus": [
+      "actionability",
+      "boundary_awareness",
+      "correctness"
+    ]
+  },
+  "tags": [
+    "diagnostics",
+    "pairing",
+    "remote_bridge"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "replace_exhausted_claude_lane",
+  "task": "Suggest the correct lane behavior when Claude is exhausted.",
+  "context": "Agent state: Claude is exhausted until a user-supplied reset time. Codex is live. Direct fallback agents are coordinator and codex_spark; codex_spark can fill a main seat. The UI has three main lanes and should show only live agents in those lanes.",
+  "expected": {
+    "preferred_response_shape": "lane behavior recommendation with fallback rule",
+    "must_include": [
+      "hide exhausted Claude",
+      "promote eligible fill-in",
+      "restore Claude when available"
+    ],
+    "must_avoid": [
+      "show exhausted agent as live",
+      "put coordinator in a main lane unless eligible",
+      "lose Claude state permanently"
+    ],
+    "scoring_focus": [
+      "correctness",
+      "actionability",
+      "stability"
+    ]
+  },
+  "tags": [
+    "agent_status",
+    "lanes",
+    "fallback"
+  ]
+}

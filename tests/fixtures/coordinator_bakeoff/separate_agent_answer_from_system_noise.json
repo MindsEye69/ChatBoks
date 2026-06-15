@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "separate_agent_answer_from_system_noise",
+  "task": "Recommend how the mobile remote should present agent output versus diagnostics.",
+  "context": "Screen context: Latest response shows CODEX started respond. Bridge events shows the same activity line. A system toast says Criteria approved. Running agents. The user says they cannot separate each agent's actual answer from system noise.",
+  "expected": {
+    "preferred_response_shape": "UI recommendation focused on default visibility",
+    "must_include": [
+      "hide bridge or system diagnostics by default",
+      "show actual agent answers",
+      "keep diagnostics available behind a button"
+    ],
+    "must_avoid": [
+      "delete diagnostics entirely",
+      "show activity events as latest answer",
+      "add more always-visible panels"
+    ],
+    "scoring_focus": [
+      "actionability",
+      "correctness",
+      "boundary_awareness"
+    ]
+  },
+  "tags": [
+    "mobile_remote",
+    "readability",
+    "diagnostics"
+  ]
+}

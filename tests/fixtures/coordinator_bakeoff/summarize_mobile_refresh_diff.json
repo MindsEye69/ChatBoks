@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "summarize_mobile_refresh_diff",
+  "task": "Summarize a small UI diff for the user.",
+  "context": "Diff summary: mobile_remote/www/app.js added setRefreshState, manual refresh feedback, and session refresh recovery for unclear bridge responses. mobile_remote/www/styles.css dimmed disabled buttons. tests/test_remote_control.py asserts the served app bundle includes refresh feedback strings. Verification: node --check passed, remote_control tests passed, full pytest passed.",
+  "expected": {
+    "preferred_response_shape": "plain-language change summary with verification",
+    "must_include": [
+      "Refresh button feedback",
+      "disabled or loading state",
+      "tests passed"
+    ],
+    "must_avoid": [
+      "claim browser visual verification",
+      "mention unrelated files",
+      "overstate behavior as network-proof"
+    ],
+    "scoring_focus": [
+      "correctness",
+      "stability",
+      "brevity"
+    ]
+  },
+  "tags": [
+    "diff_summary",
+    "mobile_remote",
+    "verification"
+  ]
+}

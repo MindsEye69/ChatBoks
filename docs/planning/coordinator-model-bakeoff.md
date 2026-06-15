@@ -2,7 +2,7 @@
 
 Last reviewed: 2026-06-15
 
-Status: planning note. This document defines the evaluation plan for local Coordinator models. It does not change `config.yaml`, install models, run Ollama, or alter routing behavior.
+Status: planning note with offline fixture validation. This document defines the evaluation plan for local Coordinator models. It does not change `config.yaml`, install models, run Ollama, or alter routing behavior.
 
 Source intake: Paper Sleuth daily research, `C:\Users\MindsEye\Documents\Paper Sleuth\research\chatboks_ideas.md`.
 
@@ -65,14 +65,15 @@ Each candidate should answer the same fixed prompts with the same context budget
 
 ## Prompt Suite
 
-The first suite should be plain text fixtures stored in a repo-local path such as `tests/fixtures/coordinator_bakeoff/`. Each prompt should include:
+The first suite is stored as JSON fixtures under `tests/fixtures/coordinator_bakeoff/`. Each prompt includes:
 
 - `id`: stable fixture name.
 - `task`: one sentence.
 - `context`: compact transcript, state, diff, or config excerpt.
 - `expected`: scoring hints, not a golden prose answer.
+- `tags`: searchable topic labels.
 
-Suggested fixture IDs:
+Fixture IDs:
 
 - `route_remote_polish`
 - `resume_after_sleep`
@@ -131,17 +132,17 @@ Fixtures should use synthetic or sanitized transcript snippets. If real ChatBoks
 
 ## Implementation Plan
 
-1. Create fixture files with sanitized prompts and expected scoring hints.
+1. Create fixture files with sanitized prompts and expected scoring hints. Done in `tests/fixtures/coordinator_bakeoff/`.
 2. Add a small runner that calls the configured local Coordinator endpoint for a supplied model name.
 3. Write JSONL results to `.chatboks/evals/coordinator-bakeoff/`.
-4. Add an offline pytest that validates fixture structure without requiring Ollama.
+4. Add an offline pytest that validates fixture structure without requiring Ollama. Done in `tests/test_coordinator_bakeoff.py`.
 5. Add an optional manual command for live model runs.
 6. Compare candidates against `gemma3:4b`.
 7. Update `config.yaml` only after reviewing results.
 
 ## Recommended First Slice
 
-Build the fixture format and offline validation first. This gives ChatBoks a stable evaluation surface without requiring a model download or Ollama availability during normal tests.
+Next, add an optional manual runner for local Ollama comparisons. It should be skipped by normal tests and should write JSONL results under `.chatboks/evals/coordinator-bakeoff/`.
 
 The first live run should compare:
 

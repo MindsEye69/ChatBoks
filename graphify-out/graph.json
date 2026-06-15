@@ -1070,7 +1070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "context_packets",
-      "community": 71,
+      "community": 2,
       "norm_label": "packets.py"
     },
     {
@@ -1080,7 +1080,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "context_packets_thoughtpacket",
-      "community": 71,
+      "community": 2,
       "norm_label": "thoughtpacket"
     },
     {
@@ -1090,7 +1090,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "context_packets_thoughtpacket_to_record",
-      "community": 71,
+      "community": 2,
       "norm_label": ".to_record()"
     },
     {
@@ -1100,7 +1100,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "context_packets_py_any",
-      "community": 71,
+      "community": 2,
       "norm_label": "any"
     },
     {
@@ -1110,7 +1110,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "context_packets_extract_packets",
-      "community": 42,
+      "community": 2,
       "norm_label": "extract_packets()"
     },
     {
@@ -1120,7 +1120,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "context_packets_parse_packet_body",
-      "community": 71,
+      "community": 2,
       "norm_label": "parse_packet_body()"
     },
     {
@@ -1130,7 +1130,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "context_packets_normalize_value",
-      "community": 71,
+      "community": 2,
       "norm_label": "normalize_value()"
     },
     {
@@ -1140,7 +1140,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "context_packets_clean_list",
-      "community": 71,
+      "community": 2,
       "norm_label": "clean_list()"
     },
     {
@@ -1150,7 +1150,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "context_packets_has_source_anchor",
-      "community": 71,
+      "community": 2,
       "norm_label": "has_source_anchor()"
     },
     {
@@ -1160,7 +1160,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "context_packets_split_observed_by_anchor",
-      "community": 71,
+      "community": 2,
       "norm_label": "split_observed_by_anchor()"
     },
     {
@@ -1170,7 +1170,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "context_packets_packet_records_from_jsonl",
-      "community": 71,
+      "community": 2,
       "norm_label": "packet_records_from_jsonl()"
     },
     {
@@ -1750,7 +1750,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "encoding_utils",
-      "community": 9,
+      "community": 58,
       "norm_label": "encoding_utils.py"
     },
     {
@@ -1760,7 +1760,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "encoding_utils_configure_utf8_stdio",
-      "community": 9,
+      "community": 58,
       "norm_label": "configure_utf8_stdio()"
     },
     {
@@ -1770,7 +1770,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "encoding_utils_utf8_env",
-      "community": 9,
+      "community": 58,
       "norm_label": "utf8_env()"
     },
     {
@@ -1780,7 +1780,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "encoding_utils_rationale_8",
-      "community": 9,
+      "community": 58,
       "norm_label": "prefer utf-8 for chatboks console/process i/o on every platform."
     },
     {
@@ -1790,7 +1790,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "encoding_utils_rationale_26",
-      "community": 9,
+      "community": 58,
       "norm_label": "return an environment that makes python children speak utf-8."
     },
     {
@@ -1800,7 +1800,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "hook_post_commit",
-      "community": 9,
+      "community": 58,
       "norm_label": "hook_post_commit.py"
     },
     {
@@ -1810,7 +1810,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "hook_post_commit_main",
-      "community": 9,
+      "community": 58,
       "norm_label": "main()"
     },
     {
@@ -1820,7 +1820,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "hook_post_commit_load_state",
-      "community": 9,
+      "community": 58,
       "norm_label": "load_state()"
     },
     {
@@ -1830,7 +1830,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "hook_post_commit_py_path",
-      "community": 9,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -1840,7 +1840,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "hook_post_commit_py_any",
-      "community": 9,
+      "community": 58,
       "norm_label": "any"
     },
     {
@@ -1850,7 +1850,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "hook_post_commit_append_commit_message",
-      "community": 9,
+      "community": 58,
       "norm_label": "append_commit_message()"
     },
     {
@@ -1860,7 +1860,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "hook_post_commit_git_output",
-      "community": 9,
+      "community": 58,
       "norm_label": "git_output()"
     },
     {
@@ -4720,7 +4720,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "orchestrator",
-      "community": 9,
+      "community": 58,
       "norm_label": "orchestrator.py"
     },
     {
@@ -4730,7 +4730,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler",
-      "community": 80,
+      "community": 47,
       "norm_label": "chatboksfilehandler"
     },
     {
@@ -4740,7 +4740,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "filesystemeventhandler",
-      "community": 80,
+      "community": 47,
       "norm_label": "filesystemeventhandler"
     },
     {
@@ -4750,7 +4750,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler_init",
-      "community": 80,
+      "community": 47,
       "norm_label": ".__init__()"
     },
     {
@@ -4760,7 +4760,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "orchestrator_chatboksfilehandler_on_modified",
-      "community": 46,
+      "community": 67,
       "norm_label": ".on_modified()"
     },
     {
@@ -4790,7 +4790,7 @@
       "source_location": "L196",
       "_origin": "ast",
       "id": "orchestrator_chatboks_init",
-      "community": 46,
+      "community": 67,
       "norm_label": ".__init__()"
     },
     {
@@ -4820,7 +4820,7 @@
       "source_location": "L250",
       "_origin": "ast",
       "id": "orchestrator_chatboks_initialize_agents",
-      "community": 45,
+      "community": 44,
       "norm_label": ".initialize_agents()"
     },
     {
@@ -4960,7 +4960,7 @@
       "source_location": "L634",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_help_command",
-      "community": 56,
+      "community": 52,
       "norm_label": ".handle_help_command()"
     },
     {
@@ -4970,7 +4970,7 @@
       "source_location": "L658",
       "_origin": "ast",
       "id": "orchestrator_chatboks_show_prompt_help_pin",
-      "community": 56,
+      "community": 52,
       "norm_label": ".show_prompt_help_pin()"
     },
     {
@@ -4980,7 +4980,7 @@
       "source_location": "L666",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_model_commands_command",
-      "community": 0,
+      "community": 79,
       "norm_label": ".handle_model_commands_command()"
     },
     {
@@ -5030,7 +5030,7 @@
       "source_location": "L809",
       "_origin": "ast",
       "id": "orchestrator_chatboks_find_agent_model_command",
-      "community": 0,
+      "community": 79,
       "norm_label": ".find_agent_model_command()"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_location": "L819",
       "_origin": "ast",
       "id": "orchestrator_chatboks_model_command_token_and_args",
-      "community": 0,
+      "community": 79,
       "norm_label": ".model_command_token_and_args()"
     },
     {
@@ -5050,7 +5050,7 @@
       "source_location": "L829",
       "_origin": "ast",
       "id": "orchestrator_chatboks_agent_model_commands",
-      "community": 0,
+      "community": 79,
       "norm_label": ".agent_model_commands()"
     },
     {
@@ -5060,7 +5060,7 @@
       "source_location": "L856",
       "_origin": "ast",
       "id": "orchestrator_chatboks_split_model_command_args",
-      "community": 0,
+      "community": 79,
       "norm_label": ".split_model_command_args()"
     },
     {
@@ -5120,7 +5120,7 @@
       "source_location": "L922",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_memory_status_lines",
-      "community": 46,
+      "community": 11,
       "norm_label": ".sleep_memory_status_lines()"
     },
     {
@@ -5250,7 +5250,7 @@
       "source_location": "L1119",
       "_origin": "ast",
       "id": "orchestrator_py_completedprocess",
-      "community": 71,
+      "community": 2,
       "norm_label": "completedprocess"
     },
     {
@@ -5310,7 +5310,7 @@
       "source_location": "L1198",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_dismiss_command",
-      "community": 45,
+      "community": 56,
       "norm_label": ".handle_dismiss_command()"
     },
     {
@@ -5340,7 +5340,7 @@
       "source_location": "L1264",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_until",
-      "community": 44,
+      "community": 10,
       "norm_label": ".parse_status_until()"
     },
     {
@@ -5350,7 +5350,7 @@
       "source_location": "L1268",
       "_origin": "ast",
       "id": "orchestrator_chatboks_parse_status_until_at",
-      "community": 44,
+      "community": 10,
       "norm_label": ".parse_status_until_at()"
     },
     {
@@ -5490,7 +5490,7 @@
       "source_location": "L1457",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_mode_command",
-      "community": 45,
+      "community": 56,
       "norm_label": ".handle_mode_command()"
     },
     {
@@ -5500,7 +5500,7 @@
       "source_location": "L1481",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_context_command",
-      "community": 45,
+      "community": 56,
       "norm_label": ".handle_context_command()"
     },
     {
@@ -5930,7 +5930,7 @@
       "source_location": "L2266",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_external_update",
-      "community": 46,
+      "community": 67,
       "norm_label": ".handle_external_update()"
     },
     {
@@ -5950,7 +5950,7 @@
       "source_location": "L2281",
       "_origin": "ast",
       "id": "orchestrator_chatboks_handle_handoff",
-      "community": 52,
+      "community": 45,
       "norm_label": ".handle_handoff()"
     },
     {
@@ -6360,7 +6360,7 @@
       "source_location": "L3119",
       "_origin": "ast",
       "id": "orchestrator_chatboks_write_sleep_memory",
-      "community": 46,
+      "community": 11,
       "norm_label": ".write_sleep_memory()"
     },
     {
@@ -6370,7 +6370,7 @@
       "source_location": "L3160",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_dir",
-      "community": 46,
+      "community": 11,
       "norm_label": ".sleep_dir()"
     },
     {
@@ -6380,7 +6380,7 @@
       "source_location": "L3163",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sleep_latest_path",
-      "community": 46,
+      "community": 11,
       "norm_label": ".sleep_latest_path()"
     },
     {
@@ -6390,7 +6390,7 @@
       "source_location": "L3167",
       "_origin": "ast",
       "id": "orchestrator_chatboks_summary_item_count",
-      "community": 46,
+      "community": 11,
       "norm_label": ".summary_item_count()"
     },
     {
@@ -6400,7 +6400,7 @@
       "source_location": "L3170",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_git_diff",
-      "community": 11,
+      "community": 58,
       "norm_label": ".capture_git_diff()"
     },
     {
@@ -6530,7 +6530,7 @@
       "source_location": "L3337",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_message",
-      "community": 45,
+      "community": 56,
       "norm_label": ".append_message()"
     },
     {
@@ -6540,7 +6540,7 @@
       "source_location": "L3354",
       "_origin": "ast",
       "id": "orchestrator_chatboks_capture_thought_packets",
-      "community": 79,
+      "community": 2,
       "norm_label": ".capture_thought_packets()"
     },
     {
@@ -6550,7 +6550,7 @@
       "source_location": "L3361",
       "_origin": "ast",
       "id": "orchestrator_chatboks_append_thought_packet",
-      "community": 79,
+      "community": 2,
       "norm_label": ".append_thought_packet()"
     },
     {
@@ -6560,7 +6560,7 @@
       "source_location": "L3361",
       "_origin": "ast",
       "id": "thoughtpacket",
-      "community": 79,
+      "community": 2,
       "norm_label": "thoughtpacket"
     },
     {
@@ -6570,7 +6570,7 @@
       "source_location": "L3375",
       "_origin": "ast",
       "id": "orchestrator_chatboks_packet_record_for_memory",
-      "community": 79,
+      "community": 2,
       "norm_label": ".packet_record_for_memory()"
     },
     {
@@ -6580,7 +6580,7 @@
       "source_location": "L3384",
       "_origin": "ast",
       "id": "orchestrator_chatboks_thought_packet_context",
-      "community": 79,
+      "community": 44,
       "norm_label": ".thought_packet_context()"
     },
     {
@@ -6590,7 +6590,7 @@
       "source_location": "L3414",
       "_origin": "ast",
       "id": "orchestrator_chatboks_confirmation_packet_stage",
-      "community": 79,
+      "community": 44,
       "norm_label": ".confirmation_packet_stage()"
     },
     {
@@ -6600,7 +6600,7 @@
       "source_location": "L3431",
       "_origin": "ast",
       "id": "orchestrator_chatboks_truncate_context_value",
-      "community": 79,
+      "community": 44,
       "norm_label": ".truncate_context_value()"
     },
     {
@@ -6630,7 +6630,7 @@
       "source_location": "L3479",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_state",
-      "community": 46,
+      "community": 67,
       "norm_label": ".load_state()"
     },
     {
@@ -6660,7 +6660,7 @@
       "source_location": "L3492",
       "_origin": "ast",
       "id": "orchestrator_chatboks_default_state",
-      "community": 46,
+      "community": 67,
       "norm_label": ".default_state()"
     },
     {
@@ -6670,7 +6670,7 @@
       "source_location": "L3519",
       "_origin": "ast",
       "id": "orchestrator_chatboks_load_config",
-      "community": 46,
+      "community": 67,
       "norm_label": ".load_config()"
     },
     {
@@ -6680,7 +6680,7 @@
       "source_location": "L3525",
       "_origin": "ast",
       "id": "orchestrator_chatboks_normalize_state",
-      "community": 46,
+      "community": 67,
       "norm_label": ".normalize_state()"
     },
     {
@@ -6720,7 +6720,7 @@
       "source_location": "L3612",
       "_origin": "ast",
       "id": "orchestrator_chatboks_sender_tag",
-      "community": 45,
+      "community": 56,
       "norm_label": ".sender_tag()"
     },
     {
@@ -6730,7 +6730,7 @@
       "source_location": "L3619",
       "_origin": "ast",
       "id": "orchestrator_chatboks_timestamp",
-      "community": 46,
+      "community": 53,
       "norm_label": ".timestamp()"
     },
     {
@@ -6740,7 +6740,7 @@
       "source_location": "L3623",
       "_origin": "ast",
       "id": "orchestrator_main",
-      "community": 9,
+      "community": 58,
       "norm_label": "main()"
     },
     {
@@ -6750,7 +6750,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "orchestrator_rationale_177",
-      "community": 80,
+      "community": 47,
       "norm_label": "watch chatboks.md for external handoff changes."
     },
     {
@@ -8074,6 +8074,776 @@
       "norm_label": "return the agents that should handle a user prompt.          a leading @agent pr"
     },
     {
+      "label": "classify_public_bridge_risk.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk",
+      "community": 9,
+      "norm_label": "classify_public_bridge_risk.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_schema_version",
+      "community": 9,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_id",
+      "community": 9,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_task",
+      "community": 9,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_context",
+      "community": 9,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_expected",
+      "community": 9,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_expected_preferred_response_shape",
+      "community": 9,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_expected_must_include",
+      "community": 9,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_expected_must_avoid",
+      "community": 9,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_expected_scoring_focus",
+      "community": 9,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_classify_public_bridge_risk_tags",
+      "community": 9,
+      "norm_label": "tags"
+    },
+    {
+      "label": "diagnose_pairing_failure.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure",
+      "community": 42,
+      "norm_label": "diagnose_pairing_failure.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_schema_version",
+      "community": 42,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_id",
+      "community": 42,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_task",
+      "community": 42,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_context",
+      "community": 42,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_expected",
+      "community": 42,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_expected_preferred_response_shape",
+      "community": 42,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_expected_must_include",
+      "community": 42,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_expected_must_avoid",
+      "community": 42,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_expected_scoring_focus",
+      "community": 42,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_diagnose_pairing_failure_tags",
+      "community": 42,
+      "norm_label": "tags"
+    },
+    {
+      "label": "replace_exhausted_claude_lane.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "community": 61,
+      "norm_label": "replace_exhausted_claude_lane.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_schema_version",
+      "community": 61,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_id",
+      "community": 61,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_task",
+      "community": 61,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_context",
+      "community": 61,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_expected",
+      "community": 61,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_preferred_response_shape",
+      "community": 61,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_must_include",
+      "community": 61,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_must_avoid",
+      "community": 61,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_scoring_focus",
+      "community": 61,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_replace_exhausted_claude_lane_tags",
+      "community": 61,
+      "norm_label": "tags"
+    },
+    {
+      "label": "resume_after_sleep.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep",
+      "community": 66,
+      "norm_label": "resume_after_sleep.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_schema_version",
+      "community": 66,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_id",
+      "community": 66,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_task",
+      "community": 66,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_context",
+      "community": 66,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_expected",
+      "community": 66,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_expected_preferred_response_shape",
+      "community": 66,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_expected_must_include",
+      "community": 66,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_expected_must_avoid",
+      "community": 66,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_expected_scoring_focus",
+      "community": 66,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_resume_after_sleep_tags",
+      "community": 66,
+      "norm_label": "tags"
+    },
+    {
+      "label": "route_remote_polish.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish",
+      "community": 71,
+      "norm_label": "route_remote_polish.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_schema_version",
+      "community": 71,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_id",
+      "community": 71,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_task",
+      "community": 71,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_context",
+      "community": 71,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_expected",
+      "community": 71,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_expected_preferred_response_shape",
+      "community": 71,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_expected_must_include",
+      "community": 71,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_expected_must_avoid",
+      "community": 71,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_expected_scoring_focus",
+      "community": 71,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_route_remote_polish_tags",
+      "community": 71,
+      "norm_label": "tags"
+    },
+    {
+      "label": "separate_agent_answer_from_system_noise.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "community": 75,
+      "norm_label": "separate_agent_answer_from_system_noise.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_schema_version",
+      "community": 75,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_id",
+      "community": 75,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_task",
+      "community": 75,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_context",
+      "community": 75,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected",
+      "community": 75,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_preferred_response_shape",
+      "community": 75,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_must_include",
+      "community": 75,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_must_avoid",
+      "community": 75,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_scoring_focus",
+      "community": 75,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_separate_agent_answer_from_system_noise_tags",
+      "community": 75,
+      "norm_label": "tags"
+    },
+    {
+      "label": "summarize_mobile_refresh_diff.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "community": 76,
+      "norm_label": "summarize_mobile_refresh_diff.json"
+    },
+    {
+      "label": "schema_version",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_schema_version",
+      "community": 76,
+      "norm_label": "schema_version"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_id",
+      "community": 76,
+      "norm_label": "id"
+    },
+    {
+      "label": "task",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_task",
+      "community": 76,
+      "norm_label": "task"
+    },
+    {
+      "label": "context",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_context",
+      "community": 76,
+      "norm_label": "context"
+    },
+    {
+      "label": "expected",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected",
+      "community": 76,
+      "norm_label": "expected"
+    },
+    {
+      "label": "preferred_response_shape",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_preferred_response_shape",
+      "community": 76,
+      "norm_label": "preferred_response_shape"
+    },
+    {
+      "label": "must_include",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_must_include",
+      "community": 76,
+      "norm_label": "must_include"
+    },
+    {
+      "label": "must_avoid",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_must_avoid",
+      "community": 76,
+      "norm_label": "must_avoid"
+    },
+    {
+      "label": "scoring_focus",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_scoring_focus",
+      "community": 76,
+      "norm_label": "scoring_focus"
+    },
+    {
+      "label": "tags",
+      "file_type": "code",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "coordinator_bakeoff_summarize_mobile_refresh_diff_tags",
+      "community": 76,
+      "norm_label": "tags"
+    },
+    {
       "label": "test_adapter_profiles.py",
       "file_type": "code",
       "source_file": "tests/test_adapter_profiles.py",
@@ -8664,6 +9434,66 @@
       "norm_label": "smoke tests for lean context v1."
     },
     {
+      "label": "test_coordinator_bakeoff.py",
+      "file_type": "code",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_coordinator_bakeoff",
+      "community": 78,
+      "norm_label": "test_coordinator_bakeoff.py"
+    },
+    {
+      "label": "load_fixture()",
+      "file_type": "code",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "tests_test_coordinator_bakeoff_load_fixture",
+      "community": 78,
+      "norm_label": "load_fixture()"
+    },
+    {
+      "label": "Path",
+      "file_type": "code",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "tests_test_coordinator_bakeoff_py_path",
+      "community": 78,
+      "norm_label": "path"
+    },
+    {
+      "label": "test_coordinator_bakeoff_fixture_set_matches_plan()",
+      "file_type": "code",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_fixture_set_matches_plan",
+      "community": 78,
+      "norm_label": "test_coordinator_bakeoff_fixture_set_matches_plan()"
+    },
+    {
+      "label": "test_coordinator_bakeoff_fixtures_are_valid_and_sanitized()",
+      "file_type": "code",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L51",
+      "_origin": "ast",
+      "id": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_fixtures_are_valid_and_sanitized",
+      "community": 78,
+      "norm_label": "test_coordinator_bakeoff_fixtures_are_valid_and_sanitized()"
+    },
+    {
+      "label": "test_coordinator_bakeoff_keeps_cloud_fallback_out_of_fixtures()",
+      "file_type": "code",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L80",
+      "_origin": "ast",
+      "id": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_keeps_cloud_fallback_out_of_fixtures",
+      "community": 78,
+      "norm_label": "test_coordinator_bakeoff_keeps_cloud_fallback_out_of_fixtures()"
+    },
+    {
       "label": "test_direct_agents.py",
       "file_type": "code",
       "source_file": "tests/test_direct_agents.py",
@@ -9150,7 +9980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_doctor",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_doctor.py"
     },
     {
@@ -9160,7 +9990,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_doctor_test_find_ollama_command_prefers_existing_explicit_path",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_find_ollama_command_prefers_existing_explicit_path()"
     },
     {
@@ -9170,7 +10000,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "tests_test_doctor_test_find_ollama_command_uses_localappdata_fallback",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_find_ollama_command_uses_localappdata_fallback()"
     },
     {
@@ -9180,7 +10010,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_py_launcher_warns_when_launcher_reports_no_installs",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_check_py_launcher_warns_when_launcher_reports_no_installs()"
     },
     {
@@ -9190,7 +10020,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_py_launcher_accepts_real_listing",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_check_py_launcher_accepts_real_listing()"
     },
     {
@@ -9200,7 +10030,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "tests_test_doctor_test_smoke_coordinator_includes_think_flag",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_smoke_coordinator_includes_think_flag()"
     },
     {
@@ -9210,7 +10040,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_project_includes_direct_agents",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_check_project_includes_direct_agents()"
     },
     {
@@ -9220,7 +10050,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "tests_test_doctor_test_parse_graphify_built_commit_reads_report",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_parse_graphify_built_commit_reads_report()"
     },
     {
@@ -9230,7 +10060,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "tests_test_doctor_test_commits_match_accepts_short_or_full_prefixes",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_commits_match_accepts_short_or_full_prefixes()"
     },
     {
@@ -9240,7 +10070,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_graphify_reports_stale_source_commit",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_check_graphify_reports_stale_source_commit()"
     },
     {
@@ -9250,7 +10080,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_graphify_accepts_latest_source_commit",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_check_graphify_accepts_latest_source_commit()"
     },
     {
@@ -9260,7 +10090,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "tests_test_doctor_test_check_graphify_warns_when_source_worktree_dirty",
-      "community": 66,
+      "community": 1,
       "norm_label": "test_check_graphify_warns_when_source_worktree_dirty()"
     },
     {
@@ -9270,7 +10100,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_encoding_utils",
-      "community": 9,
+      "community": 58,
       "norm_label": "test_encoding_utils.py"
     },
     {
@@ -9280,7 +10110,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "tests_test_encoding_utils_test_utf8_env_overrides_hostile_python_encoding",
-      "community": 9,
+      "community": 58,
       "norm_label": "test_utf8_env_overrides_hostile_python_encoding()"
     },
     {
@@ -9290,7 +10120,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "tests_test_encoding_utils_test_stream_reconfigures_stdio_before_rich_output",
-      "community": 9,
+      "community": 58,
       "norm_label": "test_stream_reconfigures_stdio_before_rich_output()"
     },
     {
@@ -9560,7 +10390,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_latency",
-      "community": 75,
+      "community": 58,
       "norm_label": "test_latency.py"
     },
     {
@@ -9570,7 +10400,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_latency_make_app",
-      "community": 75,
+      "community": 58,
       "norm_label": "_make_app()"
     },
     {
@@ -9580,7 +10410,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_latency_py_path",
-      "community": 75,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -9590,7 +10420,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_latency_py_chatboks",
-      "community": 75,
+      "community": 58,
       "norm_label": "chatboks"
     },
     {
@@ -9600,7 +10430,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "tests_test_latency_test_latency_reports_no_records_yet",
-      "community": 75,
+      "community": 58,
       "norm_label": "test_latency_reports_no_records_yet()"
     },
     {
@@ -9610,7 +10440,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "tests_test_latency_test_latency_summary_reads_recent_jsonl_records",
-      "community": 75,
+      "community": 58,
       "norm_label": "test_latency_summary_reads_recent_jsonl_records()"
     },
     {
@@ -9620,7 +10450,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "tests_test_latency_test_latency_summary_keeps_backward_compatible_field_aliases",
-      "community": 75,
+      "community": 58,
       "norm_label": "test_latency_summary_keeps_backward_compatible_field_aliases()"
     },
     {
@@ -9630,7 +10460,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_latency_rationale_1",
-      "community": 75,
+      "community": 58,
       "norm_label": "smoke tests for local cli latency summaries."
     },
     {
@@ -10140,7 +10970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_packets",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_packets.py"
     },
     {
@@ -10150,7 +10980,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_packets_make_app",
-      "community": 42,
+      "community": 2,
       "norm_label": "_make_app()"
     },
     {
@@ -10160,7 +10990,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_packets_py_path",
-      "community": 42,
+      "community": 2,
       "norm_label": "path"
     },
     {
@@ -10170,7 +11000,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "tests_test_packets_py_chatboks",
-      "community": 42,
+      "community": 2,
       "norm_label": "chatboks"
     },
     {
@@ -10180,7 +11010,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "tests_test_packets_test_extract_packets_parses_valid_block",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_extract_packets_parses_valid_block()"
     },
     {
@@ -10190,7 +11020,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "tests_test_packets_test_extract_packets_ignores_malformed_block",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_extract_packets_ignores_malformed_block()"
     },
     {
@@ -10200,7 +11030,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_packets_test_extract_packets_accepts_criteria_pending_signal",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_extract_packets_accepts_criteria_pending_signal()"
     },
     {
@@ -10210,7 +11040,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "tests_test_packets_test_append_message_persists_packet_jsonl",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_append_message_persists_packet_jsonl()"
     },
     {
@@ -10220,7 +11050,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "tests_test_packets_test_append_message_preserves_anchored_packet_observations",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_append_message_preserves_anchored_packet_observations()"
     },
     {
@@ -10230,7 +11060,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "tests_test_packets_test_confirmation_packet_context_marks_executor_output",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_confirmation_packet_context_marks_executor_output()"
     },
     {
@@ -10240,7 +11070,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "tests_test_packets_test_confirmation_packet_context_marks_verifier_review_and_repair",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_confirmation_packet_context_marks_verifier_review_and_repair()"
     },
     {
@@ -10250,7 +11080,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "tests_test_packets_test_summarizer_prefers_packet_memory",
-      "community": 42,
+      "community": 2,
       "norm_label": "test_summarizer_prefers_packet_memory()"
     },
     {
@@ -12470,7 +13300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_skills",
-      "community": 78,
+      "community": 77,
       "norm_label": "test_skills.py"
     },
     {
@@ -12480,7 +13310,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_make_app",
-      "community": 78,
+      "community": 77,
       "norm_label": "_make_app()"
     },
     {
@@ -12490,7 +13320,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_py_path",
-      "community": 78,
+      "community": 77,
       "norm_label": "path"
     },
     {
@@ -12500,7 +13330,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_skills_py_chatboks",
-      "community": 78,
+      "community": 77,
       "norm_label": "chatboks"
     },
     {
@@ -12510,7 +13340,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_skills_test_skills_command_lists_native_skills_without_agent_round",
-      "community": 78,
+      "community": 77,
       "norm_label": "test_skills_command_lists_native_skills_without_agent_round()"
     },
     {
@@ -12520,7 +13350,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "tests_test_skills_test_skills_command_previews_requested_skill",
-      "community": 78,
+      "community": 77,
       "norm_label": "test_skills_command_previews_requested_skill()"
     },
     {
@@ -12530,7 +13360,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "tests_test_skills_test_skill_summary_prefers_summary_field",
-      "community": 78,
+      "community": 77,
       "norm_label": "test_skill_summary_prefers_summary_field()"
     },
     {
@@ -12540,7 +13370,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_skills_rationale_1",
-      "community": 78,
+      "community": 77,
       "norm_label": "smoke tests for native chatboks skill discovery."
     },
     {
@@ -12550,7 +13380,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_slash_buffering",
-      "community": 61,
+      "community": 58,
       "norm_label": "test_slash_buffering.py"
     },
     {
@@ -12560,7 +13390,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_make_app",
-      "community": 61,
+      "community": 58,
       "norm_label": "_make_app()"
     },
     {
@@ -12570,7 +13400,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_py_path",
-      "community": 61,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -12580,7 +13410,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_py_chatboks",
-      "community": 61,
+      "community": 58,
       "norm_label": "chatboks"
     },
     {
@@ -12590,7 +13420,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_slash_commands_bypass_buffer",
-      "community": 61,
+      "community": 58,
       "norm_label": "test_slash_commands_bypass_buffer()"
     },
     {
@@ -12600,7 +13430,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_slash_command_does_not_clear_pending_buffer",
-      "community": 61,
+      "community": 58,
       "norm_label": "test_slash_command_does_not_clear_pending_buffer()"
     },
     {
@@ -12610,7 +13440,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_plain_text_without_punctuation_is_buffered",
-      "community": 61,
+      "community": 58,
       "norm_label": "test_plain_text_without_punctuation_is_buffered()"
     },
     {
@@ -12620,7 +13450,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_test_handle_user_input_routes_slash_commands_without_buffer",
-      "community": 61,
+      "community": 58,
       "norm_label": "test_handle_user_input_routes_slash_commands_without_buffer()"
     },
     {
@@ -12630,7 +13460,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_1",
-      "community": 61,
+      "community": 58,
       "norm_label": "smoke tests: slash commands bypass buffer_or_complete_input."
     },
     {
@@ -12640,7 +13470,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_42",
-      "community": 61,
+      "community": 58,
       "norm_label": "all known slash commands return immediately without buffering."
     },
     {
@@ -12650,7 +13480,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_67",
-      "community": 61,
+      "community": 58,
       "norm_label": "a slash command typed mid-composition leaves the existing buffer intact."
     },
     {
@@ -12660,7 +13490,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_78",
-      "community": 61,
+      "community": 58,
       "norm_label": "non-slash text without terminal punctuation is buffered as before."
     },
     {
@@ -12670,7 +13500,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "tests_test_slash_buffering_rationale_88",
-      "community": 61,
+      "community": 58,
       "norm_label": "handle_user_input executes slash local commands end-to-end."
     },
     {
@@ -12730,7 +13560,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_usage_sync",
-      "community": 76,
+      "community": 58,
       "norm_label": "test_usage_sync.py"
     },
     {
@@ -12740,7 +13570,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_usage_sync_make_app",
-      "community": 76,
+      "community": 58,
       "norm_label": "_make_app()"
     },
     {
@@ -12750,7 +13580,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_usage_sync_py_path",
-      "community": 76,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -12760,7 +13590,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "tests_test_usage_sync_py_chatboks",
-      "community": 76,
+      "community": 58,
       "norm_label": "chatboks"
     },
     {
@@ -12770,7 +13600,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_usage_show_reports_no_records_yet",
-      "community": 76,
+      "community": 58,
       "norm_label": "test_usage_show_reports_no_records_yet()"
     },
     {
@@ -12780,7 +13610,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_usage_sync_records_playwright_capture_metadata",
-      "community": 76,
+      "community": 58,
       "norm_label": "test_usage_sync_records_playwright_capture_metadata()"
     },
     {
@@ -12790,7 +13620,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_usage_summary_reads_saved_jsonl",
-      "community": 76,
+      "community": 58,
       "norm_label": "test_usage_summary_reads_saved_jsonl()"
     },
     {
@@ -12800,7 +13630,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_extract_usage_highlights_filters_relevant_lines",
-      "community": 76,
+      "community": 58,
       "norm_label": "test_extract_usage_highlights_filters_relevant_lines()"
     },
     {
@@ -12810,7 +13640,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "tests_test_usage_sync_test_extract_playwright_value_handles_raw_and_verbose_outputs",
-      "community": 76,
+      "community": 58,
       "norm_label": "test_extract_playwright_value_handles_raw_and_verbose_outputs()"
     },
     {
@@ -12820,7 +13650,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_usage_sync_rationale_1",
-      "community": 76,
+      "community": 58,
       "norm_label": "smoke tests for usage baseline syncing and summaries."
     },
     {
@@ -12980,7 +13810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_init",
-      "community": 9,
+      "community": 58,
       "norm_label": "__init__.py"
     },
     {
@@ -12990,7 +13820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_stream",
-      "community": 9,
+      "community": 58,
       "norm_label": "stream.py"
     },
     {
@@ -14707,7 +15537,7 @@
       "label": "Scoring Rubric",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L85",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_scoring_rubric",
       "community": 57,
@@ -14717,7 +15547,7 @@
       "label": "Metrics To Record",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L104",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_metrics_to_record",
       "community": 57,
@@ -14727,7 +15557,7 @@
       "label": "Privacy Rules",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L119",
+      "source_location": "L120",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_privacy_rules",
       "community": 57,
@@ -14737,7 +15567,7 @@
       "label": "Implementation Plan",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L132",
+      "source_location": "L133",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_implementation_plan",
       "community": 57,
@@ -14747,7 +15577,7 @@
       "label": "Recommended First Slice",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L142",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_recommended_first_slice",
       "community": 57,
@@ -14757,7 +15587,7 @@
       "label": "Open Questions",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L151",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_open_questions",
       "community": 57,
@@ -42518,6 +43348,706 @@
       "target": "router_router_shared_protocol"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk_expected",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk_expected",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk_expected",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_classify_public_bridge_risk_expected",
+      "target": "coordinator_bakeoff_classify_public_bridge_risk_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure_expected",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure_expected",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure_expected",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/diagnose_pairing_failure.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_diagnose_pairing_failure_expected",
+      "target": "coordinator_bakeoff_diagnose_pairing_failure_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane_expected",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane_expected",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane_expected",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/replace_exhausted_claude_lane.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_replace_exhausted_claude_lane_expected",
+      "target": "coordinator_bakeoff_replace_exhausted_claude_lane_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep",
+      "target": "coordinator_bakeoff_resume_after_sleep_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep",
+      "target": "coordinator_bakeoff_resume_after_sleep_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep",
+      "target": "coordinator_bakeoff_resume_after_sleep_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep",
+      "target": "coordinator_bakeoff_resume_after_sleep_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep",
+      "target": "coordinator_bakeoff_resume_after_sleep_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep",
+      "target": "coordinator_bakeoff_resume_after_sleep_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep_expected",
+      "target": "coordinator_bakeoff_resume_after_sleep_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep_expected",
+      "target": "coordinator_bakeoff_resume_after_sleep_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep_expected",
+      "target": "coordinator_bakeoff_resume_after_sleep_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/resume_after_sleep.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_resume_after_sleep_expected",
+      "target": "coordinator_bakeoff_resume_after_sleep_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish",
+      "target": "coordinator_bakeoff_route_remote_polish_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish",
+      "target": "coordinator_bakeoff_route_remote_polish_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish",
+      "target": "coordinator_bakeoff_route_remote_polish_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish",
+      "target": "coordinator_bakeoff_route_remote_polish_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish",
+      "target": "coordinator_bakeoff_route_remote_polish_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish",
+      "target": "coordinator_bakeoff_route_remote_polish_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish_expected",
+      "target": "coordinator_bakeoff_route_remote_polish_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish_expected",
+      "target": "coordinator_bakeoff_route_remote_polish_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish_expected",
+      "target": "coordinator_bakeoff_route_remote_polish_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/route_remote_polish.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_route_remote_polish_expected",
+      "target": "coordinator_bakeoff_route_remote_polish_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/separate_agent_answer_from_system_noise.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected",
+      "target": "coordinator_bakeoff_separate_agent_answer_from_system_noise_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_schema_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_tags",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_must_avoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_must_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_preferred_response_shape",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/coordinator_bakeoff/summarize_mobile_refresh_diff.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected",
+      "target": "coordinator_bakeoff_summarize_mobile_refresh_diff_expected_scoring_focus",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -43774,6 +45304,68 @@
       "confidence_score": 1.0,
       "source": "tests_test_context_modes_test_agent_prompt_places_turn_instruction_before_volatile_context",
       "target": "tests_test_context_modes_promptagent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "tests_test_coordinator_bakeoff",
+      "target": "tests_test_coordinator_bakeoff_load_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "tests_test_coordinator_bakeoff",
+      "target": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_fixture_set_matches_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "tests_test_coordinator_bakeoff",
+      "target": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_fixtures_are_valid_and_sanitized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "tests_test_coordinator_bakeoff",
+      "target": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_keeps_cloud_fallback_out_of_fixtures",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "tests_test_coordinator_bakeoff_load_fixture",
+      "target": "tests_test_coordinator_bakeoff_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_coordinator_bakeoff.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "tests_test_coordinator_bakeoff_test_coordinator_bakeoff_fixtures_are_valid_and_sanitized",
+      "target": "tests_test_coordinator_bakeoff_load_fixture",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -55109,9 +56701,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff"
     },
     {
       "relation": "contains",
@@ -55119,9 +56711,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_candidate_models",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_candidate_models"
     },
     {
       "relation": "contains",
@@ -55129,9 +56721,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_current_baseline",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_current_baseline"
     },
     {
       "relation": "contains",
@@ -55139,9 +56731,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_evaluation_tasks",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_evaluation_tasks"
     },
     {
       "relation": "contains",
@@ -55149,9 +56741,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_goal",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_goal"
     },
     {
       "relation": "contains",
@@ -55159,9 +56751,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L132",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_implementation_plan",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_implementation_plan"
     },
     {
       "relation": "contains",
@@ -55169,9 +56761,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_metrics_to_record",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_metrics_to_record"
     },
     {
       "relation": "contains",
@@ -55179,9 +56771,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L151",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_open_questions",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_open_questions"
     },
     {
       "relation": "contains",
@@ -55189,9 +56781,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L119",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_privacy_rules",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_privacy_rules"
     },
     {
       "relation": "contains",
@@ -55199,9 +56791,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_prompt_suite",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_prompt_suite"
     },
     {
       "relation": "contains",
@@ -55209,9 +56801,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L142",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_recommended_first_slice",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_recommended_first_slice"
     },
     {
       "relation": "contains",
@@ -55219,9 +56811,9 @@
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "planning_coordinator_model_bakeoff_coordinator_model_bakeoff",
-      "target": "planning_coordinator_model_bakeoff_scoring_rubric",
-      "confidence_score": 1.0
+      "target": "planning_coordinator_model_bakeoff_scoring_rubric"
     },
     {
       "relation": "contains",
@@ -55445,5 +57037,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c07c9ec622c4e29aa4c899db35bd5f65c6f7ad75"
+  "built_at_commit": "64c07c85164b850c6f28adf74593822402e8a06d"
 }

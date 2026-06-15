@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "route_remote_polish",
+  "task": "Choose the best ChatBoks route for a mobile remote readability polish request.",
+  "context": "User says: The mobile remote is hard to read because bridge events and system messages are mixed with actual agent answers. Current project is chatboks. Available main agents are codex and claude. Direct agents include coordinator and codex_spark. Mode strategies include implement -> solo_codex, review -> solo_claude, brainstorm -> full_round.",
+  "expected": {
+    "preferred_response_shape": "route plus one short reason",
+    "must_include": [
+      "codex",
+      "implement",
+      "UI or mobile remote"
+    ],
+    "must_avoid": [
+      "route to all agents by default",
+      "change live routing without evidence",
+      "request cloud-only tooling"
+    ],
+    "scoring_focus": [
+      "correctness",
+      "actionability",
+      "brevity"
+    ]
+  },
+  "tags": [
+    "routing",
+    "mobile_remote",
+    "implementation"
+  ]
+}
