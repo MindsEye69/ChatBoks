@@ -53,6 +53,16 @@ projects:
       brainstorm: full_round
     role_routes:
       brainstorm: [claude, coordinator]
+  klippii:
+    path: C:\Users\MindsEye\Desktop\Klippii
+    agents: [claude, codex]
+    primary: codex
+    codegraph: true
+  wallvision:
+    path: C:\Users\MindsEye\Desktop\WallVision
+    agents: [claude, codex]
+    primary: codex
+    codegraph: true
 
 agents:
   coordinator:
