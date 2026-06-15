@@ -15737,7 +15737,7 @@
       "label": "Evaluation Tasks",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L52",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_evaluation_tasks",
       "community": 57,
@@ -15747,7 +15747,7 @@
       "label": "Prompt Suite",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L66",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_prompt_suite",
       "community": 57,
@@ -15757,7 +15757,7 @@
       "label": "Scoring Rubric",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L86",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_scoring_rubric",
       "community": 57,
@@ -15767,7 +15767,7 @@
       "label": "Metrics To Record",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L105",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_metrics_to_record",
       "community": 57,
@@ -15777,7 +15777,7 @@
       "label": "Manual Runner",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L120",
+      "source_location": "L121",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_manual_runner",
       "community": 57,
@@ -15787,7 +15787,7 @@
       "label": "Privacy Rules",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L138",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_privacy_rules",
       "community": 57,
@@ -15797,7 +15797,7 @@
       "label": "Implementation Plan",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L151",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_implementation_plan",
       "community": 57,
@@ -15807,7 +15807,7 @@
       "label": "Recommended First Slice",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L161",
+      "source_location": "L162",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_recommended_first_slice",
       "community": 57,
@@ -15817,7 +15817,7 @@
       "label": "Open Questions",
       "file_type": "document",
       "source_file": "docs/planning/coordinator-model-bakeoff.md",
-      "source_location": "L170",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "planning_coordinator_model_bakeoff_open_questions",
       "community": 57,
@@ -22711,9 +22711,9 @@
       "source_file": "coordinator_bakeoff.py",
       "source_location": "L190",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "coordinator_bakeoff",
-      "target": "coordinator_bakeoff_append_result",
-      "confidence_score": 1.0
+      "target": "coordinator_bakeoff_append_result"
     },
     {
       "relation": "contains",
@@ -22897,9 +22897,9 @@
       "source_file": "coordinator_bakeoff.py",
       "source_location": "L190",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "coordinator_bakeoff_append_result",
-      "target": "coordinator_bakeoff_py_path",
-      "confidence_score": 1.0
+      "target": "coordinator_bakeoff_py_path"
     },
     {
       "relation": "references",
@@ -22941,9 +22941,9 @@
       "source_file": "coordinator_bakeoff.py",
       "source_location": "L190",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "coordinator_bakeoff_append_result",
-      "target": "coordinator_bakeoff_py_any",
-      "confidence_score": 1.0
+      "target": "coordinator_bakeoff_py_any"
     },
     {
       "relation": "references",
@@ -23150,9 +23150,9 @@
       "source_file": "coordinator_bakeoff.py",
       "source_location": "L260",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "coordinator_bakeoff_main",
-      "target": "coordinator_bakeoff_append_result",
-      "confidence_score": 1.0
+      "target": "coordinator_bakeoff_append_result"
     },
     {
       "relation": "calls",
@@ -57839,5 +57839,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ff7723a66c67b02d16a330bf92708819bea5ebbd"
+  "built_at_commit": "4202960a46adf2215fb7628e7fb8329ff72c9c55"
 }

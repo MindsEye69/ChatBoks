@@ -44,6 +44,7 @@ Start with models that can run locally through Ollama or an equivalent local ada
 |---|---|---|
 | `gemma3:4b` | Current Coordinator baseline | Required control |
 | Gemma 4 E4B QAT | Paper Sleuth candidate for better accuracy, latency, and memory tradeoff | Research before install |
+| DiffusionGemma 26B A4B IT | Google experimental text-diffusion Gemma 4 MoE; claims up to 4x faster generation on dedicated GPUs | Not tested; likely needs vLLM or Hugging Face serving, not ordinary Ollama |
 | Small Qwen instruct model | Useful fallback if Gemma struggles with routing or summaries | Optional |
 | Small Llama instruct model | Useful sanity check against a different model family | Optional |
 
@@ -166,10 +167,13 @@ The first live run should compare:
 
 - Current `gemma3:4b`.
 - One Gemma 4 E4B QAT variant, if it can be installed locally without disturbing the current Coordinator.
+- DiffusionGemma only after confirming a supported local serving path. Do not assume Ollama compatibility.
 
 ## Open Questions
 
 - Which local runtime should own Gemma 4 E4B QAT if Ollama does not expose it cleanly?
+- Can DiffusionGemma be served locally through vLLM or Hugging Face tooling on this machine without destabilizing the existing Ollama Coordinator?
+- Does DiffusionGemma's diffusion decoding improve Coordinator latency while preserving enough instruction-following reliability for routing and trust-boundary prompts?
 - Should `can_fill_main_seat` require a higher score than ordinary direct Coordinator use?
 - Should the bakeoff include multilingual or typo-heavy prompts from mobile remote usage?
 - Should trajectory-health prompts be part of this suite or a separate AgentStop-inspired suite?
