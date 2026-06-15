@@ -956,6 +956,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "function visibleTranscript" in body
             assert "function renderSystemControls" in body
             assert "function criteriaGateResponseItems" in body
+            assert "Bridge response was unclear. Session refreshed." in body
 
         with urllib.request.urlopen(f"{base}/styles.css", timeout=5) as response:
             assert response.status == 200

@@ -1,7 +1,7 @@
 # Graph Report - chatboks  (2026-06-15)
 
 ## Corpus Check
-- 93 files · ~321,119 words
+- 93 files · ~323,671 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `20fa5e1f`
+- Built from commit: `9060f6aa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

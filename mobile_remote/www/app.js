@@ -188,6 +188,9 @@ function describeNetworkError(error) {
   if (isAuthError(error)) {
     return "Session token was rejected or expired. Use Forget token, then pair with a fresh desktop code.";
   }
+  if (message.includes("Expecting value: line 1 column 1")) {
+    return "The bridge returned an empty or non-JSON response. Refreshing the session usually shows whether the command completed.";
+  }
   if (message === "Failed to fetch" || error instanceof TypeError) {
     const url = els.baseUrl.value.trim() || "the bridge URL";
     return `Could not reach the bridge at ${url}. Confirm the bridge is running, Tailscale is connected, and the URL matches the desktop bridge console.`;
@@ -920,6 +923,11 @@ async function sendPrompt(text) {
     return true;
   } catch (error) {
     const detail = describeNetworkError(error);
+    if (!isAuthError(error) && await refreshSession({ scrollLatest: false })) {
+      setSendState(false, "Bridge response was unclear. Session refreshed.");
+      clearSendStatusSoon();
+      return false;
+    }
     setSendState(false, `Send failed: ${detail}`);
     setConnectionState(detail, isAuthError(error) ? "error" : "warning");
     showError(detail);
