@@ -134,6 +134,19 @@ function setSendState(isSending, message = "") {
   els.sendStatus.textContent = message;
 }
 
+function setRefreshState(isRefreshing, label = "") {
+  els.refresh.disabled = isRefreshing;
+  els.refresh.setAttribute("aria-busy", isRefreshing ? "true" : "false");
+  els.refresh.textContent = label || (isRefreshing ? "Refreshing" : "Refresh");
+  if (!isRefreshing && label) {
+    window.setTimeout(() => {
+      if (!els.refresh.disabled && els.refresh.textContent === label) {
+        els.refresh.textContent = "Refresh";
+      }
+    }, 1500);
+  }
+}
+
 function clearSendStatusSoon() {
   window.setTimeout(() => {
     if (!els.send.disabled) {
@@ -871,6 +884,11 @@ async function switchProject(project) {
 }
 
 async function refreshSession(options = {}) {
+  const showFeedback = options.feedback === true;
+  if (showFeedback) {
+    setRefreshState(true);
+    setSendState(false, "Refreshing session...");
+  }
   try {
     const data = await apiFetch(`/api/session?cursor=${state.eventCursor}`);
     state.connectionFailures = 0;
@@ -878,11 +896,22 @@ async function refreshSession(options = {}) {
     applySession(data, options);
     setConnectionState("Connected to bridge.", "success");
     showError("");
+    if (showFeedback) {
+      setRefreshState(false, "Refreshed");
+      setSendState(false, data.command_running ? "Refreshed. Agents still running..." : "Session refreshed.");
+      if (!data.command_running) {
+        clearSendStatusSoon();
+      }
+    }
     return true;
   } catch (error) {
     state.connectionFailures += 1;
     const detail = describeNetworkError(error);
     showError(detail);
+    if (showFeedback) {
+      setRefreshState(false, "Refresh failed");
+      setSendState(false, `Refresh failed: ${detail}`);
+    }
     if (isAuthError(error)) {
       state.authBlocked = true;
       stopPolling();
@@ -1014,7 +1043,7 @@ els.connect.addEventListener("click", async () => {
 
 els.forget.addEventListener("click", forgetSessionToken);
 
-els.refresh.addEventListener("click", refreshSession);
+els.refresh.addEventListener("click", () => refreshSession({ feedback: true }));
 els.connectionToggle.addEventListener("click", () => {
   setConnectionCollapsed(!els.connectionPanel.classList.contains("hidden"));
 });

@@ -1,16 +1,16 @@
 # Graph Report - chatboks  (2026-06-15)
 
 ## Corpus Check
-- 93 files · ~323,671 words
+- 93 files · ~323,779 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1486 nodes · 3795 edges · 78 communities (67 shown, 11 thin omitted)
+- 1487 nodes · 3799 edges · 77 communities (66 shown, 11 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 261 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9060f6aa`
+- Built from commit: `b5ce87b0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,6 +47,7 @@
 - [[_COMMUNITY_Community 44|Community 44]]
 - [[_COMMUNITY_Community 46|Community 46]]
 - [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
 - [[_COMMUNITY_Community 51|Community 51]]
@@ -68,7 +69,6 @@
 - [[_COMMUNITY_Community 73|Community 73]]
 - [[_COMMUNITY_Community 74|Community 74]]
 - [[_COMMUNITY_Community 75|Community 75]]
-- [[_COMMUNITY_Community 76|Community 76]]
 - [[_COMMUNITY_Community 77|Community 77]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -99,15 +99,15 @@
 - 1-file cycle: `orchestrator.py -> orchestrator.py`
 - 1-file cycle: `tests/test_direct_agents.py -> tests/test_direct_agents.py`
 
-## Communities (78 total, 11 thin omitted)
+## Communities (77 total, 11 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.33
-Nodes (7): _make_app(), Chatboks, Path, Smoke tests for usage baseline syncing and summaries., test_usage_show_reports_no_records_yet(), test_usage_summary_reads_saved_jsonl(), test_usage_sync_records_playwright_capture_metadata()
+Cohesion: 0.12
+Nodes (20): _make_app(), Chatboks, Path, Smoke tests for manual collaboration outcome tracking., test_outcomes_summary_reads_jsonl(), test_suggest_outcome_uses_coordinator_without_recording_jsonl(), test_win_command_records_jsonl_without_agent_round(), _make_app() (+12 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.08
-Nodes (49): AntigravityAgent, BaseAgent, Any, ClaudeAgent, CodexAgent, CodexSparkAgent, Antigravity's Role - ChatBoks, Boundaries (+41 more)
+Nodes (45): AntigravityAgent, ClaudeAgent, CodexAgent, CodexSparkAgent, Antigravity's Role - ChatBoks, Boundaries, Collaboration Duties, Primary Lane (+37 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.17
@@ -138,8 +138,8 @@ Cohesion: 0.12
 Nodes (24): ContextBuilder, CoordinatorAgent, _make_app(), _make_builder(), _make_coordinator(), Chatboks, Path, Smoke tests for security hardening pass 1.  Covers: - chatboks.md history marked (+16 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.15
-Nodes (18): _make_app(), Chatboks, Path, Smoke tests for local CLI latency summaries., test_latency_reports_no_records_yet(), test_latency_summary_reads_recent_jsonl_records(), _make_app(), Chatboks (+10 more)
+Cohesion: 0.26
+Nodes (12): _make_app(), Chatboks, Path, Smoke tests: slash commands bypass buffer_or_complete_input., All known slash commands return immediately without buffering., A slash command typed mid-composition leaves the existing buffer intact., Non-slash text without terminal punctuation is buffered as before., handle_user_input executes slash local commands end-to-end. (+4 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.11
@@ -174,8 +174,8 @@ Cohesion: 0.09
 Nodes (42): apiFetch(), appendStreamText(), applyEventToList(), applySession(), clearSendStatusSoon(), copyLatestResponse(), currentBaseUrl(), currentPairCode() (+34 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.08
-Nodes (61): agentDisplayName(), apiFetch(), appendStreamText(), applyEventToList(), applySession(), canonicalAgent(), clearSendStatusSoon(), copyLatestResponse() (+53 more)
+Cohesion: 0.07
+Nodes (62): agentDisplayName(), apiFetch(), appendStreamText(), applyEventToList(), applySession(), canonicalAgent(), clearSendStatusSoon(), copyLatestResponse() (+54 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.25
@@ -207,7 +207,11 @@ Nodes (4): CodeGraph, Freshness Checks, Graph Workflow, Graphify
 
 ### Community 47 - "Community 47"
 Cohesion: 0.07
-Nodes (56): AgentTimeoutError, Path, Raised when an agent CLI rejects a prompt because the context is too large., Raised when an agent CLI exceeds its idle or wall-clock timeout., TokenExhaustionError, AgentTimeoutError, RuntimeError, FallbackAgent (+48 more)
+Nodes (48): AgentTimeoutError, BaseAgent, Any, Path, Raised when an agent CLI rejects a prompt because the context is too large., Raised when an agent CLI exceeds its idle or wall-clock timeout., TokenExhaustionError, AgentTimeoutError (+40 more)
+
+### Community 48 - "Community 48"
+Cohesion: 0.26
+Nodes (12): FakeAgent, _make_app(), Chatboks, Path, test_model_command_escape_forces_plain_prompt_text(), test_model_command_timeout_preserves_partial_output(), test_model_commands_command_lists_registered_commands(), test_raw_model_slash_command_stays_chatboks_local() (+4 more)
 
 ### Community 50 - "Community 50"
 Cohesion: 0.33
@@ -270,12 +274,8 @@ Cohesion: 0.14
 Nodes (9): BaseHTTPRequestHandler, is_allowed_bind_host(), is_loopback_host(), main(), RemoteAuth, RemoteBridgeServer, test_allowed_bind_host_requires_explicit_tailnet_flag(), Thread (+1 more)
 
 ### Community 75 - "Community 75"
-Cohesion: 0.46
-Nodes (7): _make_app(), Chatboks, Path, Smoke tests for manual collaboration outcome tracking., test_outcomes_summary_reads_jsonl(), test_suggest_outcome_uses_coordinator_without_recording_jsonl(), test_win_command_records_jsonl_without_agent_round()
-
-### Community 76 - "Community 76"
 Cohesion: 0.39
-Nodes (6): _make_app(), Chatboks, Path, Smoke tests for native ChatBoks skill discovery., test_skills_command_lists_native_skills_without_agent_round(), test_skills_command_previews_requested_skill()
+Nodes (6): _make_app(), Chatboks, Path, Smoke tests for local CLI latency summaries., test_latency_reports_no_records_yet(), test_latency_summary_reads_recent_jsonl_records()
 
 ## Knowledge Gaps
 - **148 isolated node(s):** `version`, `configurations`, `allow`, `Path`, `Any` (+143 more)
@@ -285,9 +285,9 @@ Nodes (6): _make_app(), Chatboks, Path, Smoke tests for native ChatBoks skill di
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Chatboks` connect `Community 44` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 42`, `Community 45`, `Community 46`, `Community 47`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 57`, `Community 58`, `Community 61`, `Community 65`, `Community 67`, `Community 73`, `Community 75`, `Community 76`, `Community 77`?**
-  _High betweenness centrality (0.270) - this node is a cross-community bridge._
-- **Why does `Router` connect `Community 4` to `Community 1`, `Community 67`, `Community 3`, `Community 6`, `Community 7`, `Community 10`, `Community 42`, `Community 44`, `Community 77`, `Community 46`, `Community 47`?**
+- **Why does `Chatboks` connect `Community 44` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 42`, `Community 45`, `Community 46`, `Community 47`, `Community 48`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 57`, `Community 58`, `Community 61`, `Community 65`, `Community 67`, `Community 73`, `Community 75`, `Community 77`?**
+  _High betweenness centrality (0.265) - this node is a cross-community bridge._
+- **Why does `Router` connect `Community 4` to `Community 1`, `Community 67`, `Community 3`, `Community 6`, `Community 7`, `Community 10`, `Community 42`, `Community 44`, `Community 77`, `Community 46`, `Community 47`, `Community 48`?**
   _High betweenness centrality (0.112) - this node is a cross-community bridge._
 - **Why does `Stream` connect `Community 3` to `Community 65`, `Community 67`, `Community 73`, `Community 10`, `Community 42`, `Community 44`, `Community 13`, `Community 46`, `Community 47`, `Community 77`, `Community 49`, `Community 51`, `Community 58`?**
   _High betweenness centrality (0.086) - this node is a cross-community bridge._

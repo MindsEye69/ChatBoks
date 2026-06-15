@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781519214.3757303,
-    "ast_hash": "7ac514b5d3d3ad5f6dd67b7ccfdb4382",
+    "mtime": 1781520635.5840487,
+    "ast_hash": "11072341e8e557d785e63da5127e012d",
     "semantic_hash": ""
   },
   "remote_control.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781519221.7388146,
-    "ast_hash": "c56eab3bb0f0d978c8b3c954883560ed",
+    "mtime": 1781520648.0268395,
+    "ast_hash": "952d67fd838442cbb8b875eb6274826b",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {

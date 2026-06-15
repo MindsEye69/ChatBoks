@@ -159,6 +159,11 @@ button {
   color: white;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
 button.ghost {
   background: transparent;
   color: var(--text);
