@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+import coordinator_bakeoff
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE_DIR = ROOT / "tests" / "fixtures" / "coordinator_bakeoff"
@@ -86,3 +88,85 @@ def test_coordinator_bakeoff_keeps_cloud_fallback_out_of_fixtures() -> None:
     assert "cloud fallback" not in combined_text
     assert "provider dashboard" not in combined_text
     assert "public exposure" in combined_text
+
+
+def test_coordinator_bakeoff_runner_dry_run_does_not_call_ollama(capsys) -> None:
+    with patch("sys.argv", ["coordinator_bakeoff.py", "--fixture", "route_remote_polish"]):
+        with patch("urllib.request.urlopen") as mock_open:
+            exit_code = coordinator_bakeoff.main()
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Dry run only" in captured.out
+    assert "route_remote_polish" in captured.out
+    mock_open.assert_not_called()
+
+
+def test_coordinator_bakeoff_runner_refuses_non_loopback_endpoint(capsys) -> None:
+    with patch(
+        "sys.argv",
+        [
+            "coordinator_bakeoff.py",
+            "--run",
+            "--endpoint",
+            "https://example.com/api/chat",
+            "--fixture",
+            "route_remote_polish",
+        ],
+    ):
+        with patch("urllib.request.urlopen") as mock_open:
+            exit_code = coordinator_bakeoff.main()
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert "Refusing non-loopback endpoint" in captured.out
+    mock_open.assert_not_called()
+
+
+def test_coordinator_bakeoff_runner_writes_mocked_result(tmp_path: Path) -> None:
+    response = MagicMock()
+    response.readline.side_effect = [
+        b'{"message":{"content":"Route to Codex."},"done":false}\n',
+        b'{"message":{"content":" >>> TASK_COMPLETE"},"done":true}\n',
+        b"",
+    ]
+    response.__enter__ = lambda self: self
+    response.__exit__ = MagicMock(return_value=False)
+
+    with patch(
+        "sys.argv",
+        [
+            "coordinator_bakeoff.py",
+            "--run",
+            "--fixture",
+            "route_remote_polish",
+            "--model",
+            "mock-model",
+            "--output-dir",
+            str(tmp_path),
+        ],
+    ):
+        with patch("urllib.request.urlopen", return_value=response):
+            exit_code = coordinator_bakeoff.main()
+
+    assert exit_code == 0
+    result_files = list(tmp_path.glob("*-mock-model.jsonl"))
+    assert len(result_files) == 1
+    records = [json.loads(line) for line in result_files[0].read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    assert records[0]["fixture_id"] == "route_remote_polish"
+    assert records[0]["model"] == "mock-model"
+    assert records[0]["output"] == "Route to Codex. >>> TASK_COMPLETE"
+    assert records[0]["error"] == ""
+    assert "must_include" in records[0]["expected"]
+
+
+def test_coordinator_bakeoff_prompt_does_not_leak_expected_hints() -> None:
+    fixture = load_fixture(FIXTURE_DIR / "route_remote_polish.json")
+    prompt = coordinator_bakeoff.build_prompt(fixture)
+
+    assert "must_include" not in prompt
+    assert "must_avoid" not in prompt
+    assert "scoring" not in prompt.lower()
+    assert fixture["task"] in prompt
+    assert fixture["context"] in prompt

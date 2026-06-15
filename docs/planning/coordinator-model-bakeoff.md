@@ -117,6 +117,24 @@ For each candidate and prompt:
 
 Store machine-readable results under `.chatboks/evals/coordinator-bakeoff/` so they remain local operational artifacts rather than product docs.
 
+## Manual Runner
+
+`coordinator_bakeoff.py` provides the opt-in local runner.
+
+Dry run, no model call:
+
+```powershell
+py coordinator_bakeoff.py --fixture route_remote_polish
+```
+
+Live local Ollama run:
+
+```powershell
+py coordinator_bakeoff.py --run --model gemma3:4b
+```
+
+The runner refuses non-loopback endpoints and writes JSONL results under `.chatboks/evals/coordinator-bakeoff/`. Normal tests mock the runner and do not require Ollama.
+
 ## Privacy Rules
 
 The bakeoff is local-model only.
@@ -133,16 +151,16 @@ Fixtures should use synthetic or sanitized transcript snippets. If real ChatBoks
 ## Implementation Plan
 
 1. Create fixture files with sanitized prompts and expected scoring hints. Done in `tests/fixtures/coordinator_bakeoff/`.
-2. Add a small runner that calls the configured local Coordinator endpoint for a supplied model name.
-3. Write JSONL results to `.chatboks/evals/coordinator-bakeoff/`.
+2. Add a small runner that calls the configured local Coordinator endpoint for a supplied model name. Done in `coordinator_bakeoff.py`.
+3. Write JSONL results to `.chatboks/evals/coordinator-bakeoff/`. Done in `coordinator_bakeoff.py`.
 4. Add an offline pytest that validates fixture structure without requiring Ollama. Done in `tests/test_coordinator_bakeoff.py`.
-5. Add an optional manual command for live model runs.
+5. Add an optional manual command for live model runs. Done in `coordinator_bakeoff.py`.
 6. Compare candidates against `gemma3:4b`.
 7. Update `config.yaml` only after reviewing results.
 
 ## Recommended First Slice
 
-Next, add an optional manual runner for local Ollama comparisons. It should be skipped by normal tests and should write JSONL results under `.chatboks/evals/coordinator-bakeoff/`.
+Next, run the baseline manually against `gemma3:4b`, review the JSONL results, and score the responses before installing or testing another model.
 
 The first live run should compare:
 
