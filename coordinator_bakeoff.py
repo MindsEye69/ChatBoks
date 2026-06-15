@@ -187,6 +187,12 @@ def write_results(path: Path, records: list[dict[str, Any]]) -> None:
             handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def append_result(path: Path, record: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run local Coordinator bakeoff fixtures against an Ollama model.")
     parser.add_argument("--model", help="Ollama model to evaluate. Defaults to config.yaml coordinator model.")
@@ -235,8 +241,13 @@ def main() -> int:
         print(f"Refusing non-loopback endpoint: {endpoint}")
         return 2
 
-    records = [
-        run_fixture(
+    path = result_path(args.output_dir, model)
+    if path.exists():
+        path.unlink()
+    records: list[dict[str, Any]] = []
+    for index, fixture in enumerate(fixtures, start=1):
+        print(f"Running {index}/{len(fixtures)}: {fixture['id']}", flush=True)
+        record = run_fixture(
             fixture,
             model=model,
             endpoint=endpoint,
@@ -245,10 +256,10 @@ def main() -> int:
             think=bool(args.think or config.get("think", False)),
             timeout=args.timeout,
         )
-        for fixture in fixtures
-    ]
-    path = result_path(args.output_dir, model)
-    write_results(path, records)
+        records.append(record)
+        append_result(path, record)
+        status = "error" if record["error"] else "ok"
+        print(f"Finished {fixture['id']}: {status}, {record['elapsed_ms']} ms", flush=True)
     failures = [record for record in records if record["error"]]
     print(f"Wrote {len(records)} records to {path}")
     if failures:

@@ -133,7 +133,7 @@ Live local Ollama run:
 py coordinator_bakeoff.py --run --model gemma3:4b
 ```
 
-The runner refuses non-loopback endpoints and writes JSONL results under `.chatboks/evals/coordinator-bakeoff/`. Normal tests mock the runner and do not require Ollama.
+The runner refuses non-loopback endpoints and writes JSONL results under `.chatboks/evals/coordinator-bakeoff/`. It appends one record after each fixture so slow candidate runs can still leave partial evidence. Normal tests mock the runner and do not require Ollama.
 
 ## Privacy Rules
 

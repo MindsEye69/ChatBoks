@@ -885,8 +885,8 @@
     "semantic_hash": ""
   },
   "docs/planning/coordinator-model-bakeoff.md": {
-    "mtime": 1781526661.0340965,
-    "ast_hash": "a78506d6b806267496a00723c7e35400",
+    "mtime": 1781527723.9491677,
+    "ast_hash": "46849180facb86bea8a0f3595e89e825",
     "semantic_hash": ""
   },
   "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json": {
@@ -930,8 +930,8 @@
     "semantic_hash": ""
   },
   "coordinator_bakeoff.py": {
-    "mtime": 1781526636.8202486,
-    "ast_hash": "add5539ffaf4ef85bcb3cd7444b34e58",
+    "mtime": 1781527712.3218868,
+    "ast_hash": "a34bef7c00851a6afcadbc95794f418e",
     "semantic_hash": ""
   }
 }
