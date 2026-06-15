@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781517938.547606,
-    "ast_hash": "9c873e646e7769f085e2fdf1d68c9444",
+    "mtime": 1781518477.1896982,
+    "ast_hash": "14d125804dbbfe7bcfbca90c10074048",
     "semantic_hash": ""
   },
   "remote_control.py": {
@@ -867,6 +867,16 @@
   ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/efcde281-efd9-428b-94fd-6da34e8732bc/1-Photo-1.jpg": {
     "mtime": 1781517838.3226113,
     "ast_hash": "4b914ea1db3788c7daffd515e0fd1f06",
+    "semantic_hash": ""
+  },
+  "docs/planning/chatboks-trust-contract.md": {
+    "mtime": 1781518449.1142485,
+    "ast_hash": "31745754f837e396d85f225401c0316e",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/0b045073-0ba2-4839-9221-1ea4793a1215/1-Photo-1.jpg": {
+    "mtime": 1781518416.632368,
+    "ast_hash": "27ebf923333db67f7eda8e0b9b51df61",
     "semantic_hash": ""
   }
 }
