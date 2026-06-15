@@ -870,8 +870,8 @@
     "semantic_hash": ""
   },
   "docs/planning/chatboks-trust-contract.md": {
-    "mtime": 1781518449.1142485,
-    "ast_hash": "31745754f837e396d85f225401c0316e",
+    "mtime": 1781524540.6306303,
+    "ast_hash": "d46cde273e4ec0f58339e52800326d3d",
     "semantic_hash": ""
   },
   ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/0b045073-0ba2-4839-9221-1ea4793a1215/1-Photo-1.jpg": {
@@ -882,6 +882,11 @@
   ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/2b125fc1-8314-4c8c-a12f-c90b7dad0381/1-Photo-1.jpg": {
     "mtime": 1781519124.6755607,
     "ast_hash": "1c2e92e702b2accc8d63dc433eba0519",
+    "semantic_hash": ""
+  },
+  "docs/planning/coordinator-model-bakeoff.md": {
+    "mtime": 1781524530.2878737,
+    "ast_hash": "c298ba8490ed7f5da004251813a6594a",
     "semantic_hash": ""
   }
 }
