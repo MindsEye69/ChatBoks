@@ -591,6 +591,10 @@ button.compact {
   border-left-color: var(--antigravity);
 }
 
+.sender-approval {
+  border-left-color: var(--accent);
+}
+
 .sender-codex .item-sender,
 .sender-codex_spark .item-sender,
 .sender-codex .response-sender,
@@ -616,6 +620,11 @@ button.compact {
 .sender-antigravity .item-sender,
 .sender-antigravity .response-sender {
   color: var(--antigravity);
+}
+
+.sender-approval .item-sender,
+.sender-approval .response-sender {
+  color: var(--accent);
 }
 
 .composer {

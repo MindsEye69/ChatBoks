@@ -320,13 +320,13 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781515880.725347,
-    "ast_hash": "c261cf98b1d418ef81d92fb0efede36a",
+    "mtime": 1781517938.547606,
+    "ast_hash": "9c873e646e7769f085e2fdf1d68c9444",
     "semantic_hash": ""
   },
   "remote_control.py": {
-    "mtime": 1781342539.5470018,
-    "ast_hash": "09349112a4cf4e888ff2c46610347198",
+    "mtime": 1781517926.0533755,
+    "ast_hash": "964b43e5f88b9f6cfae0914e531b6187",
     "semantic_hash": ""
   },
   "tests/test_doctor.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781515892.1027021,
-    "ast_hash": "21a627cd6a57d130c6485b03d6475105",
+    "mtime": 1781517956.1389303,
+    "ast_hash": "4f9279bda2cd40e3ac2c2d917f0b9359",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -862,6 +862,11 @@
   ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/57fff5c8-49c7-44c1-aba6-1bd3af74765f/1-Photo-1.jpg": {
     "mtime": 1781515771.5445087,
     "ast_hash": "430d5438217c0959e9a80085df5e5584",
+    "semantic_hash": ""
+  },
+  ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/efcde281-efd9-428b-94fd-6da34e8732bc/1-Photo-1.jpg": {
+    "mtime": 1781517838.3226113,
+    "ast_hash": "4b914ea1db3788c7daffd515e0fd1f06",
     "semantic_hash": ""
   }
 }

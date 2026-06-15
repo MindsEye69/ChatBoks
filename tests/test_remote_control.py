@@ -56,6 +56,7 @@ class FakeSession:
             "status": "active",
             "active_task": "test",
             "next_agent": "codex",
+            "criteria_gate": None,
             "token_line": "session tokens: CODEX 1.0k/120k",
             "transcript": [{"id": 0, "sender": "you", "text": "hello"}],
             "events": [{"id": cursor + 1, "sender": "system", "text": "ok"}],
@@ -334,6 +335,7 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
         with urllib.request.urlopen(request, timeout=5) as response:
             payload = json.loads(response.read().decode("utf-8"))
         assert payload["project"] == "chatboks"
+        assert "criteria_gate" in payload
         assert payload["events"][0]["id"] == 8
 
         command = urllib.request.Request(
@@ -953,6 +955,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert response.headers["X-Content-Type-Options"] == "nosniff"
             assert "function visibleTranscript" in body
             assert "function renderSystemControls" in body
+            assert "function criteriaGateResponseItems" in body
 
         with urllib.request.urlopen(f"{base}/styles.css", timeout=5) as response:
             assert response.status == 200

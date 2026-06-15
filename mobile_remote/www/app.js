@@ -507,6 +507,32 @@ function renderLatestResponse(items) {
   els.latestResponse.scrollTop = els.latestResponse.scrollHeight;
 }
 
+function criteriaGateResponseItems(data) {
+  if (data.status !== "awaiting_criteria" || !data.criteria_gate) {
+    return [];
+  }
+  const gate = data.criteria_gate;
+  const reasons = Array.isArray(gate.reasons) && gate.reasons.length
+    ? gate.reasons.join(", ")
+    : "criteria review";
+  const agents = Array.isArray(gate.agents) && gate.agents.length
+    ? gate.agents.map(agentDisplayName).join(", ")
+    : agentDisplayName(data.next_agent || "agent");
+  const mode = gate.mode || data.collaboration_mode || "default";
+  return [{
+    sender: "approval",
+    text: [
+      "Acceptance criteria approval needed before agents run.",
+      "",
+      `Triggers: ${reasons}`,
+      `Mode: ${mode}`,
+      `Agents: ${agents}`,
+      "",
+      "Type APPROVE to run, MODIFY <criteria> to add detail, or REJECT to cancel.",
+    ].join("\n"),
+  }];
+}
+
 function renderProjects(projects = [], currentProject = "") {
   const selected = currentProject || els.project.value;
   state.currentProject = selected;
@@ -755,7 +781,8 @@ function applySession(data, { scrollLatest = false } = {}) {
   renderApproval(data);
   renderTrace(data.trace || {});
   const transcript = data.transcript || [];
-  renderLatestResponse(transcript);
+  const responseItems = criteriaGateResponseItems(data);
+  renderLatestResponse(responseItems.length ? responseItems : transcript);
   renderList(els.transcript, visibleTranscript(transcript));
   const events = (data.events || []).filter((item) => Number(item.id || 0) > state.eventCursor);
   if (events.length) {
@@ -770,7 +797,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   renderList(els.systemFeed, state.systemItems);
   renderSystemControls();
   renderSystemToast();
-  renderLatestResponse(transcript);
+  renderLatestResponse(responseItems.length ? responseItems : transcript);
   if (scrollLatest) {
     window.requestAnimationFrame(scrollLatestResponseIntoView);
   }

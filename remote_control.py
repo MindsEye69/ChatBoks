@@ -901,6 +901,7 @@ class RemoteSession:
                 "completed_agents": list(self.app.state.get("completed_agents") or []),
                 "collaboration_mode": self.app.state.get("collaboration_mode"),
                 "context_mode": self.app.state.get("context_mode"),
+                "criteria_gate": self.app.state.get("criteria_gate"),
                 "proposal": proposal_snapshot(self.app.state.get("proposal")),
                 "command_running": self.command_running(),
                 "command_text": self._command_text,
