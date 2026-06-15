@@ -140,8 +140,11 @@
       <div id="systemList" class="stack"></div>
     </section>
 
-    <section class="panel events-panel">
-      <h2>Bridge events</h2>
+    <section id="eventsPanel" class="panel events-panel hidden">
+      <div class="section-head">
+        <h2>Bridge events</h2>
+        <button id="eventsCollapseButton" class="ghost compact" type="button">Hide</button>
+      </div>
       <div id="eventsList" class="stack"></div>
     </section>
   </main>
@@ -153,6 +156,7 @@
         <span>Prompt</span>
         <span class="composer-label-actions">
           <button id="systemFeedButton" class="ghost compact inline-copy" type="button">System</button>
+          <button id="bridgeEventsButton" class="ghost compact inline-copy" type="button">Bridge</button>
           <button id="fullTranscriptButton" class="ghost compact inline-copy" type="button">Full transcript</button>
           <button id="copyLatestButton" class="ghost compact inline-copy" type="button">Copy response</button>
         </span>

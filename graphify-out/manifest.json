@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/app.js": {
-    "mtime": 1781520635.5840487,
-    "ast_hash": "11072341e8e557d785e63da5127e012d",
+    "mtime": 1781521480.4051478,
+    "ast_hash": "4701852d2c16d0e634235505379b882d",
     "semantic_hash": ""
   },
   "remote_control.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "tests/test_remote_control.py": {
-    "mtime": 1781520648.0268395,
-    "ast_hash": "952d67fd838442cbb8b875eb6274826b",
+    "mtime": 1781521490.8161497,
+    "ast_hash": "fc6d86f1a9fccdf9d96603e73f386974",
     "semantic_hash": ""
   },
   "tests/test_usage_sync.py": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "mobile_remote/www/index.html": {
-    "mtime": 1781271341.8918192,
-    "ast_hash": "62a52fd9ccf2c6f1c01d942830bbbfb8",
+    "mtime": 1781521457.600798,
+    "ast_hash": "5ec9ddf934b6300107da29af07d41e51",
     "semantic_hash": ""
   },
   "output/playwright/usage/smoke-raw/.playwright-cli/page-2026-06-08T16-29-47-279Z.yml": {

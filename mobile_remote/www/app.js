@@ -59,9 +59,12 @@ const els = {
   systemPanel: document.getElementById("systemPanel"),
   systemCollapse: document.getElementById("systemCollapseButton"),
   systemToast: document.getElementById("systemToast"),
+  eventsPanel: document.getElementById("eventsPanel"),
+  eventsCollapse: document.getElementById("eventsCollapseButton"),
   events: document.getElementById("eventsList"),
   sendStatus: document.getElementById("sendStatus"),
   systemFeedButton: document.getElementById("systemFeedButton"),
+  bridgeEventsButton: document.getElementById("bridgeEventsButton"),
   fullTranscript: document.getElementById("fullTranscriptButton"),
   copyLatest: document.getElementById("copyLatestButton"),
   refresh: document.getElementById("refreshButton"),
@@ -126,6 +129,12 @@ function setSystemPanelCollapsed(collapsed) {
   els.systemFeedButton.classList.toggle("active", !collapsed);
   renderSystemControls();
   renderSystemToast();
+}
+
+function setEventsPanelCollapsed(collapsed) {
+  els.eventsPanel.classList.toggle("hidden", collapsed);
+  els.bridgeEventsButton.classList.toggle("active", !collapsed);
+  renderEventsControls();
 }
 
 function setSendState(isSending, message = "") {
@@ -382,7 +391,21 @@ function isCommandProgressEvent(item) {
 }
 
 function visibleCommandEvents(items) {
-  return visibleEvents(items).filter((item) => !isCommandProgressEvent(item));
+  return visibleEvents(items).filter((item) => !isCommandProgressEvent(item) && isAgentResponseEvent(item));
+}
+
+function isAgentResponseEvent(item) {
+  const kind = item.kind || "";
+  if (!item.sender || isSystemMessage(item) || isTokenUsageMessage(item)) {
+    return false;
+  }
+  if ((item.sender || "").toLowerCase() === "you") {
+    return false;
+  }
+  if (kind === "message_stream") {
+    return Boolean((item.text || "").trim());
+  }
+  return kind === "message";
 }
 
 function streamKey(item) {
@@ -510,9 +533,24 @@ function renderSystemControls() {
     : "System";
 }
 
+function renderEventsControls() {
+  const eventsVisible = !els.eventsPanel.classList.contains("hidden");
+  const count = visibleEvents(state.eventItems).length;
+  els.bridgeEventsButton.classList.toggle("active", eventsVisible);
+  if (eventsVisible) {
+    els.bridgeEventsButton.textContent = "Hide bridge";
+    return;
+  }
+  els.bridgeEventsButton.textContent = count ? `Bridge (${count})` : "Bridge";
+}
+
 function renderLatestResponse(items) {
   const commandEvents = visibleCommandEvents(state.commandEvents);
-  const group = commandEvents.length ? commandEvents : latestResponseGroup(items);
+  const group = commandEvents.length
+    ? commandEvents
+    : state.commandActive && state.commandEvents.length
+      ? [{ sender: "status", text: "Waiting for agent response..." }]
+      : latestResponseGroup(items);
   els.latestResponse.innerHTML = "";
   if (!group.length) {
     els.latestResponse.textContent = "-";
@@ -823,6 +861,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   renderList(els.events, visibleEvents(state.eventItems));
   renderList(els.systemFeed, state.systemItems);
   renderSystemControls();
+  renderEventsControls();
   renderSystemToast();
   renderLatestResponse(responseItems.length ? responseItems : transcript);
   if (scrollLatest) {
@@ -1064,6 +1103,12 @@ els.systemFeedButton.addEventListener("click", () => {
 });
 els.systemCollapse.addEventListener("click", () => {
   setSystemPanelCollapsed(true);
+});
+els.bridgeEventsButton.addEventListener("click", () => {
+  setEventsPanelCollapsed(!els.eventsPanel.classList.contains("hidden"));
+});
+els.eventsCollapse.addEventListener("click", () => {
+  setEventsPanelCollapsed(true);
 });
 els.copyLatest.addEventListener("click", copyLatestResponse);
 els.fullTranscript.addEventListener("click", () => {

@@ -755,14 +755,15 @@ button.compact {
   }
 
   .layout {
-    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, 340px);
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
     grid-template-areas:
-      "left flow right"
-      "left trace right"
-      "left main right"
-      "left approval right"
-      "left system right"
-      "left transcript right";
+      "left flow"
+      "left trace"
+      "left main"
+      "left approval"
+      "left system"
+      "left transcript"
+      "left events";
     align-items: start;
     gap: 14px;
     padding: 16px 20px 22px;
@@ -814,10 +815,8 @@ button.compact {
   }
 
   .events-panel {
-    grid-area: right;
-    position: sticky;
-    top: 76px;
-    max-height: calc(100vh - 236px);
+    grid-area: events;
+    max-height: min(46vh, 420px);
     overflow: auto;
   }
 
@@ -838,7 +837,7 @@ button.compact {
 
 @media (min-width: 1180px) {
   .layout {
-    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(280px, 360px);
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
   }
 
   .response-panel {

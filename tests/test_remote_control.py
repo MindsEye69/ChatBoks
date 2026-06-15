@@ -947,6 +947,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert response.headers["Content-Type"].startswith("text/html")
             assert "Content-Security-Policy" in response.headers
             assert "app.js" in body
+            assert 'id="eventsPanel" class="panel events-panel hidden"' in body
+            assert 'id="bridgeEventsButton"' in body
 
         with urllib.request.urlopen(f"{base}/app.js", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -959,6 +961,9 @@ def test_remote_bridge_serves_static_ui_files():
             assert "Bridge response was unclear. Session refreshed." in body
             assert "function setRefreshState" in body
             assert "Refreshing session..." in body
+            assert "function setEventsPanelCollapsed" in body
+            assert "function isAgentResponseEvent" in body
+            assert "Waiting for agent response..." in body
 
         with urllib.request.urlopen(f"{base}/styles.css", timeout=5) as response:
             assert response.status == 200
