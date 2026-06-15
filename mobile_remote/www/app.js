@@ -149,16 +149,27 @@ function stopPolling() {
   }
 }
 
+function isTextInputFocused() {
+  const active = document.activeElement;
+  if (!active) {
+    return false;
+  }
+  const tag = active.tagName ? active.tagName.toLowerCase() : "";
+  return tag === "input" || tag === "textarea" || active.isContentEditable;
+}
+
 function updateKeyboardOffset() {
   if (!window.visualViewport) {
     document.documentElement.style.setProperty("--keyboard-offset", "0px");
     updateComposerReservedHeight();
     return;
   }
-  const hiddenByKeyboard = Math.max(
-    0,
-    window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop,
-  );
+  const hiddenByKeyboard = isTextInputFocused()
+    ? Math.max(
+        0,
+        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop,
+      )
+    : 0;
   document.documentElement.style.setProperty("--keyboard-offset", `${Math.round(hiddenByKeyboard)}px`);
   updateComposerReservedHeight();
 }
@@ -1028,6 +1039,11 @@ els.fullTranscript.addEventListener("click", () => {
 els.project.addEventListener("change", () => {
   switchProject(els.project.value);
 });
+
+for (const textField of [els.prompt, els.approvalModification]) {
+  textField.addEventListener("focus", updateKeyboardOffset);
+  textField.addEventListener("blur", () => window.setTimeout(updateKeyboardOffset, 0));
+}
 
 els.send.addEventListener("click", () => {
   saveSettings();
