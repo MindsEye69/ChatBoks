@@ -1,10 +1,10 @@
 # Coordinator Model Bakeoff
 
-Last reviewed: 2026-06-15
+Last reviewed: 2026-06-16
 
 Status: planning note with offline fixture validation. This document defines the evaluation plan for local Coordinator models. It does not change `config.yaml`, install models, run Ollama, or alter routing behavior.
 
-Source intake: Paper Sleuth daily research, `C:\Users\MindsEye\Documents\Paper Sleuth\research\chatboks_ideas.md`.
+Source intake: Paper Sleuth daily research, `C:\Users\MindsEye\Documents\Paper Sleuth\research\chatboks_ideas.md`, and ticket `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\mcp-tool-trust-ledger.md`.
 
 ## Goal
 
@@ -40,15 +40,30 @@ This is the control model for the first bakeoff.
 
 Start with models that can run locally through Ollama or an equivalent local adapter.
 
-| Candidate | Source reason | Initial status |
-|---|---|---|
-| `gemma3:4b` | Current Coordinator baseline | Required control |
-| Gemma 4 E4B QAT | Paper Sleuth candidate for better accuracy, latency, and memory tradeoff | Research before install |
-| DiffusionGemma 26B A4B IT | Google experimental text-diffusion Gemma 4 MoE; claims up to 4x faster generation on dedicated GPUs | Not tested; likely needs vLLM or Hugging Face serving, not ordinary Ollama |
-| Small Qwen instruct model | Useful fallback if Gemma struggles with routing or summaries | Optional |
-| Small Llama instruct model | Useful sanity check against a different model family | Optional |
+| Candidate | Runtime path to evaluate | Source reason | Initial status |
+|---|---|---|---|
+| `gemma3:4b` | Existing Ollama endpoint | Current Coordinator baseline | Required control |
+| Gemma 4 E4B QAT | Research Ollama compatibility first; otherwise evaluate through a local Hugging Face or GGUF-compatible path | Paper Sleuth candidate for better accuracy, latency, and memory tradeoff | Research before install |
+| Foundry Local catalog model | Foundry Local SDK or optional OpenAI-compatible local server | Local runtime candidate with hardware acceleration, model cache management, and OpenAI-compatible request support | Research cache, diagnostics, and model catalog before install |
+| Small Qwen instruct model | Ollama or Foundry Local if catalog support exists | Useful fallback if Gemma struggles with routing or summaries | Optional |
+| Small Phi instruct model | Foundry Local catalog or Ollama if available | Good fit for local, low-latency routing and diagnostic prompts | Optional |
+| DiffusionGemma 26B A4B IT | Likely vLLM or Hugging Face serving, not ordinary Ollama | Experimental text-diffusion Gemma 4 MoE; may improve latency on suitable hardware | Defer until serving path is clear |
 
-Do not add cloud models to this bakeoff. Cloud fallback has separate consent and trust requirements in `chatboks-trust-contract.md`.
+Do not add cloud models to this bakeoff. Cloud fallback has separate consent and trust requirements in `chatboks-trust-contract.md` and `tool-trust-ledger.md`.
+
+## Runtime Privacy And Cache Requirements
+
+Each candidate run must record:
+
+- Runtime name and version.
+- Exact model ID, quantization, source, license, and install command.
+- Endpoint binding, especially whether it is loopback-only.
+- Local model cache path and whether BYOM or catalog discovery is enabled.
+- Runtime log path, diagnostics defaults, and whether diagnostics can leave the machine.
+- Whether prompts, outputs, or summaries are retained outside `.chatboks/evals/coordinator-bakeoff/`.
+- Whether the runtime can fall back to remote inference or remote catalog services.
+
+Foundry Local is a candidate runtime, not an automatic replacement for Ollama. Microsoft describes Foundry Local as an on-device runtime with SDKs, a curated optimized model catalog, automatic hardware acceleration, model lifecycle/cache handling, and an optional OpenAI-compatible local server. The same docs also note first-use model/component downloads and optional diagnostics, so the bakeoff must capture cache and diagnostics behavior before any Coordinator promotion.
 
 ## Evaluation Tasks
 
@@ -83,6 +98,16 @@ Fixture IDs:
 - `summarize_mobile_refresh_diff`
 - `separate_agent_answer_from_system_noise`
 - `replace_exhausted_claude_lane`
+
+Coverage against the 2026-06-16 ticket:
+
+| Ticket requirement | Fixture coverage |
+|---|---|
+| Routing | `route_remote_polish` |
+| Compact resume | `resume_after_sleep` |
+| Next diagnostic step | `diagnose_pairing_failure` |
+| Security warning classification | `classify_public_bridge_risk` |
+| Diff summary | `summarize_mobile_refresh_diff` |
 
 ## Scoring Rubric
 
@@ -163,10 +188,12 @@ Fixtures should use synthetic or sanitized transcript snippets. If real ChatBoks
 
 Next, run the baseline manually against `gemma3:4b`, review the JSONL results, and score the responses before installing or testing another model.
 
-The first live run should compare:
+The next live comparison should include:
 
 - Current `gemma3:4b`.
 - One Gemma 4 E4B QAT variant, if it can be installed locally without disturbing the current Coordinator.
+- One Foundry Local candidate if cache paths, diagnostics behavior, endpoint binding, and model source can be recorded first.
+- One Qwen or Phi candidate that can run locally with predictable latency.
 - DiffusionGemma only after confirming a supported local serving path. Do not assume Ollama compatibility.
 
 ## 2026-06-15 Post-Normalization Run
@@ -185,8 +212,16 @@ Keep `gemma3:4b` as the current Coordinator model unless a later candidate beats
 ## Open Questions
 
 - Which local runtime should own Gemma 4 E4B QAT if Ollama does not expose it cleanly?
+- Does Foundry Local's model cache and diagnostics behavior fit ChatBoks privacy expectations?
+- Which Qwen or Phi candidate is small enough for Coordinator latency while still handling boundary-awareness prompts?
 - Can DiffusionGemma be served locally through vLLM or Hugging Face tooling on this machine without destabilizing the existing Ollama Coordinator?
 - Does DiffusionGemma's diffusion decoding improve Coordinator latency while preserving enough instruction-following reliability for routing and trust-boundary prompts?
 - Should `can_fill_main_seat` require a higher score than ordinary direct Coordinator use?
 - Should the bakeoff include multilingual or typo-heavy prompts from mobile remote usage?
 - Should trajectory-health prompts be part of this suite or a separate AgentStop-inspired suite?
+
+## Sources
+
+- Foundry Local overview: https://learn.microsoft.com/en-us/azure/foundry-local/what-is-foundry-local
+- Foundry Local releases: https://github.com/microsoft/Foundry-Local/releases
+- Gemma 4 E4B QAT candidate: https://hf.co/google/gemma-4-E4B-it-qat-q4_0-unquantized-assistant

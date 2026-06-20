@@ -4,6 +4,30 @@ Version: v4 memory/remote baseline, updated June 10, 2026.
 
 Chatboks is a local multi-agent coding orchestration system for Claude, Codex, and eventually Antigravity, with the human user as overseer. Agents collaborate through `chatboks.md`, machine state persists in `.chatboks/state.json`, and CodeGraph provides SQLite-backed codebase context.
 
+## Strategic Direction - BYOM Lane Runtime
+
+ChatBoks should evolve toward BYOM lane orchestration: the end user chooses which models populate the active lanes, and ChatBoks coordinates the collaboration. Claude, Codex, Gemini, GLM-5.2, local Ollama models, OpenRouter models, Z.ai API models, and other supported runtimes are lane occupants or presets, not the core architecture.
+
+The durable target is three user-configurable lanes plus a separate optional Coordinator:
+
+- Lane 1: user-chosen model/provider.
+- Lane 2: user-chosen model/provider.
+- Lane 3: user-chosen model/provider.
+- Coordinator: optional cheap/local/router/bootstrap model, not a replacement for the three lanes.
+
+This makes ChatBoks useful across budgets. Users with paid frontier subscriptions can run a premium combination such as Claude, Codex, and Gemini. Cost-sensitive users can still run three free, local, or low-cost models, even if that setup is not optimal. ChatBoks should warn based on capability metadata, trust class, context limits, latency, and tool authority, but it should not require flagship subscriptions to be viable.
+
+GLM-5.2 is a candidate preset for a heavy long-context collaborator lane, but it is deferred until it can be evaluated without adding another monthly AI cost. It should be treated as a BYOM lane agent or optional collaborator, not as the default Coordinator and not as a replacement for Claude/Codex/Gemini. Its likely first roles are long-context repo audits, refactor planning, independent critique, post-change verification narrative, and bakeoff comparison against other lanes.
+
+Future implementation pieces:
+
+- Generic provider adapters such as `cli`, `openai_compat`, `ollama`, `anthropic`, `google`, `openrouter`, and local OpenAI-compatible servers.
+- Lane config that maps `lane_1`, `lane_2`, and `lane_3` to named agents.
+- Capability metadata for routing and warnings: context window, coding strength, streaming, tool use, shell authority, local/cloud trust class, cost tier, and expected latency.
+- Mode-to-lane routing so collaboration modes select lanes, not hard-coded model names.
+- BYOM setup wizard that helps users populate lanes from the providers/accounts/runtimes they actually have.
+- Bakeoff scoring that can compare lane occupants on ChatBoks-native tasks before recommending promotion to a default preset.
+
 ## Current Status
 
 - Orchestrator and agent wrappers exist.
@@ -29,6 +53,7 @@ Chatboks is a local multi-agent coding orchestration system for Claude, Codex, a
 - Role-file trust approval is enforced for project-local role files, with approved hashes stored outside the project tree.
 - Coordinator is now validated against Ollama's direct REST API with `think: false`, and `gemma3:4b` is the current best local balance between usefulness and desktop impact.
 - Secure mobile remote control works over a private Tailscale path with pairing/session tokens, project switching, compact mobile UI, sticky composer, latest-response/full-transcript views, and nonblocking command submission.
+- Optional lane-model bakeoff harness exists for BYOM collaborator models through an OpenAI-compatible API path. GLM-5.2 is technically ready to test but deferred for cost reasons; prioritize free, local, already-paid, or existing-account candidates first.
 
 ## Phase 0 - Onboarding and Compatibility
 
@@ -302,10 +327,11 @@ IO Website:
    - `Gemma 4 E4B QAT Q4_0`
    - `Gemma 4 E2B QAT`
    - optional `Gemma 4 12B QAT Q4_0` under explicit desktop-impact observation
-6. Reproduce and isolate the intermittent stacked-window desktop glitch if it returns.
-7. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
-8. Improve mobile remote polish:
+6. Run the lane-model bakeoff against a free, local, already-paid, or existing-account candidate before revisiting GLM-5.2.
+7. Reproduce and isolate the intermittent stacked-window desktop glitch if it returns.
+8. Preserve the original user request separately from the repair prompt in confirmation mode, so second-pass verifier prompts show both the initial goal and the current repair request.
+9. Improve mobile remote polish:
    - connection recovery feedback
    - approval controls
    - optional Agent Trace / Packet Trace view
-9. Fix Android rebuild JDK selection so APK builds consistently use a supported JDK.
+10. Fix Android rebuild JDK selection so APK builds consistently use a supported JDK.

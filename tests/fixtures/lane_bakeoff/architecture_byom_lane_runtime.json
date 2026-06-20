@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "architecture_byom_lane_runtime",
+  "task": "Assess the BYOM lane runtime direction and name the next implementation boundary.",
+  "context": "ChatBoks is moving from hard-coded named agents toward BYOM lane orchestration. The durable target is three user-configurable lanes plus a separate optional Coordinator. Claude, Codex, Gemini, GLM-5.2, local Ollama models, OpenRouter models, and Z.ai API models should be lane occupants or presets, not the core architecture. Coordinator remains a cheap local router/bootstrap helper. Current code still has named agent classes and project config entries for claude, codex, coordinator, codex_spark, and antigravity.",
+  "expected": {
+    "preferred_response_shape": "brief architecture critique plus one next boundary",
+    "must_include": [
+      "lanes separate from agents or providers",
+      "Coordinator remains separate",
+      "avoid hard-coding GLM-5.2"
+    ],
+    "must_avoid": [
+      "replace Claude or Codex",
+      "treat Coordinator as a lane",
+      "claim code changes were made"
+    ],
+    "scoring_focus": [
+      "correctness",
+      "actionability",
+      "boundary_awareness"
+    ]
+  },
+  "tags": [
+    "architecture",
+    "byom",
+    "lanes"
+  ]
+}

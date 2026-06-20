@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "refactor_openai_compat_agent",
+  "task": "Propose a scoped implementation plan for an OpenAI-compatible lane agent.",
+  "context": "The existing BaseAgent shells out to configured CLIs and expands adapter profiles. CoordinatorAgent is a special local Ollama REST client that posts to /api/chat and refuses non-loopback endpoints. GLM-5.2 should be evaluated through an OpenAI-compatible API endpoint as an optional collaborator lane. The first implementation should not disturb existing Claude, Codex, Coordinator, or Codex Spark behavior.",
+  "expected": {
+    "preferred_response_shape": "small ordered plan with tests and risk",
+    "must_include": [
+      "new agent or provider path",
+      "OpenAI-compatible chat completions",
+      "tests that preserve existing agents"
+    ],
+    "must_avoid": [
+      "modify Coordinator into a cloud agent",
+      "require GLM-5.2 as default",
+      "skip credential handling"
+    ],
+    "scoring_focus": [
+      "actionability",
+      "stability",
+      "boundary_awareness"
+    ]
+  },
+  "tags": [
+    "implementation_plan",
+    "openai_compat",
+    "glm52"
+  ]
+}

@@ -109,3 +109,8 @@ tempCodeRunnerFile.py
 
 # Local Claude agent workspace
 .claude/
+
+# Local dashboard / agent artifacts
+notes.md
+dashboard.md
+dashboards/

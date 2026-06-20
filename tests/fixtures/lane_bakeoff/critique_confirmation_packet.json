@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "critique_confirmation_packet",
+  "task": "Act as an independent collaborator lane reviewing a confirmation packet.",
+  "context": "Executor packet: Codex added a BYOM lane section to ROADMAP.md and reports no tests were run because the change was documentation only. Verifier packet: Claude agrees the concept is captured but notes the implementation plan still needs provider trust rules before runtime work. Current user intent: keep planning light unless a real bakeoff or implementation starts. No source code was intentionally changed in this packet.",
+  "expected": {
+    "preferred_response_shape": "independent verification with residual risk and next action",
+    "must_include": [
+      "documentation-only change",
+      "provider trust or credential handling",
+      "no code tests required"
+    ],
+    "must_avoid": [
+      "approve runtime readiness",
+      "invent test results",
+      "ask a question unless necessary"
+    ],
+    "scoring_focus": [
+      "correctness",
+      "boundary_awareness",
+      "stability"
+    ]
+  },
+  "tags": [
+    "confirmation",
+    "packet_review",
+    "verification"
+  ]
+}

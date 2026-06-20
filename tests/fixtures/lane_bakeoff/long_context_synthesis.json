@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "long_context_synthesis",
+  "task": "Synthesize roadmap and trust constraints into a concise lane-runtime requirement.",
+  "context": "Roadmap note: ChatBoks should support three user-configurable BYOM lanes plus an optional Coordinator. Free or cheap model combinations must be viable. GLM-5.2 is a candidate heavy long-context collaborator lane, not a replacement for Claude, Codex, Gemini, or Coordinator. Trust note: Cloud fallback means sending task context to a provider-backed CLI, hosted model, connector, or external service. It requires explicit consent before including secrets, sensitive data, authenticated dashboard screenshots, cross-project memory, or large source snapshots beyond the scoped task. Local models still need scoped prompts and reviewed cache/log behavior.",
+  "expected": {
+    "preferred_response_shape": "requirement summary with trust gate",
+    "must_include": [
+      "BYOM lanes",
+      "cloud consent",
+      "capability or trust metadata"
+    ],
+    "must_avoid": [
+      "silent cloud fallback",
+      "treat local as automatically private",
+      "make GLM-5.2 mandatory"
+    ],
+    "scoring_focus": [
+      "correctness",
+      "brevity",
+      "boundary_awareness"
+    ]
+  },
+  "tags": [
+    "synthesis",
+    "trust",
+    "roadmap"
+  ]
+}
