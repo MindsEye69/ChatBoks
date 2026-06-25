@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import shutil
@@ -101,6 +102,8 @@ HELP_COMMANDS = [
     ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
     ("/sleep", "Close a work block: consolidate memory, sync CodeGraph, and report graph/git state."),
     ("/sleep status", "Show the latest session memory checkpoint."),
+    ("/session", "Show the DasDashboard session workflow command."),
+    ("/session start|close", "Run DasDashboard session checks for this project."),
     ("/agent", "List agent availability for this project."),
     ("/agent <name> exhausted 50m", "Mark a model exhausted for a timed cooldown."),
     ("/agent <name> available", "Mark a model available again."),
@@ -129,6 +132,7 @@ HELP_PIN_COMMANDS = [
     "/resume",
     "/context",
     "/sleep",
+    "/session",
     "/agent",
     "/graph",
     "/model-commands",
@@ -610,6 +614,9 @@ class Chatboks:
         if command in {"/sleep", "/memory"}:
             self.handle_sleep_command(stripped)
             return True
+        if command == "/session":
+            self.handle_session_command(stripped)
+            return True
         if command in {"/agent", "/agents"}:
             self.handle_agent_command(stripped)
             return True
@@ -627,7 +634,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -662,6 +669,144 @@ class Chatboks:
             self.stream.help_pin(HELP_PIN_COMMANDS)
             return
         self.stream.system("Commands: " + "  ".join(HELP_PIN_COMMANDS))
+
+    def handle_session_command(self, text: str) -> None:
+        parts = text.split()
+        if len(parts) == 1:
+            self.stream.system(
+                "Session workflow: use /session start or /session close. "
+                "These run DasDashboard's project-dashboard checks for this project."
+            )
+            return
+        if len(parts) > 2:
+            self.stream.system("Unknown /session option. Try /session start or /session close.")
+            return
+
+        action = parts[1].strip().lower()
+        if action == "stop":
+            self.stream.system("ChatBoks uses /session close, not /session stop.")
+            return
+        if action not in {"start", "close"}:
+            self.stream.system("Unknown /session option. Try /session start or /session close.")
+            return
+
+        self.run_dashboard_session(action)
+
+    def run_dashboard_session(self, action: str) -> None:
+        dashboard_root = self.dasdashboard_root()
+        if dashboard_root is None:
+            self.stream.system(
+                "DasDashboard was not found. Set DASDASHBOARD_ROOT or install it at "
+                f"{Path.home() / 'Desktop' / 'DasDashboard'}."
+            )
+            return
+
+        npm_cmd = shutil.which("npm.cmd") or shutil.which("npm")
+        if not npm_cmd:
+            self.stream.system("npm was not found on PATH. Install Node.js/npm before using /session.")
+            return
+
+        script = "session:start" if action == "start" else "session:close"
+        self.stream.system(f"Running DasDashboard {script} for {self.proj_path}...")
+        try:
+            result = subprocess.run(
+                [npm_cmd, "run", script, "--", str(self.proj_path)],
+                cwd=dashboard_root,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=utf8_env(),
+                timeout=300,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            details = self.truncate_for_state(str(exc), limit=500)
+            self.stream.system(f"DasDashboard {script} timed out after 300s. {details}")
+            return
+        except OSError as exc:
+            self.stream.system(f"DasDashboard {script} could not run: {exc}")
+            return
+
+        payload = self.parse_dashboard_session_output(result.stdout)
+        self.stream.system(self.format_dashboard_session_result(action, result, payload))
+
+    def dasdashboard_root(self) -> Path | None:
+        candidates: list[Path] = []
+        env_root = os.environ.get("DASDASHBOARD_ROOT")
+        if env_root:
+            candidates.append(Path(env_root))
+        candidates.append(Path.home() / "Desktop" / "DasDashboard")
+
+        for candidate in candidates:
+            root = candidate.expanduser().resolve()
+            if (root / "package.json").exists() and (root / "scripts" / "project-dashboard.mjs").exists():
+                return root
+        return None
+
+    @staticmethod
+    def parse_dashboard_session_output(output: str) -> dict[str, Any] | None:
+        first = output.find("{")
+        last = output.rfind("}")
+        if first < 0 or last < first:
+            return None
+        try:
+            parsed = json.loads(output[first : last + 1])
+        except json.JSONDecodeError:
+            return None
+        return parsed if isinstance(parsed, dict) else None
+
+    def format_dashboard_session_result(
+        self,
+        action: str,
+        result: subprocess.CompletedProcess[str],
+        payload: dict[str, Any] | None,
+    ) -> str:
+        script = "session:start" if action == "start" else "session:close"
+        if result.returncode == 0:
+            lines = [f"DasDashboard /session {action} complete."]
+        elif action == "close" and result.returncode == 2:
+            lines = ["DasDashboard /session close ran, but close readiness failed because git is dirty."]
+        else:
+            lines = [f"DasDashboard {script} failed with exit code {result.returncode}."]
+
+        if payload:
+            written = payload.get("written") if isinstance(payload.get("written"), dict) else {}
+            snapshot = payload.get("snapshot") if isinstance(payload.get("snapshot"), dict) else {}
+            paper_sleuth = snapshot.get("paperSleuth") if isinstance(snapshot.get("paperSleuth"), dict) else {}
+            git = snapshot.get("git") if isinstance(snapshot.get("git"), dict) else {}
+            codegraph = snapshot.get("codeGraph") if isinstance(snapshot.get("codeGraph"), dict) else {}
+            graphify = snapshot.get("graphify") if isinstance(snapshot.get("graphify"), dict) else {}
+
+            git_status = git.get("status")
+            if git_status:
+                lines.append(f"Git: {git_status}")
+            paper_status = paper_sleuth.get("status")
+            if paper_status:
+                open_count = paper_sleuth.get("openTicketCount")
+                suffix = f" ({open_count} open total)" if isinstance(open_count, int) else ""
+                lines.append(f"Paper Sleuth: {paper_status}{suffix}")
+            if codegraph.get("status"):
+                lines.append(f"CodeGraph: {codegraph['status']}")
+            if graphify.get("status"):
+                lines.append(f"Graphify: {graphify['status']}")
+            for key, label in (
+                ("dashboardMarkdown", "dashboard.md"),
+                ("latestFile", "latest.json"),
+                ("sessionFile", "session snapshot"),
+            ):
+                path = written.get(key)
+                if path:
+                    lines.append(f"Wrote {label}: {path}")
+        else:
+            output = (result.stdout or result.stderr or "").strip()
+            if output:
+                lines.append(self.truncate_for_state(output, limit=1200))
+
+        stderr = result.stderr or ""
+        if stderr.strip():
+            lines.append("stderr: " + self.truncate_for_state(stderr, limit=500))
+        return "\n".join(lines)
 
     def handle_model_commands_command(self) -> None:
         lines = ["Registered model commands:"]
@@ -2962,6 +3107,8 @@ class Chatboks:
                 return response
             except AgentTimeoutError as exc:
                 timeout_attempts += 1
+                if not exc.partial_output:
+                    return self.timeout_recovery_blocked(agent_name, exc, timeout_attempts)
                 current_diff = self.capture_git_diff()
                 if self.agent_timeout_is_looping(current_diff, timeout_diff_snapshots):
                     return self.loop_recovery_blocked(agent_name, exc, timeout_attempts)

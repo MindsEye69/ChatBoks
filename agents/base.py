@@ -198,6 +198,7 @@ class BaseAgent:
         env = utf8_env()
         env["CHATBOKS"] = "1"
         idle_timeout, max_timeout = self.resolve_timeouts(prompt, timeout, idle_timeout, max_timeout)
+        first_output_timeout = self.resolve_first_output_timeout(idle_timeout)
         extra: dict[str, Any] = {}
         if os.name == "nt":
             si = subprocess.STARTUPINFO()
@@ -289,6 +290,13 @@ class BaseAgent:
             if max_timeout is not None and now - started_at >= max_timeout:
                 timeout_reason = "max"
                 break
+            if (
+                first_output_timeout is not None
+                and first_output_at is None
+                and now - started_at >= first_output_timeout
+            ):
+                timeout_reason = "first_output"
+                break
             if idle_timeout is not None and now - last_output_at >= idle_timeout:
                 timeout_reason = "idle"
                 break
@@ -336,7 +344,13 @@ class BaseAgent:
                 raise TokenExhaustionError(
                     combined_output or f"{self.name} exhausted its token context."
                 )
-            timeout_seconds = idle_timeout if timeout_reason == "idle" else max_timeout
+            timeout_seconds = (
+                first_output_timeout
+                if timeout_reason == "first_output"
+                else idle_timeout
+                if timeout_reason == "idle"
+                else max_timeout
+            )
             raise AgentTimeoutError(
                 self.name,
                 timeout_reason,
@@ -505,6 +519,18 @@ class BaseAgent:
         prompt_steps = len(prompt) // chars_per_step
         dynamic_idle = base_timeout + (prompt_steps * seconds_per_step)
         return min(dynamic_idle, resolved_max), resolved_max
+
+    def resolve_first_output_timeout(self, idle_timeout: float | None) -> float | None:
+        configured = self.config.get("first_output_timeout")
+        if configured is not None:
+            value = float(configured)
+            return value if value > 0 else None
+        if idle_timeout is None:
+            return None
+        default_timeout = float(self.config.get("default_first_output_timeout", 120))
+        if default_timeout <= 0:
+            return None
+        return min(float(idle_timeout), default_timeout)
 
     @staticmethod
     def terminate_process(process: subprocess.Popen[str]) -> None:

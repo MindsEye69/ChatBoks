@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from rich.console import Console
 
@@ -133,6 +133,101 @@ def test_resume_command_renders_without_agent_round():
         )
         app.run_agent_round.assert_not_called()
         print("PASS: /resume renders locally without routing to agents")
+
+def test_session_command_reports_dashboard_usage_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("/session")
+
+        app.stream.system.assert_called_once_with(
+            "Session workflow: use /session start or /session close. "
+            "These run DasDashboard's project-dashboard checks for this project."
+        )
+        app.run_agent_round.assert_not_called()
+        print("PASS: /session reports DasDashboard workflow usage without routing to agents")
+
+def test_session_start_invokes_dashboard_procedure_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        dashboard_root = root / "DasDashboard"
+        app = _make_app(root)
+        app.run_agent_round = MagicMock()
+        app.dasdashboard_root = MagicMock(return_value=dashboard_root)
+        payload = {
+            "ok": True,
+            "command": "session-start",
+            "written": {
+                "dashboardMarkdown": str(root / "dashboard.md"),
+                "latestFile": str(root / "dashboards" / "latest.json"),
+                "sessionFile": str(root / "dashboards" / "sessions" / "stamp.json"),
+            },
+            "snapshot": {
+                "git": {"status": "main, clean", "clean": True},
+                "paperSleuth": {"status": "3 tickets found", "openTicketCount": 7},
+                "codeGraph": {"status": "OK"},
+                "graphify": {"status": "configured"},
+            },
+        }
+        with (
+            patch("orchestrator.shutil.which", return_value="npm.cmd"),
+            patch(
+                "orchestrator.subprocess.run",
+                return_value=subprocess.CompletedProcess(["npm"], 0, json.dumps(payload), ""),
+            ) as run,
+        ):
+            app.handle_user_input("/session start")
+
+        args, kwargs = run.call_args
+        assert args[0] == ["npm.cmd", "run", "session:start", "--", str(root)]
+        assert kwargs["cwd"] == dashboard_root
+        summary = app.stream.system.call_args_list[-1].args[0]
+        assert "DasDashboard /session start complete." in summary
+        assert "Paper Sleuth: 3 tickets found (7 open total)" in summary
+        assert "Wrote dashboard.md:" in summary
+        app.run_agent_round.assert_not_called()
+        print("PASS: /session start invokes DasDashboard without routing to agents")
+
+
+def test_session_close_reports_dirty_git_gate_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        dashboard_root = root / "DasDashboard"
+        app = _make_app(root)
+        app.run_agent_round = MagicMock()
+        app.dasdashboard_root = MagicMock(return_value=dashboard_root)
+        payload = {
+            "ok": True,
+            "command": "session-close",
+            "written": {
+                "dashboardMarkdown": str(root / "dashboard.md"),
+                "latestFile": str(root / "dashboards" / "latest.json"),
+                "sessionFile": str(root / "dashboards" / "sessions" / "stamp.json"),
+            },
+            "snapshot": {
+                "git": {"status": "main, dirty (2 pending changes)", "clean": False},
+                "paperSleuth": {"status": "3 tickets found", "openTicketCount": 7},
+                "codeGraph": {"status": "OK"},
+                "graphify": {"status": "configured"},
+            },
+        }
+        with (
+            patch("orchestrator.shutil.which", return_value="npm.cmd"),
+            patch(
+                "orchestrator.subprocess.run",
+                return_value=subprocess.CompletedProcess(["npm"], 2, json.dumps(payload), ""),
+            ) as run,
+        ):
+            app.handle_user_input("/session close")
+
+        args, _kwargs = run.call_args
+        assert args[0] == ["npm.cmd", "run", "session:close", "--", str(root)]
+        summary = app.stream.system.call_args_list[-1].args[0]
+        assert "close readiness failed because git is dirty" in summary
+        assert "Git: main, dirty (2 pending changes)" in summary
+        app.run_agent_round.assert_not_called()
+        print("PASS: /session close reports DasDashboard dirty-git close gate")
 
 
 def test_resume_git_lines_reports_dirty_count():

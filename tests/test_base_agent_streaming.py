@@ -191,6 +191,33 @@ def test_streaming_run_cli_enforces_absolute_max_timeout() -> None:
     assert "tick" in error.partial_output
 
 
+def test_streaming_run_cli_enforces_first_output_timeout() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        script_path = root / "child.py"
+        script_path.write_text(
+            "import sys, time\n"
+            "sys.stdin.read()\n"
+            "time.sleep(2)\n"
+            "print('too late')\n",
+            encoding="utf-8",
+        )
+        agent = ScriptAgent(script_path, root)
+        agent.config["first_output_timeout"] = 0.2
+
+        with pytest.raises(AgentTimeoutError) as exc_info:
+            agent.run_cli("hello", timeout=5, max_timeout=5)
+
+        error = exc_info.value
+        assert error.reason == "first_output"
+        assert error.timeout_seconds == 0.2
+        assert error.partial_output == ""
+        latency_path = root / ".chatboks" / "cli_latency.jsonl"
+        record = json.loads(latency_path.read_text(encoding="utf-8").splitlines()[-1])
+        assert record["timeout_reason"] == "first_output"
+        assert record["first_output_seconds"] is None
+
+
 def test_dynamic_idle_timeout_scales_with_prompt_size() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -272,6 +299,7 @@ if __name__ == "__main__":
         test_streaming_run_cli_invokes_stdout_callback,
         test_streaming_run_cli_idle_timeout_resets_on_output,
         test_streaming_run_cli_enforces_absolute_max_timeout,
+        test_streaming_run_cli_enforces_first_output_timeout,
         test_dynamic_idle_timeout_scales_with_prompt_size,
         test_streaming_run_cli_reports_nonzero_stderr,
         test_streaming_run_cli_detects_token_exhaustion_on_failure,

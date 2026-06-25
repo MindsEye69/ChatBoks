@@ -342,6 +342,37 @@ def test_agent_timeout_recovery_blocks_after_retry_budget():
         assert "unfinished analysis" in app.chatboks_md.read_text(encoding="utf-8")
 
 
+def test_silent_agent_timeout_blocks_without_retry():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_warning": 100_000}},
+            "context": {"max_token_recovery_retries": 0, "max_timeout_recovery_retries": 1},
+        }
+        app.state["context"]["token_counts"]["codex"] = 0
+        app.context.build.return_value = "context"
+        app.capture_git_diff = MagicMock()
+
+        agent = MagicMock()
+        agent.call.side_effect = AgentTimeoutError(
+            "codex",
+            "first_output",
+            120,
+            partial_output="",
+        )
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("codex", mode="respond")
+
+        assert "codex timed out and automatic recovery did not complete." in response
+        assert "CLI call first_output timed out" in response
+        assert ">>> BLOCKED" in response
+        assert agent.call.call_count == 1
+        app.capture_git_diff.assert_not_called()
+        transcript = app.chatboks_md.read_text(encoding="utf-8") if app.chatboks_md.exists() else ""
+        assert ">>> TIMEOUT_RECOVERY" not in transcript
+
+
 def test_agent_timeout_loop_detection_uses_changed_line_overlap():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -427,6 +458,7 @@ if __name__ == "__main__":
     test_agent_timeout_recovery_checkpoints_partial_output_and_retries()
     test_recover_token_exhaustion_writes_bounded_summary_checkpoint()
     test_agent_timeout_recovery_blocks_after_retry_budget()
+    test_silent_agent_timeout_blocks_without_retry()
     test_agent_timeout_loop_detection_uses_changed_line_overlap()
     test_agent_timeout_recovery_blocks_when_git_diff_repeats()
     print("All signal/state smoke tests passed.")
