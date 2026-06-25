@@ -287,6 +287,15 @@ python orchestrator.py taskfish
 
 Use `--watch` to watch `chatboks.md` for handoffs, or `--trigger=commit` from the post-commit hook.
 
+To try the experimental Textual terminal UI:
+
+```bash
+python orchestrator.py taskfish --tui
+```
+
+The Textual path keeps the classic Rich CLI as the default. It provides a live transcript pane, project/agent rail,
+token/status strips, and a prompt input while the underlying ChatBoks routing and approval logic stays unchanged.
+
 ## Setup
 
 Run the setup helper to check Node/npm, CodeGraph, and project indexes:

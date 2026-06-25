@@ -3628,9 +3628,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trigger", default="manual", choices=["manual", "commit"])
     parser.add_argument("--watch", action="store_true", help="Watch chatboks.md for handoffs")
     parser.add_argument("--once", action="store_true", help="Run one agent round and exit")
+    parser.add_argument("--tui", action="store_true", help="Run the experimental Textual terminal UI")
     args = parser.parse_args(argv)
 
     app = Chatboks(args.project, trigger=args.trigger, config_path=args.config)
+    if args.tui:
+        from ui.textual_app import run_textual_app
+
+        return run_textual_app(app)
     app.start(watch=args.watch, once=args.once)
     return 0
 
