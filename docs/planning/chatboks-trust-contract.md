@@ -1,6 +1,6 @@
 # ChatBoks Tool Trust Ledger and Privacy Contract
 
-Last reviewed: 2026-06-15
+Last reviewed: 2026-06-22
 
 Status: planning/security contract. This document is normative for ChatBoks planning, but it does not implement automation, cloud/local routing, MCP registry ingestion, or new tool discovery.
 
@@ -52,6 +52,35 @@ Some Codex sessions may expose app MCP connectors such as Figma, Hugging Face, N
 - Do not move ChatBoks memory, packets, logs, or project code into a connector unless the user request requires it.
 - Do not persist connector-derived credentials or tokens in ChatBoks docs, packets, sleep summaries, Graphify artifacts, or logs.
 - Record any durable connector adoption in this ledger before making it automatic.
+
+## MCP Admission Controls
+
+MCP servers, app connectors, and server-like tool providers are denied by default until admitted in `docs/planning/tool-trust-ledger.md`.
+
+Admission requires:
+
+- A ledger entry with explicit admission state.
+- A non-empty allowed toolset for any tool dispatch.
+- Project scope and filesystem/network scope that match the active ChatBoks project.
+- User-visible approval semantics for elevated, mutating, authenticated remote, destructive, billable, or cross-project actions.
+- Remote OAuth review before authenticated remote MCP use.
+- Host-layer and session assumptions covering transport, session reuse, token scope, and audit records.
+
+Signed server assertions can support admission when available, but they are additive. They do not override the local allowlist, allowed projects, auth review, host constraints, or user approval requirements.
+
+Admission failures are security-relevant events. ChatBoks policy must treat them as visible trust-boundary warnings and must not silently reroute the request to a broader connector, cloud provider, browser session, or shell command.
+
+### Remote MCP OAuth Review
+
+Before a remote MCP server can use authenticated user-linked services, review and record:
+
+- OAuth grant type and whether dynamic client registration is enabled.
+- Redirect/callback URI validation and localhost/private-callback assumptions.
+- Client credential, access-token, refresh-token, and session-cookie storage.
+- Token lifetime, revocation path, and account-boundary assumptions.
+- Whether the MCP server can act beyond the specific tool call the user approved.
+
+Unknown or unverifiable OAuth behavior blocks authenticated remote admission.
 
 ## Privacy Boundaries
 
@@ -210,6 +239,8 @@ Cloud fallback must not be automatic until the "not allowed yet" items below are
 The following are explicitly out of scope until a separate reviewed design and implementation exists:
 
 - MCP registry auto-ingestion.
+- MCP server tool dispatch without admitted-server status and explicit allowed toolset.
+- Silent fallback after failed MCP attestation, admission, OAuth, host, or session checks.
 - Automatic installation or activation of MCP servers from registry metadata.
 - MCP server trust scoring without manual ledger review.
 - Automatic cloud/local routing based only on model availability, latency, or cost.
@@ -225,6 +256,7 @@ Review this ledger when:
 - A new project is added to `config.yaml`.
 - A new agent, connector, MCP server, local model runtime, browser automation path, or remote-control surface is added.
 - A tool gains broader filesystem, shell, network, or auth access.
+- An MCP server's signed assertions, allowed toolset, OAuth setup, callback handling, transport, or session behavior changes.
 - Cloud/local routing behavior changes.
 - Packet, sleep, Graphify, usage, or transcript retention changes.
 
