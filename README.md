@@ -218,6 +218,20 @@ When the classifier engages, ChatBoks writes a short `[SYSTEM]` note so the auto
 
 Use `/help` in the terminal to show the local command deck in an old-school BBS-style box.
 
+## Paper Sleuth Tickets
+
+ChatBoks can read local Paper Sleuth ticket suggestions for the active project without calling agents or changing the
+ticket files.
+
+```text
+/tickets
+/tickets all
+```
+
+`/tickets` shows open suggestions from `research/tickets/<project>/` under the Paper Sleuth repo. `/tickets all` also
+shows accepted, deferred, rejected, or unknown-status records. Treat this as triage input, not an obligation to
+implement every ticket.
+
 ## Session Token Usage
 
 ChatBoks shows a compact session token bar in the terminal after startup and after each agent response. The bar is

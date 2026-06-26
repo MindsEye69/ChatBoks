@@ -1,6 +1,6 @@
 # ChatBoks Tool Trust Ledger and Privacy Contract
 
-Last reviewed: 2026-06-22
+Last reviewed: 2026-06-26
 
 Status: planning/security contract. This document is normative for ChatBoks planning, but it does not implement automation, cloud/local routing, MCP registry ingestion, or new tool discovery.
 
@@ -65,10 +65,26 @@ Admission requires:
 - User-visible approval semantics for elevated, mutating, authenticated remote, destructive, billable, or cross-project actions.
 - Remote OAuth review before authenticated remote MCP use.
 - Host-layer and session assumptions covering transport, session reuse, token scope, and audit records.
+- Description-code consistency review comparing advertised tool descriptions against runtime metadata before high-risk use.
+- Tool-group review for related tools that share origin, update channel, workflow dependency, trigger behavior, or prompt-visible descriptions.
+- Tool-surface mutation history for registration, update, removal, schema, permission, and description changes.
+- Protocol and authorization readiness evidence for production-like remote use, including OAuth mix-up prevention, redirect binding, DPoP/WIF support or compensating controls, SDK conformance, policy hooks, and audit events.
 
 Signed server assertions can support admission when available, but they are additive. They do not override the local allowlist, allowed projects, auth review, host constraints, or user approval requirements.
 
 Admission failures are security-relevant events. ChatBoks policy must treat them as visible trust-boundary warnings and must not silently reroute the request to a broader connector, cloud provider, browser session, or shell command.
+
+### Description-Code Consistency Review
+
+Advertised MCP tool descriptions and catalogs are untrusted until checked against runtime metadata. For high-risk filesystem, network, authenticated remote, destructive, or billable capability classes, unknown or mismatched descriptions block admission unless a manual override records the mismatch evidence, mitigation, expiry or review date, and warning shown at use time.
+
+### Tool-Group And Mutation Review
+
+Related MCP tools must be reviewed as a group when their combined descriptions, parameters, runtime triggers, or workflow dependencies can alter behavior. ChatBoks policy must block mixed old/new high-risk tool groups and unreviewed runtime tool-surface mutations until the ledger records the origin-bound registration identifiers, old/new tool-set summary, changed permissions, reviewer rationale, and rollback or disable action.
+
+### Protocol Readiness Review
+
+Production-like remote MCP use requires explicit evidence for identity, mutual authentication or compensating controls, security-context propagation, fine-grained policy enforcement, audit events, OAuth mix-up prevention, redirect/callback binding, DPoP or Workload Identity Federation readiness where available, and SDK conformance for the relied-on trust surface. Unknown readiness keeps the integration restricted to discovery-only, read-only, or explicit per-action approval according to risk class.
 
 ### Remote MCP OAuth Review
 
@@ -241,6 +257,9 @@ The following are explicitly out of scope until a separate reviewed design and i
 - MCP registry auto-ingestion.
 - MCP server tool dispatch without admitted-server status and explicit allowed toolset.
 - Silent fallback after failed MCP attestation, admission, OAuth, host, or session checks.
+- High-risk MCP admission when description-code consistency is unknown or known mismatched without a recorded manual override.
+- Mixed old/new high-risk MCP tool-group state without explicit review.
+- Unreviewed runtime MCP tool-surface mutation for filesystem, network, authenticated remote, destructive, or billable capability classes.
 - Automatic installation or activation of MCP servers from registry metadata.
 - MCP server trust scoring without manual ledger review.
 - Automatic cloud/local routing based only on model availability, latency, or cost.
@@ -257,6 +276,8 @@ Review this ledger when:
 - A new agent, connector, MCP server, local model runtime, browser automation path, or remote-control surface is added.
 - A tool gains broader filesystem, shell, network, or auth access.
 - An MCP server's signed assertions, allowed toolset, OAuth setup, callback handling, transport, or session behavior changes.
+- An MCP server's tool descriptions, runtime metadata, tool group, registration identifiers, schemas, permissions, update triggers, or tool-surface mutation history changes.
+- A remote MCP integration changes authorization-readiness evidence such as OAuth mix-up prevention, DPoP/WIF support, SDK conformance, policy hooks, or audit events.
 - Cloud/local routing behavior changes.
 - Packet, sleep, Graphify, usage, or transcript retention changes.
 

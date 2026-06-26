@@ -1,10 +1,10 @@
 # Tool Trust Ledger
 
-Last reviewed: 2026-06-22
+Last reviewed: 2026-06-26
 
 Status: planning/security ledger. This document is the focused inventory for MCP servers, app connectors, browser automation, local runtimes, and other executable tool surfaces that ChatBoks may expose to agents. It complements `docs/planning/chatboks-trust-contract.md`; it does not install tools, grant permissions, or change runtime behavior.
 
-Source intake: Paper Sleuth tickets `research/tickets/chatboks/mcp-tool-trust-ledger.md` and `research/tickets/chatboks/mcp-attested-server-admission.md`; MCP security research and local-runtime notes listed under Sources.
+Source intake: Paper Sleuth tickets `research/tickets/chatboks/mcp-tool-trust-ledger.md`, `research/tickets/chatboks/mcp-attested-server-admission.md`, `research/tickets/chatboks/mcp-description-code-consistency-checks.md`, `research/tickets/chatboks/webmcp-tool-surface-poisoning.md`, `research/tickets/chatboks/mcp-smcp-protocol-controls.md`, `research/tickets/chatboks/mcp-roadmap-authz-controls.md`, and `research/tickets/chatboks/mcp-sharelock-multi-tool-poisoning.md`; MCP security research and local-runtime notes listed under Sources.
 
 ## Goal
 
@@ -27,6 +27,8 @@ Every durable tool entry should include:
 | Tool or server identity | Stable name, package/repo/vendor, and local command or MCP server name. |
 | Install source | Registry, GitHub repo, bundled plugin, local binary path, package manager, or manual install route. |
 | Tool descriptions | User-visible and model-visible descriptions that may influence agent behavior. Treat these as prompt-injection input. |
+| Tool group | Related tools that must be reviewed together because descriptions, parameters, update triggers, or runtime behavior interact. |
+| Runtime metadata | Runtime-discovered tool names, schemas, parameters, permissions, and executable metadata used to compare against advertised descriptions. |
 | Filesystem scope | Paths the tool can read/write directly or indirectly. |
 | Network scope | Loopback only, arbitrary outbound, authenticated provider API, browser-authenticated sites, local tunnel, or unknown. |
 | Auth model | Where credentials live, how tokens are obtained, whether ChatBoks sees them, and whether sessions can be reused. |
@@ -36,7 +38,9 @@ Every durable tool entry should include:
 | Allowed toolset | Per-server allowlist of tool names or capability classes. Empty means no dispatch. |
 | Trust assertions | Signed assertion location, issuer, pinned trust root, assertion expiry, and verification status when available. |
 | Remote auth review | OAuth/client-registration/callback review status for remote servers. Required before authenticated remote use. |
+| Authorization readiness | OAuth mix-up prevention, redirect binding, DPoP/WIF support or compensating controls, SDK conformance, and policy hook readiness. |
 | Host/session constraints | Transport, session reuse, token scope, audit logging, and host-layer containment assumptions. |
+| Tool-surface mutation history | Registration, update, removal, schema, permission, and description deltas with origin-bound identifiers and reviewer decisions. |
 | Last review date | Date the trust entry was last checked. |
 | Allowed projects | Explicit ChatBoks project keys or "none until reviewed". |
 | Risk class | Low, medium, high, or blocked with one-line rationale. |
@@ -77,6 +81,45 @@ Host and session checks remain mandatory because MCP defenses are split across s
 - Tool results, tool descriptions, and server metadata remain untrusted content.
 - Audit records should capture server identity, admitted state, selected tool, project, approval point, and denial reason.
 
+### Description-Code Consistency Gate
+
+Advertised tool descriptions are not sufficient evidence of the executable tool surface. Before admitting an MCP server or connector for automatic use, ChatBoks policy requires a consistency check between advertised descriptions and runtime metadata:
+
+- Compare advertised tool names, parameter names, parameter types, required fields, defaults, permissions, and side-effect descriptions against runtime-discovered metadata.
+- Treat undocumented parameters, broader permissions, hidden write/network behavior, or missing destructive-action warnings as admission failures for high-risk projects.
+- Record the exact mismatch evidence, review decision, mitigation, and reviewer identity in the ledger.
+- Re-run the consistency check when server claims, runtime tool lists, schemas, executable metadata, package versions, or invocation surfaces change.
+- A manual override can admit a mismatched tool only with a narrow allowed toolset, explicit expiry or review date, and a visible warning at use time.
+
+### Tool-Group And Mutation Gate
+
+Single-tool review is not enough for tool-poisoning patterns that split instructions or behavior across a related tool set. ChatBoks policy treats related MCP tools as group-level trust objects when they share a server, origin, update channel, prompt-visible descriptions, workflow dependency, or runtime trigger.
+
+For tool groups:
+
+- Onboard related tools atomically when admission depends on their combined descriptions, parameters, update triggers, or runtime behavior.
+- Compare group-level description changes, schema changes, permission changes, and executable metadata changes before allowing mixed old/new tool states.
+- Block unreviewed tool-surface mutations for high filesystem, network, authenticated remote, destructive, or billable capability classes.
+- Require explicit approval before accepting cross-tool behavior dependencies, update-triggered reconstruction conditions, or multi-tool threshold behavior.
+- Record origin-bound registration identifiers, old and new tool-set summaries, changed permissions, affected projects, reviewer rationale, and rollback/disable action.
+
+If runtime registration changes are detected without a matching ledger review, the safe state is `blocked` or discovery-only inspection with no tool dispatch.
+
+### Protocol And Authorization Readiness Gate
+
+Remote or production-like MCP integrations also need protocol-readiness evidence before higher-risk use. Admission should record whether the integration provides:
+
+- Verifiable server identity, signed assertions, or another pinned provenance mechanism.
+- Mutual authentication or explicit compensating controls.
+- Security-context propagation across tool calls and sessions.
+- Fine-grained policy enforcement hooks that can deny individual tools, parameters, projects, and capability classes.
+- Audit events for registration, invocation, scope changes, auth changes, session reuse, and denial decisions.
+- OAuth mix-up prevention, redirect/callback binding, dynamic-client-registration constraints, token storage review, and revocation path.
+- DPoP, Workload Identity Federation, or a documented reason those controls are unavailable plus compensating controls.
+- SDK or client conformance status for the trust surface ChatBoks relies on.
+
+Unknown or unverifiable readiness keeps the integration in restricted mode: discovery-only, read-only, or explicit per-action approval depending on risk class.
+
 ## Entry Template
 
 ```markdown
@@ -85,6 +128,8 @@ Host and session checks remain mandatory because MCP defenses are split across s
 - Identity:
 - Install source:
 - Tool descriptions:
+- Tool group:
+- Runtime metadata:
 - Filesystem scope:
 - Network scope:
 - Auth model:
@@ -94,7 +139,9 @@ Host and session checks remain mandatory because MCP defenses are split across s
 - Allowed toolset:
 - Trust assertions:
 - Remote auth review:
+- Authorization readiness:
 - Host/session constraints:
+- Tool-surface mutation history:
 - Last review date:
 - Allowed projects:
 - Risk class:
@@ -209,13 +256,17 @@ Before enabling a new tool automatically:
 
 - Confirm install source and update channel.
 - Copy the exact tool descriptions into the ledger or link to the local manifest.
+- Record the tool group, shared origin, workflow dependency, and update trigger set when related tools can influence each other.
+- Compare advertised descriptions against runtime metadata before admitting high-risk tools.
 - Set admission state explicitly; default to not admitted.
 - Declare the allowed toolset; empty means no tool dispatch.
 - Verify signed server assertions against a pinned trust root when assertions are available.
 - Record filesystem and network scope from actual configuration, not marketing copy.
 - Identify every credential source and where tokens/session data are stored.
 - Review OAuth registration, redirect/callback handling, token storage, token expiry, and revocation behavior for remote servers.
+- Record OAuth mix-up prevention, redirect binding, DPoP/WIF support or compensating controls, SDK conformance, and policy hook readiness.
 - Record host-layer transport, session reuse, and audit-log assumptions.
+- Record tool-surface mutation history for registration, update, removal, schema, permission, and description changes.
 - Decide whether returned content is untrusted, semi-trusted, or project-local.
 - Define the approval prompts ChatBoks must show before use.
 - Add an allowed-project list; default to none when uncertain.
@@ -226,6 +277,9 @@ Before enabling a new tool automatically:
 - No MCP registry auto-trust.
 - No MCP server dispatch without an admitted server entry and non-empty allowed toolset.
 - No silent fallback when attestation, admission, OAuth, or host/session checks fail.
+- No admission of high-risk MCP tools when description-code consistency is unknown or known mismatched without a recorded manual override.
+- No mixed old/new tool-group state for high-risk MCP tool updates without explicit review.
+- No acceptance of unreviewed runtime tool-surface mutations for filesystem, network, authenticated remote, destructive, or billable capability classes.
 - No automatic installation based only on registry or connector metadata.
 - No silent cloud fallback from local Coordinator failures.
 - No cross-project memory use through tools without explicit user approval.
@@ -234,6 +288,11 @@ Before enabling a new tool automatically:
 ## Sources
 
 - Paper Sleuth ticket: `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\mcp-tool-trust-ledger.md`
+- Paper Sleuth ticket: `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\mcp-description-code-consistency-checks.md`
+- Paper Sleuth ticket: `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\webmcp-tool-surface-poisoning.md`
+- Paper Sleuth ticket: `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\mcp-smcp-protocol-controls.md`
+- Paper Sleuth ticket: `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\mcp-roadmap-authz-controls.md`
+- Paper Sleuth ticket: `C:\Users\MindsEye\Documents\Paper Sleuth\research\tickets\chatboks\mcp-sharelock-multi-tool-poisoning.md`
 - MCP threat modeling and tool poisoning: https://hf.co/papers/2603.22489
 - MCPShield adaptive trust calibration: https://arxiv.org/abs/2602.14281
 - Formal MCP security framework: https://arxiv.org/abs/2604.05969
@@ -241,5 +300,10 @@ Before enabling a new tool automatically:
 - Attested Tool-Server Admission: https://arxiv.org/abs/2605.24248
 - Remote MCP authentication measurement: https://arxiv.org/abs/2605.22333
 - MCP defense-placement taxonomy: https://arxiv.org/abs/2604.07551
+- MCP description-code inconsistency: https://arxiv.org/abs/2606.04769
+- WebMCP tool-surface poisoning: https://arxiv.org/abs/2606.06387
+- SMCP protocol-level controls: https://arxiv.org/abs/2602.01129
+- MCP ShareLock multi-tool poisoning: https://arxiv.org/abs/2606.27027
+- MCP roadmap authorization readiness: https://modelcontextprotocol.io/development/roadmap
 - Foundry Local overview: https://learn.microsoft.com/en-us/azure/foundry-local/what-is-foundry-local
 - Foundry Local releases: https://github.com/microsoft/Foundry-Local/releases

@@ -57,3 +57,47 @@ def test_trust_contract_denies_unadmitted_mcp_servers_by_default() -> None:
 
     for term in required_terms:
         assert term in text
+
+
+def test_tool_ledger_documents_group_and_mutation_controls() -> None:
+    text = _read(TOOL_LEDGER)
+
+    required_terms = [
+        "description-code consistency gate",
+        "runtime metadata",
+        "mismatch evidence",
+        "tool-group and mutation gate",
+        "group-level trust objects",
+        "onboard related tools atomically",
+        "mixed old/new tool states",
+        "tool-surface mutations",
+        "origin-bound registration identifiers",
+        "multi-tool threshold behavior",
+        "discovery-only inspection with no tool dispatch",
+    ]
+
+    for term in required_terms:
+        assert term in text
+
+
+def test_trust_contract_documents_protocol_readiness_controls() -> None:
+    text = _read(TRUST_CONTRACT)
+
+    required_terms = [
+        "description-code consistency review",
+        "tool-group and mutation review",
+        "protocol readiness review",
+        "runtime metadata",
+        "mixed old/new high-risk tool groups",
+        "origin-bound registration identifiers",
+        "oauth mix-up prevention",
+        "redirect/callback binding",
+        "dpop",
+        "workload identity federation",
+        "sdk conformance",
+        "fine-grained policy enforcement",
+        "discovery-only",
+    ]
+
+    for term in required_terms:
+        assert term in text

@@ -98,6 +98,7 @@ HELP_COMMANDS = [
     ("/skills", "List native ChatBoks workflow skills."),
     ("/skills <name>", "Preview a workflow skill without calling agents."),
     ("/resume", "Show start-of-session readiness: graphs, memory, packets, git, and next action."),
+    ("/tickets", "Show Paper Sleuth tickets for this project with suggested next actions."),
     ("/context", "Show current context mode: lean, normal, or full."),
     ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
     ("/sleep", "Close a work block: consolidate memory, sync CodeGraph, and report graph/git state."),
@@ -130,6 +131,7 @@ HELP_PIN_COMMANDS = [
     "/help",
     "/skills",
     "/resume",
+    "/tickets",
     "/context",
     "/sleep",
     "/session",
@@ -652,6 +654,9 @@ class Chatboks:
         if command == "/resume":
             self.handle_resume_command()
             return True
+        if command in {"/ticket", "/tickets"}:
+            self.handle_tickets_command(stripped)
+            return True
         if command in {"/context", "/ctx"}:
             self.handle_context_command(stripped)
             return True
@@ -678,7 +683,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /context, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /tickets, /context, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -713,6 +718,171 @@ class Chatboks:
             self.stream.help_pin(HELP_PIN_COMMANDS)
             return
         self.stream.system("Commands: " + "  ".join(HELP_PIN_COMMANDS))
+
+    def handle_tickets_command(self, text: str = "/tickets") -> None:
+        parts = text.split()
+        if len(parts) > 2:
+            self.stream.system("Unknown /tickets option. Try /tickets or /tickets all.")
+            return
+        if len(parts) == 2 and parts[1].lower() not in {"all", "open"}:
+            self.stream.system("Unknown /tickets option. Try /tickets or /tickets all.")
+            return
+
+        tickets_dir = self.paper_sleuth_ticket_dir()
+        if tickets_dir is None:
+            self.stream.system(
+                "Paper Sleuth tickets unavailable. Set PAPER_SLEUTH_ROOT or create "
+                f"{Path.home() / 'Documents' / 'Paper Sleuth' / 'research' / 'tickets' / self.project}."
+            )
+            return
+
+        tickets = self.load_paper_sleuth_tickets(tickets_dir)
+        if not tickets:
+            self.stream.system(f"Paper Sleuth tickets for {self.project}: none found in {tickets_dir}")
+            return
+
+        show_all = len(parts) == 2 and parts[1].lower() == "all"
+        self.stream.system(self.format_ticket_triage(tickets, tickets_dir, show_all=show_all))
+
+    def paper_sleuth_ticket_dir(self) -> Path | None:
+        candidates: list[Path] = []
+        env_root = os.environ.get("PAPER_SLEUTH_ROOT")
+        if env_root:
+            candidates.append(Path(env_root))
+        candidates.append(Path.home() / "Documents" / "Paper Sleuth")
+
+        for root in candidates:
+            ticket_dir = root.expanduser().resolve() / "research" / "tickets" / self.project
+            if ticket_dir.exists() and ticket_dir.is_dir():
+                return ticket_dir
+        return None
+
+    def load_paper_sleuth_tickets(self, tickets_dir: Path) -> list[dict[str, Any]]:
+        tickets: list[dict[str, Any]] = []
+        for path in sorted(tickets_dir.glob("*.md")):
+            try:
+                text = path.read_text(encoding="utf-8-sig")
+            except OSError:
+                continue
+            ticket = self.parse_paper_sleuth_ticket(text)
+            ticket["file"] = path
+            tickets.append(ticket)
+        return sorted(tickets, key=self.ticket_sort_key)
+
+    @staticmethod
+    def parse_paper_sleuth_ticket(text: str) -> dict[str, Any]:
+        lines = text.splitlines()
+        title = "Untitled Paper Sleuth ticket"
+        status = "unknown"
+        priority = "P?"
+        sources: list[str] = []
+        summary_lines: list[str] = []
+        section = ""
+
+        for raw_line in lines:
+            line = raw_line.strip()
+            if line.startswith("# "):
+                title = line[2:].strip() or title
+                section = ""
+                continue
+            if line.startswith("## "):
+                section = line[3:].strip().lower()
+                continue
+            if line.lower().startswith("status:"):
+                status = line.split(":", 1)[1].strip() or status
+                continue
+            if line.lower().startswith("priority:"):
+                priority = line.split(":", 1)[1].strip() or priority
+                continue
+            if section == "source urls" and line.startswith("- "):
+                sources.append(line[2:].strip())
+                continue
+            if section == "finding summary" and line:
+                summary_lines.append(line)
+
+        return {
+            "title": title,
+            "status": status,
+            "priority": priority,
+            "sources": sources,
+            "summary": " ".join(summary_lines).strip(),
+        }
+
+    @staticmethod
+    def ticket_sort_key(ticket: dict[str, Any]) -> tuple[int, str, str]:
+        priority = str(ticket.get("priority") or "").upper()
+        priority_rank = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(priority, 9)
+        status = str(ticket.get("status") or "").lower()
+        status_rank = 0 if status == "open" else 1
+        return (status_rank, priority_rank, str(ticket.get("title") or "").lower())
+
+    def format_ticket_triage(
+        self,
+        tickets: list[dict[str, Any]],
+        tickets_dir: Path,
+        *,
+        show_all: bool = False,
+    ) -> str:
+        grouped: dict[str, list[dict[str, Any]]] = {
+            "open": [],
+            "accepted": [],
+            "deferred": [],
+            "rejected": [],
+            "other": [],
+        }
+        for ticket in tickets:
+            status = str(ticket.get("status") or "unknown").strip().lower()
+            if status in {"open", "accepted", "deferred", "rejected"}:
+                grouped[status].append(ticket)
+            else:
+                grouped["other"].append(ticket)
+
+        visible_tickets = tickets if show_all else grouped["open"]
+        lines = [f"Paper Sleuth tickets for {self.project}: {len(tickets)} total, {len(grouped['open'])} open."]
+        lines.append(f"Source: {tickets_dir}")
+        if not visible_tickets:
+            lines.append("- No open tickets. Use /tickets all to inspect non-open records.")
+            return "\n".join(lines)
+
+        current_section = ""
+        for ticket in visible_tickets:
+            status = str(ticket.get("status") or "unknown").strip().lower()
+            section = status if status in grouped else "other"
+            if show_all and section != current_section:
+                current_section = section
+                lines.append(f"\n{section.title()}:")
+            prefix = f"- {ticket.get('priority', 'P?')} {ticket.get('title', 'Untitled')}"
+            if show_all:
+                prefix += f" [{ticket.get('status', 'unknown')}]"
+            lines.append(prefix)
+            source = (ticket.get("sources") or [""])[0]
+            if source:
+                lines.append(f"  Source: {source}")
+            summary = str(ticket.get("summary") or "").strip()
+            if summary:
+                lines.append(f"  Summary: {self.truncate_for_state(summary, limit=180)}")
+            lines.append(f"  Next: {self.ticket_next_action(ticket)}")
+            file_path = ticket.get("file")
+            if file_path:
+                lines.append(f"  File: {file_path}")
+        if not show_all and len(tickets) != len(visible_tickets):
+            lines.append("\nUse /tickets all to include accepted, deferred, rejected, or unknown-status records.")
+        return "\n".join(lines)
+
+    @staticmethod
+    def ticket_next_action(ticket: dict[str, Any]) -> str:
+        status = str(ticket.get("status") or "").strip().lower()
+        priority = str(ticket.get("priority") or "").strip().upper()
+        title = str(ticket.get("title") or "").lower()
+        if status in {"rejected", "closed", "done"}:
+            return "No action unless new evidence changes the decision."
+        if status in {"accepted", "in progress"}:
+            return "Continue the accepted scoped implementation and verify it."
+        if status == "deferred":
+            return "Keep parked until the dependency or use case becomes real."
+        if "subterranean" in title or priority in {"P2", "P3"}:
+            return "Decide later; useful as a design spike, not urgent implementation."
+        return "Triage now: accept, reject, defer, or convert into a scoped implementation."
 
     def handle_session_command(self, text: str) -> None:
         parts = text.split()
@@ -751,7 +921,10 @@ class Chatboks:
             return
 
         script = "session:start" if action == "start" else "session:close"
-        self.stream.system(f"Running DasDashboard {script} for {self.proj_path}...")
+        self.stream.system(
+            f"Running DasDashboard {script} for {self.proj_path} "
+            f"(root: {dashboard_root}, timeout: 300s)..."
+        )
         try:
             result = subprocess.run(
                 [npm_cmd, "run", script, "--", str(self.proj_path)],
@@ -811,10 +984,19 @@ class Chatboks:
             lines = [f"DasDashboard /session {action} complete."]
         elif action == "close" and result.returncode == 2:
             lines = ["DasDashboard /session close ran, but close readiness failed because git is dirty."]
+            lines.append("Next action: commit, stash, or intentionally discard pending changes, then rerun /session close.")
         else:
             lines = [f"DasDashboard {script} failed with exit code {result.returncode}."]
+        lines.append(f"Command: npm run {script} -- {self.proj_path}")
 
         if payload:
+            ok = payload.get("ok")
+            if ok is False:
+                lines.append("DasDashboard reported ok=false.")
+            errors = payload.get("errors")
+            if isinstance(errors, list) and errors:
+                lines.append("Errors:")
+                lines.extend(f"- {self.truncate_for_state(str(error), limit=200)}" for error in errors[:5])
             written = payload.get("written") if isinstance(payload.get("written"), dict) else {}
             snapshot = payload.get("snapshot") if isinstance(payload.get("snapshot"), dict) else {}
             paper_sleuth = snapshot.get("paperSleuth") if isinstance(snapshot.get("paperSleuth"), dict) else {}
@@ -843,12 +1025,17 @@ class Chatboks:
                 if path:
                     lines.append(f"Wrote {label}: {path}")
         else:
-            output = (result.stdout or result.stderr or "").strip()
-            if output:
-                lines.append(self.truncate_for_state(output, limit=1200))
+            stdout = (result.stdout or "").strip()
+            stderr_text = (result.stderr or "").strip()
+            if stdout:
+                lines.append("stdout: " + self.truncate_for_state(stdout, limit=700))
+            if stderr_text:
+                lines.append("stderr: " + self.truncate_for_state(stderr_text, limit=700))
+            if not stdout and not stderr_text:
+                lines.append("No stdout/stderr captured from DasDashboard.")
 
         stderr = result.stderr or ""
-        if stderr.strip():
+        if payload and stderr.strip():
             lines.append("stderr: " + self.truncate_for_state(stderr, limit=500))
         return "\n".join(lines)
 

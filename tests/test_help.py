@@ -148,6 +148,72 @@ def test_session_command_reports_dashboard_usage_without_agent_round():
         app.run_agent_round.assert_not_called()
         print("PASS: /session reports DasDashboard workflow usage without routing to agents")
 
+
+def test_tickets_command_lists_open_paper_sleuth_tickets_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        paper_root = root / "Paper Sleuth"
+        ticket_dir = paper_root / "research" / "tickets" / "test"
+        ticket_dir.mkdir(parents=True)
+        (ticket_dir / "p1-ticket.md").write_text(
+            "# Useful MCP Gate\n\n"
+            "Status: open\n"
+            "Priority: P1\n\n"
+            "## Finding Summary\n\n"
+            "A useful hardening idea.\n\n"
+            "## Source URLs\n\n"
+            "- https://example.test/paper\n",
+            encoding="utf-8",
+        )
+        (ticket_dir / "deferred-ticket.md").write_text(
+            "# Parked Idea\n\n"
+            "Status: deferred\n"
+            "Priority: P2\n\n",
+            encoding="utf-8",
+        )
+        app = _make_app(root)
+        app.run_agent_round = MagicMock()
+
+        with patch.dict("orchestrator.os.environ", {"PAPER_SLEUTH_ROOT": str(paper_root)}):
+            app.handle_user_input("/tickets")
+
+        output = app.stream.system.call_args.args[0]
+        assert "Paper Sleuth tickets for test: 2 total, 1 open." in output
+        assert "- P1 Useful MCP Gate" in output
+        assert "Source: https://example.test/paper" in output
+        assert "Next: Triage now" in output
+        assert "Parked Idea" not in output
+        app.run_agent_round.assert_not_called()
+        print("PASS: /tickets lists open Paper Sleuth tickets without routing to agents")
+
+
+def test_tickets_all_includes_non_open_status_groups():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        paper_root = root / "Paper Sleuth"
+        ticket_dir = paper_root / "research" / "tickets" / "test"
+        ticket_dir.mkdir(parents=True)
+        (ticket_dir / "open-ticket.md").write_text(
+            "# Open Idea\n\nStatus: open\nPriority: P1\n",
+            encoding="utf-8",
+        )
+        (ticket_dir / "deferred-ticket.md").write_text(
+            "# Deferred Idea\n\nStatus: deferred\nPriority: P2\n",
+            encoding="utf-8",
+        )
+        app = _make_app(root)
+
+        with patch.dict("orchestrator.os.environ", {"PAPER_SLEUTH_ROOT": str(paper_root)}):
+            app.handle_user_input("/tickets all")
+
+        output = app.stream.system.call_args.args[0]
+        assert "Open:" in output
+        assert "Deferred:" in output
+        assert "Open Idea [open]" in output
+        assert "Deferred Idea [deferred]" in output
+        print("PASS: /tickets all includes non-open ticket groups")
+
+
 def test_session_start_invokes_dashboard_procedure_without_agent_round():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -184,6 +250,7 @@ def test_session_start_invokes_dashboard_procedure_without_agent_round():
         assert kwargs["cwd"] == dashboard_root
         summary = app.stream.system.call_args_list[-1].args[0]
         assert "DasDashboard /session start complete." in summary
+        assert "Command: npm run session:start --" in summary
         assert "Paper Sleuth: 3 tickets found (7 open total)" in summary
         assert "Wrote dashboard.md:" in summary
         app.run_agent_round.assert_not_called()
@@ -225,6 +292,8 @@ def test_session_close_reports_dirty_git_gate_without_agent_round():
         assert args[0] == ["npm.cmd", "run", "session:close", "--", str(root)]
         summary = app.stream.system.call_args_list[-1].args[0]
         assert "close readiness failed because git is dirty" in summary
+        assert "Next action: commit, stash, or intentionally discard pending changes" in summary
+        assert "Command: npm run session:close --" in summary
         assert "Git: main, dirty (2 pending changes)" in summary
         app.run_agent_round.assert_not_called()
         print("PASS: /session close reports DasDashboard dirty-git close gate")

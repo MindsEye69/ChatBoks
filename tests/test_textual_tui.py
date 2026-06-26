@@ -147,6 +147,8 @@ def test_textual_app_completion_palette_covers_fixed_choice_commands() -> None:
     assert ("/usage sync openai", "OpenAI Platform") in app.completion_options("/usage sync ")
     assert ("/usage sync openai", "OpenAI Platform") in app.completion_options("/usage sync op")
     assert ("/skills implement", "implementation workflow") in app.completion_options("/skills im")
+    assert ("/tickets all", "show all Paper Sleuth tickets") in app.completion_options("/tickets ")
+    assert ("/tickets open", "show open Paper Sleuth tickets") in app.completion_options("/tickets o")
     assert ("@codex", "route directly to agent") in app.completion_options("@co")
     assert ("/session start", "run DasDashboard start checks") in app.completion_options("/session st")
     assert ("/session close", "run DasDashboard close checks") in app.completion_options("/session cl")

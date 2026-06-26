@@ -43,6 +43,7 @@ def test_slash_commands_bypass_buffer():
     cases = [
         "/help",
         "/resume",
+        "/tickets",
         "/mode bugsearch",
         "/sleep",
         "/agent codex exhausted 60m",
@@ -123,6 +124,12 @@ def test_handle_user_input_routes_slash_commands_without_buffer():
         app.handle_resume_command = MagicMock()
         app.handle_user_input("/resume")
         app.handle_resume_command.assert_called_once()
+        app.run_agent_round.assert_not_called()
+
+        # /tickets should stay local and not trigger a round
+        app.handle_tickets_command = MagicMock()
+        app.handle_user_input("/tickets")
+        app.handle_tickets_command.assert_called_once_with("/tickets")
         app.run_agent_round.assert_not_called()
 
         # /sleep should stay local and not trigger a round

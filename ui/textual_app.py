@@ -547,6 +547,15 @@ class ChatboksTextualApp(App[None]):
                     "packet-risk": "alias for confirmation-risk",
                 },
             )
+        if command in {"/ticket", "/tickets"}:
+            return self.complete_word_command(
+                stripped,
+                "/tickets",
+                {
+                    "open": "show open Paper Sleuth tickets",
+                    "all": "show all Paper Sleuth tickets",
+                },
+            )
         if command == "/outcome":
             return self.complete_word_command(
                 stripped,
