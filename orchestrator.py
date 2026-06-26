@@ -509,6 +509,45 @@ class Chatboks:
         self.stream.proposal(message)
         self.stream.system("Type APPROVE to run, MODIFY <criteria> to add detail, or REJECT to cancel.")
 
+    def handle_agent_criteria_pending(
+        self,
+        response: str,
+        agent_name: str,
+        initiator: str | None,
+        agents: list[str],
+    ) -> None:
+        routed_text = str(self.state.get("active_task") or initiator or "").strip()
+        if not routed_text:
+            routed_text = self.strip_signal_suffix(response).strip()
+        gate = {
+            "id": f"criteria_{int(time.time())}",
+            "original_text": routed_text,
+            "routed_text": routed_text,
+            "agents": agents,
+            "exclusive_agent": None,
+            "strategy": self.state.get("round_intent", "respond"),
+            "mode": self.state.get("collaboration_mode", "default"),
+            "reasons": ["agent requested acceptance criteria"],
+            "source": "agent",
+            "requested_by": agent_name,
+            "request": self.strip_signal_suffix(response).strip(),
+        }
+        self.update_state(
+            {
+                "status": "awaiting_criteria",
+                "next_agent": "you",
+                "active_task": routed_text,
+                "criteria_gate": gate,
+            }
+        )
+        message = self.format_criteria_gate(gate)
+        self.append_message("system", f"{message}\n>>> CRITERIA_PENDING")
+        self.stream.proposal(message)
+        self.stream.system(
+            f"{agent_name} requested acceptance criteria. "
+            "Type APPROVE to run, MODIFY <criteria> to add detail, or REJECT to cancel."
+        )
+
     def handle_criteria_response(self, text: str) -> None:
         gate = self.state.get("criteria_gate")
         if not isinstance(gate, dict):
@@ -555,9 +594,14 @@ class Chatboks:
             for reason in gate.get("reasons", [])
         ]
         agents = ", ".join(str(agent) for agent in gate.get("agents", [])) or "unknown"
+        source = str(gate.get("source") or "")
+        trigger_line = "Acceptance criteria gate triggered before agent execution."
+        if source == "agent":
+            requester = str(gate.get("requested_by") or "An agent")
+            trigger_line = f"Acceptance criteria gate triggered by {requester} during execution."
         lines = [
             "CRITERIA_PENDING",
-            "Acceptance criteria gate triggered before agent execution.",
+            trigger_line,
             f"Triggers: {', '.join(reasons) or 'unspecified'}",
             f"Mode: {gate.get('mode') or 'default'}",
             f"Routing: {gate.get('strategy') or 'default'} -> {agents}",
@@ -2783,6 +2827,9 @@ class Chatboks:
                     continue
                 if signal == "QUESTION":
                     self.handle_question(response)
+                    return
+                if signal == "CRITERIA_PENDING":
+                    self.handle_agent_criteria_pending(response, agent_name, initiator, active_agents)
                     return
                 if signal == "HANDOFF":
                     if not is_last_agent:

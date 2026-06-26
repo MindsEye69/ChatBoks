@@ -160,6 +160,49 @@ def test_session_token_budget_blocks_new_work_at_hard_cap():
         app.run_agent_round.assert_not_called()
 
 
+def test_agent_criteria_pending_pauses_round_with_gate():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["active_task"] = "Original task"
+        app.config["rounds"] = {"max_before_escalate": 3}
+        app.call_agent_with_token_recovery = MagicMock(return_value="Need acceptance criteria.\n>>> CRITERIA_PENDING")
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+
+        app.run_agent_round(initiator="Original task", agents=["codex"])
+
+        assert app.state["status"] == "awaiting_criteria"
+        assert app.state["next_agent"] == "you"
+        assert app.state["active_task"] == "Original task"
+        assert app.state["completed_agents"] == ["codex"]
+        gate = app.state["criteria_gate"]
+        assert gate["source"] == "agent"
+        assert gate["requested_by"] == "codex"
+        assert gate["routed_text"] == "Original task"
+        assert gate["agents"] == ["codex"]
+        assert "Need acceptance criteria." in gate["request"]
+        app.stream.system.assert_called_with(
+            "codex requested acceptance criteria. "
+            "Type APPROVE to run, MODIFY <criteria> to add detail, or REJECT to cancel."
+        )
+
+
+def test_agent_criteria_pending_approval_restarts_routed_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["criteria_gate"] = {
+            "routed_text": "Original task",
+            "original_text": "Original task",
+            "agents": ["codex"],
+            "exclusive_agent": None,
+        }
+        app.start_routed_agent_round = MagicMock()
+
+        app.handle_criteria_response("APPROVE")
+
+        app.start_routed_agent_round.assert_called_once_with("Original task", ["codex"], None)
+
+
 def test_handle_approval_accepts_common_affirmatives():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
