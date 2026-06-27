@@ -1,6 +1,6 @@
 projects:
   chatboks:
-    path: C:\Users\MindsEye\Desktop\chatboks
+    path: .
     agents: [claude, codex]
     direct_agents: [coordinator, codex_spark]
     primary: codex
@@ -80,7 +80,7 @@ agents:
     color: magenta
     role_file: COORDINATOR.md
   claude:
-    cli: C:\Users\MindsEye\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe
+    cli: claude
     adapter_profile: claude_code_print_v1
     first_output_timeout: 45
     token_limit: 180000
@@ -95,14 +95,14 @@ agents:
         description: Run Claude Code Ultrareview for the current branch, PR, or target.
         enabled: true
   codex:
-    cli: C:\Users\MindsEye\AppData\Local\OpenAI\Codex\bin\070117a2efe12b41\codex.exe
+    cli: codex
     adapter_profile: codex_exec_v1
     token_limit: 120000
     token_warning: 100000
     color: green
     role_file: AGENTS.md
   codex_spark:
-    cli: C:\Users\MindsEye\AppData\Local\OpenAI\Codex\bin\070117a2efe12b41\codex.exe
+    cli: codex
     adapter_profile: codex_spark_exec_v1
     token_limit: 128000
     token_warning: 100000
