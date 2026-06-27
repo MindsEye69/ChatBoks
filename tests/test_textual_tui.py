@@ -132,6 +132,23 @@ def test_textual_app_seed_transcript_tail_handles_missing_file() -> None:
         app.write_log.assert_not_called()
 
 
+def test_textual_app_prompt_exception_is_persisted_and_blocks_state() -> None:
+    chatboks = MagicMock()
+    app = ChatboksTextualApp(chatboks)
+    app.call_from_thread = lambda method, *args: method(*args)  # type: ignore[method-assign]
+    app.write_log = MagicMock()
+
+    app.handle_prompt_exception(RuntimeError("agent dispatch failed"))
+
+    chatboks.append_message.assert_called_once()
+    sender, message = chatboks.append_message.call_args.args
+    assert sender == "system"
+    assert "TUI prompt failed: RuntimeError: agent dispatch failed" in message
+    assert ">>> BLOCKED" in message
+    chatboks.update_state.assert_called_once_with({"status": "blocked", "next_agent": "you"})
+    app.write_log.assert_called_once()
+
+
 def test_textual_app_completion_palette_covers_fixed_choice_commands() -> None:
     chatboks = MagicMock()
     chatboks.config = {"agents": {"codex": {}, "claude": {}}}
