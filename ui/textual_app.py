@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import threading
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -392,9 +393,20 @@ class ChatboksTextualApp(App[None]):
         try:
             self.chatboks.handle_user_input(value)
         except Exception as exc:  # pragma: no cover - defensive UI boundary
-            self.call_from_thread(self.write_log, f"[SYSTEM] TUI prompt failed: {exc}", "bold red")
+            self.handle_prompt_exception(exc)
         finally:
             self.call_from_thread(self.finish_prompt)
+
+    def handle_prompt_exception(self, exc: Exception) -> None:
+        summary = f"TUI prompt failed: {type(exc).__name__}: {exc}"
+        detail = "".join(traceback.format_exception_only(type(exc), exc)).strip()
+        message = "\n".join(part for part in (summary, detail, ">>> BLOCKED") if part)
+        try:
+            self.chatboks.append_message("system", message)
+            self.chatboks.update_state({"status": "blocked", "next_agent": "you"})
+        except Exception:
+            pass
+        self.call_from_thread(self.write_log, f"[SYSTEM] {summary}", "bold red")
 
     def finish_prompt(self) -> None:
         prompt = self.query_one("#prompt", TextArea)
