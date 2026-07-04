@@ -10,8 +10,8 @@
     "semantic_hash": "a9f891c2127461346afd818f6d925bfc"
   },
   "agents/base.py": {
-    "mtime": 1781164503.5812712,
-    "ast_hash": "94646413f428ecd6a5ec3de324aa0b63",
+    "mtime": 1782414344.8583837,
+    "ast_hash": "a7348825a1a0042c6bb4f7bdf0900cb7",
     "semantic_hash": ""
   },
   "agents/claude.py": {
@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "orchestrator.py": {
-    "mtime": 1781298974.2037177,
-    "ast_hash": "506cfc3a6fd86fd1f211b641e7d387f1",
+    "mtime": 1782513564.9398406,
+    "ast_hash": "4f6b880b59c794682db95e3ced70bd7c",
     "semantic_hash": ""
   },
   "router.py": {
@@ -70,8 +70,8 @@
     "semantic_hash": ""
   },
   "tests/test_base_agent_streaming.py": {
-    "mtime": 1781164137.2018104,
-    "ast_hash": "beb9075e9a47344b35a58052efb00578",
+    "mtime": 1782414368.1559253,
+    "ast_hash": "7b796130ac9c3c45ec803811ffddf641",
     "semantic_hash": ""
   },
   "tests/test_context_modes.py": {
@@ -85,8 +85,8 @@
     "semantic_hash": ""
   },
   "tests/test_help.py": {
-    "mtime": 1781267562.1806064,
-    "ast_hash": "dd5fc456d1f57651b906724c5151b072",
+    "mtime": 1782513637.2995663,
+    "ast_hash": "6b65cea06dba1ffe47901b06d86726ad",
     "semantic_hash": ""
   },
   "tests/test_modes.py": {
@@ -115,8 +115,8 @@
     "semantic_hash": ""
   },
   "tests/test_signal_state.py": {
-    "mtime": 1781267562.224627,
-    "ast_hash": "4ec665abe276888f89aa0af264335cc1",
+    "mtime": 1782499637.1609397,
+    "ast_hash": "3c551c9f6f145078d8d76a43add64e38",
     "semantic_hash": ""
   },
   "tests/test_skills.py": {
@@ -125,8 +125,8 @@
     "semantic_hash": "29b1aba7030b95dd57dd819a63d8f194"
   },
   "tests/test_slash_buffering.py": {
-    "mtime": 1781169760.0052896,
-    "ast_hash": "25d50215c452a680a1cc91c3eff2e9af",
+    "mtime": 1782513646.0147758,
+    "ast_hash": "a8867808d8d01abee041bf25e9ce713a",
     "semantic_hash": ""
   },
   "trust.py": {
@@ -140,8 +140,8 @@
     "semantic_hash": "b2cd4d8c4d3ff8e25b412c4cf7550a30"
   },
   "ui/stream.py": {
-    "mtime": 1781186709.3165145,
-    "ast_hash": "98c84efeba769b9659828a4464a15ff8",
+    "mtime": 1782597692.8131044,
+    "ast_hash": "b87468e1ca3f9803b6074cb1e77a0a0a",
     "semantic_hash": ""
   },
   "CREDITS.md": {
@@ -150,24 +150,24 @@
     "semantic_hash": "ec6e73c93a04f0e849149095746b1f28"
   },
   "README.md": {
-    "mtime": 1781267562.1645892,
-    "ast_hash": "6ea30b78a6a56a23540fe2006a3312db",
+    "mtime": 1782597664.7791762,
+    "ast_hash": "6898452d40163e2f91760202b0a1fa43",
     "semantic_hash": ""
   },
   "ROADMAP.md": {
-    "mtime": 1781268196.362506,
-    "ast_hash": "b86ceee6368a3b3bd1261d40136e75b2",
+    "mtime": 1781693746.9066126,
+    "ast_hash": "913260e2d6dc777ac5980332eb2c8b1c",
     "semantic_hash": ""
   },
   "config.yaml": {
-    "mtime": 1781482451.741737,
-    "ast_hash": "5ac558aefe11f0903f43e04b5af0545e",
+    "mtime": 1782597222.1052847,
+    "ast_hash": "cd80fbddfdccb980bdbb91d5009bfd0a",
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1779909548.455675,
-    "ast_hash": "a53f8c54c06dbb3fda02b8a60e1dffa0",
-    "semantic_hash": "a53f8c54c06dbb3fda02b8a60e1dffa0"
+    "mtime": 1782391970.5435028,
+    "ast_hash": "6f8a6a1698d87fd5205dc1b7c6d08e7d",
+    "semantic_hash": ""
   },
   "skills/README.md": {
     "mtime": 1780589843.6536381,
@@ -870,8 +870,8 @@
     "semantic_hash": ""
   },
   "docs/planning/chatboks-trust-contract.md": {
-    "mtime": 1781524540.6306303,
-    "ast_hash": "d46cde273e4ec0f58339e52800326d3d",
+    "mtime": 1782509404.8923297,
+    "ast_hash": "0e7976d9e697a5cdda159ba4ebae0aad",
     "semantic_hash": ""
   },
   ".codex-remote-attachments/019eb890-3107-7700-9006-eaf9d4df2232/0b045073-0ba2-4839-9221-1ea4793a1215/1-Photo-1.jpg": {
@@ -885,8 +885,8 @@
     "semantic_hash": ""
   },
   "docs/planning/coordinator-model-bakeoff.md": {
-    "mtime": 1781531860.0580583,
-    "ast_hash": "f5b18e7fde389e9438032c6caa0b94bd",
+    "mtime": 1781611763.18563,
+    "ast_hash": "18ebb867cb1c8e15110e83e95b273df2",
     "semantic_hash": ""
   },
   "tests/fixtures/coordinator_bakeoff/classify_public_bridge_risk.json": {
@@ -932,6 +932,106 @@
   "coordinator_bakeoff.py": {
     "mtime": 1781531190.027835,
     "ast_hash": "2c51b728c5260ac0e969adfe894c3df1",
+    "semantic_hash": ""
+  },
+  "dashboards/latest.json": {
+    "mtime": 1783128504.4811246,
+    "ast_hash": "f82f14bff4bb032a47c646838f1ea423",
+    "semantic_hash": ""
+  },
+  "dashboards/sessions/2026-07-04T01-21-40-041Z.json": {
+    "mtime": 1783128100.4763565,
+    "ast_hash": "e58bc708aa94929f16a46715200a8dda",
+    "semantic_hash": ""
+  },
+  "lane_bakeoff.py": {
+    "mtime": 1781692232.6029255,
+    "ast_hash": "e4666bd0965853ca612eac1540394902",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/lane_bakeoff/architecture_byom_lane_runtime.json": {
+    "mtime": 1781692266.0885215,
+    "ast_hash": "c82f6abb7c6a1e4617f612324d763225",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/lane_bakeoff/critique_confirmation_packet.json": {
+    "mtime": 1781692266.0895205,
+    "ast_hash": "282cc6fb6508ead353b9b390198ac6a9",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/lane_bakeoff/long_context_synthesis.json": {
+    "mtime": 1781692266.0895205,
+    "ast_hash": "542aae801142a8e3ed35ceaaba887afa",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/lane_bakeoff/protocol_signal_compliance.json": {
+    "mtime": 1781692266.0910237,
+    "ast_hash": "840ed3babd0e47a37ba483cb18cd5b78",
+    "semantic_hash": ""
+  },
+  "tests/fixtures/lane_bakeoff/refactor_openai_compat_agent.json": {
+    "mtime": 1781692266.0895205,
+    "ast_hash": "ab51e0a0612505017d2f9208e5b07255",
+    "semantic_hash": ""
+  },
+  "tests/test_lane_bakeoff.py": {
+    "mtime": 1781692304.8748927,
+    "ast_hash": "c684c9a02318d2a6d4b53f3dcea514bc",
+    "semantic_hash": ""
+  },
+  "tests/test_mcp_trust_docs.py": {
+    "mtime": 1782509415.992995,
+    "ast_hash": "4dff160aa77c593cdf57465f9bf9db4c",
+    "semantic_hash": ""
+  },
+  "tests/test_textual_tui.py": {
+    "mtime": 1782597664.7791762,
+    "ast_hash": "f1669a2db3964e7545ed2f45cc246229",
+    "semantic_hash": ""
+  },
+  "ui/textual_app.py": {
+    "mtime": 1782597664.7781708,
+    "ast_hash": "8ab76e33beb4791403872242cc36fce6",
+    "semantic_hash": ""
+  },
+  "version.py": {
+    "mtime": 1782597664.776667,
+    "ast_hash": "d8b89012d4e5eb6d60c0d621a763b977",
+    "semantic_hash": ""
+  },
+  "dashboard.md": {
+    "mtime": 1783128504.4831252,
+    "ast_hash": "f12301cf3ee1b34808a1b7087e30ed5f",
+    "semantic_hash": ""
+  },
+  "docs/planning/lane-model-bakeoff.md": {
+    "mtime": 1781693737.3524714,
+    "ast_hash": "7f688c9d78fe86768d6024582314f871",
+    "semantic_hash": ""
+  },
+  "docs/planning/subterranean-agent-workflow-compilation.md": {
+    "mtime": 1783128305.5729008,
+    "ast_hash": "77a52c165814a7f25d9872a7462ff768",
+    "semantic_hash": ""
+  },
+  "docs/planning/tool-trust-ledger.md": {
+    "mtime": 1782509388.0657506,
+    "ast_hash": "26470b7bae15884b619249a285b1045b",
+    "semantic_hash": ""
+  },
+  "notes.md": {
+    "mtime": 1781648111.3462875,
+    "ast_hash": "7473e47a27cd6e216bfd2b1cf1f8897d",
+    "semantic_hash": ""
+  },
+  "dashboards/sessions/2026-07-04T01-28-06-618Z.json": {
+    "mtime": 1783128487.0825524,
+    "ast_hash": "d31230e193071d780e32a75e6fe9cbf9",
+    "semantic_hash": ""
+  },
+  "dashboards/sessions/2026-07-04T01-28-24-020Z.json": {
+    "mtime": 1783128504.4801257,
+    "ast_hash": "f82f14bff4bb032a47c646838f1ea423",
     "semantic_hash": ""
   }
 }
