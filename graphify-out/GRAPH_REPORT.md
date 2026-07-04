@@ -1,16 +1,16 @@
 # Graph Report - chatboks  (2026-07-04)
 
 ## Corpus Check
-- 123 files · ~421,170 words
+- 124 files · ~436,480 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2537 nodes · 5139 edges · 164 communities (148 shown, 16 thin omitted)
+- 2689 nodes · 5295 edges · 179 communities (163 shown, 16 thin omitted)
 - Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 292 edges (avg confidence: 0.51)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cd113391`
+- Built from commit: `0a0045c9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -160,6 +160,21 @@
 - [[_COMMUNITY_Community 161|Community 161]]
 - [[_COMMUNITY_Community 162|Community 162]]
 - [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
+- [[_COMMUNITY_Community 167|Community 167]]
+- [[_COMMUNITY_Community 168|Community 168]]
+- [[_COMMUNITY_Community 169|Community 169]]
+- [[_COMMUNITY_Community 170|Community 170]]
+- [[_COMMUNITY_Community 171|Community 171]]
+- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
+- [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 176|Community 176]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `Chatboks` - 266 edges
@@ -189,7 +204,7 @@
 - 1-file cycle: `orchestrator.py -> orchestrator.py`
 - 1-file cycle: `tests/test_direct_agents.py -> tests/test_direct_agents.py`
 
-## Communities (164 total, 16 thin omitted)
+## Communities (179 total, 16 thin omitted)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.06
@@ -520,12 +535,12 @@ Cohesion: 0.25
 Nodes (8): git, aheadBehind, branch, clean, commits, remoteUrl, status, uncommitted
 
 ### Community 113 - "Community 113"
-Cohesion: 0.09
-Nodes (22): attention, codeGraph, configured, issue, status, customModules, dashboardMarkdownExists, files (+14 more)
+Cohesion: 0.11
+Nodes (18): attention, customModules, dashboardMarkdownExists, files, generatedAt, handoffs, mode, notes (+10 more)
 
 ### Community 114 - "Community 114"
-Cohesion: 0.11
-Nodes (20): collaboration, dropToken, dropTokenConfigured, dropZone, enabled, endpoint, peerName, reservations (+12 more)
+Cohesion: 0.18
+Nodes (13): collaboration, dropToken, dropTokenConfigured, enabled, endpoint, peerName, reservations, reservationStore (+5 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.48
@@ -576,8 +591,8 @@ Cohesion: 0.14
 Nodes (14): assignmentStore, localUser, participants, updatedAt, id, name, ticketStore, collaboration (+6 more)
 
 ### Community 130 - "Community 130"
-Cohesion: 0.11
-Nodes (18): attention, customModules, dashboardMarkdownExists, files, generatedAt, handoffs, mode, notes (+10 more)
+Cohesion: 0.09
+Nodes (22): attention, codeGraph, configured, issue, status, customModules, dashboardMarkdownExists, files (+14 more)
 
 ### Community 131 - "Community 131"
 Cohesion: 0.17
@@ -604,8 +619,8 @@ Cohesion: 0.17
 Nodes (13): paperSleuth, paperSleuth, exists, openTicketCount, projectFolder, projectRecentlyCompleted, projectTicketsPath, recentlyCompleted (+5 more)
 
 ### Community 137 - "Community 137"
-Cohesion: 0.18
-Nodes (13): collaboration, dropToken, dropTokenConfigured, enabled, endpoint, peerName, reservations, reservationStore (+5 more)
+Cohesion: 0.11
+Nodes (20): collaboration, dropToken, dropTokenConfigured, dropZone, enabled, endpoint, peerName, reservations (+12 more)
 
 ### Community 138 - "Community 138"
 Cohesion: 0.26
@@ -636,8 +651,8 @@ Cohesion: 0.39
 Nodes (6): _make_app(), Chatboks, Path, Smoke tests for native ChatBoks skill discovery., test_skills_command_lists_native_skills_without_agent_round(), test_skills_command_previews_requested_skill()
 
 ### Community 146 - "Community 146"
-Cohesion: 0.29
-Nodes (7): dropZone, enabled, inbox, incomingCount, outbox, outgoingCount, path
+Cohesion: 0.09
+Nodes (22): attention, customModules, dashboardMarkdownExists, files, generatedAt, graphify, configured, issue (+14 more)
 
 ### Community 147 - "Community 147"
 Cohesion: 0.33
@@ -660,8 +675,8 @@ Cohesion: 0.40
 Nodes (5): stats, files, languages, linesOfCode, sessions
 
 ### Community 152 - "Community 152"
-Cohesion: 0.50
-Nodes (4): codeGraph, configured, issue, status
+Cohesion: 0.12
+Nodes (16): flows, program, sessionClose, sessionStart, edges, nodes, positions, title (+8 more)
 
 ### Community 153 - "Community 153"
 Cohesion: 0.22
@@ -707,8 +722,68 @@ Nodes (4): graphify, configured, issue, status
 Cohesion: 0.50
 Nodes (4): graphify, configured, issue, status
 
+### Community 164 - "Community 164"
+Cohesion: 0.14
+Nodes (14): modulesDir, projects, config, checks, data, home, modulesDir, path (+6 more)
+
+### Community 165 - "Community 165"
+Cohesion: 0.14
+Nodes (14): assignmentStore, localUser, participants, updatedAt, id, name, ticketStore, collaboration (+6 more)
+
+### Community 166 - "Community 166"
+Cohesion: 0.17
+Nodes (13): paperSleuth, paperSleuth, exists, openTicketCount, projectFolder, projectRecentlyCompleted, projectTicketsPath, recentlyCompleted (+5 more)
+
+### Community 167 - "Community 167"
+Cohesion: 0.18
+Nodes (13): collaboration, dropToken, dropTokenConfigured, enabled, endpoint, peerName, reservations, reservationStore (+5 more)
+
+### Community 168 - "Community 168"
+Cohesion: 0.20
+Nodes (10): brief, generatedAt, headline, items, metrics, collaboratorsOnline, dirtyWorktrees, handoffs (+2 more)
+
+### Community 169 - "Community 169"
+Cohesion: 0.22
+Nodes (9): appControl, available, command, label, mode, pid, processName, running (+1 more)
+
+### Community 170 - "Community 170"
+Cohesion: 0.25
+Nodes (8): git, aheadBehind, branch, clean, commits, remoteUrl, status, uncommitted
+
+### Community 171 - "Community 171"
+Cohesion: 0.29
+Nodes (7): dropZone, enabled, inbox, incomingCount, outbox, outgoingCount, path
+
+### Community 172 - "Community 172"
+Cohesion: 0.29
+Nodes (7): dropZone, enabled, inbox, incomingCount, outbox, outgoingCount, path
+
+### Community 173 - "Community 173"
+Cohesion: 0.33
+Nodes (6): fileTree, children, name, path, type, uncommitted
+
+### Community 174 - "Community 174"
+Cohesion: 0.40
+Nodes (5): procedures, close, dir, json, startup
+
+### Community 175 - "Community 175"
+Cohesion: 0.40
+Nodes (5): project, id, name, path, ticketFolder
+
+### Community 176 - "Community 176"
+Cohesion: 0.40
+Nodes (5): stats, files, languages, linesOfCode, sessions
+
+### Community 177 - "Community 177"
+Cohesion: 0.50
+Nodes (4): codeGraph, configured, issue, status
+
+### Community 178 - "Community 178"
+Cohesion: 0.50
+Nodes (4): codeGraph, configured, issue, status
+
 ## Knowledge Gaps
-- **788 isolated node(s):** `version`, `configurations`, `allow`, `Path`, `Any` (+783 more)
+- **905 isolated node(s):** `version`, `configurations`, `allow`, `Path`, `Any` (+900 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -716,11 +791,11 @@ Nodes (4): graphify, configured, issue, status
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Chatboks` connect `Community 44` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 135`, `Community 8`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 138`, `Community 143`, `Community 144`, `Community 145`, `Community 45`, `Community 47`, `Community 49`, `Community 51`, `Community 52`, `Community 53`, `Community 65`, `Community 67`, `Community 73`, `Community 80`, `Community 81`, `Community 82`, `Community 85`, `Community 108`?**
-  _High betweenness centrality (0.103) - this node is a cross-community bridge._
+  _High betweenness centrality (0.090) - this node is a cross-community bridge._
 - **Why does `Stream` connect `Community 3` to `Community 0`, `Community 11`, `Community 13`, `Community 44`, `Community 46`, `Community 47`, `Community 49`, `Community 51`, `Community 56`, `Community 58`, `Community 65`, `Community 67`, `Community 73`, `Community 77`, `Community 80`, `Community 81`, `Community 82`, `Community 85`, `Community 87`, `Community 89`, `Community 124`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **Why does `Router` connect `Community 4` to `Community 0`, `Community 1`, `Community 67`, `Community 6`, `Community 7`, `Community 10`, `Community 11`, `Community 44`, `Community 47`, `Community 80`, `Community 82`, `Community 85`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
 - **Are the 47 inferred relationships involving `Chatboks` (e.g. with `BaseHTTPRequestHandler` and `ContextBuilder`) actually correct?**
   _`Chatboks` has 47 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 40 inferred relationships involving `Stream` (e.g. with `AgentTimeoutError` and `BaseHTTPRequestHandler`) actually correct?**
