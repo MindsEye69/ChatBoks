@@ -25,6 +25,8 @@ DEFAULT_COLORS = {
 
 
 class Stream:
+    suppress_duplicate_stream_messages = True
+
     def __init__(self, agent_config: dict[str, Any], agents: list[str]) -> None:
         configure_utf8_stdio()
         self.console = Console(legacy_windows=False)

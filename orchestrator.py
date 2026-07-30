@@ -3936,7 +3936,8 @@ class Chatboks:
             self._internal_write = False
         if sender.lower() != "you":
             streamed_response = getattr(self, "_streamed_agent_responses", {}).pop(sender.lower(), None)
-            if streamed_response != text.strip():
+            suppress_duplicate_stream_message = getattr(self.stream, "suppress_duplicate_stream_messages", True)
+            if streamed_response != text.strip() or not suppress_duplicate_stream_message:
                 self.stream.message(sender, text, timestamp)
 
     def capture_thought_packets(self, sender: str, text: str) -> None:

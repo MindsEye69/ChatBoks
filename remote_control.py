@@ -841,6 +841,8 @@ class RemoteAuth:
 
 
 class RemoteStream(Stream):
+    suppress_duplicate_stream_messages = False
+
     def __init__(self, agent_config: dict[str, Any], agents: list[str], events: RemoteEventBuffer) -> None:
         super().__init__(agent_config, agents)
         self.events = events
@@ -861,7 +863,7 @@ class RemoteStream(Stream):
         self.events.append("role_call", "system", line)
 
     def message(self, sender: str, text: str, timestamp: str) -> None:
-        self.events.append("message", sender.lower(), f"{timestamp}\n{text.strip()}")
+        self.events.append("message", sender.lower(), text.strip())
 
     def standby(self, agent_name: str, text: str) -> None:
         self.events.append("standby", agent_name.lower(), text)

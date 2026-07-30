@@ -445,6 +445,19 @@ def test_streamed_agent_response_is_persisted_without_duplicate_render():
         app.stream.message.assert_not_called()
 
 
+def test_remote_streamed_agent_response_still_emits_final_message_event():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.stream.suppress_duplicate_stream_messages = False
+        app._streamed_agent_responses = {"codex": "Live answer\n>>> TASK_COMPLETE"}
+
+        app.append_message("codex", "Live answer\n>>> TASK_COMPLETE")
+
+        app.stream.message.assert_called_once()
+        assert app.stream.message.call_args.args[0] == "codex"
+        assert app.stream.message.call_args.args[1] == "Live answer\n>>> TASK_COMPLETE"
+
+
 def test_agent_timeout_recovery_checkpoints_partial_output_and_retries():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))

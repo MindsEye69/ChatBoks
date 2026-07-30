@@ -54,6 +54,7 @@ const state = {
   directAgents: [],
   lanes: {},
   streams: {},
+  eventMessages: {},
   coordItems: [],
   coordExpanded: false,
   systemDetailsVisible: true,
@@ -441,6 +442,7 @@ async function connect() {
 function resetSessionState() {
   state.eventCursor = 0;
   state.streams = {};
+  state.eventMessages = {};
   state.coordItems = [];
   state.trace = {};
   state.lanes = {};
@@ -881,7 +883,10 @@ function renderLanes(transcript) {
     const nearBottom = lane.stream.scrollHeight - lane.stream.scrollTop - lane.stream.clientHeight < 60;
     lane.stream.innerHTML = "";
     const messages = transcript.filter((item) => canonicalAgent(item.sender) === agent);
-    const recent = messages.slice(-LANE_MESSAGE_LIMIT);
+    const transcriptText = new Set(messages.map((message) => String(message.text || "").trim()));
+    const eventMessages = (state.eventMessages[agent] || [])
+      .filter((message) => !transcriptText.has(String(message.text || "").trim()));
+    const recent = [...messages, ...eventMessages].slice(-LANE_MESSAGE_LIMIT);
     if (!recent.length && !state.streams[agent] && !latestUserMessage?.text) {
       const empty = document.createElement("p");
       empty.className = "lane-empty";
@@ -976,6 +981,17 @@ function ingestEvents(events) {
     }
     if (kind === "message_stream_finish") {
       delete state.streams[sender];
+      continue;
+    }
+    if (kind === "message" && state.lanes[sender]) {
+      if (!state.eventMessages[sender]) state.eventMessages[sender] = [];
+      state.eventMessages[sender].push({
+        id: event.id || 0,
+        sender,
+        text: event.text || "",
+        timestamp: event.timestamp || "",
+      });
+      state.eventMessages[sender] = state.eventMessages[sender].slice(-LANE_MESSAGE_LIMIT);
       continue;
     }
     if (kind === "activity") {
