@@ -26,7 +26,7 @@ DEFAULT_COLORS = {
 class Stream:
     def __init__(self, agent_config: dict[str, Any], agents: list[str]) -> None:
         configure_utf8_stdio()
-        self.console = Console()
+        self.console = Console(legacy_windows=False)
         self.agents = agents
         self.agent_config = agent_config
         self.colors = DEFAULT_COLORS.copy()

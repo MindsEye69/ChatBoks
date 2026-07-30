@@ -57,6 +57,8 @@ class BaseAgent:
         "reduce the length",
         "model maximum",
     )
+    _running_processes: dict[int, tuple[Path, subprocess.Popen[str]]] = {}
+    _running_processes_lock = threading.RLock()
 
     def __init__(self, project_path: Path, config: dict[str, Any], role: str) -> None:
         self.project_path = project_path
@@ -66,6 +68,30 @@ class BaseAgent:
         self.last_adapter_profile_used = str(config.get("adapter_profile") or self.default_adapter_profile)
         self.last_adapter_fallback_used = False
         self.stdout_callback: Callable[[str], None] | None = None
+
+    @classmethod
+    def cancel_project_processes(cls, project_path: Path) -> int:
+        """Stop only the CLI processes launched for one ChatBoks project."""
+        target = project_path.resolve()
+        with cls._running_processes_lock:
+            processes = [
+                process
+                for _pid, (process_path, process) in cls._running_processes.items()
+                if process_path == target and process.poll() is None
+            ]
+        for process in processes:
+            cls.terminate_process(process)
+        return len(processes)
+
+    @classmethod
+    def _track_process(cls, project_path: Path, process: subprocess.Popen[str]) -> None:
+        with cls._running_processes_lock:
+            cls._running_processes[process.pid] = (project_path.resolve(), process)
+
+    @classmethod
+    def _untrack_process(cls, process: subprocess.Popen[str]) -> None:
+        with cls._running_processes_lock:
+            cls._running_processes.pop(process.pid, None)
 
     def initialize(self, codegraph: str) -> str:
         return f"Codegraph loaded. Ready.\n\n{self.short_codegraph_status(codegraph)}"
@@ -101,7 +127,10 @@ class BaseAgent:
             instruction = "Resume from the compressed context. Confirm readiness or ask a focused question."
         else:
             instruction = (
-                "Respond with analysis or action. If proposing a plan, end with >>> PROPOSAL. "
+                "This is a planning turn. Do not write, edit, move, or delete files; do not run "
+                "state-changing commands, installs, commits, or network changes. Analyze the work and "
+                "propose the concrete next action instead. Execution is allowed only after the user has "
+                "explicitly approved a proposal. If proposing a plan, end with >>> PROPOSAL. "
                 "If you need user input, end with >>> QUESTION. If handing off, end with >>> HANDOFF. "
                 "If another agent has fully addressed the task and you have nothing materially different "
                 "to add, end with >>> SKIP. If complete, end with >>> TASK_COMPLETE. "
@@ -110,7 +139,11 @@ class BaseAgent:
         return f"{self.role}\n\n[AGENT TURN INSTRUCTION]\n{instruction}\n\n{context}\n"
 
     def command(self, adapter_override: dict[str, Any] | None = None) -> list[str]:
-        return [self.cli, *self.adapter_args(adapter_override)]
+        command = [self.cli, *self.adapter_args(adapter_override)]
+        model = str(self.config.get("model") or "").strip()
+        if model:
+            command.extend(["--model", model])
+        return command
 
     def adapter_args(self, adapter_override: dict[str, Any] | None = None) -> list[str]:
         configured_args = (adapter_override or {}).get("adapter_args", self.config.get("adapter_args"))
@@ -222,13 +255,16 @@ class BaseAgent:
             env=env,
             **extra,
         )
+        self._track_process(self.project_path, process)
         process_started_at = time.monotonic()
         output_queue: queue.Queue[tuple[str, str, float]] = queue.Queue()
 
         def read_stream(name: str, stream: Any) -> None:
             try:
                 while True:
-                    chunk = stream.read(1)
+                    # Agent stdout drives the visible live response, while stderr is diagnostic-only.
+                    # Drain stderr in chunks so verbose Codex startup logs do not create one queue item per byte.
+                    chunk = stream.read(1 if name == "stdout" else 4096)
                     if not chunk:
                         break
                     output_queue.put((name, chunk, time.monotonic()))
@@ -340,6 +376,7 @@ class BaseAgent:
                 stdout_chars=len("".join(stdout_parts)),
                 stderr_chars=len("".join(stderr_parts)),
             )
+            self._untrack_process(process)
             if self.is_token_exhaustion(combined_output):
                 raise TokenExhaustionError(
                     combined_output or f"{self.name} exhausted its token context."
@@ -370,6 +407,7 @@ class BaseAgent:
             remember_output,
             self.stdout_callback,
         )
+        self._untrack_process(process)
         ended_at = time.monotonic()
 
         stdout = "".join(stdout_parts)

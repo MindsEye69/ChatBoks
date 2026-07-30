@@ -7,9 +7,34 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+from rich.panel import Panel
 from rich.text import Text
 
 from ui.stream import Stream
+
+SIGNAL_BADGES: dict[str, tuple[str, str]] = {
+    "PROPOSAL": ("yellow", "⚑ PROPOSAL"),
+    "QUESTION": ("cyan", "❓ QUESTION"),
+    "HANDOFF": ("magenta", "↪ HANDOFF"),
+    "TASK_COMPLETE": ("green", "✔ TASK COMPLETE"),
+    "TASK COMPLETE": ("green", "✔ TASK COMPLETE"),
+    "BLOCKED": ("red", "⛔ BLOCKED"),
+    "SKIP": ("grey50", "SKIP"),
+    "CRITERIA_PENDING": ("blue", "CRITERIA PENDING"),
+}
+
+
+def detect_turn_signal(text: str) -> str | None:
+    """Return the last '>>> SIGNAL' control marker found in text, if any."""
+    upper = text.upper()
+    last_pos = -1
+    last_signal: str | None = None
+    for signal in SIGNAL_BADGES:
+        pos = upper.rfind(f">>> {signal}")
+        if pos > last_pos:
+            last_pos = pos
+            last_signal = signal
+    return last_signal
 
 try:
     from textual import on
@@ -201,6 +226,10 @@ class TextualStream:
         self.log(f"role call: {names}", "dim")
 
     def message(self, sender: str, text: str, timestamp: str) -> None:
+        signal = detect_turn_signal(text)
+        if signal:
+            self.call_ui("write_turn_card", sender, text.strip(), timestamp, signal)
+            return
         self.log(f"[{sender.upper()}] {timestamp}", "bold")
         self.log(text.strip(), self.agent_style(sender))
 
@@ -279,6 +308,13 @@ class ChatboksTextualApp(App[None]):
         height: auto;
         margin-bottom: 1;
     }
+
+    #decision-banner {
+        height: auto;
+        padding: 0 1;
+        margin-bottom: 1;
+        display: none;
+    }
     """
 
     BINDINGS = [
@@ -305,6 +341,7 @@ class ChatboksTextualApp(App[None]):
         yield Header(show_clock=True)
         yield Static("", id="help")
         yield Static("session tokens: unavailable", id="tokens")
+        yield Static("", id="decision-banner")
         yield SelectableRichLog(id="transcript", text_provider=self.transcript_text)
         yield Static(self.agent_summary(), id="left-rail")
         yield Static("status: starting", id="status")
@@ -331,6 +368,7 @@ class ChatboksTextualApp(App[None]):
         self.chatboks.refresh_token_usage_display()
         self.chatboks.show_prompt_help_pin(force=True)
         self.seed_transcript_tail()
+        self.refresh_decision_banner()
         self.query_one("#prompt", PromptTextArea).focus()
 
     def on_key(self, event: Key) -> None:
@@ -413,6 +451,7 @@ class ChatboksTextualApp(App[None]):
         prompt.disabled = False
         prompt.focus()
         self.refresh_left_rail()
+        self.refresh_decision_banner()
         self.set_status("ready")
 
     def set_prompt_text(self, prompt: TextArea, text: str) -> None:
@@ -426,6 +465,60 @@ class ChatboksTextualApp(App[None]):
         self.remember_transcript_text(message)
         log = self.query_one("#transcript", RichLog)
         log.write(Text(message, style=style or ""))
+
+    def write_turn_card(self, sender: str, text: str, timestamp: str, signal: str) -> None:
+        color, badge = SIGNAL_BADGES.get(signal, ("white", signal))
+        panel = Panel(
+            text,
+            title=f"{sender.upper()} · {badge}",
+            title_align="left",
+            subtitle=timestamp,
+            subtitle_align="right",
+            border_style=color,
+            padding=(0, 1),
+        )
+        log = self.query_one("#transcript", RichLog)
+        log.write(panel)
+        self.remember_transcript_text(f"[{sender.upper()}] {timestamp} · {badge}\n{text}")
+
+    def refresh_decision_banner(self) -> None:
+        try:
+            banner = self.query_one("#decision-banner", Static)
+        except Exception:
+            return
+        state = getattr(self.chatboks, "state", {}) or {}
+        status = str(state.get("status", ""))
+        last_agent = str(state.get("last_agent") or "agent").upper()
+
+        if status == "awaiting_approval":
+            proposal = state.get("proposal") or {}
+            proposed_by = str(proposal.get("proposed_by") or last_agent).upper()
+            summary = str(proposal.get("summary") or "Proposal pending review.")
+            banner.update(
+                Text(
+                    f"⚑ PROPOSAL from {proposed_by} — {summary}\n"
+                    "Type APPROVE, MODIFY <criteria>, or REJECT to respond.",
+                    style="bold black on yellow",
+                )
+            )
+            banner.display = True
+        elif status == "awaiting_input":
+            banner.update(
+                Text(f"❓ QUESTION from {last_agent} — your input is needed.", style="bold white on dark_cyan")
+            )
+            banner.display = True
+        elif status == "blocked":
+            banner.update(
+                Text(f"⛔ BLOCKED — {last_agent} needs your call.", style="bold white on dark_red")
+            )
+            banner.display = True
+        elif status == "awaiting_criteria":
+            banner.update(
+                Text(f"CRITERIA PENDING from {last_agent} — add detail or APPROVE/REJECT.", style="bold black on blue")
+            )
+            banner.display = True
+        else:
+            banner.display = False
 
     def remember_transcript_text(self, message: str) -> None:
         self._transcript_lines.extend(message.splitlines() or [message])
@@ -449,10 +542,16 @@ class ChatboksTextualApp(App[None]):
 
     def call_ui(self, method_name: str, *args: Any) -> None:
         method = getattr(self, method_name)
-        if self._app_thread_id is None or threading.get_ident() == self._app_thread_id:
+        on_app_thread = self._app_thread_id is None or threading.get_ident() == self._app_thread_id
+        if on_app_thread:
             method(*args)
-            return
-        self.call_from_thread(method, *args)
+        else:
+            self.call_from_thread(method, *args)
+        if method_name != "refresh_decision_banner":
+            if on_app_thread:
+                self.refresh_decision_banner()
+            else:
+                self.call_from_thread(self.refresh_decision_banner)
 
     def set_status(self, text: str) -> None:
         self.query_one("#status", Static).update(f"status: {text}")

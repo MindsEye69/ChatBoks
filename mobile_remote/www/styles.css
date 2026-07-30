@@ -319,6 +319,7 @@ button.compact {
 
 .response-panel,
 .approval-panel,
+.attention-panel,
 .trace-panel,
 .transcript-panel,
 .system-panel,
@@ -409,6 +410,55 @@ button.compact {
 .approval-actions button:disabled {
   cursor: wait;
   opacity: 0.58;
+}
+
+.attention-panel {
+  border-color: rgba(250, 204, 21, 0.52);
+  background: rgba(250, 204, 21, 0.08);
+}
+
+.attention-meta {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.attention-summary {
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.attention-details {
+  margin: 8px 0;
+}
+
+.attention-details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.attention-details pre {
+  max-height: 180px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 10px;
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.attention-guidance {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .trace-panel {
@@ -799,6 +849,10 @@ button.compact {
   }
 
   .approval-panel {
+    grid-area: approval;
+  }
+
+  .attention-panel {
     grid-area: approval;
   }
 

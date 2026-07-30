@@ -1,4 +1,5 @@
 rich>=13.7
 textual>=8.2
+pywebview>=5.4
 watchdog>=4.0
 pyyaml>=6.0

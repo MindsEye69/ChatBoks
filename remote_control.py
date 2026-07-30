@@ -14,14 +14,17 @@ import ipaddress
 import json
 import os
 import secrets
+import shutil
 import socket
 import sqlite3
 import subprocess
+import sys
 import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import yaml
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -29,6 +32,7 @@ from typing import Any
 
 from context.packets import packet_records_from_jsonl
 from context.transcript import is_transcript_turn
+from agents.base import BaseAgent
 from encoding_utils import configure_utf8_stdio
 from orchestrator import DEFAULT_AGENT_FALLBACKS, Chatboks
 from ui.stream import Stream
@@ -37,9 +41,13 @@ from ui.stream import Stream
 TRANSCRIPT_LIMIT = 120
 MAX_TRANSCRIPT_LIMIT = TRANSCRIPT_LIMIT
 COMMAND_MAX_CHARS = 6000
+MODEL_NAME_MAX_CHARS = 120
 REMOTE_PROPOSAL_RAW_LIMIT = 4000
 TRACE_SUMMARY_LIMIT = 140
 LANE_AGENT_LIMIT = 3
+# The coordinator lane is additive: it sits to the right of the working agents
+# and does not consume one of their slots.
+COORDINATOR_LANE_AGENT = "coordinator"
 MAX_JSON_BODY_BYTES = 64 * 1024
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
@@ -47,7 +55,10 @@ SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
 OPERATOR_STATUS_FILENAME = "remote_bridge.json"
 OPERATOR_PROBE_TIMEOUT_SECONDS = 2.0
 WORKBENCH_STATUS_CACHE_SECONDS = 5.0
-WORKBENCH_WWW_ROOT = Path(__file__).resolve().parent / "mobile_remote" / "www"
+CODEGRAPH_STOP_TIMEOUT_SECONDS = 3.0
+_cpu_sample_lock = threading.Lock()
+_cpu_sample: tuple[int, int] | None = None
+WORKBENCH_WWW_ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "mobile_remote" / "www"
 # Exact-match allowlist: request paths never touch the filesystem directly,
 # so traversal sequences in a URL can only miss the map and return 404.
 WORKBENCH_STATIC_ROUTES = {
@@ -57,9 +68,13 @@ WORKBENCH_STATIC_ROUTES = {
     "/workbench": ("workbench.html", "text/html; charset=utf-8"),
     "/workbench.css": ("workbench.css", "text/css; charset=utf-8"),
     "/workbench.js": ("workbench.js", "text/javascript; charset=utf-8"),
-    "/favicon.ico": ("assets/chatboks-mark.png", "image/png"),
+    "/favicon.ico": ("assets/chatboks-cube.png", "image/png"),
     "/assets/chatboks-logo.png": ("assets/chatboks-logo.png", "image/png"),
     "/assets/chatboks-mark.png": ("assets/chatboks-mark.png", "image/png"),
+    "/assets/chatboks-cube.png": ("assets/chatboks-cube.png", "image/png"),
+    "/assets/claude.png": ("assets/claude.png", "image/png"),
+    "/assets/codex.png": ("assets/codex.png", "image/png"),
+    "/assets/orchestrator.png": ("assets/orchestrator.png", "image/png"),
 }
 ALLOWED_APP_ORIGINS = {
     "capacitor://localhost",
@@ -72,6 +87,10 @@ AGENT_ALIASES = {
     "agent_zero": "coordinator",
     "agentzero": "coordinator",
     "az": "coordinator",
+}
+MODEL_CHOICES = {
+    "claude": ["", "sonnet", "opus", "haiku"],
+    "codex": ["", "gpt-5.6", "gpt-5.6-terra", "gpt-5.6-luna"],
 }
 SHELL_CSP = (
     "default-src 'self'; "
@@ -266,7 +285,40 @@ def append_lane_agent(selected: list[str], agent: str, agent_statuses: dict[str,
     return len(selected) >= LANE_AGENT_LIMIT
 
 
+def pin_coordinator_last(selected: list[str], agent_config: dict[str, Any]) -> list[str]:
+    """Keep the coordinator as the rightmost lane, outside LANE_AGENT_LIMIT.
+
+    It is the synthesis lane: it reads the working agents' answers and sums
+    them up before the operator decides, so it is not a peer competing for a
+    slot and it must stay visible even while idle or offline.
+    """
+    if COORDINATOR_LANE_AGENT not in canonical_agent_config(agent_config):
+        return selected
+    lanes = [agent for agent in selected if agent != COORDINATOR_LANE_AGENT]
+    lanes.append(COORDINATOR_LANE_AGENT)
+    return lanes
+
+
 def build_lane_agents(
+    main_agents: list[str],
+    direct_agents: list[str],
+    agent_config: dict[str, Any],
+    agent_statuses: dict[str, Any],
+    fallback_config: dict[str, Any] | None = None,
+    active_agents: list[str] | None = None,
+) -> list[str]:
+    working = _build_working_lane_agents(
+        main_agents,
+        direct_agents,
+        agent_config,
+        agent_statuses,
+        fallback_config,
+        active_agents,
+    )
+    return pin_coordinator_last(working, agent_config)
+
+
+def _build_working_lane_agents(
     main_agents: list[str],
     direct_agents: list[str],
     agent_config: dict[str, Any],
@@ -354,6 +406,20 @@ def proposal_snapshot(proposal: Any) -> dict[str, Any] | None:
     if not isinstance(proposal, dict):
         return None
     raw = str(proposal.get("raw") or "")
+    candidates = []
+    for item in proposal.get("candidates") or []:
+        if not isinstance(item, dict):
+            continue
+        candidate_raw = str(item.get("raw") or "")
+        candidates.append(
+            {
+                "agent": item.get("agent"),
+                "summary": item.get("summary"),
+                "raw": candidate_raw[:REMOTE_PROPOSAL_RAW_LIMIT],
+                "raw_truncated": len(candidate_raw) > REMOTE_PROPOSAL_RAW_LIMIT,
+                "execution_estimate": item.get("execution_estimate"),
+            }
+        )
     return {
         "id": proposal.get("id"),
         "summary": proposal.get("summary"),
@@ -361,6 +427,7 @@ def proposal_snapshot(proposal: Any) -> dict[str, Any] | None:
         "raw": raw[:REMOTE_PROPOSAL_RAW_LIMIT],
         "raw_truncated": len(raw) > REMOTE_PROPOSAL_RAW_LIMIT,
         "execution_estimate": proposal.get("execution_estimate"),
+        "candidates": candidates,
     }
 
 
@@ -478,11 +545,21 @@ def git_environment(proj_path: Path | None) -> dict[str, Any] | None:
         return None
 
     def run_git(*args: str) -> str:
+        hidden_window: dict[str, Any] = {}
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+            hidden_window = {
+                "startupinfo": startupinfo,
+                "creationflags": subprocess.CREATE_NO_WINDOW,
+            }
         result = subprocess.run(
             ["git", "-C", str(root), *args],
             capture_output=True,
             text=True,
             timeout=5,
+            **hidden_window,
         )
         if result.returncode != 0:
             raise RuntimeError(result.stderr.strip() or f"git {' '.join(args)} failed")
@@ -543,6 +620,22 @@ def codegraph_stats(proj_path: Path | None) -> dict[str, Any] | None:
         connection.close()
 
 
+def find_codegraph_command() -> str | None:
+    """Find CodeGraph even when a frozen Windows app lacks npm's global bin in PATH."""
+    command = shutil.which("codegraph") or shutil.which("codegraph.cmd")
+    if command:
+        return command
+    npm_bin = Path(os.environ.get("APPDATA", "")) / "npm"
+    for candidate in (npm_bin / "codegraph.cmd", npm_bin / "codegraph"):
+        try:
+            exists = candidate.is_file()
+        except OSError:
+            continue
+        if exists:
+            return str(candidate)
+    return None
+
+
 def system_memory_percent() -> float | None:
     try:
         import psutil  # type: ignore[import-not-found]
@@ -585,17 +678,58 @@ def detect_tailnet_ip() -> str | None:
     return None
 
 
+def system_cpu_percent() -> float | None:
+    """Return current whole-machine CPU usage without requiring psutil in the EXE."""
+    try:
+        import psutil  # type: ignore[import-not-found]
+
+        return float(psutil.cpu_percent(interval=0.1))
+    except ImportError:
+        pass
+    if os.name != "nt":
+        return None
+    import ctypes
+
+    class FileTime(ctypes.Structure):
+        _fields_ = [("dwLowDateTime", ctypes.c_ulong), ("dwHighDateTime", ctypes.c_ulong)]
+
+    idle = FileTime()
+    kernel = FileTime()
+    user = FileTime()
+    if not ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)):
+        return None
+
+    def as_int(value: FileTime) -> int:
+        return (int(value.dwHighDateTime) << 32) | int(value.dwLowDateTime)
+
+    current_idle = as_int(idle)
+    current_total = as_int(kernel) + as_int(user)
+    global _cpu_sample
+    with _cpu_sample_lock:
+        previous = _cpu_sample
+        if previous is None:
+            _cpu_sample = (current_idle, current_total)
+        else:
+            _cpu_sample = (current_idle, current_total)
+    if previous is None:
+        # One short sample establishes a meaningful first value instead of displaying a false zero.
+        time.sleep(0.08)
+        return system_cpu_percent()
+    idle_delta = current_idle - previous[0]
+    total_delta = current_total - previous[1]
+    if total_delta <= 0:
+        return 0.0
+    return max(0.0, min(100.0, 100.0 * (1.0 - (idle_delta / total_delta))))
+
+
 def monitor_stats() -> dict[str, Any]:
     stats: dict[str, Any] = {"pid": os.getpid()}
     memory = system_memory_percent()
     if memory is not None:
         stats["ram_percent"] = memory
-    try:
-        import psutil  # type: ignore[import-not-found]
-
-        stats["cpu_percent"] = float(psutil.cpu_percent(interval=None))
-    except ImportError:
-        pass
+    cpu = system_cpu_percent()
+    if cpu is not None:
+        stats["cpu_percent"] = cpu
     tailnet_ip = detect_tailnet_ip()
     if tailnet_ip:
         stats["tailnet_ip"] = tailnet_ip
@@ -772,7 +906,17 @@ class RemoteSession:
         self.lock = threading.RLock()
         self._command_thread: threading.Thread | None = None
         self._command_text: str | None = None
+        self._stop_requested = False
+        self._claude_update_thread: threading.Thread | None = None
+        self._claude_update_status = "idle"
+        self._codex_update_thread: threading.Thread | None = None
+        self._codex_update_status = "idle"
+        self._claude_login_pid: int | None = None
         self._workbench_cache: tuple[float, dict[str, Any]] | None = None
+        self._codegraph_process: subprocess.Popen[str] | None = None
+        self._codegraph_project: str | None = None
+        self._codegraph_generation = 0
+        self._codegraph_state: dict[str, Any] = {"status": "idle", "enabled": False}
         self.events = RemoteEventBuffer()
         self.app.stream = RemoteStream(
             self.app.config.get("agents", {}),
@@ -784,13 +928,373 @@ class RemoteSession:
     def available_projects(self) -> list[str]:
         return sorted((self.app.config.get("projects") or {}).keys())
 
+    def model_selection(self) -> dict[str, dict[str, Any]]:
+        agents = self.app.config.get("agents") or {}
+        selection: dict[str, dict[str, Any]] = {}
+        for agent_name in ("claude", "codex"):
+            if agent_name not in agents:
+                continue
+            configured = str((agents.get(agent_name) or {}).get("model") or "").strip()
+            options = list(MODEL_CHOICES[agent_name])
+            if configured and configured not in options:
+                options.append(configured)
+            selection[agent_name] = {"current": configured, "options": options}
+        return selection
+
+    def set_agent_model(self, agent: str, model: str) -> dict[str, Any]:
+        agent_name = canonical_agent_name(agent)
+        if agent_name not in MODEL_CHOICES:
+            raise ValueError("Only Claude and Codex support model selection here.")
+        selected = model.strip()
+        if len(selected) > MODEL_NAME_MAX_CHARS or not all(char.isalnum() or char in "._:-" for char in selected):
+            raise ValueError("Enter a valid model identifier without spaces.")
+        with self.lock:
+            if self.command_running():
+                raise ValueError("Choose a model before starting the next task.")
+            agent_config = (self.app.config.get("agents") or {}).get(agent_name)
+            if not isinstance(agent_config, dict):
+                raise ValueError(f"{agent_name.title()} is not configured.")
+            if selected:
+                agent_config["model"] = selected
+            else:
+                agent_config.pop("model", None)
+            config_path = self.config_path or Path("~/.chatboks/config.yaml").expanduser()
+            if not config_path.exists():
+                raise ValueError("ChatBoks configuration was not found.")
+            config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
+            self.events.append("system", "system", f"{agent_name.title()} model set to {selected or 'CLI default'} for the next task.")
+            return self.snapshot(cursor=0)
+
+    def project_catalog(self) -> list[dict[str, Any]]:
+        """Return only the non-sensitive details a graphical project picker needs."""
+        projects = self.app.config.get("projects") or {}
+        catalog: list[dict[str, Any]] = []
+        for name in self.available_projects():
+            project_config = projects.get(name) or {}
+            catalog.append(
+                {
+                    "name": name,
+                    "path": str(project_config.get("path") or ""),
+                    "agents": canonical_agent_list(list(project_config.get("agents") or [])),
+                    "direct_agents": canonical_agent_list(list(project_config.get("direct_agents") or [])),
+                    "primary": canonical_agent_name(project_config.get("primary")),
+                }
+            )
+        return catalog
+
+    def register_project(self, project_path: str, name: str = "") -> dict[str, Any]:
+        """Register a selected project or the immediate projects within a selected folder."""
+        raw_path = project_path.strip()
+        if not raw_path:
+            raise ValueError("Choose a project folder first.")
+        target_path = Path(raw_path).expanduser().resolve()
+        if not target_path.is_dir():
+            raise ValueError("That project folder does not exist.")
+
+        config_path = self.config_path or Path("~/.chatboks/config.yaml").expanduser()
+        if not config_path.exists():
+            raise ValueError(f"ChatBoks configuration was not found: {config_path}")
+
+        with self.lock:
+            projects = self.app.config.setdefault("projects", {})
+            agent_config = self.app.config.get("agents") or {}
+            agents = [agent for agent in ("claude", "codex") if agent in agent_config]
+            if not agents:
+                agents = list(agent_config)[:1]
+            if not agents:
+                raise ValueError("No agents are configured for new projects.")
+
+            candidates = [target_path] if self.is_project_folder(target_path) else [
+                child for child in sorted(target_path.iterdir(), key=lambda item: item.name.casefold())
+                if child.is_dir() and self.is_project_folder(child)
+            ]
+            if not candidates:
+                raise ValueError("No projects were found in that folder. Choose a project folder or a folder containing project subfolders.")
+
+            created: list[str] = []
+            existing: list[str] = []
+            for candidate in candidates:
+                registered_name, was_created = self.register_project_path(
+                    projects,
+                    candidate,
+                    agents,
+                    name if candidate == target_path else "",
+                )
+                (created if was_created else existing).append(registered_name)
+
+            if created:
+                config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
+            registered = created + existing
+            return {"projects": registered, "created": created, "existing": existing}
+
+    def remove_project(self, project: str) -> dict[str, Any]:
+        target = project.strip()
+        if not target:
+            raise ValueError("Choose a project to remove.")
+        with self.lock:
+            if self.command_running():
+                raise ValueError("Cannot remove a project while a command is running.")
+            if target == self.project:
+                raise ValueError("Switch to another project before removing the active project.")
+            projects = self.app.config.get("projects") or {}
+            if target not in projects:
+                raise ValueError(f"Unknown project '{target}'.")
+            config_path = self.config_path or Path("~/.chatboks/config.yaml").expanduser()
+            if not config_path.exists():
+                raise ValueError("ChatBoks configuration was not found.")
+            projects.pop(target)
+            config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
+            return {"removed": target, "projects": self.available_projects()}
+
+    @staticmethod
+    def is_project_folder(path: Path) -> bool:
+        markers = (".git", "package.json", "pyproject.toml", "Cargo.toml", "composer.json", "*.sln", "*.csproj")
+        return any(path.joinpath(marker).exists() for marker in markers[:-2]) or any(any(path.glob(marker)) for marker in markers[-2:])
+
+    @staticmethod
+    def register_project_path(
+        projects: dict[str, Any],
+        project_path: Path,
+        agents: list[str],
+        name: str = "",
+    ) -> tuple[str, bool]:
+        target_key = str(project_path).casefold()
+        for existing_name, existing in projects.items():
+            existing_path_text = str((existing or {}).get("path") or "").strip()
+            if existing_path_text and str(Path(existing_path_text).expanduser().resolve()).casefold() == target_key:
+                return existing_name, False
+
+        base_name = name.strip() or project_path.name or "project"
+        normalized_name = "-".join(part for part in base_name.lower().replace("_", "-").split() if part)
+        normalized_name = normalized_name or "project"
+        project_name = normalized_name
+        suffix = 2
+        while project_name in projects:
+            project_name = f"{normalized_name}-{suffix}"
+            suffix += 1
+        projects[project_name] = {
+            "path": str(project_path),
+            "agents": agents,
+            "primary": "codex" if "codex" in agents else agents[0],
+            # New folders should never trigger a potentially expensive index implicitly.
+            "codegraph": False,
+        }
+        return project_name, True
+
     def prepare(self) -> None:
         with self.lock:
             self.app.ensure_project_files()
+            if self.app.state.get("status") in {"active", "handoff", "paused"} and self.app.state.get("active_task"):
+                self.app.update_state({"status": "awaiting_resume", "next_agent": "you"})
+                self.events.append("system", "system", "Previous work was paused. Choose whether to continue it or end the task.")
             if self.app.state.get("status") == "initializing":
                 self.app.initialize_agents()
             self.app.stream.ready()
             self.app.refresh_token_usage_display()
+            self.configure_active_codegraph()
+
+    def configure_active_codegraph(self) -> None:
+        """Keep at most one CodeGraph indexer, scoped to the active project only."""
+        project_name = self.app.project
+        project_path = Path(self.app.proj_path).resolve()
+        enabled = bool(self.app.proj_config.get("codegraph", False))
+        if self._codegraph_project == project_name and self._codegraph_state.get("enabled") == enabled:
+            return
+        self.stop_active_codegraph()
+        self._codegraph_project = project_name
+        self._codegraph_state = {"status": "disabled", "enabled": enabled, "project": project_name}
+        self._workbench_cache = None
+        if not enabled:
+            return
+        if codegraph_stats(project_path) is not None:
+            self._codegraph_state["status"] = "ready"
+            return
+        command = find_codegraph_command()
+        if not command:
+            self._codegraph_state.update({"status": "unavailable", "detail": "CodeGraph command is not installed."})
+            return
+        hidden_window: dict[str, Any] = {}
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+            hidden_window = {"startupinfo": startupinfo, "creationflags": subprocess.CREATE_NO_WINDOW}
+        try:
+            process = subprocess.Popen(
+                [command, "init", "-i"],
+                cwd=project_path,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                **hidden_window,
+            )
+        except OSError as exc:
+            self._codegraph_state.update({"status": "unavailable", "detail": str(exc)})
+            return
+        self._codegraph_generation += 1
+        generation = self._codegraph_generation
+        self._codegraph_process = process
+        self._codegraph_state.update({"status": "indexing", "pid": process.pid})
+        threading.Thread(
+            target=self._wait_for_codegraph,
+            args=(process, project_name, generation),
+            daemon=True,
+            name="chatboks-codegraph-index",
+        ).start()
+
+    def _wait_for_codegraph(self, process: subprocess.Popen[str], project: str, generation: int) -> None:
+        returncode = process.wait()
+        with self.lock:
+            if generation != self._codegraph_generation or self._codegraph_project != project:
+                return
+            self._codegraph_process = None
+            if returncode == 0 and codegraph_stats(Path(self.app.proj_path)) is not None:
+                self._codegraph_state = {"status": "ready", "enabled": True, "project": project}
+            elif returncode != 0:
+                self._codegraph_state.update({"status": "failed", "returncode": returncode})
+            else:
+                self._codegraph_state.update({"status": "unavailable", "detail": "CodeGraph index was not created."})
+            self._workbench_cache = None
+
+    def stop_active_codegraph(self) -> None:
+        process = self._codegraph_process
+        self._codegraph_process = None
+        self._codegraph_generation += 1
+        if process is None or process.poll() is not None:
+            return
+        process.terminate()
+        try:
+            process.wait(timeout=CODEGRAPH_STOP_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, check=False)
+            else:
+                process.kill()
+
+    def close(self) -> None:
+        self.stop_command(silent=True)
+        command_thread = self._command_thread
+        if command_thread is not None and command_thread is not threading.current_thread():
+            command_thread.join(timeout=2)
+        with self.lock:
+            if self._stop_requested and self.app.state.get("active_task"):
+                self.app.update_state({"status": "awaiting_resume", "next_agent": "you"})
+            self.stop_active_codegraph()
+
+    def update_claude(self) -> dict[str, str]:
+        """Update the locally installed Claude Code CLI after an explicit UI request."""
+        with self.lock:
+            if self._claude_update_thread is not None and self._claude_update_thread.is_alive():
+                return {"status": "updating"}
+            npm = shutil.which("npm.cmd") or shutil.which("npm")
+            if not npm:
+                raise ValueError("npm was not found. Install Node.js before updating Claude.")
+            self._claude_update_status = "updating"
+            self._claude_update_thread = threading.Thread(
+                target=self._run_claude_update,
+                args=(npm,),
+                daemon=True,
+                name="chatboks-claude-update",
+            )
+            self._claude_update_thread.start()
+            return {"status": "updating"}
+
+    def _run_claude_update(self, npm: str) -> None:
+        hidden_window: dict[str, Any] = {}
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+            hidden_window = {"startupinfo": startupinfo, "creationflags": subprocess.CREATE_NO_WINDOW}
+        try:
+            result = subprocess.run(
+                [npm, "install", "-g", "@anthropic-ai/claude-code@latest"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                **hidden_window,
+            )
+            if result.returncode != 0:
+                raise RuntimeError((result.stderr or result.stdout or "npm update failed").strip())
+        except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+            with self.lock:
+                self._claude_update_status = "failed"
+            self.events.append("error", "system", f"Claude update failed: {exc}")
+            return
+        with self.lock:
+            self._claude_update_status = "updated"
+        self.events.append("system", "system", "Claude Code updated. Start a new task to use the new version.")
+
+    def update_codex(self) -> dict[str, str]:
+        """Update the locally installed Codex CLI after an explicit UI request."""
+        with self.lock:
+            if self._codex_update_thread is not None and self._codex_update_thread.is_alive():
+                return {"status": "updating"}
+            npm = shutil.which("npm.cmd") or shutil.which("npm")
+            if not npm:
+                raise ValueError("npm was not found. Install Node.js before updating Codex.")
+            self._codex_update_status = "updating"
+            self._codex_update_thread = threading.Thread(
+                target=self._run_codex_update,
+                args=(npm,),
+                daemon=True,
+                name="chatboks-codex-update",
+            )
+            self._codex_update_thread.start()
+            return {"status": "updating"}
+
+    def _run_codex_update(self, npm: str) -> None:
+        hidden_window: dict[str, Any] = {}
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+            hidden_window = {"startupinfo": startupinfo, "creationflags": subprocess.CREATE_NO_WINDOW}
+        try:
+            result = subprocess.run(
+                [npm, "install", "-g", "@openai/codex@latest"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                **hidden_window,
+            )
+            if result.returncode != 0:
+                raise RuntimeError((result.stderr or result.stdout or "npm update failed").strip())
+        except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+            with self.lock:
+                self._codex_update_status = "failed"
+            self.events.append("error", "system", f"Codex update failed: {exc}")
+            return
+        with self.lock:
+            self._codex_update_status = "updated"
+        self.events.append("system", "system", "Codex CLI updated. Start a new task to use the new version.")
+
+    def start_claude_login(self) -> dict[str, str]:
+        """Start Claude Code's browser-based sign-in flow without a console window."""
+        cli_name = str((self.app.config.get("agents") or {}).get("claude", {}).get("cli") or "claude")
+        cli = shutil.which(cli_name)
+        if not cli:
+            raise ValueError("Claude Code was not found on PATH.")
+        hidden_window: dict[str, Any] = {}
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+            hidden_window = {"startupinfo": startupinfo, "creationflags": subprocess.CREATE_NO_WINDOW}
+        try:
+            process = subprocess.Popen(
+                [cli, "auth", "login", "--claudeai"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                **hidden_window,
+            )
+        except OSError as exc:
+            raise ValueError(f"Claude login could not start: {exc}") from exc
+        self._claude_login_pid = process.pid
+        self.events.append("system", "system", "Claude browser sign-in started. Complete it in the browser, then send a new task.")
+        return {"status": "login_started"}
 
     def switch_project(self, project: str) -> dict[str, Any]:
         target = project.strip()
@@ -801,6 +1305,7 @@ class RemoteSession:
         with self.lock:
             if self.command_running():
                 raise ValueError("Cannot switch project while a command is running.")
+            self.stop_active_codegraph()
             self.project = target
             self.app = Chatboks(target, trigger="manual", config_path=self.config_path)
             self._command_thread = None
@@ -828,6 +1333,7 @@ class RemoteSession:
         with self.lock:
             if self.command_running():
                 raise ValueError("A remote command is already running.")
+            self._stop_requested = False
             self._command_text = cleaned
             self.events.append("system", "system", "Command accepted. Waiting for agents.")
             self._command_thread = threading.Thread(
@@ -846,11 +1352,53 @@ class RemoteSession:
             self.events.append("error", "system", f"Remote command failed: {exc}")
         finally:
             with self.lock:
+                if self._stop_requested:
+                    self.app.update_state({"status": "paused", "next_agent": "you"})
+                    self.events.append("system", "system", "Work stopped. Continue only if you choose to resume it.")
                 self._command_text = None
+
+    def stop_command(self, silent: bool = False) -> dict[str, Any]:
+        with self.lock:
+            if not self.command_running():
+                if silent:
+                    return {"status": "idle"}
+                raise ValueError("No agent process is running.")
+            self._stop_requested = True
+            self.app.request_stop()
+            stopped = BaseAgent.cancel_project_processes(Path(self.app.proj_path))
+            self.app.update_state({"status": "paused", "next_agent": "you"})
+            self.events.append("system", "system", f"Stop requested. Ended {stopped} active agent process(es).")
+            return self.snapshot(cursor=0)
+
+    def resolve_interrupted_task(self, action: str) -> dict[str, Any]:
+        normalized = action.strip().lower()
+        if normalized not in {"continue", "end"}:
+            raise ValueError("Choose whether to continue or end the previous task.")
+        with self.lock:
+            if self.command_running():
+                raise ValueError("Wait for the current stop request to finish first.")
+            if self.app.state.get("status") != "awaiting_resume":
+                raise ValueError("There is no paused task to resolve.")
+            task = str(self.app.state.get("active_task") or "").strip()
+            if normalized == "end":
+                self.app.update_state({"status": "idle", "next_agent": self.app.router.primary(), "active_task": None})
+                self.events.append("system", "system", "Previous task ended without restarting agents.")
+                return self.snapshot(cursor=0)
+            if not task:
+                self.app.update_state({"status": "idle", "next_agent": self.app.router.primary()})
+                return self.snapshot(cursor=0)
+            self.app.update_state({"status": "idle", "next_agent": self.app.router.primary()})
+            self.events.append("system", "system", "Continuing the paused task by user request.")
+            return self.submit(task)
 
     def snapshot(self, cursor: int = 0, transcript_limit: int = TRANSCRIPT_LIMIT) -> dict[str, Any]:
         with self.lock:
-            self.app.state = self.app.load_state()
+            try:
+                self.app.state = self.app.load_state()
+            except (OSError, ValueError, json.JSONDecodeError):
+                # A streaming token checkpoint may be writing at this exact instant.
+                # Keep the in-memory state for this one fast UI poll and retry next time.
+                pass
             context = self.app.state.get("context") or {}
             token_counts = dict(context.get("token_counts") or {})
             session_budget = self.app.session_token_budget()
@@ -891,6 +1439,7 @@ class RemoteSession:
             return {
                 "project": self.app.project,
                 "projects": self.available_projects(),
+                "project_catalog": self.project_catalog(),
                 "session": self.app.state.get("session"),
                 "status": self.app.state.get("status"),
                 "active_task": self.app.state.get("active_task"),
@@ -905,12 +1454,17 @@ class RemoteSession:
                 "proposal": proposal_snapshot(self.app.state.get("proposal")),
                 "command_running": self.command_running(),
                 "command_text": self._command_text,
+                "recovery_pending": self.app.state.get("status") == "awaiting_resume",
+                "claude_update": getattr(self, "_claude_update_status", "idle"),
+                "codex_update": getattr(self, "_codex_update_status", "idle"),
+                "claude_login_pid": getattr(self, "_claude_login_pid", None),
                 "agents": main_agents,
                 "direct_agents": direct_agents,
                 "agent_statuses": agent_statuses,
                 "lane_agents": lane_agents,
                 "token_line": token_line,
                 "token_usage": build_token_usage(token_counts, agent_config, main_agents),
+                "model_selection": self.model_selection(),
                 "session_budget": session_budget if isinstance(session_budget, dict) else None,
                 "transcript": transcript,
                 "trace": trace_snapshot(transcript, packet_path if isinstance(packet_path, Path) else None),
@@ -923,11 +1477,14 @@ class RemoteSession:
         if cached is not None and now - cached[0] < WORKBENCH_STATUS_CACHE_SECONDS:
             return cached[1]
         proj_path = getattr(self.app, "proj_path", None)
+        graph = codegraph_stats(proj_path)
+        if graph is None:
+            graph = dict(self._codegraph_state)
         payload = {
             "project": getattr(self.app, "project", self.project),
             "generated_at": time.strftime("%H:%M:%S"),
             "environment": git_environment(proj_path),
-            "graph": codegraph_stats(proj_path),
+            "graph": graph,
             "monitor": monitor_stats(),
         }
         self._workbench_cache = (now, payload)
@@ -1080,6 +1637,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 {
                     "project": self.server.session.snapshot(cursor=0, transcript_limit=0).get("project"),
                     "projects": self.server.session.available_projects(),
+                    "project_catalog": self.server.session.project_catalog(),
                 }
             )
             return
@@ -1130,6 +1688,97 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
                 return
             self.respond_json(snapshot)
+            return
+        if parsed.path == "/api/projects":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                result = self.server.session.register_project(
+                    str(payload.get("path") or ""),
+                    str(payload.get("name") or ""),
+                )
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                return
+            self.respond_json(result)
+            return
+        if parsed.path == "/api/projects/remove":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                result = self.server.session.remove_project(str(payload.get("project") or ""))
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                return
+            self.respond_json(result)
+            return
+        if parsed.path == "/api/claude/update":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                self.respond_json(self.server.session.update_claude())
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/claude/login":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                self.respond_json(self.server.session.start_claude_login())
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/codex/update":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                self.respond_json(self.server.session.update_codex())
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/agent/model":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                self.respond_json(self.server.session.set_agent_model(str(payload.get("agent") or ""), str(payload.get("model") or "")))
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/command/stop":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                self.respond_json(self.server.session.stop_command())
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/session/recovery":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                self.respond_json(self.server.session.resolve_interrupted_task(str(payload.get("action") or "")))
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
             return
         if parsed.path != "/api/command":
             self.respond_error(HTTPStatus.NOT_FOUND, "Not found")

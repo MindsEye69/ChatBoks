@@ -1,38 +1,66 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="carbon">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatBoks Workbench</title>
-  <link rel="icon" type="image/png" href="./assets/chatboks-mark.png">
+  <link rel="icon" type="image/png" href="./assets/chatboks-cube.png">
   <link rel="stylesheet" href="./workbench.css">
 </head>
 <body>
   <div class="workbench-shell">
-    <aside class="left-rail" aria-label="Workspace navigation">
-      <header class="brand-row">
-        <div class="brand-mark"><img src="./assets/chatboks-mark.png" alt="ChatBoks logo"></div>
-        <div>
-          <h1>ChatBoks</h1>
-          <p>multi-agent workbench</p>
-        </div>
-        <button id="themeToggleRail" class="icon-button" type="button" aria-label="Collapse project rail" title="Collapse project rail">||</button>
-      </header>
 
+    <header class="workspace-topbar">
+      <div class="brand-row">
+        <div class="brand-mark"><img src="./assets/chatboks-cube.png" alt="ChatBoks"></div>
+        <div class="brand-name">ChatBoks</div>
+      </div>
+
+      <!-- project/session breadcrumb. #projectButton wraps #topbarProject
+           because JS only ever writes the inner span; #sessionButton has its
+           own textContent overwritten by JS, so it stays a sibling. -->
+      <nav class="crumb" aria-label="Current project and session">
+        <button id="projectButton" class="crumb-button" type="button" aria-haspopup="dialog">
+          <strong id="topbarProject">-</strong><span class="caret" aria-hidden="true">▾</span>
+        </button>
+        <span class="crumb-sep" aria-hidden="true">/</span>
+        <strong id="topbarSession" class="crumb-session">-</strong>
+        <button id="sessionButton" class="ghost-button" type="button">Session</button>
+        <span id="topbarStatus" class="status-pill muted-pill">Offline</span>
+      </nav>
+
+      <div class="topbar-actions">
+        <button id="liveButton" class="status-button" type="button">
+          <span id="liveDot" class="live-dot offline"></span> <span id="liveLabel">Offline</span>
+        </button>
+        <button id="connectionToggle" class="ghost-button" type="button">Connection</button>
+        <button id="previewButton" class="ghost-button" type="button" disabled>Preview</button>
+        <button id="claudeUpdateButton" class="ghost-button" type="button">Update Claude</button>
+        <button id="systemDrawerButton" class="ghost-button" type="button" aria-expanded="false">Coordinator</button>
+
+        <div class="theme-pick" role="group" aria-label="Theme">
+          <button class="swatch" type="button" data-set-theme="carbon" style="--sw-bg:#0d0d13; --sw-ac:#9d6be8"
+                  aria-pressed="false" aria-label="Carbon theme" title="Carbon — carbon black, violet accent"></button>
+          <button class="swatch" type="button" data-set-theme="chrome" style="--sw-bg:#edeff4; --sw-ac:#6a3cb0"
+                  aria-pressed="false" aria-label="Chrome theme" title="Chrome — light, violet accent"></button>
+          <button class="swatch" type="button" data-set-theme="console" style="--sw-bg:#0f1213; --sw-ac:#e0912f"
+                  aria-pressed="false" aria-label="Console theme" title="Console — graphite, amber accent"></button>
+        </div>
+      </div>
+    </header>
+
+    <aside class="left-rail" aria-label="Workspace navigation">
       <button id="newTaskButton" class="new-task-button" type="button">
-        <span>+</span>
+        <span aria-hidden="true">+</span>
         <span>New Task</span>
         <kbd>Ctrl+N</kbd>
       </button>
 
       <nav class="rail-section" aria-label="Projects">
-        <div class="section-label">Projects</div>
-        <div id="projectList"></div>
-      </nav>
-
-      <nav class="rail-section" aria-label="Recent sessions">
-        <div class="section-label">Recent Sessions</div>
-        <div id="sessionList"></div>
+        <button id="railProjectsButton" class="rail-project-button" type="button" aria-haspopup="dialog">
+          <span class="folder-icon" aria-hidden="true"></span>
+          <span>Projects</span>
+        </button>
       </nav>
 
       <section class="token-card" aria-label="Token balances">
@@ -50,204 +78,249 @@
     </aside>
 
     <main class="work-area">
-      <header class="workspace-topbar">
-        <div class="session-title">
-          <span class="eyebrow">Project</span>
-          <strong id="topbarProject">-</strong>
-          <span class="dot"></span>
-          <span class="eyebrow">Session</span>
-          <strong id="topbarSession">-</strong>
-          <span id="topbarStatus" class="status-pill muted-pill">Offline</span>
+
+      <!-- Round state, promoted out of the coordinator drawer so the thing
+           the whole session turns on is always on screen. -->
+      <div class="round-bar" aria-label="Round state">
+        <div class="round-cell">
+          <span class="round-label">Round</span>
+          <span id="statRound" class="round-value">-</span>
         </div>
-        <div class="topbar-actions">
-          <button id="liveButton" class="status-button" type="button"><span id="liveDot" class="live-dot offline"></span> <span id="liveLabel">Offline</span></button>
-          <button id="sessionButton" class="ghost-button" type="button">Session</button>
-          <button id="connectionToggle" class="ghost-button" type="button">Connection v</button>
-          <button id="themeToggle" class="ghost-button" type="button">Light</button>
+        <div class="round-cell">
+          <span class="round-label">Mode</span>
+          <span id="statMode" class="round-value">-</span>
         </div>
-      </header>
-
-      <div class="center-grid">
-        <section id="connectionPanel" class="connection-card hidden" aria-label="Bridge connection">
-          <h2>Bridge connection</h2>
-          <p class="connection-hint">Pair with the one-time code shown in the desktop bridge console, or paste a saved session token. Tokens stay in this browser only.</p>
-          <div class="connection-grid">
-            <input id="bridgeUrl" type="url" placeholder="Bridge URL, e.g. http://127.0.0.1:8765">
-            <input id="pairCode" type="text" placeholder="One-time pairing code" autocomplete="one-time-code" spellcheck="false">
-            <input id="token" type="password" placeholder="Session token (filled after pairing)">
-            <div class="connection-actions">
-              <button id="pairButton" class="ghost-button" type="button">Pair</button>
-              <button id="connectButton" class="ghost-button" type="button">Connect</button>
-              <button id="forgetButton" class="ghost-button" type="button">Forget token</button>
-            </div>
-          </div>
-          <div id="connectionState" class="connection-state muted">Not connected.</div>
-          <div id="connectionRecovery" class="connection-recovery hidden" aria-live="polite"></div>
-          <div id="errorBox" class="error-box hidden"></div>
-        </section>
-
-        <section class="agent-lanes" id="agentLanes" aria-label="Agent lanes"></section>
-
-        <section class="coordinator-card" aria-label="System coordinator">
-          <header class="coordinator-header">
-            <div class="agent-logo system-logo">SY</div>
-            <div class="coordinator-title">
-              <h2>System <span>(Coordinator)</span></h2>
-              <p><span id="coordDot" class="live-dot offline"></span> <span id="coordState">Offline</span></p>
-            </div>
-            <div class="coordinator-actions">
-              <button id="roleCallButton" class="ghost-button" type="button">Role Call</button>
-              <button id="systemFeedButton" class="ghost-button" type="button" aria-pressed="false">System</button>
-              <button id="logsButton" class="ghost-button" type="button">Logs</button>
-            </div>
-          </header>
-          <section id="approvalPanel" class="approval-panel hidden" aria-label="Proposal approval">
-            <div>
-              <div class="event-meta"><span id="approvalMeta">Proposal</span></div>
-              <h3 id="approvalSummary">Awaiting approval</h3>
-              <p id="approvalEstimate"></p>
-              <p id="approvalHelper" class="approval-helper"></p>
-              <details class="approval-details">
-                <summary>Proposal details</summary>
-                <pre id="approvalRaw"></pre>
-              </details>
-            </div>
-            <label class="approval-note">
-              <span>Modification note</span>
-              <textarea id="approvalModification" rows="2" placeholder="Required for Modify"></textarea>
-            </label>
-            <div>
-              <div id="approvalStatus" class="approval-status" aria-live="polite"></div>
-              <div id="approvalCommandPreview" class="approval-command-preview"></div>
-              <div class="approval-actions">
-                <button id="approveButton" class="approval-button approve-action" type="button">Approve</button>
-                <button id="modifyButton" class="approval-button modify-action" type="button">Modify</button>
-                <button id="rejectButton" class="approval-button reject-action" type="button">Reject</button>
-                <button id="dismissButton" class="approval-button dismiss-action" type="button">Dismiss</button>
-              </div>
-            </div>
-          </section>
-          <div class="summary-grid">
-            <div class="summary-copy">
-              <div class="event-meta"><time id="coordTime"></time><span>Coordinator Feed</span></div>
-              <div id="coordFeed" class="coord-feed"></div>
-            </div>
-            <dl class="summary-stats">
-              <div><dt>Round</dt><dd id="statRound">-</dd></div>
-              <div><dt>Mode</dt><dd id="statMode">-</dd></div>
-              <div><dt>Next agent</dt><dd id="statNext">-</dd></div>
-              <div><dt>Status</dt><dd><span id="statStatus" class="status-pill muted-pill">-</span></dd></div>
-            </dl>
-          </div>
-          <section class="trace-panel" aria-label="Agent and packet trace">
-            <div>
-              <div class="trace-head">
-                <h3>Agent Trace</h3>
-                <span id="traceAgentCount">0</span>
-              </div>
-              <div id="traceAgentList" class="trace-list"></div>
-            </div>
-            <div>
-              <div class="trace-head">
-                <h3>Packet Trace</h3>
-                <span id="tracePacketCount">0</span>
-              </div>
-              <div id="tracePacketList" class="trace-list"></div>
-            </div>
-          </section>
-        </section>
-
-        <section class="composer-card" aria-label="Prompt composer">
-          <div class="composer-input">
-            <label for="workbenchPrompt">YOU &gt;</label>
-            <textarea id="workbenchPrompt" rows="2" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
-          </div>
-          <div class="composer-toolbar">
-            <button class="ghost-button" type="button">Upload</button>
-            <button class="ghost-button" type="button">Auto v</button>
-            <span id="sendStatus">Uses best available model</span>
-            <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
-            <button id="sendButton" class="send-button" type="button">Send</button>
-          </div>
-        </section>
+        <div class="round-cell round-next">
+          <span class="round-label">Next agent</span>
+          <span id="statNext" class="round-value">-</span>
+        </div>
+        <div class="round-cell">
+          <span class="round-label">Status</span>
+          <span id="statStatus" class="status-pill muted-pill">-</span>
+        </div>
+        <div class="round-spacer"></div>
+        <div class="round-actions">
+          <button id="focusButton" class="ghost-button focus-button" type="button" aria-pressed="false"
+                  aria-label="Focus mode — hide the rails and the top bar">
+            <span class="focus-glyph" aria-hidden="true">⤢</span> <span id="focusLabel">Focus</span>
+          </button>
+        </div>
       </div>
+
+      <section id="connectionPanel" class="connection-card hidden" aria-label="Bridge connection">
+        <h2>Bridge connection</h2>
+        <p class="connection-hint">Pair with the one-time code shown in the desktop bridge console, or paste a saved session token. Tokens stay in this browser only.</p>
+        <div class="connection-grid">
+          <input id="bridgeUrl" type="url" placeholder="Bridge URL, e.g. http://127.0.0.1:8765">
+          <input id="pairCode" type="text" placeholder="One-time pairing code" autocomplete="one-time-code" spellcheck="false">
+          <input id="token" type="password" placeholder="Session token (filled after pairing)">
+          <div class="connection-actions">
+            <button id="pairButton" class="ghost-button" type="button">Pair</button>
+            <button id="connectButton" class="ghost-button" type="button">Connect</button>
+            <button id="forgetButton" class="ghost-button" type="button">Forget token</button>
+          </div>
+        </div>
+        <div id="connectionState" class="connection-state muted">Not connected.</div>
+        <div id="connectionRecovery" class="connection-recovery hidden" aria-live="polite"></div>
+        <div id="errorBox" class="error-box hidden"></div>
+      </section>
+
+      <div class="lane-deck">
+        <section class="agent-lanes" id="agentLanes" aria-label="Agent lanes"></section>
+      </div>
+
+      <!-- Approval and attention are docked here, directly above the composer.
+           They used to sit inside #systemDrawer, which is collapsed by
+           default — so the one thing that blocks a round was invisible. -->
+      <section id="approvalPanel" class="approval-panel hidden" aria-label="Proposal approval">
+        <div>
+          <div class="event-meta"><span id="approvalMeta">Proposal</span></div>
+          <h3 id="approvalSummary">Awaiting approval</h3>
+          <p id="approvalEstimate"></p>
+          <p id="approvalHelper" class="approval-helper"></p>
+          <details class="approval-details">
+            <summary>Proposal details</summary>
+            <pre id="approvalRaw"></pre>
+          </details>
+        </div>
+        <label class="approval-note">
+          <span>Modification note</span>
+          <textarea id="approvalModification" rows="2" placeholder="Required for Modify"></textarea>
+        </label>
+        <div>
+          <div id="approvalStatus" class="approval-status" aria-live="polite"></div>
+          <div id="approvalCommandPreview" class="approval-command-preview"></div>
+          <div id="approvalBuildActions" class="approval-build-actions" aria-label="Choose an agent to build"></div>
+          <div class="approval-actions">
+            <button id="approveButton" class="approval-button approve-action" type="button">Build with primary</button>
+            <button id="modifyButton" class="approval-button modify-action" type="button">Modify</button>
+            <button id="rejectButton" class="approval-button reject-action" type="button">Reject</button>
+            <button id="dismissButton" class="approval-button dismiss-action" type="button">Dismiss</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="attentionPanel" class="attention-panel hidden" aria-live="polite">
+        <div>
+          <div class="event-meta"><span id="attentionMeta"></span></div>
+          <h3 id="attentionTitle">Decision needed</h3>
+          <p id="attentionSummary"></p>
+          <details class="approval-details">
+            <summary>Agent message</summary>
+            <pre id="attentionRaw"></pre>
+          </details>
+          <p id="attentionGuidance" class="approval-helper"></p>
+        </div>
+      </section>
+
+      <section id="resumePanel" class="attention-panel hidden" aria-live="polite">
+        <div>
+          <div class="event-meta">Previous task</div>
+          <h3>Continue previous work?</h3>
+          <p id="resumeSummary"></p>
+          <p class="approval-helper">The task was paused when ChatBoks closed. It will not run again until you choose Continue.</p>
+        </div>
+        <div class="approval-actions">
+          <button id="resumeButton" class="approval-button approve-action" type="button">Continue</button>
+          <button id="endTaskButton" class="approval-button reject-action" type="button">End task</button>
+        </div>
+      </section>
+
+      <section class="composer-card" aria-label="Prompt composer">
+        <div class="composer-input">
+          <label for="workbenchPrompt">YOU &gt;</label>
+          <textarea id="workbenchPrompt" rows="2" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
+        </div>
+        <div class="composer-toolbar">
+          <button class="ghost-button" type="button">Upload</button>
+          <button class="ghost-button" type="button">Auto v</button>
+          <span id="sendStatus">Uses best available model</span>
+          <button id="stopButton" class="stop-button hidden" type="button">Stop</button>
+          <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
+          <button id="sendButton" class="send-button" type="button">Send</button>
+        </div>
+      </section>
+
+      <section id="systemDrawer" class="coordinator-card system-drawer hidden" aria-label="System coordinator">
+        <header class="coordinator-header">
+          <div class="agent-logo system-logo agent-avatar"><img src="./assets/orchestrator.png" alt=""></div>
+          <div class="coordinator-title">
+            <h2>System <span>(Coordinator)</span></h2>
+            <p><span id="coordDot" class="live-dot offline"></span> <span id="coordState">Offline</span></p>
+          </div>
+          <div class="coordinator-actions">
+            <button id="roleCallButton" class="ghost-button" type="button">Role Call</button>
+            <button id="systemFeedButton" class="ghost-button" type="button" aria-pressed="false">System</button>
+            <button id="logsButton" class="ghost-button" type="button">Logs</button>
+            <button id="systemDetailsButton" class="ghost-button" type="button" aria-expanded="true">Details</button>
+            <button id="traceButton" class="ghost-button" type="button" aria-expanded="false">Trace</button>
+          </div>
+        </header>
+        <div id="systemDetails" class="summary-grid">
+          <div class="summary-copy">
+            <div class="event-meta"><time id="coordTime"></time><span>Coordinator Feed</span></div>
+            <div id="coordFeed" class="coord-feed"></div>
+          </div>
+        </div>
+        <section id="tracePanel" class="trace-panel hidden" aria-label="Agent and packet trace">
+          <div>
+            <div class="trace-head">
+              <h3>Agent Trace</h3>
+              <span id="traceAgentCount">0</span>
+            </div>
+            <div id="traceAgentList" class="trace-list"></div>
+          </div>
+          <div>
+            <div class="trace-head">
+              <h3>Packet Trace</h3>
+              <span id="tracePacketCount">0</span>
+            </div>
+            <div id="tracePacketList" class="trace-list"></div>
+          </div>
+        </section>
+      </section>
+
     </main>
 
     <aside class="right-rail" aria-label="Environment and monitor">
-      <section class="side-card environment-card">
-        <header>
-          <h2>Environment</h2>
-          <span id="envProject" class="status-pill muted-pill">gear</span>
-        </header>
-        <dl class="detail-list">
-          <div><dt>Branch</dt><dd id="envBranch">-</dd></div>
-          <div><dt>Local</dt><dd><span id="envCleanDot" class="live-dot offline"></span> <span id="envClean">-</span></dd></div>
-          <div><dt>Changes</dt><dd id="envChanges">-</dd></div>
-          <div><dt>Last Commit</dt><dd id="envCommit">-</dd></div>
-          <div><dt>Bridge</dt><dd><span id="bridgeDot" class="live-dot offline"></span> <span id="bridgePid">-</span></dd></div>
-          <div><dt>Pair Code</dt><dd id="bridgePairTtl">-</dd></div>
-          <div><dt>Operator</dt><dd id="bridgeOperator">-</dd></div>
-        </dl>
-      </section>
+      <div class="rail-scroll">
+        <section class="side-card environment-card">
+          <header>
+            <h2>Workspace</h2>
+            <span id="envProject" class="status-pill muted-pill">-</span>
+          </header>
+          <dl class="detail-list">
+            <div><dt>Branch</dt><dd id="envBranch">-</dd></div>
+            <div><dt>Local</dt><dd><span id="envCleanDot" class="live-dot offline"></span> <span id="envClean">-</span></dd></div>
+            <div><dt>Changes</dt><dd id="envChanges">-</dd></div>
+            <div><dt>Last Commit</dt><dd id="envCommit">-</dd></div>
+          </dl>
 
-      <section class="side-card">
-        <h2>Progress</h2>
-        <ol id="progressList" class="progress-list"></ol>
-        <div class="progress-footer">
-          <span id="progressCount">-</span>
-          <span id="progressPercent" class="status-pill muted-pill">-</span>
+          <div class="card-divider" role="presentation"></div>
+          <dl class="detail-list compact-list">
+            <div><dt>Bridge</dt><dd><span id="bridgeDot" class="live-dot offline"></span> <span id="bridgePid">-</span></dd></div>
+            <div><dt>Pair Code</dt><dd id="bridgePairTtl">-</dd></div>
+            <div><dt>Operator</dt><dd id="bridgeOperator">-</dd></div>
+          </dl>
+
+          <div class="card-divider" role="presentation"></div>
+          <dl class="detail-list compact-list">
+            <div><dt>CodeGraph</dt><dd><span id="graphDot" class="live-dot offline"></span> <span id="graphHealth">-</span></dd></div>
+            <div><dt>Files</dt><dd id="graphFiles">-</dd></div>
+            <div><dt>Nodes</dt><dd id="graphNodes">-</dd></div>
+            <div><dt>Edges</dt><dd id="graphEdges">-</dd></div>
+            <div><dt>Last Indexed</dt><dd id="graphIndexed">-</dd></div>
+          </dl>
+        </section>
+
+        <section class="side-card">
+          <h2>Progress</h2>
+          <ol id="progressList" class="progress-list"></ol>
+          <div class="progress-footer">
+            <span id="progressCount">-</span>
+            <span id="progressPercent" class="status-pill muted-pill">-</span>
+          </div>
+        </section>
+      </div>
+
+      <section class="monitor-strip" aria-label="Monitor">
+        <div class="monitor-metric">
+          <span>Tailscale</span>
+          <strong id="monTailscale">-</strong>
         </div>
-      </section>
-
-      <section class="side-card">
-        <h2>Graph Status</h2>
-        <dl class="detail-list compact-list">
-          <div><dt>CodeGraph</dt><dd><span id="graphDot" class="live-dot offline"></span> <span id="graphHealth">-</span></dd></div>
-          <div><dt>Files</dt><dd id="graphFiles">-</dd></div>
-          <div><dt>Nodes</dt><dd id="graphNodes">-</dd></div>
-          <div><dt>Edges</dt><dd id="graphEdges">-</dd></div>
-          <div><dt>Last Indexed</dt><dd id="graphIndexed">-</dd></div>
-        </dl>
-      </section>
-
-      <section class="side-card monitor-card">
-        <h2>Monitor</h2>
-        <div class="monitor-grid">
-          <div class="monitor-metric">
-            <span>Tailscale</span>
-            <strong id="monTailscale">-</strong>
-          </div>
-          <div class="monitor-metric">
-            <span>CPU</span>
-            <strong id="monCpu">-</strong>
-            <div class="sparkline"></div>
-          </div>
-          <div class="monitor-metric">
-            <span>RAM</span>
-            <strong id="monRam">-</strong>
-            <div class="sparkline alt"></div>
-          </div>
+        <div class="monitor-metric">
+          <span>CPU</span>
+          <strong id="monCpu">-</strong>
+          <div class="sparkline"></div>
         </div>
-      </section>
-
-      <section class="terminal-card">
-        <header>
-          <h2>Terminal</h2>
-          <div>
-            <span class="status-pill">cube on</span>
-            <span class="status-pill muted-pill">logs</span>
-          </div>
-        </header>
-        <button id="terminalFocus" class="terminal-screen" type="button" aria-label="Focus mini terminal">
-          <span id="terminalCaption" class="terminal-caption">bridge idle - click to focus</span>
-          <span class="cube-art" aria-hidden="true">
-            <span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span>
-          </span>
-          <span class="terminal-prompt">YOU &gt;</span>
-        </button>
+        <div class="monitor-metric">
+          <span>RAM</span>
+          <strong id="monRam">-</strong>
+          <div class="sparkline alt"></div>
+        </div>
       </section>
     </aside>
+  </div>
+
+  <div id="projectDialog" class="project-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="projectDialogTitle">
+    <button id="projectDialogBackdrop" class="project-dialog-backdrop" type="button" aria-label="Close project picker"></button>
+    <section class="project-picker" aria-label="Choose project">
+      <header class="project-picker-header">
+        <div>
+          <span class="section-label">Workspace</span>
+          <h2 id="projectDialogTitle">Choose a project</h2>
+        </div>
+        <button id="projectDialogClose" class="icon-button" type="button" aria-label="Close project picker">x</button>
+      </header>
+      <label class="project-search-label" for="projectSearch">Search projects</label>
+      <input id="projectSearch" class="project-search" type="search" placeholder="Search by name or path" autocomplete="off">
+      <div class="project-add-row">
+        <input id="projectPath" class="project-path-input" type="text" placeholder="Project or projects folder" autocomplete="off">
+        <button id="projectBrowseButton" class="ghost-button" type="button">Browse</button>
+        <button id="projectAddButton" class="primary-button" type="button">Add</button>
+      </div>
+      <div id="projectPickerList" class="project-picker-list" role="listbox" aria-label="Available projects"></div>
+    </section>
   </div>
 
   <script src="./workbench.js"></script>

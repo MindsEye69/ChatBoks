@@ -211,6 +211,15 @@ def test_route_no_prefix_preserves_original_text():
     print("PASS: no-prefix prompt preserves original text including leading space")
 
 
+def test_route_leading_agent_name_is_direct():
+    r = _router("claude", "codex")
+    d = r.route_user_prompt_details("Claude, are you there?")
+    assert d.agents == ["claude"]
+    assert d.exclusive_agent == "claude"
+    assert d.strategy == "addressed_agent"
+    print("PASS: leading agent name routes directly to that agent")
+
+
 # ---------------------------------------------------------------------------
 # Router.route_user_prompt_details — @all / @team / @everyone
 # ---------------------------------------------------------------------------
@@ -591,6 +600,7 @@ if __name__ == "__main__":
     test_normal_round_agents_uses_default_agents_when_no_round_agents()
     test_route_no_prefix_returns_all_agents()
     test_route_no_prefix_preserves_original_text()
+    test_route_leading_agent_name_is_direct()
     test_route_at_all_routes_to_all_agents()
     test_route_at_team_routes_to_all_agents()
     test_route_at_everyone_routes_to_all_agents()
