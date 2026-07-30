@@ -192,6 +192,33 @@ def test_broad_multi_agent_prompt_triggers_criteria_gate():
         print("PASS: broad multi-agent prompts pause for criteria")
 
 
+def test_brainstorm_ideation_prompt_bypasses_criteria_gate():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["collaboration_mode"] = "brainstorm"
+        app.router.route_user_prompt_details.return_value = RoutingDecision(
+            ["claude", "codex"],
+            "brainstorm 6-10 solid improvements to Chatboks for design, speed, mobile interface, or model integration",
+            strategy="explicit_all",
+        )
+        app.resolve_available_agents = MagicMock(return_value=["claude", "codex"])
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input(
+            "@all brainstorm 6-10 solid improvements to Chatboks for design, speed, mobile interface, or model integration"
+        )
+
+        assert app.state["status"] == "active"
+        assert app.state.get("criteria_gate") is None
+        app.run_agent_round.assert_called_once_with(
+            initiator=(
+                "brainstorm 6-10 solid improvements to Chatboks for design, speed, mobile interface, or model integration"
+            ),
+            agents=["claude", "codex"],
+        )
+        print("PASS: brainstorm ideation prompts bypass the criteria gate")
+
+
 def test_criteria_approval_resumes_routed_prompt_without_rerouting():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))

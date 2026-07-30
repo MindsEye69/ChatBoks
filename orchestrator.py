@@ -391,7 +391,11 @@ class Chatboks:
             return False
         if decision.exclusive_agent:
             return False
-        return bool(self.criteria_gate_reasons(text, agents, decision))
+        reasons = self.criteria_gate_reasons(text, agents, decision)
+        mode = str(self.state.get("collaboration_mode") or "default").lower()
+        if mode == "brainstorm" and set(reasons).issubset({"multi_agent", "broad"}):
+            return False
+        return bool(reasons)
 
     def criteria_gate_enabled(self) -> bool:
         gate_config = self.config.get("criteria_gate", {})
@@ -452,7 +456,8 @@ class Chatboks:
                 "packet",
                 "handoff",
                 "routing",
-                "mode",
+                "collaboration mode",
+                "/mode",
                 "runbook",
                 "docs",
                 "documentation",
