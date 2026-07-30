@@ -675,6 +675,20 @@ kbd {
   cursor: pointer;
 }
 
+.agent-model-control {
+  display: grid;
+  gap: 3px;
+  align-items: start;
+}
+
+.agent-model-warning {
+  max-width: 150px;
+  color: var(--bad);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 .agent-stream {
   display: grid;
   align-content: start;

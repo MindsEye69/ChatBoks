@@ -89,8 +89,13 @@ AGENT_ALIASES = {
     "az": "coordinator",
 }
 MODEL_CHOICES = {
-    "claude": ["", "sonnet", "opus", "haiku"],
-    "codex": ["", "gpt-5.6", "gpt-5.6-terra", "gpt-5.6-luna"],
+    "claude": ["", "fable", "sonnet", "opus", "haiku"],
+    "codex": ["", "gpt-5.6", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"],
+}
+MODEL_USAGE_WARNINGS = {
+    "claude": {
+        "fable": "Fable may require extra usage or credits on your Claude plan.",
+    },
 }
 SHELL_CSP = (
     "default-src 'self'; "
@@ -938,7 +943,11 @@ class RemoteSession:
             options = list(MODEL_CHOICES[agent_name])
             if configured and configured not in options:
                 options.append(configured)
-            selection[agent_name] = {"current": configured, "options": options}
+            selection[agent_name] = {
+                "current": configured,
+                "options": options,
+                "warnings": MODEL_USAGE_WARNINGS.get(agent_name, {}),
+            }
         return selection
 
     def set_agent_model(self, agent: str, model: str) -> dict[str, Any]:
