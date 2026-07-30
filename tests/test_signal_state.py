@@ -134,6 +134,21 @@ def test_update_token_count_refreshes_session_token_display():
         )
 
 
+def test_streaming_token_count_updates_without_double_counting_final_response():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"codex": {"token_limit": 120_000, "token_warning": 100_000}},
+            "context": {"session_token_budget_warning": 220_000, "session_token_budget_limit": 280_000},
+        }
+
+        app.record_streaming_token_count("codex", "x" * 80)
+        assert app.state["context"]["token_counts"]["codex"] == 100_020
+
+        app.update_token_count("codex", "x" * 80)
+        assert app.state["context"]["token_counts"]["codex"] == 100_020
+
+
 def test_session_token_budget_emits_warning_once():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -213,8 +228,77 @@ def test_handle_approval_accepts_common_affirmatives():
         app.handle_approval("yes")
 
         assert app.state["status"] == "executing"
-        app.execute_proposal.assert_called_once()
+        app.execute_proposal.assert_called_once_with("codex")
         app.run_agent_round.assert_not_called()
+
+
+def test_proposals_are_collected_before_the_builder_gate_opens():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["rounds"] = {"max_before_escalate": 3}
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=["Claude plan.\n>>> PROPOSAL", "Codex plan.\n>>> PROPOSAL"]
+        )
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+        app.handle_proposal = MagicMock()
+
+        app.run_agent_round(agents=["claude", "codex"])
+
+        assert app.call_agent_with_token_recovery.call_count == 2
+        app.handle_proposal.assert_called_once_with(
+            "Claude plan.\n>>> PROPOSAL",
+            "claude",
+            candidates=[
+                ("Claude plan.\n>>> PROPOSAL", "claude"),
+                ("Codex plan.\n>>> PROPOSAL", "codex"),
+            ],
+        )
+        assert app.state["completed_agents"] == ["claude", "codex"]
+
+
+def test_blocked_pauses_before_the_next_agent_runs():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["rounds"] = {"max_before_escalate": 3}
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=["Need a decision.\n>>> BLOCKED", "This must not run.\n>>> TASK_COMPLETE"]
+        )
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+
+        app.run_agent_round(agents=["claude", "codex"])
+
+        assert app.call_agent_with_token_recovery.call_count == 1
+        assert app.state["status"] == "blocked"
+        assert app.state["next_agent"] == "you"
+
+
+def test_modify_clears_the_prior_proposal_before_a_revision_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.run_agent_round = MagicMock()
+
+        app.handle_approval("MODIFY include a rollback plan")
+
+        assert app.state["proposal"] is None
+        app.run_agent_round.assert_called_once()
+
+
+def test_approval_uses_the_builder_chosen_from_the_proposals():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["proposal"] = {
+            "candidates": [{"agent": "claude"}, {"agent": "codex"}],
+            "proposed_by": "claude",
+        }
+        app.execute_proposal = MagicMock()
+
+        app.handle_approval("APPROVE claude")
+
+        assert app.state["status"] == "executing"
+        assert app.state["next_agent"] == "claude"
+        app.execute_proposal.assert_called_once_with("claude")
 
 
 def test_dismiss_command_clears_active_proposal_without_agent_round():
@@ -492,7 +576,13 @@ if __name__ == "__main__":
     test_handle_proposal_includes_execution_cost_estimate_when_configured()
     test_handle_proposal_marks_cost_unavailable_when_rates_missing()
     test_check_token_limit_uses_default_warning_threshold()
+    test_update_token_count_refreshes_session_token_display()
+    test_streaming_token_count_updates_without_double_counting_final_response()
     test_handle_approval_accepts_common_affirmatives()
+    test_proposals_are_collected_before_the_builder_gate_opens()
+    test_blocked_pauses_before_the_next_agent_runs()
+    test_modify_clears_the_prior_proposal_before_a_revision_round()
+    test_approval_uses_the_builder_chosen_from_the_proposals()
     test_dismiss_command_clears_active_proposal_without_agent_round()
     test_load_state_accepts_utf8_bom()
     test_coordinator_strips_prefixed_signal_lines_from_body()

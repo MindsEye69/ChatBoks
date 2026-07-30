@@ -1,9 +1,11 @@
 const STORAGE_KEY = "chatboks-workbench";
-const SESSION_POLL_MS = 2500;
-const SESSION_POLL_BUSY_MS = 1500;
+const SESSION_POLL_MS = 1500;
+const SESSION_POLL_BUSY_MS = 350;
 const WORKBENCH_POLL_MS = 10000;
 const LANE_MESSAGE_LIMIT = 10;
 const LANE_AGENT_LIMIT = 3;
+// applies to the working agents only; the coordinator lane is additive
+const COORDINATOR_LANE_AGENT = "coordinator";
 const COORD_FEED_LIMIT = 6;
 const COORD_FEED_EXPANDED_LIMIT = 40;
 const TRACE_ROW_LIMIT = 6;
@@ -19,16 +21,30 @@ const AGENT_GLYPHS = {
   coordinator: "CO",
 };
 const LANE_LABELS = {
-  coordinator: "Gemma",
+  coordinator: "Orchestrator",
 };
 const LANE_GLYPHS = {
   coordinator: "GM",
 };
+const AGENT_IMAGES = {
+  claude: "./assets/claude.png",
+  codex: "./assets/codex.png",
+  coordinator: "./assets/orchestrator.png",
+};
+
+/* Themes live in workbench.css as [data-theme="..."] blocks. The picked one
+   is persisted with the rest of the workbench settings, so the app reopens in
+   whatever the operator last chose. LEGACY_THEMES migrates the old two-way
+   dark/light setting that earlier builds wrote to localStorage. */
+const THEMES = ["carbon", "chrome", "console"];
+const DEFAULT_THEME = "carbon";
+const LEGACY_THEMES = { dark: "carbon", light: "chrome" };
 
 const state = {
   token: "",
   bridgeUrl: "",
-  theme: "dark",
+  theme: DEFAULT_THEME,
+  focusMode: false,
   connected: false,
   eventCursor: 0,
   sessionTimer: null,
@@ -40,7 +56,10 @@ const state = {
   streams: {},
   coordItems: [],
   coordExpanded: false,
+  systemDetailsVisible: true,
+  traceVisible: false,
   showSystemFeed: false,
+  systemDrawerOpen: false,
   trace: {},
   currentProject: "",
   lastActivity: "",
@@ -49,11 +68,19 @@ const state = {
   approvalActive: false,
   approvalProposalId: "",
   approvalSubmitting: false,
+  projectCatalog: [],
+  modelSelection: {},
 };
 
 const previewSession = {
   project: "chatboks",
   projects: ["chatboks", "gracious-eagle-otel", "romantic-otter-otel-7", "chatboks_2.0"],
+  project_catalog: [
+    { name: "chatboks", path: "C:/workspace/chatboks", agents: ["claude", "codex"], primary: "codex" },
+    { name: "gracious-eagle-otel", path: "C:/workspace/gracious-eagle-otel", agents: ["claude", "codex"], primary: "claude" },
+    { name: "romantic-otter-otel-7", path: "C:/workspace/romantic-otter-otel-7", agents: ["codex"], primary: "codex" },
+    { name: "chatboks_2.0", path: "C:/workspace/chatboks-2", agents: ["claude", "codex", "coordinator"], primary: "codex" },
+  ],
   session: "multi-agent-refactor",
   session_history: [
     { name: "multi-agent-refactor", age: "2m ago" },
@@ -112,24 +139,26 @@ const previewSession = {
 
 const els = {};
 for (const id of [
-  "themeToggle", "themeToggleRail", "newTaskButton", "projectList", "sessionList",
+  "focusButton", "focusLabel", "newTaskButton", "railProjectsButton",
+  "projectButton", "projectDialog", "projectDialogBackdrop", "projectDialogClose", "projectSearch", "projectPath", "projectBrowseButton", "projectAddButton", "projectPickerList",
   "tokenBalances", "settingsButton", "stripCpu", "stripRam",
-  "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel",
+  "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "claudeUpdateButton", "systemDrawer",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
-  "agentLanes", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton",
+  "agentLanes", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalHelper", "approvalRaw", "approvalModification", "approvalStatus", "approvalCommandPreview",
-  "approveButton", "modifyButton", "rejectButton", "dismissButton",
+  "approvalBuildActions", "approveButton", "modifyButton", "rejectButton", "dismissButton",
+  "attentionPanel", "attentionMeta", "attentionTitle", "attentionSummary", "attentionRaw", "attentionGuidance",
+  "resumePanel", "resumeSummary", "resumeButton", "endTaskButton",
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
-    "workbenchPrompt", "sendStatus", "sendButton",
+    "workbenchPrompt", "sendStatus", "sendButton", "stopButton",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
   "bridgeDot", "bridgePid", "bridgePairTtl", "bridgeOperator",
   "progressList", "progressCount", "progressPercent",
   "graphDot", "graphHealth", "graphFiles", "graphNodes", "graphEdges", "graphIndexed",
   "monTailscale", "monCpu", "monRam",
-  "terminalFocus", "terminalCaption",
 ]) {
   els[id] = document.getElementById(id);
 }
@@ -141,10 +170,11 @@ function loadSettings() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     state.token = saved.token || "";
     state.bridgeUrl = saved.bridgeUrl || "";
-    state.theme = saved.theme === "light" ? "light" : "dark";
+    state.theme = normaliseTheme(saved.theme);
   } catch {
     state.token = "";
     state.bridgeUrl = "";
+    state.theme = DEFAULT_THEME;
   }
   els.token.value = state.token;
   els.bridgeUrl.value = state.bridgeUrl || "";
@@ -154,11 +184,26 @@ function saveSettings() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: state.token, bridgeUrl: state.bridgeUrl, theme: state.theme }));
 }
 
+function normaliseTheme(value) {
+  const name = String(value || "");
+  if (THEMES.includes(name)) return name;
+  return LEGACY_THEMES[name] || DEFAULT_THEME;
+}
+
 function setTheme(theme) {
-  state.theme = theme;
-  document.documentElement.dataset.theme = theme;
-  els.themeToggle.textContent = theme === "dark" ? "Light" : "Dark";
+  state.theme = normaliseTheme(theme);
+  document.documentElement.dataset.theme = state.theme;
+  for (const swatch of document.querySelectorAll(".swatch")) {
+    swatch.setAttribute("aria-pressed", String(swatch.dataset.setTheme === state.theme));
+  }
   saveSettings();
+}
+
+function setFocusMode(on) {
+  state.focusMode = Boolean(on);
+  document.body.classList.toggle("is-focus", state.focusMode);
+  els.focusButton.setAttribute("aria-pressed", String(state.focusMode));
+  els.focusLabel.textContent = state.focusMode ? "Exit focus" : "Focus";
 }
 
 function enforceLeftToRightText(element) {
@@ -498,13 +543,41 @@ function splitSignals(text) {
 function signalCard(signal, timestamp) {
   const card = document.createElement("section");
   const upper = signal.toUpperCase();
-  card.className = upper.startsWith("TASK_COMPLETE") ? "complete-card" : "handoff-card";
+  const key = upper.startsWith("TASK_COMPLETE")
+    ? "complete"
+    : upper.startsWith("PROPOSAL")
+      ? "proposal"
+      : upper.startsWith("BLOCKED")
+        ? "blocked"
+        : upper.startsWith("QUESTION")
+          ? "question"
+          : upper.startsWith("HANDOFF")
+            ? "handoff"
+            : upper.startsWith("SKIP")
+              ? "skip"
+              : "signal";
+  const presentation = {
+    complete: { icon: "FLAG", title: "Complete" },
+    proposal: { icon: "!", title: "Approval required" },
+    blocked: { icon: "!", title: "Needs your input" },
+    question: { icon: "?", title: "Question" },
+    handoff: { icon: "->", title: "Handoff" },
+    skip: { icon: "-", title: "No additional work" },
+    signal: { icon: ">", title: "Agent signal" },
+  }[key];
+  card.className = `signal-card signal-${key}`;
   const arrow = document.createElement("span");
-  arrow.textContent = upper.startsWith("TASK_COMPLETE") ? "FLAG" : "->";
+  arrow.className = "signal-icon";
+  arrow.textContent = presentation.icon;
+  const content = document.createElement("span");
+  content.className = "signal-copy";
+  const title = document.createElement("strong");
+  title.textContent = presentation.title;
   const label = document.createElement("strong");
   label.textContent = `>>> ${signal}`;
+  content.append(title, label);
   card.appendChild(arrow);
-  card.appendChild(label);
+  card.appendChild(content);
   if (timestamp) {
     const time = document.createElement("time");
     time.textContent = timestamp;
@@ -513,12 +586,12 @@ function signalCard(signal, timestamp) {
   return card;
 }
 
-function messageCard(text, { streaming = false, timestamp = "" } = {}) {
+function messageCard(text, { streaming = false, timestamp = "", user = false } = {}) {
   const fragment = document.createDocumentFragment();
   const { body, signals } = splitSignals(text);
   if (body || streaming) {
     const card = document.createElement("section");
-    card.className = streaming ? "message-card streaming" : "message-card";
+    card.className = user ? "message-card user-message-card" : streaming ? "message-card streaming" : "message-card";
     const paragraph = document.createElement("p");
     paragraph.className = "msg-text";
     paragraph.textContent = body;
@@ -565,7 +638,7 @@ function laneGlyph(agent) {
 
 function laneEmptyText(agent) {
   if (canonicalAgent(agent) === "coordinator") {
-    return "Gemma is ready. Direct @coordinator replies appear here.";
+    return "Orchestrator is ready. Direct @coordinator replies appear here.";
   }
   return "No messages this session yet.";
 }
@@ -613,11 +686,32 @@ function agentIsLive(agent, statuses = {}) {
   return ["available", "low"].includes(agentStatusValue(agent, statuses));
 }
 
+/* The coordinator lane is the synthesis seat: it reads what the working
+   agents produced and sums it up before the operator decides. So it is pinned
+   to the right of them, it does not spend one of their LANE_AGENT_LIMIT slots,
+   and it stays on screen while idle or offline instead of being filtered out
+   with the live agents. */
+function pinCoordinatorLast(agents, data) {
+  const roster = uniqueAgents(agents).filter((agent) => agent !== COORDINATOR_LANE_AGENT);
+  const configured = uniqueAgents([
+    ...(data.agents || []),
+    ...(data.direct_agents || []),
+    ...(data.lane_agents || []),
+  ]);
+  const capped = roster.slice(0, LANE_AGENT_LIMIT);
+  if (configured.includes(COORDINATOR_LANE_AGENT)) {
+    capped.push(COORDINATOR_LANE_AGENT);
+  }
+  return capped;
+}
+
 function deriveLaneAgents(data) {
   const statuses = data.agent_statuses || {};
-  const serverLanes = uniqueAgents(data.lane_agents || []).filter((agent) => agentIsLive(agent, statuses));
+  const serverLanes = uniqueAgents(data.lane_agents || []).filter(
+    (agent) => agent === COORDINATOR_LANE_AGENT || agentIsLive(agent, statuses),
+  );
   if (serverLanes.length) {
-    return serverLanes.slice(0, LANE_AGENT_LIMIT);
+    return pinCoordinatorLast(serverLanes, data);
   }
   const mainAgents = uniqueAgents(data.agents || DEFAULT_AGENTS);
   const directAgents = uniqueAgents(data.direct_agents || []);
@@ -642,7 +736,7 @@ function deriveLaneAgents(data) {
       lanes.push(agent);
     }
   }
-  return (lanes.length ? lanes : mainAgents).slice(0, LANE_AGENT_LIMIT);
+  return pinCoordinatorLast(lanes.length ? lanes : mainAgents, data);
 }
 
 function ensureLanes(agents) {
@@ -660,7 +754,16 @@ function ensureLanes(agents) {
     header.className = "agent-header";
     const logo = document.createElement("div");
     logo.className = `agent-logo ${laneStyleClass(agent)}-logo`;
-    logo.textContent = laneGlyph(agent);
+    const imageSource = AGENT_IMAGES[canonicalAgent(agent)];
+    if (imageSource) {
+      const image = document.createElement("img");
+      image.src = imageSource;
+      image.alt = "";
+      logo.classList.add("agent-avatar");
+      logo.appendChild(image);
+    } else {
+      logo.textContent = laneGlyph(agent);
+    }
     const title = document.createElement("div");
     const name = document.createElement("h2");
     name.textContent = laneDisplayName(agent);
@@ -669,8 +772,12 @@ function ensureLanes(agents) {
     dot.className = "live-dot";
     const statusLabel = document.createElement("span");
     statusLabel.textContent = " Offline";
+    const activity = document.createElement("span");
+    activity.className = "agent-activity hidden";
+    activity.textContent = "Working";
     status.appendChild(dot);
     status.appendChild(statusLabel);
+    status.appendChild(activity);
     title.appendChild(name);
     title.appendChild(status);
     header.appendChild(logo);
@@ -680,7 +787,26 @@ function ensureLanes(agents) {
     menu.type = "button";
     menu.setAttribute("aria-label", `${laneDisplayName(agent)} options`);
     menu.title = `${laneDisplayName(agent)} options`;
-    menu.textContent = "...";
+    if (agent === "claude" || agent === "codex") {
+      const modelSelect = document.createElement("select");
+      modelSelect.className = "agent-model-select";
+      modelSelect.setAttribute("aria-label", `${laneDisplayName(agent)} model`);
+      modelSelect.addEventListener("change", () => chooseAgentModel(agent, modelSelect));
+      header.appendChild(modelSelect);
+      state.lanes[agent] = { pane, stream: null, statusDot: dot, statusLabel, activity, modelSelect };
+    }
+    if (agent === "claude") {
+      menu.className = "ghost-button claude-auth-button";
+      menu.textContent = "Sign in";
+      menu.addEventListener("click", startClaudeLogin);
+    } else if (agent === "codex") {
+      menu.className = "ghost-button claude-auth-button";
+      menu.textContent = "Update";
+      menu.title = "Update Codex";
+      menu.addEventListener("click", updateCodex);
+    } else {
+      menu.textContent = "...";
+    }
     header.appendChild(menu);
 
     const stream = document.createElement("div");
@@ -689,17 +815,63 @@ function ensureLanes(agents) {
     pane.appendChild(header);
     pane.appendChild(stream);
     els.agentLanes.appendChild(pane);
-    state.lanes[agent] = { pane, stream, statusDot: dot, statusLabel };
+    state.lanes[agent] = { ...(state.lanes[agent] || {}), pane, stream, statusDot: dot, statusLabel, activity };
+  }
+}
+
+function renderModelSelectors(selection = {}) {
+  state.modelSelection = selection || {};
+  for (const [agent, lane] of Object.entries(state.lanes)) {
+    if (!lane.modelSelect) continue;
+    const details = state.modelSelection[agent] || { current: "", options: [""] };
+    const options = Array.isArray(details.options) ? details.options : [""];
+    lane.modelSelect.innerHTML = "";
+    for (const model of options) {
+      const option = document.createElement("option");
+      option.value = model;
+      option.textContent = model || "Model: Default";
+      lane.modelSelect.appendChild(option);
+    }
+    const custom = document.createElement("option");
+    custom.value = "__custom__";
+    custom.textContent = "Custom model...";
+    lane.modelSelect.appendChild(custom);
+    lane.modelSelect.value = details.current || "";
+  }
+}
+
+async function chooseAgentModel(agent, select) {
+  let model = select.value;
+  if (model === "__custom__") {
+    model = window.prompt(`Model identifier for ${laneDisplayName(agent)}:`)?.trim() || "";
+    if (!model) {
+      renderModelSelectors(state.modelSelection);
+      return;
+    }
+  }
+  select.disabled = true;
+  try {
+    const data = await apiFetch("/api/agent/model", {
+      method: "POST",
+      body: JSON.stringify({ agent, model }),
+    });
+    applySession(data);
+  } catch (error) {
+    showError(friendlyFetchError(error));
+    renderModelSelectors(state.modelSelection);
+  } finally {
+    select.disabled = false;
   }
 }
 
 function renderLanes(transcript) {
+  const latestUserMessage = [...transcript].reverse().find((item) => canonicalAgent(item.sender) === "you");
   for (const [agent, lane] of Object.entries(state.lanes)) {
     const nearBottom = lane.stream.scrollHeight - lane.stream.scrollTop - lane.stream.clientHeight < 60;
     lane.stream.innerHTML = "";
     const messages = transcript.filter((item) => canonicalAgent(item.sender) === agent);
     const recent = messages.slice(-LANE_MESSAGE_LIMIT);
-    if (!recent.length && !state.streams[agent]) {
+    if (!recent.length && !state.streams[agent] && !latestUserMessage?.text) {
       const empty = document.createElement("p");
       empty.className = "lane-empty";
       empty.textContent = laneEmptyText(agent);
@@ -722,6 +894,9 @@ function renderLanes(transcript) {
       lane.stream.appendChild(meta);
       lane.stream.appendChild(messageCard(active.text, { streaming: true, timestamp: active.timestamp }));
     }
+    if (latestUserMessage?.text) {
+      lane.stream.appendChild(messageCard(latestUserMessage.text, { user: true }));
+    }
     if (nearBottom) {
       lane.stream.scrollTop = lane.stream.scrollHeight;
     }
@@ -729,12 +904,46 @@ function renderLanes(transcript) {
 }
 
 function updateLaneActivity(data) {
+  const status = String(data.status || "idle").toLowerCase();
+  const proposalOwner = canonicalAgent(data.proposal?.proposed_by || "");
   for (const [agent, lane] of Object.entries(state.lanes)) {
     const busy = Boolean(state.streams[agent]) || (data.command_running && canonicalAgent(data.next_agent) === agent);
+    const awaitingApproval = status === "awaiting_approval" && proposalOwner === agent;
+    const needsInput = (status === "blocked" || status === "awaiting_input") && canonicalAgent(data.last_agent) === agent;
     lane.statusDot.classList.toggle("offline", !state.connected);
     lane.statusDot.classList.toggle("busy", busy);
-    lane.statusLabel.textContent = state.connected ? (busy ? " Working" : " Online") : " Offline";
+    lane.pane.classList.toggle("awaiting-approval", awaitingApproval);
+    lane.pane.classList.toggle("needs-input", needsInput);
+    lane.pane.classList.toggle("is-working", busy);
+    lane.activity.classList.toggle("hidden", !busy);
+    lane.statusLabel.textContent = !state.connected
+      ? " Offline"
+      : busy
+        ? " Working"
+        : awaitingApproval
+          ? " Awaiting approval"
+          : needsInput
+            ? " Needs input"
+            : " Online";
   }
+}
+
+function previewTargetFromTranscript(transcript) {
+  for (const item of [...(transcript || [])].reverse()) {
+    const text = String(item.text || "");
+    const url = text.match(/https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?[^\s"')\]]*/i)?.[0];
+    if (url) return { target: url, label: "Open preview" };
+    const artifact = text.match(/[A-Za-z]:\\[^\n"']+?\.(?:html?|exe)\b/i)?.[0];
+    if (artifact) return { target: artifact, label: artifact.toLowerCase().endsWith(".exe") ? "Open app" : "Open HTML" };
+  }
+  return null;
+}
+
+function updatePreviewButton(data) {
+  const preview = previewTargetFromTranscript(data.transcript);
+  state.previewTarget = preview?.target || "";
+  els.previewButton.disabled = !state.previewTarget || !window.pywebview?.api?.open_preview;
+  els.previewButton.textContent = preview?.label || "Preview";
 }
 
 /* ---------- events ---------- */
@@ -858,6 +1067,7 @@ function setApprovalStatus(message, tone = "muted") {
 function setApprovalControls(disabled) {
   state.approvalSubmitting = disabled;
   els.approveButton.disabled = disabled;
+  for (const button of els.approvalBuildActions.querySelectorAll("button")) button.disabled = disabled;
   els.rejectButton.disabled = disabled;
   els.dismissButton.disabled = disabled;
   els.approvalModification.disabled = disabled;
@@ -882,11 +1092,53 @@ function updateApprovalActionState(action = "APPROVE") {
 }
 
 function proposalRawText(proposal) {
+  const candidates = Array.isArray(proposal.candidates) ? proposal.candidates : [];
+  if (candidates.length) {
+    return candidates.map((candidate) => {
+      const name = agentDisplayName(String(candidate.agent || "agent"));
+      const raw = String(candidate.raw || candidate.summary || "No detailed proposal text was included.").trim();
+      return `${name}\n${raw}${candidate.raw_truncated ? "\n\n[truncated]" : ""}`;
+    }).join("\n\n---\n\n");
+  }
   const raw = String(proposal.raw || "").trim();
   if (!raw) {
     return "No detailed proposal text was included in the session snapshot.";
   }
   return proposal.raw_truncated ? `${raw}\n\n[truncated]` : raw;
+}
+
+function proposalCandidates(proposal) {
+  const supplied = Array.isArray(proposal.candidates) ? proposal.candidates : [];
+  const candidates = supplied.length ? supplied : [{
+    agent: proposal.proposed_by,
+    summary: proposal.summary,
+    execution_estimate: proposal.execution_estimate,
+  }];
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    const agent = canonicalAgent(candidate.agent || "");
+    if (!agent || seen.has(agent)) return false;
+    seen.add(agent);
+    return true;
+  });
+}
+
+function renderBuildChoices(proposal) {
+  const candidates = proposalCandidates(proposal);
+  els.approvalBuildActions.innerHTML = "";
+  for (const candidate of candidates) {
+    const agent = canonicalAgent(candidate.agent);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "approval-button builder-action";
+    button.textContent = `Build with ${agentDisplayName(agent)}`;
+    button.title = `Approve this plan and let only ${agentDisplayName(agent)} make changes`;
+    button.disabled = state.approvalSubmitting;
+    button.addEventListener("click", () => submitApproval(`APPROVE ${agent}`));
+    button.addEventListener("focus", () => updateApprovalActionState(`APPROVE ${agent}`));
+    els.approvalBuildActions.appendChild(button);
+  }
+  els.approveButton.classList.toggle("hidden", candidates.length > 0);
 }
 
 function renderApproval(data) {
@@ -900,6 +1152,7 @@ function renderApproval(data) {
     setApprovalStatus("");
     els.approvalCommandPreview.textContent = "";
     els.approvalHelper.textContent = "";
+    els.approvalBuildActions.innerHTML = "";
     return;
   }
   const proposalId = String(proposal.id || `${proposal.proposed_by || "agent"}:${proposal.summary || ""}`);
@@ -910,54 +1163,181 @@ function renderApproval(data) {
   state.approvalActive = true;
   state.approvalProposalId = proposalId;
   const proposer = proposal.proposed_by ? agentDisplayName(proposal.proposed_by) : "Agent";
-  els.approvalMeta.textContent = `${proposer} proposal`;
-  els.approvalSummary.textContent = proposal.summary || "Review proposal";
-  els.approvalEstimate.textContent = formatExecutionEstimate(proposal.execution_estimate);
-  els.approvalHelper.textContent = `Responding to ${
-    proposal.id ? `proposal ${proposal.id}` : "the active proposal"
-  }. Modify requires a note; Dismiss closes the gate without execution.`;
+  const candidates = proposalCandidates(proposal);
+  els.approvalMeta.textContent = candidates.length > 1 ? `${candidates.length} plans ready` : `${proposer} proposal`;
+  els.approvalSummary.textContent = candidates.length > 1 ? "Choose who should build" : proposal.summary || "Review proposal";
+  els.approvalEstimate.textContent = candidates
+    .map((candidate) => `${agentDisplayName(candidate.agent)}: ${formatExecutionEstimate(candidate.execution_estimate)}`)
+    .join(" | ") || formatExecutionEstimate(proposal.execution_estimate);
+  els.approvalHelper.textContent = "Review the plans, then choose the one agent allowed to build. Modify requires a note; Dismiss closes the gate without execution.";
   els.approvalRaw.textContent = proposalRawText(proposal);
+  renderBuildChoices(proposal);
   setApprovalControls(false);
+}
+
+function latestSignalMessage(items, signal) {
+  const marker = `>>> ${signal}`;
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const text = String(items[index].text || "");
+    if (text.toUpperCase().includes(marker)) return items[index];
+  }
+  return null;
+}
+
+function firstMeaningfulLine(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith(">>>")) || "";
+}
+
+function renderAttention(data) {
+  const status = String(data.status || "").toLowerCase();
+  const signal = status === "awaiting_input" ? "QUESTION" : status === "blocked" ? "BLOCKED" : "";
+  els.attentionPanel.classList.toggle("hidden", !signal);
+  if (!signal) return;
+  const message = latestSignalMessage(data.transcript || [], signal);
+  const raw = String(message?.text || data.active_task || "No agent detail was recorded in this session snapshot.");
+  const isQuestion = signal === "QUESTION";
+  els.attentionMeta.textContent = `${agentDisplayName(message?.sender || data.next_agent || "agent")} · ${signal}`;
+  els.attentionTitle.textContent = isQuestion ? "Question needs your input" : "Work is blocked";
+  els.attentionSummary.textContent = firstMeaningfulLine(raw) || (isQuestion ? "Reply with the decision or missing detail." : "Review the blocker and provide the next direction.");
+  els.attentionRaw.textContent = raw;
+  els.attentionGuidance.textContent = isQuestion
+    ? "Reply in the composer below to continue."
+    : "Reply in the composer below with direction, a workaround, or a new task.";
 }
 
 /* ---------- left rail ---------- */
 
 function renderProjects(projects, currentProject) {
   state.currentProject = currentProject;
-  els.projectList.innerHTML = "";
-  for (const project of projects) {
+  els.railProjectsButton.title = currentProject
+    ? `Choose or manage projects. Current project: ${currentProject}`
+    : "Choose or manage projects";
+}
+
+function projectDetails(project) {
+  return state.projectCatalog.find((item) => item.name === project) || { name: project, path: "", agents: [], primary: "" };
+}
+
+function renderProjectPicker(query = "") {
+  const normalizedQuery = query.trim().toLowerCase();
+  const projects = state.projectCatalog.length ? state.projectCatalog : (state.currentProject ? [projectDetails(state.currentProject)] : []);
+  const matching = projects.filter((project) => {
+    const searchable = [project.name, project.path, ...(project.agents || [])].join(" ").toLowerCase();
+    return !normalizedQuery || searchable.includes(normalizedQuery);
+  });
+  els.projectPickerList.innerHTML = "";
+  if (!matching.length) {
+    const empty = document.createElement("p");
+    empty.className = "project-picker-empty";
+    empty.textContent = "No projects match that search.";
+    els.projectPickerList.appendChild(empty);
+    return;
+  }
+  for (const project of matching) {
+    const row = document.createElement("div");
+    row.className = "project-picker-row";
     const item = document.createElement("button");
     item.type = "button";
-    item.className = project === currentProject ? "rail-item active" : "rail-item";
-    const icon = document.createElement("span");
-    icon.className = "folder-icon";
-    const label = document.createElement("span");
-    label.textContent = project;
-    item.appendChild(icon);
-    item.appendChild(label);
-    if (project !== currentProject) {
-      item.addEventListener("click", () => switchProject(project));
-    }
-    els.projectList.appendChild(item);
+    item.className = project.name === state.currentProject ? "project-picker-item active" : "project-picker-item";
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", String(project.name === state.currentProject));
+    const title = document.createElement("strong");
+    title.textContent = project.name;
+    const path = document.createElement("span");
+    path.className = "project-picker-path";
+    path.textContent = project.path || "Path is not configured";
+    const meta = document.createElement("span");
+    meta.className = "project-picker-meta";
+    const agents = project.agents?.length ? project.agents.join(" + ") : "No agents configured";
+    meta.textContent = project.primary ? `${agents}  |  primary: ${project.primary}` : agents;
+    item.append(title, path, meta);
+    item.addEventListener("click", async () => {
+      closeProjectPicker();
+      if (project.name !== state.currentProject) await switchProject(project.name);
+    });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "project-remove-button";
+    remove.textContent = "X";
+    remove.title = project.name === state.currentProject
+      ? "Switch projects before removing this one"
+      : `Remove ${project.name} from ChatBoks`;
+    remove.setAttribute("aria-label", remove.title);
+    remove.disabled = project.name === state.currentProject;
+    remove.addEventListener("click", () => removeProject(project.name));
+    row.append(item, remove);
+    els.projectPickerList.appendChild(row);
   }
 }
 
-function renderSession(data) {
-  els.sessionList.innerHTML = "";
-  const sessions = data.session_history || [{ name: data.session || "current", age: data.context_mode || "" }];
-  for (const session of sessions) {
-    const item = document.createElement("div");
-    item.className = session.name === data.session ? "rail-item active" : "rail-item";
-    const icon = document.createElement("span");
-    icon.className = "folder-icon";
-    const label = document.createElement("span");
-    label.textContent = session.name || "current";
-    const mode = document.createElement("time");
-    mode.textContent = session.age || "";
-    item.appendChild(icon);
-    item.appendChild(label);
-    item.appendChild(mode);
-    els.sessionList.appendChild(item);
+function renderResumePrompt(data) {
+  const pending = Boolean(data.recovery_pending) && data.status === "awaiting_resume";
+  els.resumePanel.classList.toggle("hidden", !pending);
+  if (pending) {
+    els.resumeSummary.textContent = String(data.active_task || "A previous task was interrupted before it completed.");
+  }
+}
+
+async function removeProject(project) {
+  if (project === state.currentProject || !window.confirm(`Remove ${project} from ChatBoks? The project files will not be deleted.`)) return;
+  try {
+    await apiFetch("/api/projects/remove", {
+      method: "POST",
+      body: JSON.stringify({ project }),
+    });
+    state.projectCatalog = state.projectCatalog.filter((item) => item.name !== project);
+    renderProjectPicker(els.projectSearch.value);
+    renderProjects(state.projectCatalog.map((item) => item.name), state.currentProject);
+    setSendState(false, `${project} removed from ChatBoks.`);
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  }
+}
+
+function openProjectPicker() {
+  renderProjectPicker(els.projectSearch.value);
+  els.projectDialog.classList.remove("hidden");
+  els.projectSearch.focus();
+}
+
+function closeProjectPicker() {
+  els.projectDialog.classList.add("hidden");
+  els.projectSearch.value = "";
+}
+
+async function browseProjectFolder() {
+  const selectedPath = await window.pywebview?.api?.choose_project_folder?.();
+  if (selectedPath) els.projectPath.value = selectedPath;
+}
+
+async function addProject() {
+  const path = els.projectPath.value.trim();
+  if (!path) {
+    els.projectPath.focus();
+    return;
+  }
+  setConnectionBusy(els.projectAddButton, true, "Adding...");
+  try {
+    const result = await apiFetch("/api/projects", {
+      method: "POST",
+      body: JSON.stringify({ path }),
+    });
+    els.projectPath.value = "";
+    await refreshWorkbench();
+    const projects = Array.isArray(result.projects) ? result.projects : [];
+    if (projects.length === 1 && projects[0] !== state.currentProject) {
+      await switchProject(projects[0]);
+    } else if (projects.length > 1) {
+      setSendState(false, `${projects.length} projects added. Choose one from Projects.`);
+    }
+    showError("");
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  } finally {
+    setConnectionBusy(els.projectAddButton, false, "Adding...");
   }
 }
 
@@ -1083,6 +1463,15 @@ function renderGraph(graph) {
     }
     return;
   }
+  if (!graph.healthy) {
+    const status = graph.status || "unavailable";
+    els.graphHealth.textContent = status === "indexing" ? "Indexing" : status;
+    els.graphDot.classList.toggle("offline", status !== "indexing");
+    for (const el of [els.graphFiles, els.graphNodes, els.graphEdges, els.graphIndexed]) {
+      el.textContent = "-";
+    }
+    return;
+  }
   els.graphHealth.textContent = "Healthy";
   els.graphDot.classList.remove("offline");
   els.graphFiles.textContent = graph.files.toLocaleString();
@@ -1128,7 +1517,6 @@ function renderOfflineWorkbench() {
   els.topbarStatus.textContent = "Offline";
   els.topbarStatus.classList.add("muted-pill");
   els.coordState.textContent = "Offline";
-  els.terminalCaption.textContent = "bridge idle - click to focus";
 }
 
 function progressItem(label, state = "done") {
@@ -1138,24 +1526,12 @@ function progressItem(label, state = "done") {
   return item;
 }
 
-function latestTerminalSignal(trace = {}) {
-  const agentTrace = Array.isArray(trace.agent) ? trace.agent : [];
-  for (const item of agentTrace.slice().reverse()) {
-    const signal = String(item.signal || "").toUpperCase();
-    if (["TASK_COMPLETE", "BLOCKED", "QUESTION"].includes(signal)) {
-      return signal;
-    }
-  }
-  return "";
-}
-
 function renderProgress(data) {
   const expected = uniqueAgents(data.expected_agents || []);
   const completed = new Set(uniqueAgents(data.completed_agents || []));
   const nextAgent = canonicalAgent(data.next_agent || "");
   const status = String(data.status || "idle");
   const awaitingApproval = status === "awaiting_approval" && data.proposal;
-  const terminalSignal = data.command_running || awaitingApproval ? "" : latestTerminalSignal(data.trace || {});
   const rows = [];
   let done = 0;
   let total = 0;
@@ -1185,13 +1561,7 @@ function renderProgress(data) {
     rows.push(progressItem("Routing command to an agent", "active"));
   }
 
-  if (terminalSignal === "TASK_COMPLETE") {
-    rows.push(progressItem("Terminal signal: TASK COMPLETE"));
-  } else if (terminalSignal === "BLOCKED") {
-    rows.push(progressItem("Terminal signal: BLOCKED", "blocked"));
-  } else if (terminalSignal === "QUESTION") {
-    rows.push(progressItem("Terminal signal: QUESTION", "active"));
-  } else if (!rows.length) {
+  if (!rows.length) {
     rows.push(progressItem("Idle. No active task.", "pending"));
   }
 
@@ -1206,8 +1576,8 @@ function renderProgress(data) {
     return;
   }
   if (!total) {
-    els.progressCount.textContent = terminalSignal === "TASK_COMPLETE" ? "complete" : "idle";
-    els.progressPercent.textContent = terminalSignal === "TASK_COMPLETE" ? "100%" : "-";
+    els.progressCount.textContent = "idle";
+    els.progressPercent.textContent = "-";
     return;
   }
   const percent = Math.round((done * 100) / total);
@@ -1248,15 +1618,15 @@ function appendTraceText(row, className, text) {
 function renderTrace(trace = {}) {
   const agents = trace.agent || [];
   const packets = trace.packets || [];
-  const limit = state.coordExpanded ? TRACE_ROW_LIMIT : 0;
+  const limit = state.traceVisible ? TRACE_ROW_LIMIT : 0;
   els.traceAgentCount.textContent = String(agents.length);
   els.tracePacketCount.textContent = String(packets.length);
-  renderTraceList(els.traceAgentList, agents, state.coordExpanded ? "No handoffs or terminal signals yet." : "Open Logs to view handoffs and terminal signals.", (row, item) => {
+  renderTraceList(els.traceAgentList, agents, state.traceVisible ? "No handoffs or terminal signals yet." : "Open Trace to view handoffs and terminal signals.", (row, item) => {
     appendTraceText(row, "trace-kicker", agentDisplayName(String(item.agent || "unknown")));
     appendTraceText(row, "trace-title", traceSignalLabel(item));
     appendTraceText(row, "trace-summary", item.summary || `message #${item.message_id ?? "-"}`);
   }, limit);
-  renderTraceList(els.tracePacketList, packets, state.coordExpanded ? "No thought packets captured yet." : "Open Logs to view packet trace.", (row, item) => {
+  renderTraceList(els.tracePacketList, packets, state.traceVisible ? "No thought packets captured yet." : "Open Trace to view packet trace.", (row, item) => {
     appendTraceText(row, "trace-kicker", `${agentDisplayName(String(item.agent || "unknown"))} ${item.stance || ""}`.trim());
     appendTraceText(row, "trace-title", String(item.signal || "UNKNOWN").replace("_", " "));
     appendTraceText(
@@ -1270,6 +1640,8 @@ function renderTrace(trace = {}) {
 /* ---------- session apply ---------- */
 
 function applySession(data) {
+  state.projectCatalog = Array.isArray(data.project_catalog) ? data.project_catalog : [];
+  state.modelSelection = data.model_selection || {};
   els.topbarProject.textContent = data.project || "-";
   els.topbarSession.textContent = data.session || "-";
   const awaitingApproval = data.status === "awaiting_approval";
@@ -1279,13 +1651,14 @@ function applySession(data) {
   els.sessionButton.textContent = awaitingApproval ? "Approval" : data.command_running ? "Working" : "Session";
 
   state.commandRunning = Boolean(data.command_running);
+  els.stopButton.classList.toggle("hidden", !state.commandRunning);
   state.agents = deriveLaneAgents(data);
   state.directAgents = uniqueAgents(data.direct_agents || []);
   els.roleCallButton.classList.toggle("hidden", !state.directAgents.includes("coordinator"));
 
   ensureLanes(state.agents);
+  renderModelSelectors(state.modelSelection);
   renderProjects(data.projects || [], data.project || "");
-  renderSession(data);
   renderTokenBalances(data.token_usage, data.session_budget);
 
   const events = (data.events || []).filter((event) => Number(event.id || 0) > state.eventCursor);
@@ -1295,9 +1668,12 @@ function applySession(data) {
   }
 
   renderLanes(data.transcript || []);
+  updatePreviewButton(data);
   updateLaneActivity(data);
   renderCoordinator(data);
   renderApproval(data);
+  renderAttention(data);
+  renderResumePrompt(data);
   renderProgress(data);
   state.trace = data.trace || {};
   renderTrace(state.trace);
@@ -1307,10 +1683,6 @@ function applySession(data) {
   els.statNext.textContent = data.next_agent ? agentDisplayName(data.next_agent) : "-";
   els.statStatus.textContent = statusText;
   els.statStatus.classList.toggle("muted-pill", statusText !== "idle" && !data.command_running && !awaitingApproval);
-
-  els.terminalCaption.textContent = awaitingApproval
-    ? "approval needed"
-    : state.lastActivity || (state.commandRunning ? "agents working..." : "bridge idle - click to focus");
 
   if (state.commandRunning) {
     setSendState(true, "Agents working...");
@@ -1328,6 +1700,34 @@ function setSendState(sending, message) {
   els.sendButton.textContent = sending ? "Working" : "Send";
   if (message !== undefined) {
     els.sendStatus.textContent = message;
+  }
+}
+
+async function stopActiveCommand() {
+  els.stopButton.disabled = true;
+  els.stopButton.textContent = "Stopping";
+  try {
+    const data = await apiFetch("/api/command/stop", { method: "POST", body: "{}" });
+    applySession(data);
+    scheduleSessionPoll();
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  } finally {
+    els.stopButton.disabled = false;
+    els.stopButton.textContent = "Stop";
+  }
+}
+
+async function resolveRecovery(action) {
+  try {
+    const data = await apiFetch("/api/session/recovery", {
+      method: "POST",
+      body: JSON.stringify({ action }),
+    });
+    applySession(data);
+    scheduleSessionPoll();
+  } catch (error) {
+    showError(friendlyFetchError(error));
   }
 }
 
@@ -1369,8 +1769,11 @@ async function submitApproval(action) {
     return;
   }
   const command = approvalCommandFor(action);
-  const label = action === "APPROVE"
-    ? "Approval"
+  const selectedBuilder = action.match(/^APPROVE\s+(.+)$/i)?.[1];
+  const label = selectedBuilder
+    ? `Build with ${agentDisplayName(selectedBuilder)}`
+    : action === "APPROVE"
+      ? "Approval"
     : action === "REJECT"
       ? "Rejection"
       : action === "DISMISS"
@@ -1413,8 +1816,11 @@ async function switchProject(project) {
 
 /* ---------- event wiring ---------- */
 
-els.themeToggle.addEventListener("click", () => setTheme(state.theme === "dark" ? "light" : "dark"));
-els.themeToggleRail.addEventListener("click", () => setTheme(state.theme === "dark" ? "light" : "dark"));
+for (const swatch of document.querySelectorAll(".swatch")) {
+  swatch.addEventListener("click", () => setTheme(swatch.dataset.setTheme));
+}
+
+els.focusButton.addEventListener("click", () => setFocusMode(!state.focusMode));
 
 els.connectionToggle.addEventListener("click", () => {
   setConnectionPanel(els.connectionPanel.classList.contains("hidden"));
@@ -1504,9 +1910,41 @@ els.newTaskButton.addEventListener("click", () => {
   els.workbenchPrompt.select();
 });
 
-els.terminalFocus.addEventListener("click", () => {
-  els.terminalFocus.classList.add("is-focused");
-  els.workbenchPrompt.focus();
+els.projectButton.addEventListener("click", openProjectPicker);
+els.railProjectsButton.addEventListener("click", openProjectPicker);
+els.stopButton.addEventListener("click", stopActiveCommand);
+els.resumeButton.addEventListener("click", () => resolveRecovery("continue"));
+els.endTaskButton.addEventListener("click", () => resolveRecovery("end"));
+els.projectDialogClose.addEventListener("click", closeProjectPicker);
+els.projectDialogBackdrop.addEventListener("click", closeProjectPicker);
+els.projectSearch.addEventListener("input", () => renderProjectPicker(els.projectSearch.value));
+els.projectBrowseButton.addEventListener("click", () => browseProjectFolder().catch((error) => showError(friendlyFetchError(error))));
+els.projectAddButton.addEventListener("click", addProject);
+els.projectPath.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") addProject();
+});
+els.systemDrawerButton.addEventListener("click", () => {
+  state.systemDrawerOpen = !state.systemDrawerOpen;
+  syncSystemPanels();
+});
+els.claudeUpdateButton.addEventListener("click", updateClaude);
+document.addEventListener("keydown", (event) => {
+  // Escape unwinds one layer at a time, outermost first, so leaving focus
+  // mode never also closes the picker or the drawer in the same keypress.
+  if (event.key === "Escape") {
+    if (!els.projectDialog.classList.contains("hidden")) {
+      closeProjectPicker();
+    } else if (state.systemDrawerOpen) {
+      state.systemDrawerOpen = false;
+      syncSystemPanels();
+    } else if (state.focusMode) {
+      setFocusMode(false);
+    }
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p") {
+    event.preventDefault();
+    openProjectPicker();
+  }
 });
 
 els.roleCallButton.addEventListener("click", () => sendPrompt("@coordinator role call"));
@@ -1528,22 +1966,134 @@ els.logsButton.addEventListener("click", () => {
   renderCoordinator({ command_running: state.commandRunning, command_text: "" });
   renderTrace(state.trace);
 });
+els.systemDetailsButton.addEventListener("click", () => {
+  state.systemDetailsVisible = !state.systemDetailsVisible;
+  syncSystemPanels();
+});
+els.traceButton.addEventListener("click", () => {
+  state.traceVisible = !state.traceVisible;
+  syncSystemPanels();
+  renderTrace(state.trace);
+});
 
 els.liveButton.addEventListener("click", () => {
   refreshSession().catch(() => {});
   refreshWorkbench().catch(() => {});
 });
 
+els.previewButton.addEventListener("click", async () => {
+  if (!state.previewTarget) return;
+  try {
+    await window.pywebview.api.open_preview(state.previewTarget);
+    setSendState(false, "Preview opened.");
+  } catch (error) {
+    showError(error?.message || "Could not open the preview.");
+  }
+});
+
 /* ---------- boot ---------- */
 
-document.documentElement.dir = "ltr";
-loadSettings();
-setTheme(state.theme);
-if (state.token) {
-  setConnectionState("Saved session token found. Verifying bridge connection...", "muted");
-  connect().catch(() => setConnectionPanel(true));
+let workbenchStarted = false;
+const desktopMode = new URLSearchParams(window.location.search).has("desktop");
+
+function syncSystemPanels() {
+  els.systemDrawer.classList.toggle("hidden", !state.systemDrawerOpen);
+  els.systemDrawerButton.setAttribute("aria-expanded", String(state.systemDrawerOpen));
+  els.systemDrawerButton.classList.toggle("is-active", state.systemDrawerOpen);
+  els.systemDetails.classList.toggle("hidden", !state.systemDetailsVisible);
+  els.tracePanel.classList.toggle("hidden", !state.traceVisible);
+  els.systemDetailsButton.setAttribute("aria-expanded", String(state.systemDetailsVisible));
+  els.traceButton.setAttribute("aria-expanded", String(state.traceVisible));
+  els.systemDetailsButton.textContent = state.systemDetailsVisible ? "Details" : "Show details";
+  els.traceButton.textContent = state.traceVisible ? "Hide trace" : "Trace";
+}
+
+async function startWorkbench() {
+  if (workbenchStarted) return;
+  workbenchStarted = true;
+  document.documentElement.dir = "ltr";
+  loadSettings();
+  try {
+    const bootstrap = await window.pywebview?.api?.bootstrap?.();
+    if (bootstrap?.bridgeUrl && bootstrap?.sessionToken) {
+      state.bridgeUrl = bootstrap.bridgeUrl;
+      state.token = bootstrap.sessionToken;
+      els.bridgeUrl.value = state.bridgeUrl;
+      els.token.value = state.token;
+      saveSettings();
+    } else if (desktopMode) {
+      throw new Error("Desktop session was not supplied by the native app.");
+    }
+  } catch (error) {
+    if (desktopMode) {
+      renderOfflineWorkbench();
+      setConnectionPanel(true);
+      setConnectionState("Desktop session could not start.", "error");
+      showError(error.message || "Desktop session could not start.");
+      return;
+    }
+    // Browser and mobile clients continue through the explicit pairing flow.
+  }
+  setTheme(state.theme);
+  setFocusMode(state.focusMode);
+  if (state.token) {
+    setConnectionState("Connecting to local Workbench...", "muted");
+    connect().catch(() => setConnectionPanel(true));
+  } else {
+    renderOfflineWorkbench();
+    setConnectionPanel(false);
+    setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
+  }
+}
+
+async function updateClaude() {
+  setConnectionBusy(els.claudeUpdateButton, true, "Updating...");
+  try {
+    await apiFetch("/api/claude/update", { method: "POST", body: "{}" });
+    setSendState(false, "Claude update started. It will finish in the background.");
+    showError("");
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  } finally {
+    setConnectionBusy(els.claudeUpdateButton, false, "Updating...");
+  }
+}
+
+async function startClaudeLogin() {
+  try {
+    await apiFetch("/api/claude/login", { method: "POST", body: "{}" });
+    setSendState(false, "Claude sign-in opened in your browser. Finish there, then send a new task.");
+    showError("");
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  }
+}
+
+async function updateCodex() {
+  const laneButton = state.lanes.codex?.pane.querySelector(".claude-auth-button");
+  if (laneButton) setConnectionBusy(laneButton, true, "Updating...");
+  try {
+    await apiFetch("/api/codex/update", { method: "POST", body: "{}" });
+    setSendState(false, "Codex update started. It will finish in the background.");
+    showError("");
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  } finally {
+    if (laneButton) setConnectionBusy(laneButton, false, "Updating...");
+  }
+}
+
+syncSystemPanels();
+if (desktopMode) {
+  window.addEventListener("pywebviewready", startWorkbench, { once: true });
+  window.setTimeout(() => {
+    if (!workbenchStarted) {
+      renderOfflineWorkbench();
+      setConnectionPanel(true);
+      setConnectionState("Waiting for the desktop session timed out.", "error");
+      showError("ChatBoks could not connect its desktop session. Close and reopen the app.");
+    }
+  }, 3000);
 } else {
-  renderOfflineWorkbench();
-  setConnectionPanel(false);
-  setConnectionState("No session token saved. Pair with a fresh desktop code.", "muted");
+  window.setTimeout(startWorkbench, 0);
 }

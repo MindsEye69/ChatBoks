@@ -15,6 +15,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -224,6 +225,18 @@ class Chatboks:
         self._internal_write = False
         self.input_buffer: list[str] = []
         self._streamed_agent_responses: dict[str, str] = {}
+        self._stop_requested = threading.Event()
+        self._streaming_token_buffers: dict[str, str] = {}
+        self._streaming_token_counts: dict[str, int] = {}
+        self._last_streaming_token_save_at: dict[str, float] = {}
+
+    def request_stop(self) -> None:
+        if not hasattr(self, "_stop_requested"):
+            self._stop_requested = threading.Event()
+        self._stop_requested.set()
+
+    def stop_requested(self) -> bool:
+        return bool(getattr(self, "_stop_requested", None) and self._stop_requested.is_set())
 
     def start(self, watch: bool = False, once: bool = False) -> None:
         self.ensure_project_files()
@@ -300,6 +313,9 @@ class Chatboks:
             observer.join()
 
     def handle_user_input(self, text: str) -> None:
+        if not hasattr(self, "_stop_requested"):
+            self._stop_requested = threading.Event()
+        self._stop_requested.clear()
         if self.handle_local_command(text):
             return
         if not self.ensure_session_token_budget():
@@ -2979,7 +2995,7 @@ class Chatboks:
         max_rounds = int(self.config.get("rounds", {}).get("max_before_escalate", 3))
 
         for _ in range(max_rounds):
-            pending_proposal: tuple[str, str] | None = None
+            pending_proposals: list[tuple[str, str]] = []
             completed_agent: str | None = None
             self.state["round"] = int(self.state.get("round", 0)) + 1
             self.state["round_intent"] = intent
@@ -3009,8 +3025,7 @@ class Chatboks:
                 self.update_state({"last_agent": agent_name, "next_agent": next_agent})
 
                 if signal == "PROPOSAL":
-                    if pending_proposal is None:
-                        pending_proposal = (response, agent_name)
+                    pending_proposals.append((response, agent_name))
                     continue
                 if signal == "QUESTION":
                     self.handle_question(response)
@@ -3053,26 +3068,14 @@ class Chatboks:
                     self.update_state({"handoff_depth": 0})
                     return
                 if signal == "BLOCKED":
-                    if completed_agent is not None:
-                        self.stream.system(
-                            f"{agent_name} blocked after {completed_agent} completed the task; treating as a warning."
-                        )
-                        if not is_last_agent:
-                            continue
-                        self.maybe_announce_direct_standby_agents(initiator, active_agents)
-                        self.stream.system("Task complete. Awaiting next instruction.")
-                        self.update_state({"status": "idle", "active_task": None, "confirmation": None})
-                        self.update_state({"handoff_depth": 0})
-                        return
-                    if not is_last_agent:
-                        self.stream.system(f"{agent_name} blocked. Continuing to {next_agent}.")
-                        continue
                     self.stream.system("Agent blocked. Your input needed.")
                     self.update_state({"status": "blocked", "next_agent": "you"})
                     return
 
-            if pending_proposal:
-                self.handle_proposal(*pending_proposal)
+            if pending_proposals:
+                response, proposed_by = pending_proposals[0]
+                self.handle_proposal(response, proposed_by, candidates=pending_proposals)
+                self.stream.system("Planning round complete. Choose which agent should build the approved change.")
                 return
 
             if self.all_expected_agents_completed():
@@ -3130,12 +3133,33 @@ class Chatboks:
             "or needed as a fallback."
         )
 
-    def handle_proposal(self, response: str, proposed_by: str) -> None:
+    def handle_proposal(
+        self,
+        response: str,
+        proposed_by: str,
+        candidates: list[tuple[str, str]] | None = None,
+    ) -> None:
+        proposal_candidates = []
+        seen_agents: set[str] = set()
+        for candidate_response, candidate_agent in candidates or [(response, proposed_by)]:
+            agent_name = str(candidate_agent).strip().lower()
+            if not agent_name or agent_name in seen_agents:
+                continue
+            seen_agents.add(agent_name)
+            proposal_candidates.append(
+                {
+                    "agent": agent_name,
+                    "summary": self.extract_first_line(candidate_response),
+                    "raw": candidate_response,
+                    "execution_estimate": self.estimate_execution_cost(agent_name),
+                }
+            )
         proposal = {
             "id": f"prop_{int(time.time())}",
             "summary": self.extract_first_line(response),
             "raw": response,
             "proposed_by": proposed_by,
+            "candidates": proposal_candidates,
             "endorsed_by": [],
             "challenged_by": [],
         }
@@ -3146,10 +3170,13 @@ class Chatboks:
                 "proposal": proposal,
             }
         )
-        estimate = self.estimate_execution_cost()
+        estimate = next(
+            (item["execution_estimate"] for item in proposal_candidates if item["agent"] == proposed_by),
+            self.estimate_execution_cost(proposed_by),
+        )
         proposal["execution_estimate"] = estimate
         self.stream.proposal(self.format_proposal_gate(proposal, estimate))
-        self.stream.system("Type APPROVE, MODIFY, or REJECT.")
+        self.stream.system("Choose a builder, MODIFY the proposal, REJECT it, or dismiss the gate.")
 
     def handle_question(self, response: str) -> None:
         self.update_state({"status": "awaiting_input", "next_agent": "you"})
@@ -3160,12 +3187,17 @@ class Chatboks:
             self.handle_handoff()
 
     def handle_approval(self, text: str) -> None:
-        verdict = text.strip().upper()
+        parts = text.strip().split(maxsplit=1)
+        verdict = parts[0].upper() if parts else ""
+        requested_builder = parts[1].strip().lower().replace("-", "_").replace(" ", "_") if len(parts) > 1 else ""
 
         if verdict in {"APPROVE", "YES", "Y", "OK", "GO"}:
-            self.stream.system("Approved. Executing...")
-            self.update_state({"status": "executing", "next_agent": self.router.primary()})
-            self.execute_proposal()
+            builder = self.resolve_proposal_builder(requested_builder)
+            if not builder:
+                return
+            self.stream.system(f"Approved. {builder} is executing...")
+            self.update_state({"status": "executing", "next_agent": builder})
+            self.execute_proposal(builder)
         elif verdict == "REJECT":
             self.stream.system("Rejected. Agents notified.")
             self.append_message("you", "Proposal rejected. Please revise.")
@@ -3177,18 +3209,38 @@ class Chatboks:
             self.update_state(
                 {
                     "status": "active",
+                    "proposal": None,
                     "round_intent": "revise",
                     "active_task": f"Revise the current proposal using this modification: {modification}",
                 }
             )
             self.run_agent_round(initiator=modification, intent="revise")
 
-    def execute_proposal(self) -> None:
+    def resolve_proposal_builder(self, requested_builder: str = "") -> str | None:
+        proposal = self.state.get("proposal") or {}
+        candidates = proposal.get("candidates") if isinstance(proposal, dict) else []
+        if not isinstance(candidates, list):
+            candidates = []
+        allowed = [
+            str(item.get("agent") or "").strip().lower()
+            for item in candidates
+            if isinstance(item, dict) and str(item.get("agent") or "").strip()
+        ]
+        if not allowed:
+            proposed_by = str(proposal.get("proposed_by") or "").strip().lower()
+            allowed = [proposed_by] if proposed_by else [self.router.primary()]
+        builder = requested_builder or self.router.primary()
+        if builder not in allowed:
+            self.stream.system(f"Choose one of the agents that proposed this work: {', '.join(allowed)}.")
+            return None
+        return builder
+
+    def execute_proposal(self, requested_builder: str | None = None) -> None:
         if not self.ensure_session_token_budget():
             self.update_state({"status": "blocked", "next_agent": "you"})
             return
-        lead = self.router.primary()
-        agents = self.resolve_available_agents([lead], exclusive_agent=None)
+        lead = requested_builder or self.router.primary()
+        agents = self.resolve_available_agents([lead], exclusive_agent=lead)
         if not agents:
             self.update_state({"status": "blocked", "next_agent": "you"})
             return
@@ -3203,8 +3255,8 @@ class Chatboks:
             }
         )
 
-    def estimate_execution_cost(self) -> dict[str, Any]:
-        lead = self.estimate_execution_target()
+    def estimate_execution_cost(self, requested_builder: str | None = None) -> dict[str, Any]:
+        lead = self.estimate_execution_target(requested_builder)
         if not lead:
             return {
                 "agent": None,
@@ -3235,12 +3287,12 @@ class Chatboks:
             "cost_configured": total_cost is not None,
         }
 
-    def estimate_execution_target(self) -> str | None:
-        lead = self.router.primary()
+    def estimate_execution_target(self, requested_builder: str | None = None) -> str | None:
+        lead = requested_builder or self.router.primary()
         statuses = self.load_agent_statuses()
         if self.agent_is_available(lead, statuses):
             return lead
-        return self.find_agent_fallback(lead, statuses, []) or None
+        return None if requested_builder else self.find_agent_fallback(lead, statuses, []) or None
 
     def estimate_execution_output_tokens(self, agent_name: str, input_tokens: int) -> int:
         agent_config = self.config.get("agents", {}).get(agent_name, {})
@@ -3305,6 +3357,8 @@ class Chatboks:
         return str(value)
 
     def call_agent_with_token_recovery(self, agent_name: str, mode: str) -> str:
+        if self.stop_requested():
+            return "Work stopped by the user.\n>>> BLOCKED"
         context_config = self.config.get("context", {})
         retries = int(context_config.get("max_token_recovery_retries", 2))
         timeout_retries = int(context_config.get("max_timeout_recovery_retries", 1))
@@ -3325,6 +3379,7 @@ class Chatboks:
                     self.stream.agent_output_start(agent_name, mode)
                 streamed_output_parts.append(chunk)
                 self.stream.agent_output_delta(agent_name, chunk)
+                self.record_streaming_token_count(agent_name, chunk)
 
             if hasattr(agent, "stdout_callback"):
                 agent.stdout_callback = stream_stdout_chunk
@@ -3334,6 +3389,8 @@ class Chatboks:
                     response = agent.execute(context_pkg)
                 else:
                     response = agent.call(context_pkg)
+                if self.stop_requested():
+                    return "Work stopped by the user.\n>>> BLOCKED"
                 if streamed_output_parts and response.strip() == "".join(streamed_output_parts).strip():
                     if not hasattr(self, "_streamed_agent_responses"):
                         self._streamed_agent_responses = {}
@@ -3693,11 +3750,50 @@ class Chatboks:
         return cleaned[: limit - 3] + "..."
 
     def update_token_count(self, agent_name: str, response: str) -> None:
-        tokens = max(1, len(response) // 4)
+        if not hasattr(self, "_streaming_token_buffers"):
+            self._streaming_token_buffers = {}
+            self._streaming_token_counts = {}
+            self._last_streaming_token_save_at = {}
+        self.flush_streaming_token_count(agent_name)
+        estimated_total = max(1, len(response) // 4)
+        streamed_tokens = self._streaming_token_counts.pop(agent_name, 0)
+        self._streaming_token_buffers.pop(agent_name, None)
+        self._last_streaming_token_save_at.pop(agent_name, None)
+        tokens = max(0, estimated_total - streamed_tokens)
         counts = self.state["context"].setdefault("token_counts", {})
-        counts[agent_name] = counts.get(agent_name, 0) + tokens
+        if tokens:
+            counts[agent_name] = counts.get(agent_name, 0) + tokens
         self.save_state()
         self.ensure_session_token_budget()
+        self.refresh_token_usage_display()
+
+    def record_streaming_token_count(self, agent_name: str, chunk: str) -> None:
+        """Persist coarse output-token estimates while the CLI is still streaming."""
+        if not chunk:
+            return
+        if not hasattr(self, "_streaming_token_buffers"):
+            self._streaming_token_buffers = {}
+            self._streaming_token_counts = {}
+            self._last_streaming_token_save_at = {}
+        pending = self._streaming_token_buffers.get(agent_name, "") + chunk
+        self._streaming_token_buffers[agent_name] = pending
+        last_save = self._last_streaming_token_save_at.get(agent_name, 0.0)
+        if len(pending) >= 64 or time.monotonic() - last_save >= 0.35:
+            self.flush_streaming_token_count(agent_name)
+
+    def flush_streaming_token_count(self, agent_name: str) -> None:
+        if not hasattr(self, "_streaming_token_buffers"):
+            return
+        pending = self._streaming_token_buffers.get(agent_name, "")
+        tokens = len(pending) // 4
+        if tokens <= 0:
+            return
+        self._streaming_token_buffers[agent_name] = pending[tokens * 4 :]
+        self._streaming_token_counts[agent_name] = self._streaming_token_counts.get(agent_name, 0) + tokens
+        counts = self.state["context"].setdefault("token_counts", {})
+        counts[agent_name] = counts.get(agent_name, 0) + tokens
+        self._last_streaming_token_save_at[agent_name] = time.monotonic()
+        self.save_state()
         self.refresh_token_usage_display()
 
     def refresh_token_usage_display(self) -> None:

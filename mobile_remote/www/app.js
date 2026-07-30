@@ -52,6 +52,12 @@ const els = {
   approve: document.getElementById("approveButton"),
   modify: document.getElementById("modifyButton"),
   reject: document.getElementById("rejectButton"),
+  attentionPanel: document.getElementById("attentionPanel"),
+  attentionTitle: document.getElementById("attentionTitle"),
+  attentionMeta: document.getElementById("attentionMeta"),
+  attentionSummary: document.getElementById("attentionSummary"),
+  attentionRaw: document.getElementById("attentionRaw"),
+  attentionGuidance: document.getElementById("attentionGuidance"),
   prompt: document.getElementById("promptInput"),
   transcript: document.getElementById("transcriptList"),
   transcriptPanel: document.getElementById("transcriptPanel"),
@@ -798,6 +804,43 @@ function renderApproval(data) {
   setApprovalControls(false);
 }
 
+function latestSignalMessage(items, signal) {
+  const marker = `>>> ${signal}`;
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const text = String(items[index].text || "");
+    if (text.toUpperCase().includes(marker)) {
+      return items[index];
+    }
+  }
+  return null;
+}
+
+function firstMeaningfulLine(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith(">>>")) || "";
+}
+
+function renderAttention(data, transcript) {
+  const status = String(data.status || "").toLowerCase();
+  const signal = status === "awaiting_input" ? "QUESTION" : status === "blocked" ? "BLOCKED" : "";
+  const message = signal ? latestSignalMessage(transcript, signal) : null;
+  els.attentionPanel.classList.toggle("hidden", !signal);
+  if (!signal) {
+    return;
+  }
+  const isQuestion = signal === "QUESTION";
+  const raw = String(message?.text || data.active_task || "No agent detail was recorded in this session snapshot.");
+  els.attentionTitle.textContent = isQuestion ? "Question needs your input" : "Work is blocked";
+  els.attentionMeta.textContent = `${agentDisplayName(message?.sender || data.next_agent || "agent")} · ${signal}`;
+  els.attentionSummary.textContent = firstMeaningfulLine(raw) || (isQuestion ? "Reply with the decision or missing detail." : "Review the blocker and provide the next direction.");
+  els.attentionRaw.textContent = raw;
+  els.attentionGuidance.textContent = isQuestion
+    ? "Reply in the composer below to continue."
+    : "Reply in the composer below with direction, a workaround, or a new task.";
+}
+
 function scrollLatestResponseIntoView() {
   els.latestResponse.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -846,6 +889,7 @@ function applySession(data, { scrollLatest = false } = {}) {
   renderApproval(data);
   renderTrace(data.trace || {});
   const transcript = data.transcript || [];
+  renderAttention(data, transcript);
   const responseItems = criteriaGateResponseItems(data);
   renderLatestResponse(responseItems.length ? responseItems : transcript);
   renderList(els.transcript, visibleTranscript(transcript));

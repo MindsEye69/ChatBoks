@@ -6,6 +6,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from types import SimpleNamespace
 
 from remote_control import (
     MAX_JSON_BODY_BYTES,
@@ -68,6 +69,9 @@ class FakeSession:
 
     def available_projects(self) -> list[str]:
         return self.projects
+
+    def project_catalog(self) -> list[dict[str, object]]:
+        return [{"name": project, "path": "", "agents": [], "direct_agents": [], "primary": ""} for project in self.projects]
 
     def switch_project(self, project: str) -> dict[str, object]:
         if project not in self.projects:
@@ -458,12 +462,102 @@ def test_remote_bridge_lists_projects_for_authorized_client():
         )
         with urllib.request.urlopen(request, timeout=5) as response:
             payload = json.loads(response.read().decode("utf-8"))
-        assert payload == {"project": "chatboks", "projects": ["biosassist", "chatboks"]}
+        assert payload == {
+            "project": "chatboks",
+            "projects": ["biosassist", "chatboks"],
+            "project_catalog": [
+                {"name": "biosassist", "path": "", "agents": [], "direct_agents": [], "primary": ""},
+                {"name": "chatboks", "path": "", "agents": [], "direct_agents": [], "primary": ""},
+            ],
+        }
     finally:
         server.shutdown()
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge lists projects for authorized clients")
+
+
+def test_remote_session_project_catalog_exposes_only_picker_metadata():
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = SimpleNamespace(
+        config={
+            "projects": {
+                "chatboks": {
+                    "path": "C:/work/chatboks",
+                    "agents": ["claude", "codex"],
+                    "direct_agents": ["coordinator"],
+                    "primary": "codex",
+                    "secret": "must not leave config",
+                }
+            }
+        }
+    )
+
+    assert session.project_catalog() == [
+        {
+            "name": "chatboks",
+            "path": "C:/work/chatboks",
+            "agents": ["claude", "codex"],
+            "direct_agents": ["coordinator"],
+            "primary": "codex",
+        }
+    ]
+    print("PASS: project catalog exposes safe metadata for graphical pickers")
+
+
+def test_remote_session_register_project_persists_a_local_folder(tmp_path: Path):
+    import yaml
+
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("projects: {}\nagents:\n  claude: {}\n  codex: {}\n", encoding="utf-8")
+    project_path = tmp_path / "My Projects"
+    project_path.mkdir()
+    first_project = project_path / "First Project"
+    first_project.mkdir()
+    (first_project / ".git").mkdir()
+    second_project = project_path / "Second Project"
+    second_project.mkdir()
+    (second_project / "package.json").write_text("{}", encoding="utf-8")
+    session = RemoteSession.__new__(RemoteSession)
+    session.lock = threading.RLock()
+    session.config_path = config_path
+    session.app = SimpleNamespace(config=yaml.safe_load(config_path.read_text(encoding="utf-8")))
+
+    created = session.register_project(str(project_path))
+    duplicate = session.register_project(str(project_path))
+    stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+    assert created == {"projects": ["first-project", "second-project"], "created": ["first-project", "second-project"], "existing": []}
+    assert duplicate == {"projects": ["first-project", "second-project"], "created": [], "existing": ["first-project", "second-project"]}
+    assert stored["projects"]["first-project"]["path"] == str(first_project.resolve())
+    assert stored["projects"]["second-project"]["agents"] == ["claude", "codex"]
+    print("PASS: project picker imports a local project folder without duplicate entries")
+
+
+def test_remote_session_remove_project_updates_only_the_registry(tmp_path: Path):
+    import yaml
+
+    config_path = tmp_path / "config.yaml"
+    project_path = tmp_path / "Removable"
+    project_path.mkdir()
+    config_path.write_text(
+        "projects:\n  active:\n    path: .\n  removable:\n    path: " + str(project_path) + "\nagents: {}\n",
+        encoding="utf-8",
+    )
+    session = RemoteSession.__new__(RemoteSession)
+    session.lock = threading.RLock()
+    session.config_path = config_path
+    session.project = "active"
+    session._command_thread = None
+    session.app = SimpleNamespace(config=yaml.safe_load(config_path.read_text(encoding="utf-8")))
+
+    result = session.remove_project("removable")
+    stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+    assert result == {"removed": "removable", "projects": ["active"]}
+    assert "removable" not in stored["projects"]
+    assert project_path.is_dir()
+    print("PASS: project removal only changes the ChatBoks registry")
 
 
 def test_remote_bridge_switches_project_for_authorized_client():
@@ -536,6 +630,10 @@ def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):
         "raw": "Ship the remote polish\n>>> PROPOSAL",
         "proposed_by": "codex",
         "execution_estimate": {"total_tokens": 1200},
+        "candidates": [
+            {"agent": "claude", "summary": "Review the architecture", "raw": "Claude plan"},
+            {"agent": "codex", "summary": "Implement the change", "raw": "Codex plan"},
+        ],
     }
     session.app = app
 
@@ -545,6 +643,8 @@ def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):
     assert payload["proposal"]["summary"] == "Ship the remote polish"
     assert payload["proposal"]["proposed_by"] == "codex"
     assert payload["proposal"]["execution_estimate"] == {"total_tokens": 1200}
+    assert [candidate["agent"] for candidate in payload["proposal"]["candidates"]] == ["claude", "codex"]
+    assert payload["proposal"]["candidates"][1]["raw"] == "Codex plan"
     print("PASS: remote session snapshots include compact proposal metadata")
 
 
@@ -1097,6 +1197,52 @@ def test_codegraph_stats_reads_counts_from_database(tmp_path: Path):
     assert stats["edges"] == 1
     assert stats["last_indexed"]
     print("PASS: codegraph stats read counts from the index database")
+
+
+def test_find_codegraph_command_uses_npm_bin_when_path_is_missing(tmp_path: Path):
+    import remote_control as remote
+    from unittest.mock import patch
+
+    npm_bin = tmp_path / "npm"
+    npm_bin.mkdir()
+    command = npm_bin / "codegraph.cmd"
+    command.write_text("@echo off\n", encoding="utf-8")
+
+    with patch.object(remote.shutil, "which", return_value=None), patch.dict(remote.os.environ, {"APPDATA": str(tmp_path)}):
+        assert remote.find_codegraph_command() == str(command)
+    print("PASS: CodeGraph lookup finds npm's global command outside PATH")
+
+
+def test_register_project_path_disables_codegraph_by_default(tmp_path: Path):
+    projects: dict[str, object] = {}
+
+    name, created = RemoteSession.register_project_path(projects, tmp_path / "NewProject", ["codex"])
+
+    assert created is True
+    assert projects[name]["codegraph"] is False
+    print("PASS: new projects do not start CodeGraph automatically")
+
+
+def test_configure_active_codegraph_skips_disabled_project(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.lock = threading.RLock()
+    session.app = SimpleNamespace(
+        project="no-graph",
+        proj_path=str(tmp_path),
+        proj_config={"codegraph": False},
+    )
+    session._codegraph_process = None
+    session._codegraph_project = None
+    session._codegraph_generation = 0
+    session._codegraph_state = {"status": "idle", "enabled": False}
+    session._workbench_cache = (1.0, {"graph": {"status": "indexing"}})
+
+    session.configure_active_codegraph()
+
+    assert session._codegraph_process is None
+    assert session._codegraph_state == {"status": "disabled", "enabled": False, "project": "no-graph"}
+    assert session._workbench_cache is None
+    print("PASS: disabled projects do not launch CodeGraph")
 
 
 def test_rotate_pair_code_helper_uses_operator_file(tmp_path: Path, capsys):

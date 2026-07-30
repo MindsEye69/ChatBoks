@@ -86,6 +86,15 @@ class Router:
         """
         stripped = text.lstrip()
         if not stripped.startswith("@"):
+            addressed = self.addressed_agent(stripped)
+            if addressed is not None:
+                return RoutingDecision(
+                    [addressed],
+                    text,
+                    addressed,
+                    note=f"Direct question routed to {addressed.title()}.",
+                    strategy="addressed_agent",
+                )
             auto = self.auto_route_prompt(text, collaboration_mode)
             if auto is not None:
                 return auto
@@ -115,6 +124,15 @@ class Router:
 
         cleaned = remainder.strip() or text
         return RoutingDecision([agent_name], cleaned, agent_name, strategy="explicit_agent")
+
+    def addressed_agent(self, text: str) -> str | None:
+        """Recognize a leading agent name such as 'Claude, are you there?' as direct."""
+        lowered = text.lower()
+        for agent_name in [*self.agent_names, *self.direct_agent_names]:
+            normalized = agent_name.replace("_", " ")
+            if lowered == normalized or lowered.startswith(f"{normalized} ") or lowered.startswith(f"{normalized},") or lowered.startswith(f"{normalized}:"):
+                return agent_name
+        return None
 
     def normal_round_agents(self, collaboration_mode: str | None = None) -> list[str]:
         role = str(collaboration_mode or "").strip().lower()
