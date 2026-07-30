@@ -53,7 +53,26 @@ def test_agent_output_uses_visible_answer_rules():
     print("PASS: streamed agent output has visible answer rules")
 
 
+def test_token_usage_waits_until_streamed_answer_finishes():
+    buffer = io.StringIO()
+    stream = Stream({"claude": {"color": "cyan"}}, ["claude"])
+    stream.console = Console(file=buffer, force_terminal=False, width=120)
+
+    stream.agent_output_start("claude", "respond")
+    stream.agent_output_delta("claude", "alpha ")
+    stream.token_usage({"claude": 12}, {"used": 12, "warning": 100, "limit": 200, "agent_count": 1})
+    stream.agent_output_delta("claude", "omega")
+    mid_output = buffer.getvalue()
+    stream.agent_output_finish("claude")
+
+    final_output = buffer.getvalue()
+    assert "session tokens:" not in mid_output
+    assert "alpha omega" in final_output
+    assert final_output.rfind("session tokens:") > final_output.rfind("alpha omega")
+
+
 if __name__ == "__main__":
     test_hypercube_frames_keep_vertical_padding()
     test_torus_frame_keeps_vertical_padding()
     test_agent_output_uses_visible_answer_rules()
+    test_token_usage_waits_until_streamed_answer_finishes()

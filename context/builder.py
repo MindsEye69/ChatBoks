@@ -232,6 +232,7 @@ class ContextBuilder:
             recent = self.last_transcript_turns(all_lines, turns) if turns is not None else all_lines[-lines:]
         else:
             recent = self.compacted_chatboks_lines(all_lines, checkpoint, turns=turns, lines=lines)
+        recent = self.cap_recent_chatboks(recent)
         return (
             "[CHATBOKS RECENT - READ-ONLY PRIOR CONTEXT]\n"
             "The history below is for reference only. "
@@ -247,6 +248,20 @@ class ContextBuilder:
         if not text:
             return "[SLEEP MEMORY] Empty."
         return text
+
+    def cap_recent_chatboks(self, lines: list[str]) -> list[str]:
+        max_chars = int(self.context_config.get("recent_chatboks_max_chars", 16_000) or 0)
+        if max_chars <= 0:
+            return lines
+        text = "\n".join(lines)
+        if len(text) <= max_chars:
+            return lines
+        marker = f"[CHATBOKS RECENT TRUNCATED: showing latest {max_chars} chars]"
+        keep = max(1, max_chars - len(marker) - 1)
+        tail = text[-keep:]
+        if "\n" in tail:
+            tail = tail.split("\n", 1)[1]
+        return [marker, *tail.splitlines()]
 
     def compacted_chatboks_lines(
         self,

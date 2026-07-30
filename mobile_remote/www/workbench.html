@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatBoks Workbench</title>
   <link rel="icon" type="image/png" href="./assets/chatboks-cube.png">
-  <link rel="stylesheet" href="./workbench.css">
+  <link rel="stylesheet" href="./workbench.css?v=20260730-current-task-lanes">
 </head>
 <body>
   <div class="workbench-shell">
@@ -75,9 +75,14 @@
           <span id="stripRam">RAM --</span>
         </div>
       </footer>
+
+      <section class="active-prompt-card" aria-labelledby="activePromptTitle">
+        <div id="activePromptTitle" class="section-label">Active Prompt</div>
+        <div id="activePromptText" class="active-prompt-text" tabindex="0">No active prompt.</div>
+      </section>
     </aside>
 
-    <main class="work-area">
+    <main id="workArea" class="work-area">
 
       <!-- Round state, promoted out of the coordinator drawer so the thing
            the whole session turns on is always on screen. -->
@@ -186,10 +191,14 @@
         </div>
       </section>
 
-      <section class="composer-card" aria-label="Prompt composer">
+      <section id="composerCard" class="composer-card" aria-label="Prompt composer">
+        <button id="composerExpandButton" class="composer-expand-handle" type="button" aria-expanded="false"
+                aria-label="Expand prompt composer" title="Expand prompt composer">
+          <span aria-hidden="true">⌃</span>
+        </button>
         <div class="composer-input">
           <label for="workbenchPrompt">YOU &gt;</label>
-          <textarea id="workbenchPrompt" rows="2" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
+          <textarea id="workbenchPrompt" rows="5" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
         </div>
         <div class="composer-toolbar">
           <button class="ghost-button" type="button">Upload</button>
@@ -323,6 +332,6 @@
     </section>
   </div>
 
-  <script src="./workbench.js"></script>
+  <script src="./workbench.js?v=20260730-current-task-lanes"></script>
 </body>
 </html>

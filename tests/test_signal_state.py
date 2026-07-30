@@ -218,6 +218,81 @@ def test_agent_criteria_pending_approval_restarts_routed_round():
         app.start_routed_agent_round.assert_called_once_with("Original task", ["codex"], None)
 
 
+def test_blocked_agent_does_not_count_as_completed():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.call_agent_with_token_recovery = MagicMock(
+            return_value="claude timed out before producing output.\n>>> BLOCKED"
+        )
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+
+        app.run_agent_round(initiator="Original task", agents=["claude"])
+
+        assert app.state["status"] == "blocked"
+        assert app.state["next_agent"] == "you"
+        assert app.state["completed_agents"] == []
+        app.append_message.assert_called_once_with(
+            "claude",
+            "claude timed out before producing output.\n>>> BLOCKED",
+        )
+
+
+def test_agent_response_without_signal_blocks_dispatch():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["rounds"] = {"max_before_escalate": 3}
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=["Finished but forgot the control line.", "This must not run.\n>>> TASK_COMPLETE"]
+        )
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+
+        app.run_agent_round(initiator="Original task", agents=["claude", "codex"])
+
+        assert app.call_agent_with_token_recovery.call_count == 1
+        assert app.state["status"] == "blocked"
+        assert app.state["next_agent"] == "you"
+        assert app.state["last_agent"] == "claude"
+        assert app.state["blocked_reason"] == "missing_agent_signal"
+        assert app.state["completed_agents"] == []
+        app.append_message.assert_called_once_with("claude", "Finished but forgot the control line.")
+        app.stream.system.assert_called_with(
+            "claude response missing a valid terminal signal. Your input needed."
+        )
+
+
+def test_agent_response_with_unknown_signal_blocks_dispatch():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["rounds"] = {"max_before_escalate": 3}
+        app.call_agent_with_token_recovery = MagicMock(return_value="Finished.\n>>> DONE")
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+
+        app.run_agent_round(initiator="Original task", agents=["claude"])
+
+        assert app.state["status"] == "blocked"
+        assert app.state["blocked_reason"] == "missing_agent_signal"
+        assert app.state["completed_agents"] == []
+        app.append_message.assert_called_once_with("claude", "Finished.\n>>> DONE")
+
+
+def test_dismiss_proposal_clears_active_task():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["status"] = "awaiting_approval"
+        app.state["active_task"] = "diagnostic proposal"
+        app.state["proposal"] = {"id": "prop_test"}
+
+        app.handle_dismiss_command()
+
+        assert app.state["status"] == "idle"
+        assert app.state["next_agent"] == "you"
+        assert app.state["active_task"] is None
+        assert app.state["proposal"] is None
+
+
 def test_handle_approval_accepts_common_affirmatives():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
@@ -644,6 +719,8 @@ if __name__ == "__main__":
     test_update_token_count_refreshes_session_token_display()
     test_streaming_token_count_updates_without_double_counting_final_response()
     test_handle_approval_accepts_common_affirmatives()
+    test_agent_response_without_signal_blocks_dispatch()
+    test_agent_response_with_unknown_signal_blocks_dispatch()
     test_proposals_are_collected_before_the_builder_gate_opens()
     test_blocked_pauses_before_the_next_agent_runs()
     test_modify_clears_the_prior_proposal_before_a_revision_round()

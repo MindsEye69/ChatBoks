@@ -1414,6 +1414,28 @@ class RemoteSession:
             self.events.append("system", "system", "Continuing the paused task by user request.")
             return self.submit(task)
 
+    def start_new_task(self) -> dict[str, Any]:
+        with self.lock:
+            if self.command_running():
+                raise ValueError("Stop the running agent command before starting a new task.")
+            primary = self.app.router.primary()
+            self.app.update_state(
+                {
+                    "status": "idle",
+                    "next_agent": primary,
+                    "active_task": None,
+                    "proposal": None,
+                    "criteria_gate": None,
+                    "confirmation": None,
+                    "blocked_reason": None,
+                    "expected_agents": [],
+                    "completed_agents": [],
+                }
+            )
+            self.app.append_message("system", "New task started. Previous task state cleared.")
+            self.events.append("system", "system", "New task ready.")
+            return self.snapshot(cursor=0)
+
     def snapshot(self, cursor: int = 0, transcript_limit: int = TRANSCRIPT_LIMIT) -> dict[str, Any]:
         with self.lock:
             try:
@@ -1800,6 +1822,16 @@ class RemoteHandler(BaseHTTPRequestHandler):
             try:
                 payload = self.read_json_body()
                 self.respond_json(self.server.session.resolve_interrupted_task(str(payload.get("action") or "")))
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/session/new-task":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                self.respond_json(self.server.session.start_new_task())
             except ValueError as exc:
                 self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
             return

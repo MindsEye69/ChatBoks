@@ -69,6 +69,15 @@ class FakeSession:
         self.commands.append(text)
         return self.snapshot()
 
+    def start_new_task(self) -> dict[str, object]:
+        self.commands.append("/new-task")
+        return {
+            **self.snapshot(),
+            "status": "idle",
+            "active_task": None,
+            "events": [{"id": 1, "sender": "system", "text": "New task ready."}],
+        }
+
     def available_projects(self) -> list[str]:
         return self.projects
 
@@ -364,6 +373,32 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
     print("PASS: remote bridge accepts an authorized command and forwards it")
 
 
+def test_remote_bridge_starts_new_task_for_authorized_client():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/session/new-task",
+            data=b"{}",
+            headers={
+                "Authorization": "Bearer secret-token",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert payload["status"] == "idle"
+        assert payload["active_task"] is None
+        assert session.commands == ["/new-task"]
+        assert payload["events"][0]["text"] == "New task ready."
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge starts a new task for an authorized client")
+
+
 def test_remote_bridge_rejects_invalid_session_query():
     server, thread, base = run_server(FakeSession(), "secret-token")
     try:
@@ -538,9 +573,11 @@ def test_remote_session_register_project_persists_a_local_folder(tmp_path: Path)
 
 def test_remote_model_choices_hide_unsupported_codex_chatgpt_account_model():
     assert "gpt-5.6" not in MODEL_CHOICES["codex"]
-    assert "gpt-5.6-sol" in MODEL_CHOICES["codex"]
-    assert normalize_agent_model("codex", "gpt-5.6") == "gpt-5.6-sol"
-    print("PASS: remote model picker maps unsupported Codex model to Sol")
+    assert "gpt-5.6-sol" not in MODEL_CHOICES["codex"]
+    assert "gpt-5.5" in MODEL_CHOICES["codex"]
+    assert normalize_agent_model("codex", "gpt-5.6") == "gpt-5.5"
+    assert normalize_agent_model("codex", "gpt-5.6-sol") == "gpt-5.5"
+    print("PASS: remote model picker maps unsupported Codex 5.6 models to GPT-5.5")
 
 
 def test_remote_session_set_agent_model_persists_normalized_codex_choice(tmp_path: Path):
@@ -562,8 +599,8 @@ def test_remote_session_set_agent_model_persists_normalized_codex_choice(tmp_pat
     payload = session.set_agent_model("codex", "gpt-5.6")
     stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
-    assert stored["agents"]["codex"]["model"] == "gpt-5.6-sol"
-    assert payload["model_selection"]["codex"]["current"] == "gpt-5.6-sol"
+    assert stored["agents"]["codex"]["model"] == "gpt-5.5"
+    assert payload["model_selection"]["codex"]["current"] == "gpt-5.5"
     assert session.events.since(0)[-1]["text"].endswith("Unsupported gpt-5.6 was mapped automatically.")
     print("PASS: remote model picker persists normalized Codex model choices")
 
@@ -1113,15 +1150,35 @@ def test_remote_bridge_serves_static_ui_files():
             assert response.headers["Content-Type"].startswith("text/html")
             assert "Content-Security-Policy" in response.headers
             assert "workbench.js" in body
+            assert "composerExpandButton" in body
+            assert "activePromptText" in body
 
         with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
+            body = response.read().decode("utf-8")
             assert response.status == 200
             assert response.headers["Content-Type"].startswith("text/javascript")
             assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert "updateLaneScrollState" in body
+            assert "New task ready" in body
+            assert "copyButtonFor" in body
+            assert "Copy this response" in body
+            assert "message-card-tools" in body
+            assert "if (!user && body)" in body
+            assert "activePromptFromSession" in body
+            assert "renderActivePrompt(cleaned)" in body
+            assert "laneTranscriptForSession" in body
+            assert "transcript.slice(startIndex)" in body
+            assert "String(item.text || \"\").trim() === activePrompt" in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
+            body = response.read().decode("utf-8")
             assert response.status == 200
             assert response.headers["Content-Type"].startswith("text/css")
+            assert "lane-jump-button" in body
+            assert "status-confirm-flash" in body
+            assert "card-copy-button" in body
+            assert "message-card-tools" in body
+            assert "active-prompt-card" in body
     finally:
         server.shutdown()
         thread.join(timeout=5)

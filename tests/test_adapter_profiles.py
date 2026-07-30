@@ -60,7 +60,8 @@ def test_codex_spark_adapter_profile_uses_spark_model():
 
 
 def test_codex_model_alias_maps_unsupported_chatgpt_account_model():
-    assert normalize_codex_model("gpt-5.6") == "gpt-5.6-sol"
+    assert normalize_codex_model("gpt-5.6") == "gpt-5.5"
+    assert normalize_codex_model("gpt-5.6-sol") == "gpt-5.5"
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         agent = CodexAgent(
@@ -71,7 +72,7 @@ def test_codex_model_alias_maps_unsupported_chatgpt_account_model():
 
         command = agent.command()
 
-        assert command[-2:] == ["--model", "gpt-5.6-sol"]
+        assert command[-2:] == ["--model", "gpt-5.5"]
 
 
 def test_adapter_args_override_named_profile():

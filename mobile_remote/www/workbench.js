@@ -71,6 +71,9 @@ const state = {
   approvalSubmitting: false,
   projectCatalog: [],
   modelSelection: {},
+  composerExpanded: false,
+  activePrompt: "",
+  newTaskClicks: 0,
 };
 
 const previewSession = {
@@ -140,9 +143,9 @@ const previewSession = {
 
 const els = {};
 for (const id of [
-  "focusButton", "focusLabel", "newTaskButton", "railProjectsButton",
+    "workArea", "focusButton", "focusLabel", "newTaskButton", "railProjectsButton",
   "projectButton", "projectDialog", "projectDialogBackdrop", "projectDialogClose", "projectSearch", "projectPath", "projectBrowseButton", "projectAddButton", "projectPickerList",
-  "tokenBalances", "settingsButton", "stripCpu", "stripRam",
+    "tokenBalances", "activePromptText", "settingsButton", "stripCpu", "stripRam",
   "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "claudeUpdateButton", "systemDrawer",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
@@ -154,7 +157,7 @@ for (const id of [
   "resumePanel", "resumeSummary", "resumeButton", "endTaskButton",
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
-    "workbenchPrompt", "sendStatus", "sendButton", "stopButton",
+    "composerCard", "composerExpandButton", "workbenchPrompt", "sendStatus", "sendButton", "stopButton",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
   "bridgeDot", "bridgePid", "bridgePairTtl", "bridgeOperator",
   "progressList", "progressCount", "progressPercent",
@@ -446,6 +449,8 @@ function resetSessionState() {
   state.coordItems = [];
   state.trace = {};
   state.lanes = {};
+  state.activePrompt = "";
+  renderActivePrompt("");
   els.agentLanes.innerHTML = "";
 }
 
@@ -533,6 +538,52 @@ async function refreshWorkbench() {
 
 /* ---------- message helpers ---------- */
 
+async function copyText(text) {
+  const value = String(text || "");
+  if (!value) return false;
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      // Fall through to the textarea fallback below.
+    }
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
+function copyButtonFor(text) {
+  const button = document.createElement("button");
+  button.className = "card-copy-button";
+  button.type = "button";
+  button.textContent = "Copy";
+  button.setAttribute("aria-label", "Copy this response");
+  button.title = "Copy this response";
+  button.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    const copied = await copyText(text);
+    button.textContent = copied ? "Copied" : "Copy failed";
+    button.classList.toggle("copied", copied);
+    window.setTimeout(() => {
+      button.textContent = "Copy";
+      button.classList.remove("copied");
+    }, 1500);
+  });
+  return button;
+}
+
 function splitSignals(text) {
   const lines = (text || "").split("\n");
   const signals = [];
@@ -593,7 +644,14 @@ function messageCard(text, { streaming = false, timestamp = "", user = false } =
   const { body, signals } = splitSignals(text);
   if (body || streaming) {
     const card = document.createElement("section");
-    card.className = user ? "message-card user-message-card" : streaming ? "message-card streaming" : "message-card";
+      card.className = user ? "message-card user-message-card" : streaming ? "message-card streaming" : "message-card";
+        if (!user && body) {
+          card.classList.add("copyable-message-card");
+          const tools = document.createElement("div");
+          tools.className = "message-card-tools";
+          tools.appendChild(copyButtonFor(body));
+          card.appendChild(tools);
+        }
     const paragraph = document.createElement("p");
     paragraph.className = "msg-text";
     paragraph.textContent = body;
@@ -819,11 +877,33 @@ function ensureLanes(agents) {
 
     const stream = document.createElement("div");
     stream.className = "agent-stream";
+    const jumpButton = document.createElement("button");
+    jumpButton.className = "lane-jump-button hidden";
+    jumpButton.type = "button";
+    jumpButton.textContent = "↓";
+    jumpButton.setAttribute("aria-label", `Jump to latest ${laneDisplayName(agent)} output`);
+    jumpButton.title = "Jump to latest output";
+    jumpButton.addEventListener("click", () => {
+      stream.scrollTop = stream.scrollHeight;
+      updateLaneScrollState(agent);
+    });
+    stream.addEventListener("scroll", () => updateLaneScrollState(agent));
 
     pane.appendChild(header);
     pane.appendChild(stream);
+    pane.appendChild(jumpButton);
     els.agentLanes.appendChild(pane);
-    state.lanes[agent] = { ...(state.lanes[agent] || {}), pane, stream, statusDot: dot, statusLabel, activity };
+    state.lanes[agent] = {
+      ...(state.lanes[agent] || {}),
+      pane,
+      stream,
+      jumpButton,
+      statusDot: dot,
+      statusLabel,
+      activity,
+      atBottom: true,
+      savedScrollTop: 0,
+    };
   }
 }
 
@@ -853,6 +933,15 @@ function renderModelSelectors(selection = {}) {
   }
 }
 
+function updateLaneScrollState(agent) {
+  const lane = state.lanes[agent];
+  if (!lane?.stream) return;
+  const distanceFromBottom = lane.stream.scrollHeight - lane.stream.scrollTop - lane.stream.clientHeight;
+  lane.atBottom = distanceFromBottom < 48;
+  lane.savedScrollTop = lane.stream.scrollTop;
+  lane.jumpButton?.classList.toggle("hidden", lane.atBottom);
+}
+
 async function chooseAgentModel(agent, select) {
   let model = select.value;
   if (model === "__custom__") {
@@ -878,16 +967,38 @@ async function chooseAgentModel(agent, select) {
 }
 
 function renderLanes(transcript) {
-  const latestUserMessage = [...transcript].reverse().find((item) => canonicalAgent(item.sender) === "you");
+  const indexedTranscript = (transcript || []).map((item, index) => ({ ...item, index }));
+  const latestUserMessage = [...indexedTranscript].reverse().find((item) => canonicalAgent(item.sender) === "you");
   for (const [agent, lane] of Object.entries(state.lanes)) {
-    const nearBottom = lane.stream.scrollHeight - lane.stream.scrollTop - lane.stream.clientHeight < 60;
+    updateLaneScrollState(agent);
+    const stickToBottom = lane.atBottom !== false;
+    const previousScrollTop = lane.savedScrollTop || 0;
     lane.stream.innerHTML = "";
-    const messages = transcript.filter((item) => canonicalAgent(item.sender) === agent);
-    const transcriptText = new Set(messages.map((message) => String(message.text || "").trim()));
+    const messages = [];
+    const seenTranscriptIndexes = new Set();
+    for (const message of indexedTranscript.filter((item) => canonicalAgent(item.sender) === agent)) {
+      const prompt = [...indexedTranscript]
+        .reverse()
+        .find((item) => item.index < message.index && canonicalAgent(item.sender) === "you");
+      if (prompt && !seenTranscriptIndexes.has(prompt.index)) {
+        messages.push(prompt);
+        seenTranscriptIndexes.add(prompt.index);
+      }
+      messages.push(message);
+      seenTranscriptIndexes.add(message.index);
+    }
+    const transcriptText = new Set(
+      transcript
+        .filter((item) => canonicalAgent(item.sender) === agent)
+        .map((message) => String(message.text || "").trim()),
+    );
     const eventMessages = (state.eventMessages[agent] || [])
       .filter((message) => !transcriptText.has(String(message.text || "").trim()));
+    if (eventMessages.length && latestUserMessage && !seenTranscriptIndexes.has(latestUserMessage.index)) {
+      messages.push(latestUserMessage);
+    }
     const recent = [...messages, ...eventMessages].slice(-LANE_MESSAGE_LIMIT);
-    if (!recent.length && !state.streams[agent] && !latestUserMessage?.text) {
+    if (!recent.length && !state.streams[agent]) {
       const empty = document.createElement("p");
       empty.className = "lane-empty";
       empty.textContent = laneEmptyText(agent);
@@ -895,7 +1006,9 @@ function renderLanes(transcript) {
       continue;
     }
     for (const message of recent) {
-      lane.stream.appendChild(messageCard(message.text));
+      lane.stream.appendChild(
+        messageCard(message.text, { user: canonicalAgent(message.sender) === "you" }),
+      );
     }
     const active = state.streams[agent];
     if (active) {
@@ -910,12 +1023,12 @@ function renderLanes(transcript) {
       lane.stream.appendChild(meta);
       lane.stream.appendChild(messageCard(active.text, { streaming: true, timestamp: active.timestamp }));
     }
-    if (latestUserMessage?.text) {
-      lane.stream.appendChild(messageCard(latestUserMessage.text, { user: true }));
-    }
-    if (nearBottom) {
+    if (stickToBottom) {
       lane.stream.scrollTop = lane.stream.scrollHeight;
+    } else {
+      lane.stream.scrollTop = Math.min(previousScrollTop, lane.stream.scrollHeight);
     }
+    updateLaneScrollState(agent);
   }
 }
 
@@ -1296,6 +1409,66 @@ function renderAttention(data) {
 }
 
 /* ---------- left rail ---------- */
+
+function latestUserPrompt(transcript = []) {
+  for (let index = transcript.length - 1; index >= 0; index -= 1) {
+    const item = transcript[index] || {};
+    if (canonicalAgent(item.sender) === "you") {
+      return { index, text: String(item.text || "").trim() };
+    }
+  }
+  return { index: -1, text: "" };
+}
+
+function activePromptFromSession(data, transcript = []) {
+  const explicit = String(data.command_text || data.active_task || "").trim();
+  if (explicit) {
+    return explicit;
+  }
+  const status = String(data.status || "").toLowerCase();
+  const canUseLatestPrompt = Boolean(data.command_running)
+    || ["active", "handoff", "awaiting_approval", "awaiting_input", "blocked", "awaiting_criteria"].includes(status);
+  if (canUseLatestPrompt) {
+    return latestUserPrompt(transcript).text;
+  }
+  return "";
+}
+
+function hasVisibleTask(data) {
+  const status = String(data.status || "").toLowerCase();
+  return Boolean(data.command_running)
+    || Boolean(String(data.command_text || data.active_task || "").trim())
+    || ["active", "handoff", "awaiting_approval", "awaiting_input", "blocked", "awaiting_criteria", "awaiting_resume"].includes(status);
+}
+
+function laneTranscriptForSession(data, transcript = []) {
+  if (!hasVisibleTask(data)) {
+    return [];
+  }
+  const activePrompt = String(data.command_text || data.active_task || "").trim();
+  let startIndex = -1;
+  if (activePrompt) {
+    for (let index = transcript.length - 1; index >= 0; index -= 1) {
+      const item = transcript[index] || {};
+      if (canonicalAgent(item.sender) === "you" && String(item.text || "").trim() === activePrompt) {
+        startIndex = index;
+        break;
+      }
+    }
+  }
+  if (startIndex < 0) {
+    startIndex = latestUserPrompt(transcript).index;
+  }
+  return startIndex >= 0 ? transcript.slice(startIndex) : [];
+}
+
+function renderActivePrompt(text) {
+  const prompt = String(text || "").trim();
+  state.activePrompt = prompt;
+  els.activePromptText.textContent = prompt || "No active prompt.";
+  els.activePromptText.classList.toggle("is-empty", !prompt);
+  els.activePromptText.scrollTop = 0;
+}
 
 function renderProjects(projects, currentProject) {
   state.currentProject = currentProject;
@@ -1765,13 +1938,21 @@ function applySession(data) {
     ingestEvents(events);
   }
 
-  renderLanes(data.transcript || []);
+  const transcript = data.transcript || [];
+  renderActivePrompt(activePromptFromSession(data, transcript));
+  renderLanes(laneTranscriptForSession(data, transcript));
   updatePreviewButton(data);
   updateLaneActivity(data);
   renderCoordinator(data);
   renderApproval(data);
   renderAttention(data);
   renderResumePrompt(data);
+  els.workArea.classList.toggle(
+    "is-decision-docked",
+    !els.approvalPanel.classList.contains("hidden")
+      || !els.attentionPanel.classList.contains("hidden")
+      || !els.resumePanel.classList.contains("hidden"),
+  );
   renderProgress(data);
   state.trace = data.trace || {};
   renderTrace(state.trace);
@@ -1799,6 +1980,29 @@ function setSendState(sending, message) {
   if (message !== undefined) {
     els.sendStatus.textContent = message;
   }
+}
+
+function setComposerExpanded(expanded) {
+  state.composerExpanded = Boolean(expanded);
+  els.composerCard.classList.toggle("is-expanded", state.composerExpanded);
+  els.composerExpandButton.setAttribute("aria-expanded", String(state.composerExpanded));
+  els.composerExpandButton.setAttribute(
+    "aria-label",
+    state.composerExpanded ? "Collapse prompt composer" : "Expand prompt composer",
+  );
+  els.composerExpandButton.title = state.composerExpanded ? "Collapse prompt composer" : "Expand prompt composer";
+  els.composerExpandButton.querySelector("span").textContent = state.composerExpanded ? "v" : "^";
+  els.workbenchPrompt.focus();
+}
+
+function flashSendStatus() {
+  els.sendStatus.classList.remove("status-flash");
+  void els.sendStatus.offsetWidth;
+  els.sendStatus.classList.add("status-flash");
+}
+
+function currentTimeLabel() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 async function stopActiveCommand() {
@@ -1829,12 +2033,34 @@ async function resolveRecovery(action) {
   }
 }
 
+async function startNewTask() {
+  els.newTaskButton.disabled = true;
+  setSendState(false, "Starting new task...");
+  flashSendStatus();
+  try {
+    const data = await apiFetch("/api/session/new-task", { method: "POST", body: "{}" });
+    applySession(data);
+    state.newTaskClicks += 1;
+    setSendState(false, `New task ready · ${currentTimeLabel()} · ${state.newTaskClicks}`);
+      flashSendStatus();
+      showError("");
+      els.workbenchPrompt.value = "";
+      renderActivePrompt("");
+      els.workbenchPrompt.focus();
+  } catch (error) {
+    showError(friendlyFetchError(error));
+  } finally {
+    els.newTaskButton.disabled = false;
+  }
+}
+
 async function sendPrompt(text) {
   const cleaned = text.trim();
   if (!cleaned || els.sendButton.disabled) {
     return false;
   }
   setSendState(true, "Sending to ChatBoks...");
+  renderActivePrompt(cleaned);
   try {
     const data = await apiFetch("/api/command", {
       method: "POST",
@@ -1987,6 +2213,7 @@ els.forgetButton.addEventListener("click", () => {
 });
 
 els.sendButton.addEventListener("click", () => sendPrompt(els.workbenchPrompt.value));
+els.composerExpandButton.addEventListener("click", () => setComposerExpanded(!state.composerExpanded));
 for (const textField of [els.workbenchPrompt, els.approvalModification]) {
   enforceLeftToRightText(textField);
   textField.addEventListener("focus", () => enforceLeftToRightText(textField));
@@ -2003,10 +2230,7 @@ els.workbenchPrompt.addEventListener("keydown", (event) => {
   }
 });
 
-els.newTaskButton.addEventListener("click", () => {
-  els.workbenchPrompt.focus();
-  els.workbenchPrompt.select();
-});
+els.newTaskButton.addEventListener("click", () => startNewTask());
 
 els.projectButton.addEventListener("click", openProjectPicker);
 els.railProjectsButton.addEventListener("click", openProjectPicker);
@@ -2030,7 +2254,9 @@ document.addEventListener("keydown", (event) => {
   // Escape unwinds one layer at a time, outermost first, so leaving focus
   // mode never also closes the picker or the drawer in the same keypress.
   if (event.key === "Escape") {
-    if (!els.projectDialog.classList.contains("hidden")) {
+    if (state.composerExpanded) {
+      setComposerExpanded(false);
+    } else if (!els.projectDialog.classList.contains("hidden")) {
       closeProjectPicker();
     } else if (state.systemDrawerOpen) {
       state.systemDrawerOpen = false;

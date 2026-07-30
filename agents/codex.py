@@ -6,9 +6,12 @@ from agents.base import BaseAgent
 
 
 CODEX_MODEL_ALIASES = {
-    "gpt-5.6": "gpt-5.6-sol",
+    "gpt-5.6": "gpt-5.5",
+    "gpt-5.6-sol": "gpt-5.5",
+    "gpt-5.6-terra": "gpt-5.5",
+    "gpt-5.6-luna": "gpt-5.5",
 }
-CODEX_MODEL_CHOICES = ["", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"]
+CODEX_MODEL_CHOICES = ["", "gpt-5.5"]
 
 
 def normalize_codex_model(model: str) -> str:

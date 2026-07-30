@@ -169,6 +169,32 @@ def test_lean_context_keeps_checkpoint_summary_with_recent_turns():
         assert "[CLAUDE] current reply" in payload
 
 
+def test_recent_context_is_capped_after_turn_selection():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        _make_codegraph(root)
+        chat = root / "chatboks.md"
+        chat.write_text(
+            "\n".join(
+                [
+                    "[YOU] old request",
+                    "[CODEX] " + "old error " * 200,
+                    "[YOU] current ask",
+                    "[CLAUDE] fresh response",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        builder = ContextBuilder(root, {"context": {"recent_chatboks_max_chars": 120}})
+
+        payload = builder.build(_state("lean"), chat)
+
+        assert "[CHATBOKS RECENT TRUNCATED: showing latest 120 chars]" in payload
+        assert "[YOU] current ask" in payload
+        assert "[CLAUDE] fresh response" in payload
+        assert "[YOU] old request" not in payload
+
+
 def test_context_includes_sleep_memory_artifact():
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         root = Path(tmp)
@@ -405,6 +431,7 @@ if __name__ == "__main__":
     test_full_context_includes_broad_codegraph_dumps()
     test_normal_context_preserves_checkpoint_summary_and_recent_tail()
     test_lean_context_keeps_checkpoint_summary_with_recent_turns()
+    test_recent_context_is_capped_after_turn_selection()
     test_context_includes_sleep_memory_artifact()
     test_lean_context_keeps_stable_prefix_before_transcript_tail()
     test_agent_prompt_places_turn_instruction_before_volatile_context()

@@ -82,7 +82,7 @@ agents:
   claude:
     cli: claude
     adapter_profile: claude_code_print_v1
-    first_output_timeout: 45
+    first_output_timeout: 180
     token_limit: 180000
     token_warning: 150000
     color: cyan
@@ -97,6 +97,7 @@ agents:
   codex:
     cli: codex
     adapter_profile: codex_exec_v1
+    model: gpt-5.5
     token_limit: 120000
     token_warning: 100000
     color: green
@@ -123,6 +124,7 @@ rounds:
 
 context:
   recent_chatboks_lines: 50
+  recent_chatboks_max_chars: 16000
   session_token_budget_warning: 220000
   session_token_budget_limit: 280000
   codegraph:

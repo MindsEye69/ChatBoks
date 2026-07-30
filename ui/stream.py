@@ -39,6 +39,7 @@ class Stream:
         self._agent_activity_status: Any | None = None
         self._agent_output_active: str | None = None
         self._agent_output_needs_newline = False
+        self._pending_token_usage_line: str | None = None
 
     def banner(self, project: str) -> None:
         self.console.print(f"[dim]{CHATBOKS_VERSION_LABEL}[/dim]", justify="right")
@@ -52,7 +53,11 @@ class Stream:
         token_counts: dict[str, int],
         session_budget: dict[str, int] | None = None,
     ) -> None:
-        self.console.print(f"[dim]{self.build_token_usage_line(token_counts, session_budget)}[/dim]")
+        line = self.build_token_usage_line(token_counts, session_budget)
+        if self._agent_output_active is not None:
+            self._pending_token_usage_line = line
+            return
+        self.console.print(f"[dim]{line}[/dim]")
 
     def agent_activity_start(self, agent_name: str, mode: str) -> None:
         color = self.colors.get(agent_name.lower(), "white")
@@ -102,6 +107,9 @@ class Stream:
         self.console.print(Rule(style=color))
         self._agent_output_active = None
         self._agent_output_needs_newline = False
+        if self._pending_token_usage_line is not None:
+            self.console.print(f"[dim]{self._pending_token_usage_line}[/dim]")
+            self._pending_token_usage_line = None
 
     def intro(self, project: str) -> None:
         if not self.console.is_terminal:

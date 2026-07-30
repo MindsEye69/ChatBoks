@@ -1663,7 +1663,9 @@ class Chatboks:
             self.stream.system("No active proposal to dismiss.")
             return
         proposal_id = proposal.get("id", "unknown")
-        self.update_state({"proposal": None, "status": "idle", "next_agent": "you"})
+        self.update_state(
+            {"proposal": None, "status": "idle", "next_agent": "you", "active_task": None}
+        )
         self.append_message("system", f"Proposal {proposal_id} dismissed.")
 
     def handle_agent_command(self, text: str) -> None:
@@ -3079,6 +3081,22 @@ class Chatboks:
                 response = self.call_agent_with_token_recovery(agent_name, mode="respond")
                 signal = self.parse_signal(response)
 
+                if signal is None:
+                    self.append_message(agent_name, response)
+                    self.update_token_count(agent_name, response)
+                    self.stream.system(
+                        f"{agent_name} response missing a valid terminal signal. Your input needed."
+                    )
+                    self.update_state(
+                        {
+                            "status": "blocked",
+                            "next_agent": "you",
+                            "last_agent": agent_name,
+                            "blocked_reason": "missing_agent_signal",
+                        }
+                    )
+                    return
+
                 if signal == "SKIP":
                     self.update_token_count(agent_name, response)
                     self.mark_agent_completed(agent_name)
@@ -3091,7 +3109,8 @@ class Chatboks:
 
                 self.append_message(agent_name, response)
                 self.update_token_count(agent_name, response)
-                self.mark_agent_completed(agent_name)
+                if signal != "BLOCKED":
+                    self.mark_agent_completed(agent_name)
                 self.update_state({"last_agent": agent_name, "next_agent": next_agent})
 
                 if signal == "PROPOSAL":

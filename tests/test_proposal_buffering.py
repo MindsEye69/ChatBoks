@@ -68,8 +68,7 @@ def test_proposal_buffered_until_all_agents_complete():
         call_log.append(agent_name)
         if agent_name == "claude":
             return "I suggest we do X.\n>>> PROPOSAL"
-        # codex emits no controlling signal; it has reviewed the proposal in the transcript
-        return "Agreed with claude's approach. No counter-proposal."
+        return "Agreed with claude's approach. No counter-proposal.\n>>> SKIP"
 
     app.call_agent_with_token_recovery = fake_call  # type: ignore[method-assign]
     app.append_message = MagicMock()
