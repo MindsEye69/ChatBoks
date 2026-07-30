@@ -1,6 +1,19 @@
 from __future__ import annotations
 
+from typing import Any
+
 from agents.base import BaseAgent
+
+
+CODEX_MODEL_ALIASES = {
+    "gpt-5.6": "gpt-5.6-sol",
+}
+CODEX_MODEL_CHOICES = ["", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"]
+
+
+def normalize_codex_model(model: str) -> str:
+    cleaned = model.strip()
+    return CODEX_MODEL_ALIASES.get(cleaned, cleaned)
 
 
 class CodexAgent(BaseAgent):
@@ -18,6 +31,13 @@ class CodexAgent(BaseAgent):
         ],
     }
     default_args = adapter_profiles["codex_exec_v1"]
+
+    def command(self, adapter_override: dict[str, Any] | None = None) -> list[str]:
+        command = [self.cli, *self.adapter_args(adapter_override)]
+        model = normalize_codex_model(str(self.config.get("model") or ""))
+        if model:
+            command.extend(["--model", model])
+        return command
 
 
 class CodexSparkAgent(CodexAgent):

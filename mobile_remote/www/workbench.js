@@ -788,12 +788,18 @@ function ensureLanes(agents) {
     menu.setAttribute("aria-label", `${laneDisplayName(agent)} options`);
     menu.title = `${laneDisplayName(agent)} options`;
     if (agent === "claude" || agent === "codex") {
+      const modelControl = document.createElement("div");
+      modelControl.className = "agent-model-control";
       const modelSelect = document.createElement("select");
       modelSelect.className = "agent-model-select";
       modelSelect.setAttribute("aria-label", `${laneDisplayName(agent)} model`);
       modelSelect.addEventListener("change", () => chooseAgentModel(agent, modelSelect));
-      header.appendChild(modelSelect);
-      state.lanes[agent] = { pane, stream: null, statusDot: dot, statusLabel, activity, modelSelect };
+      const modelWarning = document.createElement("span");
+      modelWarning.className = "agent-model-warning hidden";
+      modelControl.appendChild(modelSelect);
+      modelControl.appendChild(modelWarning);
+      header.appendChild(modelControl);
+      state.lanes[agent] = { pane, stream: null, statusDot: dot, statusLabel, activity, modelSelect, modelWarning };
     }
     if (agent === "claude") {
       menu.className = "ghost-button claude-auth-button";
@@ -837,6 +843,11 @@ function renderModelSelectors(selection = {}) {
     custom.textContent = "Custom model...";
     lane.modelSelect.appendChild(custom);
     lane.modelSelect.value = details.current || "";
+    if (lane.modelWarning) {
+      const warning = String((details.warnings || {})[details.current || ""] || "");
+      lane.modelWarning.textContent = warning;
+      lane.modelWarning.classList.toggle("hidden", !warning);
+    }
   }
 }
 

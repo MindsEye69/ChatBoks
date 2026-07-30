@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agents.claude import ClaudeAgent
-from agents.codex import CodexAgent, CodexSparkAgent
+from agents.codex import CodexAgent, CodexSparkAgent, normalize_codex_model
 from doctor import adapter_profile_known
 
 
@@ -59,6 +59,21 @@ def test_codex_spark_adapter_profile_uses_spark_model():
         ]
 
 
+def test_codex_model_alias_maps_unsupported_chatgpt_account_model():
+    assert normalize_codex_model("gpt-5.6") == "gpt-5.6-sol"
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        agent = CodexAgent(
+            root,
+            {"cli": "codex", "adapter_profile": "codex_exec_v1", "model": "gpt-5.6"},
+            "role",
+        )
+
+        command = agent.command()
+
+        assert command[-2:] == ["--model", "gpt-5.6-sol"]
+
+
 def test_adapter_args_override_named_profile():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -103,6 +118,7 @@ def test_doctor_accepts_known_profile_and_rejects_unknown_profile():
 if __name__ == "__main__":
     test_codex_adapter_profile_expands_project_path()
     test_codex_spark_adapter_profile_uses_spark_model()
+    test_codex_model_alias_maps_unsupported_chatgpt_account_model()
     test_adapter_args_override_named_profile()
     test_doctor_accepts_known_profile_and_rejects_unknown_profile()
     print("All adapter profile smoke tests passed.")

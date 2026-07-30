@@ -33,6 +33,7 @@ from typing import Any
 from context.packets import packet_records_from_jsonl
 from context.transcript import is_transcript_turn
 from agents.base import BaseAgent
+from agents.codex import CODEX_MODEL_CHOICES, normalize_codex_model
 from encoding_utils import configure_utf8_stdio
 from orchestrator import DEFAULT_AGENT_FALLBACKS, Chatboks
 from ui.stream import Stream
@@ -89,8 +90,13 @@ AGENT_ALIASES = {
     "az": "coordinator",
 }
 MODEL_CHOICES = {
-    "claude": ["", "sonnet", "opus", "haiku"],
-    "codex": ["", "gpt-5.6", "gpt-5.6-terra", "gpt-5.6-luna"],
+    "claude": ["", "fable", "sonnet", "opus", "haiku"],
+    "codex": CODEX_MODEL_CHOICES,
+}
+MODEL_USAGE_WARNINGS = {
+    "claude": {
+        "fable": "Fable may require extra usage or credits on your Claude plan.",
+    },
 }
 SHELL_CSP = (
     "default-src 'self'; "
@@ -129,6 +135,12 @@ def is_allowed_app_origin(origin: str) -> bool:
         return True
     parsed = urllib.parse.urlparse(normalized)
     return parsed.scheme in {"http", "https"} and parsed.hostname in {"localhost", "127.0.0.1"}
+
+
+def normalize_agent_model(agent_name: str, model: str) -> str:
+    if agent_name == "codex":
+        return normalize_codex_model(model)
+    return model.strip()
 
 
 def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[dict[str, Any]]:
@@ -934,18 +946,23 @@ class RemoteSession:
         for agent_name in ("claude", "codex"):
             if agent_name not in agents:
                 continue
-            configured = str((agents.get(agent_name) or {}).get("model") or "").strip()
+            configured = normalize_agent_model(agent_name, str((agents.get(agent_name) or {}).get("model") or ""))
             options = list(MODEL_CHOICES[agent_name])
             if configured and configured not in options:
                 options.append(configured)
-            selection[agent_name] = {"current": configured, "options": options}
+            selection[agent_name] = {
+                "current": configured,
+                "options": options,
+                "warnings": MODEL_USAGE_WARNINGS.get(agent_name, {}),
+            }
         return selection
 
     def set_agent_model(self, agent: str, model: str) -> dict[str, Any]:
         agent_name = canonical_agent_name(agent)
         if agent_name not in MODEL_CHOICES:
             raise ValueError("Only Claude and Codex support model selection here.")
-        selected = model.strip()
+        requested = model.strip()
+        selected = normalize_agent_model(agent_name, requested)
         if len(selected) > MODEL_NAME_MAX_CHARS or not all(char.isalnum() or char in "._:-" for char in selected):
             raise ValueError("Enter a valid model identifier without spaces.")
         with self.lock:
@@ -962,7 +979,11 @@ class RemoteSession:
             if not config_path.exists():
                 raise ValueError("ChatBoks configuration was not found.")
             config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
-            self.events.append("system", "system", f"{agent_name.title()} model set to {selected or 'CLI default'} for the next task.")
+            if requested and selected != requested:
+                message = f"{agent_name.title()} model set to {selected} for the next task. Unsupported {requested} was mapped automatically."
+            else:
+                message = f"{agent_name.title()} model set to {selected or 'CLI default'} for the next task."
+            self.events.append("system", "system", message)
             return self.snapshot(cursor=0)
 
     def project_catalog(self) -> list[dict[str, Any]]:

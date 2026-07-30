@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from remote_control import (
     MAX_JSON_BODY_BYTES,
     MAX_TRANSCRIPT_LIMIT,
+    MODEL_CHOICES,
     RemoteEventBuffer,
     RemoteAuth,
     RemoteBridgeServer,
@@ -28,6 +29,7 @@ from remote_control import (
     parse_chatboks_messages,
     packet_trace_from_file,
     proposal_snapshot,
+    normalize_agent_model,
     rotate_pair_code_from_operator_file,
     trace_snapshot,
 )
@@ -532,6 +534,38 @@ def test_remote_session_register_project_persists_a_local_folder(tmp_path: Path)
     assert stored["projects"]["first-project"]["path"] == str(first_project.resolve())
     assert stored["projects"]["second-project"]["agents"] == ["claude", "codex"]
     print("PASS: project picker imports a local project folder without duplicate entries")
+
+
+def test_remote_model_choices_hide_unsupported_codex_chatgpt_account_model():
+    assert "gpt-5.6" not in MODEL_CHOICES["codex"]
+    assert "gpt-5.6-sol" in MODEL_CHOICES["codex"]
+    assert normalize_agent_model("codex", "gpt-5.6") == "gpt-5.6-sol"
+    print("PASS: remote model picker maps unsupported Codex model to Sol")
+
+
+def test_remote_session_set_agent_model_persists_normalized_codex_choice(tmp_path: Path):
+    import yaml
+
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        "projects: {}\nagents:\n  claude: {}\n  codex: {}\n",
+        encoding="utf-8",
+    )
+    session = RemoteSession.__new__(RemoteSession)
+    session.lock = threading.RLock()
+    session.config_path = config_path
+    session._command_thread = None
+    session.events = RemoteEventBuffer()
+    session.app = SimpleNamespace(config=yaml.safe_load(config_path.read_text(encoding="utf-8")))
+    session.snapshot = lambda cursor=0: {"model_selection": session.model_selection()}  # type: ignore[method-assign]
+
+    payload = session.set_agent_model("codex", "gpt-5.6")
+    stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+    assert stored["agents"]["codex"]["model"] == "gpt-5.6-sol"
+    assert payload["model_selection"]["codex"]["current"] == "gpt-5.6-sol"
+    assert session.events.since(0)[-1]["text"].endswith("Unsupported gpt-5.6 was mapped automatically.")
+    print("PASS: remote model picker persists normalized Codex model choices")
 
 
 def test_remote_session_remove_project_updates_only_the_registry(tmp_path: Path):
