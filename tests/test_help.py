@@ -214,6 +214,52 @@ def test_tickets_all_includes_non_open_status_groups():
         print("PASS: /tickets all includes non-open ticket groups")
 
 
+def test_test_claude_auth_reports_logged_out_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        app = _make_app(root)
+        app.config = {"agents": {"claude": {"cli": "claude"}}}
+        app.run_agent_round = MagicMock()
+        completed = subprocess.CompletedProcess(
+            ["claude", "auth", "status"],
+            1,
+            '{"loggedIn": false, "authMethod": "none", "apiProvider": "firstParty"}\n',
+            "",
+        )
+
+        with patch("orchestrator.subprocess.run", return_value=completed):
+            app.handle_user_input("/test claude-auth")
+
+        output = app.stream.system.call_args.args[0]
+        assert "Claude auth check:" in output
+        assert "not logged in for external prompt mode" in output
+        assert "claude auth login --claudeai" in output
+        assert ">>> BLOCKED" in output
+        app.run_agent_round.assert_not_called()
+
+
+def test_test_claude_auth_reports_logged_in_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        app = _make_app(root)
+        app.config = {"agents": {"claude": {"cli": "claude"}}}
+        app.run_agent_round = MagicMock()
+        completed = subprocess.CompletedProcess(
+            ["claude", "auth", "status"],
+            0,
+            '{"loggedIn": true, "authMethod": "claudeAi", "apiProvider": "firstParty"}\n',
+            "",
+        )
+
+        with patch("orchestrator.subprocess.run", return_value=completed):
+            app.handle_user_input("/test claude-auth")
+
+        output = app.stream.system.call_args.args[0]
+        assert "PASS: logged in for external prompt mode" in output
+        assert ">>> TASK_COMPLETE" in output
+        app.run_agent_round.assert_not_called()
+
+
 def test_session_start_invokes_dashboard_procedure_without_agent_round():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)

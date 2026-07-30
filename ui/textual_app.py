@@ -361,7 +361,7 @@ class ChatboksTextualApp(App[None]):
             show_line_numbers=False,
             soft_wrap=True,
             tab_behavior="focus",
-            placeholder="Type a prompt, slash command, APPROVE, MODIFY, or REJECT",
+            placeholder="Type a prompt, slash command, APPROVE [agent], MODIFY, or REJECT",
         )
         yield Footer()
 
@@ -618,6 +618,9 @@ class ChatboksTextualApp(App[None]):
 
     def completion_options(self, value: str) -> list[tuple[str, str]]:
         stripped = value.lstrip()
+        upper = stripped.upper()
+        if upper == "APPROVE" or upper.startswith("APPROVE "):
+            return self.complete_approval_command(stripped)
         if not stripped.startswith(("/", "@")):
             return []
         parts = stripped.split()
@@ -665,6 +668,7 @@ class ChatboksTextualApp(App[None]):
                 {
                     "confirmation-risk": "local confirmation packet risk smoke",
                     "packet-risk": "alias for confirmation-risk",
+                    "claude-auth": "check Claude Code auth state",
                 },
             )
         if command in {"/ticket", "/tickets"}:
@@ -703,6 +707,31 @@ class ChatboksTextualApp(App[None]):
         if stripped.startswith("@") and len(parts) <= 1:
             return self.complete_agent_route(stripped)
         return []
+
+    def complete_approval_command(self, stripped: str) -> list[tuple[str, str]]:
+        parts = stripped.split()
+        if len(parts) > 2:
+            return []
+        if len(parts) == 1 and not stripped.endswith(" "):
+            return [("APPROVE", "execute with default agent")]
+        prefix = parts[1].lstrip("@").lower() if len(parts) > 1 else ""
+        options: list[tuple[str, str]] = []
+        for agent_name in self.approval_agent_choices():
+            if agent_name.startswith(prefix):
+                options.append((f"APPROVE {agent_name}", "execute approved build with this agent"))
+        return options
+
+    def approval_agent_choices(self) -> list[str]:
+        choices: list[str] = []
+        project_agents = list(self.chatboks.proj_config.get("agents", []))
+        direct_agents = list(self.chatboks.proj_config.get("direct_agents", []))
+        configured_agents = self.chatboks.config.get("agents", {})
+        for agent_name in project_agents + direct_agents:
+            if agent_name in choices or agent_name not in configured_agents:
+                continue
+            if agent_name in project_agents or configured_agents.get(agent_name, {}).get("can_fill_main_seat"):
+                choices.append(agent_name)
+        return choices
 
     def complete_word_command(
         self,

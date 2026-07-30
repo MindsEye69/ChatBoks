@@ -184,7 +184,7 @@ def test_textual_app_prompt_exception_is_persisted_and_blocks_state() -> None:
 def test_textual_app_completion_palette_covers_fixed_choice_commands() -> None:
     chatboks = MagicMock()
     chatboks.config = {"agents": {"codex": {}, "claude": {}}}
-    chatboks.proj_config = {"agents": ["codex"], "direct_agents": ["coordinator"]}
+    chatboks.proj_config = {"agents": ["claude", "codex"], "direct_agents": ["coordinator"]}
     chatboks.list_native_skills.return_value = [("implement", "implementation workflow")]
     app = ChatboksTextualApp(chatboks)
 
@@ -201,6 +201,9 @@ def test_textual_app_completion_palette_covers_fixed_choice_commands() -> None:
     assert ("@codex", "route directly to agent") in app.completion_options("@co")
     assert ("/session start", "run DasDashboard start checks") in app.completion_options("/session st")
     assert ("/session close", "run DasDashboard close checks") in app.completion_options("/session cl")
+    assert ("/test claude-auth", "check Claude Code auth state") in app.completion_options("/test cl")
+    assert ("APPROVE claude", "execute approved build with this agent") in app.completion_options("APPROVE cl")
+    assert ("APPROVE codex", "execute approved build with this agent") in app.completion_options("APPROVE ")
     assert app.completion_options("/model-commands") == []
     assert app.replacement_from_option_prompt("/mode brainstorm            Brainstorm mode") == "/mode brainstorm"
     long_replacement = "/agent very_long_custom_agent_name exhausted"

@@ -114,6 +114,7 @@ HELP_COMMANDS = [
     ("/mode", "Show the current collaboration mode and available modes."),
     ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, confirmation, diagnose."),
     ("/test confirmation-risk", "Run a local no-agent smoke for confirmation packet risk gating."),
+    ("/test claude-auth", "Check Claude Code auth state without calling the model."),
     ("/win ...", "Record a collaboration win without calling agents."),
     ("/fail ...", "Record a collaboration failure without calling agents."),
     ("/suggest-outcome [agent]", "Ask Coordinator for candidate /win or /fail lines from recent work."),
@@ -699,7 +700,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /tickets, /context, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /tickets, /context, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /test claude-auth, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -1072,8 +1073,11 @@ class Chatboks:
     def handle_test_command(self, text: str) -> None:
         parts = text.strip().split()
         target = parts[1].lower() if len(parts) > 1 else ""
+        if target == "claude-auth":
+            self.stream.system("\n".join(self.claude_auth_status_lines()))
+            return
         if target not in {"confirmation-risk", "packet-risk"}:
-            self.stream.system("Available local tests:\n- /test confirmation-risk")
+            self.stream.system("Available local tests:\n- /test confirmation-risk\n- /test claude-auth")
             return
 
         executor_response = "\n".join(
@@ -1121,6 +1125,65 @@ class Chatboks:
         else:
             lines.append(">>> TASK_COMPLETE")
         self.stream.system("\n".join(lines))
+
+    def claude_auth_status_lines(self) -> list[str]:
+        agent_config = self.config.get("agents", {}).get("claude", {})
+        cli = str(agent_config.get("cli") or "claude")
+        command = [cli, "auth", "status"]
+        use_shell = os.name == "nt"
+        run_command: str | list[str] = subprocess.list2cmdline(command) if use_shell else command
+        try:
+            result = subprocess.run(
+                run_command,
+                cwd=self.proj_path,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=utf8_env(),
+                timeout=30,
+                check=False,
+                shell=use_shell,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return [
+                "Claude auth check:",
+                f"- FAIL: could not run `{cli} auth status`: {exc}",
+                "- Next: run `claude auth login --claudeai` or tools/claude-login-refresh.cmd.",
+                ">>> BLOCKED",
+            ]
+
+        output = (result.stdout or "").strip()
+        try:
+            status = json.loads(output) if output else {}
+        except json.JSONDecodeError:
+            status = {}
+        if status.get("loggedIn") is True:
+            method = status.get("authMethod") or "unknown"
+            provider = status.get("apiProvider") or "unknown"
+            return [
+                "Claude auth check:",
+                f"- PASS: logged in for external prompt mode ({method}, {provider}).",
+                ">>> TASK_COMPLETE",
+            ]
+        if status.get("loggedIn") is False:
+            return [
+                "Claude auth check:",
+                "- FAIL: Claude Code is not logged in for external prompt mode.",
+                "- Next: run `claude auth login --claudeai` or tools/claude-login-refresh.cmd.",
+                ">>> BLOCKED",
+            ]
+
+        detail = self.truncate_for_state(
+            (result.stderr or result.stdout or f"exit code {result.returncode}").strip(),
+            limit=400,
+        )
+        return [
+            "Claude auth check:",
+            f"- FAIL: could not parse Claude auth status: {detail}",
+            "- Next: run `claude auth login --claudeai`, then rerun /test claude-auth.",
+            ">>> BLOCKED",
+        ]
 
     def handle_model_command_if_present(self, agent_name: str, text: str) -> bool:
         escaped = self.model_command_escape_text(text)
@@ -3068,6 +3131,15 @@ class Chatboks:
                     self.update_state({"handoff_depth": 0})
                     return
                 if signal == "BLOCKED":
+                    if completed_agent:
+                        self.stream.system(
+                            f"{agent_name} blocked after {completed_agent} completed the task; treating as a warning."
+                        )
+                        self.maybe_announce_direct_standby_agents(initiator, active_agents)
+                        self.stream.system("Task complete. Awaiting next instruction.")
+                        self.update_state({"status": "idle", "active_task": None, "confirmation": None})
+                        self.update_state({"handoff_depth": 0})
+                        return
                     self.stream.system("Agent blocked. Your input needed.")
                     self.update_state({"status": "blocked", "next_agent": "you"})
                     return
@@ -3176,7 +3248,7 @@ class Chatboks:
         )
         proposal["execution_estimate"] = estimate
         self.stream.proposal(self.format_proposal_gate(proposal, estimate))
-        self.stream.system("Choose a builder, MODIFY the proposal, REJECT it, or dismiss the gate.")
+        self.stream.system("Type APPROVE [agent], MODIFY, REJECT, or /dismiss.")
 
     def handle_question(self, response: str) -> None:
         self.update_state({"status": "awaiting_input", "next_agent": "you"})
@@ -3187,15 +3259,18 @@ class Chatboks:
             self.handle_handoff()
 
     def handle_approval(self, text: str) -> None:
-        parts = text.strip().split(maxsplit=1)
+        parts = text.strip().split()
         verdict = parts[0].upper() if parts else ""
-        requested_builder = parts[1].strip().lower().replace("-", "_").replace(" ", "_") if len(parts) > 1 else ""
 
         if verdict in {"APPROVE", "YES", "Y", "OK", "GO"}:
+            if len(parts) > 2:
+                self.stream.system("Unknown approval target. Try APPROVE, APPROVE codex, or APPROVE claude.")
+                return
+            requested_builder = self.normalize_agent_name(parts[1]) if len(parts) == 2 else ""
             builder = self.resolve_proposal_builder(requested_builder)
             if not builder:
                 return
-            self.stream.system(f"Approved. {builder} is executing...")
+            self.stream.system(f"Approved. Executing with {builder}...")
             self.update_state({"status": "executing", "next_agent": builder})
             self.execute_proposal(builder)
         elif verdict == "REJECT":
@@ -3217,29 +3292,65 @@ class Chatboks:
             self.run_agent_round(initiator=modification, intent="revise")
 
     def resolve_proposal_builder(self, requested_builder: str = "") -> str | None:
-        proposal = self.state.get("proposal") or {}
-        candidates = proposal.get("candidates") if isinstance(proposal, dict) else []
-        if not isinstance(candidates, list):
-            candidates = []
-        allowed = [
-            str(item.get("agent") or "").strip().lower()
-            for item in candidates
-            if isinstance(item, dict) and str(item.get("agent") or "").strip()
-        ]
+        allowed = self.proposal_builder_choices()
         if not allowed:
-            proposed_by = str(proposal.get("proposed_by") or "").strip().lower()
-            allowed = [proposed_by] if proposed_by else [self.router.primary()]
+            self.stream.system("No available proposal builders. Ask agents to revise the proposal.")
+            return None
         builder = requested_builder or self.router.primary()
+        if not requested_builder and builder not in allowed:
+            builder = allowed[0]
         if builder not in allowed:
-            self.stream.system(f"Choose one of the agents that proposed this work: {', '.join(allowed)}.")
+            self.stream.system(
+                f"Unknown approval target: {requested_builder}. Available builders: {', '.join(allowed)}."
+            )
+            return None
+        if requested_builder and not self.agent_is_available(builder, self.load_agent_statuses()):
+            self.stream.system(
+                f"{builder} is exhausted or unavailable. Use /agent {builder} available to retry, "
+                "or choose another proposal builder."
+            )
             return None
         return builder
 
-    def execute_proposal(self, requested_builder: str | None = None) -> None:
+    def proposal_builder_choices(self) -> list[str]:
+        proposal = self.state.get("proposal") or {}
+        choices: list[str] = []
+        candidates = proposal.get("candidates") if isinstance(proposal, dict) else []
+        if isinstance(candidates, list):
+            for item in candidates:
+                if not isinstance(item, dict):
+                    continue
+                agent_name = self.normalize_agent_name(str(item.get("agent") or ""))
+                if agent_name and agent_name not in choices:
+                    choices.append(agent_name)
+        if choices:
+            return choices
+        proposed_by = self.normalize_agent_name(str(proposal.get("proposed_by") or "")) if isinstance(proposal, dict) else ""
+        if proposed_by:
+            return [proposed_by]
+        return self.execution_agent_choices()
+
+    def execution_agent_choices(self) -> list[str]:
+        choices: list[str] = []
+        configured_agents = self.config.get("agents", {})
+        for agent_name in list(self.proj_config.get("agents", [])) + list(self.proj_config.get("direct_agents", [])):
+            if agent_name not in configured_agents:
+                continue
+            if agent_name in choices:
+                continue
+            if agent_name in self.proj_config.get("agents", []) or self.fallback_can_fill_main_seat(agent_name):
+                choices.append(agent_name)
+        return choices
+
+    @staticmethod
+    def normalize_agent_name(agent_name: str) -> str:
+        return agent_name.strip().lstrip("@").lower().replace("-", "_")
+
+    def execute_proposal(self, lead: str | None = None) -> None:
         if not self.ensure_session_token_budget():
             self.update_state({"status": "blocked", "next_agent": "you"})
             return
-        lead = requested_builder or self.router.primary()
+        lead = lead or self.router.primary()
         agents = self.resolve_available_agents([lead], exclusive_agent=lead)
         if not agents:
             self.update_state({"status": "blocked", "next_agent": "you"})

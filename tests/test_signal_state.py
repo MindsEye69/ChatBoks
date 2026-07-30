@@ -298,7 +298,59 @@ def test_approval_uses_the_builder_chosen_from_the_proposals():
 
         assert app.state["status"] == "executing"
         assert app.state["next_agent"] == "claude"
+        app.stream.system.assert_called_once_with("Approved. Executing with claude...")
         app.execute_proposal.assert_called_once_with("claude")
+
+
+def test_handle_approval_routes_to_selected_executor():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"agents": {"codex": {}, "claude": {}}}
+        app.proj_config = {"agents": ["claude", "codex"]}
+        app.state["proposal"] = {
+            "candidates": [{"agent": "claude"}, {"agent": "codex"}],
+            "proposed_by": "claude",
+        }
+        app.router.primary.return_value = "codex"
+        app.execute_proposal = MagicMock()
+        app.run_agent_round = MagicMock()
+
+        app.handle_approval("APPROVE claude")
+
+        assert app.state["status"] == "executing"
+        assert app.state["next_agent"] == "claude"
+        app.stream.system.assert_called_once_with("Approved. Executing with claude...")
+        app.execute_proposal.assert_called_once_with("claude")
+        app.run_agent_round.assert_not_called()
+
+
+def test_handle_approval_rejects_unknown_executor():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"agents": {"codex": {}, "claude": {}}}
+        app.proj_config = {"agents": ["claude", "codex"]}
+        app.execute_proposal = MagicMock()
+
+        app.handle_approval("APPROVE spark")
+
+        output = app.stream.system.call_args.args[0]
+        assert "Unknown approval target: spark" in output
+        assert "claude, codex" in output
+        app.execute_proposal.assert_not_called()
+
+
+def test_execute_proposal_uses_selected_executor_without_fallback():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {"agents": {"codex": {}, "claude": {}}}
+        app.proj_config = {"agents": ["claude", "codex"]}
+        app.call_agent_with_token_recovery = MagicMock(return_value="Applied.\n>>> TASK_COMPLETE")
+        app.append_message = MagicMock()
+
+        app.execute_proposal("claude")
+
+        app.call_agent_with_token_recovery.assert_called_once_with("claude", mode="execute")
+        app.append_message.assert_called_once_with("claude", "Applied.\n>>> TASK_COMPLETE")
 
 
 def test_dismiss_command_clears_active_proposal_without_agent_round():

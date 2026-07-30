@@ -108,6 +108,35 @@ def test_check_project_includes_direct_agents():
     assert seen == ["claude", "codex", "coordinator"]
 
 
+def test_check_claude_auth_accepts_logged_in_status(capsys):
+    completed = doctor.subprocess.CompletedProcess(
+        ["claude", "auth", "status"],
+        0,
+        '{"loggedIn": true, "authMethod": "claudeAi", "apiProvider": "firstParty"}\n',
+        "",
+    )
+    with patch("doctor.run_capture", return_value=completed):
+        assert doctor.check_claude_auth("claude")
+
+    output = capsys.readouterr().out
+    assert "OK   claude auth status: logged in" in output
+
+
+def test_check_claude_auth_fails_logged_out_status(capsys):
+    completed = doctor.subprocess.CompletedProcess(
+        ["claude", "auth", "status"],
+        1,
+        '{"loggedIn": false, "authMethod": "none", "apiProvider": "firstParty"}\n',
+        "",
+    )
+    with patch("doctor.run_capture", return_value=completed):
+        assert not doctor.check_claude_auth("claude")
+
+    output = capsys.readouterr().out
+    assert "FAIL claude auth status: not logged in" in output
+    assert "claude auth login --claudeai" in output
+
+
 def test_parse_graphify_built_commit_reads_report():
     with tempfile.TemporaryDirectory() as tmp:
         report = Path(tmp) / "GRAPH_REPORT.md"

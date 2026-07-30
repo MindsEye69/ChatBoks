@@ -270,11 +270,36 @@ def check_agent(project_path: Path, agent_name: str, agent_config: dict[str, Any
 
     if cli_ok:
         ok = check_cli_help(cli, agent_name) and ok
+        if agent_name == "claude":
+            ok = check_claude_auth(cli) and ok
         if smoke_agents:
             ok = smoke_agent_stdin(agent_name, project_path, agent_config) and ok
         else:
             print(f"SKIP {agent_name} stdin smoke test (use --smoke-agents; may consume tokens)")
     return ok
+
+
+def check_claude_auth(cli: str) -> bool:
+    result = run_capture([cli, "auth", "status"], timeout=30)
+    output = (result.stdout or "").strip()
+    try:
+        status = json.loads(output) if output else {}
+    except json.JSONDecodeError:
+        status = {}
+    if status.get("loggedIn") is True:
+        method = status.get("authMethod") or "unknown"
+        provider = status.get("apiProvider") or "unknown"
+        print(f"OK   claude auth status: logged in ({method}, {provider})")
+        return True
+    if status.get("loggedIn") is False:
+        print(
+            "FAIL claude auth status: not logged in for external prompt mode; "
+            "run `claude auth login --claudeai` or tools/claude-login-refresh.cmd"
+        )
+        return False
+    detail = (result.stderr or result.stdout or f"exit code {result.returncode}").strip()
+    print(f"WARN claude auth status: unavailable ({detail})")
+    return False
 
 
 def adapter_profile_known(agent_name: str, agent_config: dict[str, Any]) -> bool:
