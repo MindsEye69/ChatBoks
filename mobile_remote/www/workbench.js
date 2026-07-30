@@ -1191,6 +1191,14 @@ function criteriaGateText(gate) {
   return lines.join("\n");
 }
 
+function setApprovalDetails(label, open) {
+  const details = els.approvalRaw.closest("details");
+  if (!details) return;
+  const summary = details.querySelector("summary");
+  if (summary) summary.textContent = label;
+  details.open = open;
+}
+
 function renderApproval(data) {
   const proposal = data.proposal || null;
   const awaitingApproval = data.status === "awaiting_approval" && proposal;
@@ -1207,6 +1215,7 @@ function renderApproval(data) {
     els.approvalBuildActions.innerHTML = "";
     els.dismissButton.classList.remove("hidden");
     els.approveButton.textContent = "Build with primary";
+    setApprovalDetails("Proposal details", false);
     return;
   }
   if (awaitingCriteria) {
@@ -1222,6 +1231,7 @@ function renderApproval(data) {
     els.approvalEstimate.textContent = "No agent has started this task yet.";
     els.approvalHelper.textContent = "Approve starts the selected agents. Modify appends extra criteria. Reject cancels this pending task.";
     els.approvalRaw.textContent = criteriaGateText(gate);
+    setApprovalDetails("Criteria details", true);
     els.approvalBuildActions.innerHTML = "";
     els.approveButton.textContent = "Approve criteria";
     els.approveButton.classList.remove("hidden");
@@ -1245,6 +1255,7 @@ function renderApproval(data) {
     .join(" | ") || formatExecutionEstimate(proposal.execution_estimate);
   els.approvalHelper.textContent = "Review the plans, then choose the one agent allowed to build. Modify requires a note; Dismiss closes the gate without execution.";
   els.approvalRaw.textContent = proposalRawText(proposal);
+  setApprovalDetails("Proposal details", false);
   els.approveButton.textContent = "Build with primary";
   els.dismissButton.classList.remove("hidden");
   renderBuildChoices(proposal);
