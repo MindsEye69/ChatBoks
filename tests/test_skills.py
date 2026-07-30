@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from orchestrator import Chatboks
+from remote_control import discover_skills
 
 
 def _make_app(root: Path) -> Chatboks:
@@ -73,8 +74,26 @@ def test_skill_summary_prefers_summary_field() -> None:
     print("PASS: skill summary uses Summary field")
 
 
+def test_workbench_discovers_project_agent_specific_skills() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        claude_skill = root / ".claude" / "skills" / "claude-only" / "SKILL.md"
+        codex_skill = root / ".codex" / "skills" / "codex-only" / "SKILL.md"
+        claude_skill.parent.mkdir(parents=True)
+        codex_skill.parent.mkdir(parents=True)
+        claude_skill.write_text("Summary: Claude workflow.\n", encoding="utf-8")
+        codex_skill.write_text("Summary: Codex workflow.\n", encoding="utf-8")
+
+        catalog = discover_skills(root)
+
+        assert catalog["project claude:claude-only"]["agents"] == ["claude"]
+        assert catalog["project codex:codex-only"]["agents"] == ["codex"]
+        print("PASS: Workbench discovers project skill folders")
+
+
 if __name__ == "__main__":
     test_skills_command_lists_native_skills_without_agent_round()
     test_skills_command_previews_requested_skill()
     test_skill_summary_prefers_summary_field()
+    test_workbench_discovers_project_agent_specific_skills()
     print("\nAll skill smoke tests passed.")
