@@ -177,11 +177,13 @@ def test_broad_multi_agent_prompt_triggers_criteria_gate():
         )
         app.resolve_available_agents = MagicMock(return_value=["claude", "codex"])
         app.run_agent_round = MagicMock()
+        app.state["completed_agents"] = ["claude"]
 
         app.handle_user_input("@all give your top improvements, do three rounds")
 
         assert app.state["status"] == "awaiting_criteria"
         assert app.state["next_agent"] == "you"
+        assert app.state["completed_agents"] == []
         assert app.state["criteria_gate"]["agents"] == ["claude", "codex"]
         assert "multi_agent" in app.state["criteria_gate"]["reasons"]
         assert "broad" in app.state["criteria_gate"]["reasons"]

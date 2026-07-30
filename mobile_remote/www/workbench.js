@@ -1559,6 +1559,7 @@ function renderProgress(data) {
   const nextAgent = canonicalAgent(data.next_agent || "");
   const status = String(data.status || "idle");
   const awaitingApproval = status === "awaiting_approval" && data.proposal;
+  const awaitingCriteria = status === "awaiting_criteria" && data.criteria_gate;
   const rows = [];
   let done = 0;
   let total = 0;
@@ -1572,7 +1573,12 @@ function renderProgress(data) {
     rows.push(progressItem(`Approval needed: ${data.proposal.summary || "review proposal"}`, "active"));
   }
 
-  if (expected.length) {
+  if (awaitingCriteria) {
+    total += 1;
+    rows.push(progressItem("Criteria needed: approve, modify, or reject", "active"));
+  }
+
+  if (expected.length && !awaitingCriteria) {
     total += expected.length;
     for (const agent of expected) {
       const canonical = canonicalAgent(agent);
@@ -1599,6 +1605,11 @@ function renderProgress(data) {
 
   if (awaitingApproval) {
     els.progressCount.textContent = "approval needed";
+    els.progressPercent.textContent = "hold";
+    return;
+  }
+  if (awaitingCriteria) {
+    els.progressCount.textContent = "criteria needed";
     els.progressPercent.textContent = "hold";
     return;
   }

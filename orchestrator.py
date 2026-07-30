@@ -373,6 +373,7 @@ class Chatboks:
                 "next_agent": next_agent,
                 "active_task": routed_text,
                 "agent_status": self.load_agent_statuses(),
+                "completed_agents": [],
                 "confirmation_repairs_used": 0,
                 "handoff_depth": 0,
                 "criteria_gate": None,
@@ -520,6 +521,7 @@ class Chatboks:
                 "status": "awaiting_criteria",
                 "next_agent": "you",
                 "active_task": routed_text,
+                "completed_agents": [],
                 "criteria_gate": gate,
             }
         )
