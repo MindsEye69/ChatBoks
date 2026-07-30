@@ -10,6 +10,7 @@ from typing import Any
 from rich.text import Text
 
 from ui.stream import Stream
+from version import CHATBOKS_VERSION_LABEL
 
 try:
     from textual import on
@@ -275,6 +276,13 @@ class ChatboksTextualApp(App[None]):
         display: none;
     }
 
+    #version {
+        height: 1;
+        content-align: right middle;
+        color: $text-muted;
+        padding: 0 1;
+    }
+
     #status, #tokens, #help {
         height: auto;
         margin-bottom: 1;
@@ -303,6 +311,7 @@ class ChatboksTextualApp(App[None]):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
+        yield Static(CHATBOKS_VERSION_LABEL, id="version")
         yield Static("", id="help")
         yield Static("session tokens: unavailable", id="tokens")
         yield SelectableRichLog(id="transcript", text_provider=self.transcript_text)
@@ -766,11 +775,17 @@ class ChatboksTextualApp(App[None]):
         path = Path(self.chatboks.chatboks_md)
         if not path.exists():
             return
-        lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+        lines = self.filter_transcript_tail_lines(path.read_text(encoding="utf-8-sig", errors="replace").splitlines())
         tail = "\n".join(lines[-line_count:]).strip()
         if tail:
             self.write_log("Recent transcript tail", "bold dim")
             self.write_log(tail, "dim")
+
+    @staticmethod
+    def filter_transcript_tail_lines(lines: list[str]) -> list[str]:
+        from agents.base import BaseAgent
+
+        return [line for line in lines if not BaseAgent.is_noisy_codex_startup_warning(line)]
 
     def action_clear_log(self) -> None:
         self.query_one("#transcript", RichLog).clear()
@@ -898,5 +913,5 @@ class ChatboksTextualApp(App[None]):
 
 
 def run_textual_app(chatboks: Any) -> int:
-    ChatboksTextualApp(chatboks).run()
+    ChatboksTextualApp(chatboks).run(mouse=False)
     return 0

@@ -12,8 +12,10 @@ from textual.widgets import OptionList, RichLog, Static, TextArea
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import ui.textual_app as textual_app_module
 from ui.stream import Stream
 from ui.textual_app import ChatboksTextualApp, SelectableRichLog, TextualStream
+from version import CHATBOKS_VERSION_LABEL
 
 
 @pytest.fixture
@@ -132,6 +134,36 @@ def test_textual_app_seed_transcript_tail_handles_missing_file() -> None:
         app.write_log.assert_not_called()
 
 
+def test_textual_app_seed_tail_filters_noisy_codex_startup_warnings() -> None:
+    lines = [
+        "[HANDOFF] None.",
+        "2026-07-28T16:06:03.773840Z  WARN codex_models_manager::model_info: Unknown model gpt-5.6-sol is used.",
+        "box junk 2026-07-28T16:06:04.089819Z  WARN codex_core_skills::loader: ignoring interface.icon_small",
+        "warning: Model metadata for `gpt-5.6-sol` not found. Defaulting to fallback metadata.",
+        "ERROR: real model failure",
+    ]
+
+    filtered = ChatboksTextualApp.filter_transcript_tail_lines(lines)
+
+    assert filtered == ["[HANDOFF] None.", "ERROR: real model failure"]
+
+
+def test_run_textual_app_disables_mouse_reporting(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[bool | None] = []
+
+    class FakeApp:
+        def __init__(self, chatboks: MagicMock) -> None:
+            self.chatboks = chatboks
+
+        def run(self, *, mouse: bool = True) -> None:
+            calls.append(mouse)
+
+    monkeypatch.setattr(textual_app_module, "ChatboksTextualApp", FakeApp)
+
+    assert textual_app_module.run_textual_app(MagicMock()) == 0
+    assert calls == [False]
+
+
 def test_textual_app_prompt_exception_is_persisted_and_blocks_state() -> None:
     chatboks = MagicMock()
     app = ChatboksTextualApp(chatboks)
@@ -194,11 +226,14 @@ async def test_textual_app_mounts_with_fake_chatboks(tmp_path: Path) -> None:
     async with app.run_test():
         prompt = app.query_one("#prompt", TextArea)
         transcript = app.query_one("#transcript", RichLog)
+        version = app.query_one("#version", Static)
         assert prompt.placeholder.startswith("Type a prompt")
         assert prompt.styles.height.value == 4
         assert transcript.allow_select is True
         assert isinstance(transcript, SelectableRichLog)
+        assert CHATBOKS_VERSION_LABEL in str(version.render())
         child_ids = [child.id for child in app.screen.children if child.id]
+        assert child_ids.index("version") < child_ids.index("help")
         assert child_ids.index("tokens") < child_ids.index("transcript")
         child_types = [type(child).__name__ for child in app.screen.children]
         assert child_types.index("PromptTextArea") < child_types.index("Footer")

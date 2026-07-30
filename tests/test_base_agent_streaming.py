@@ -246,6 +246,39 @@ def test_streaming_run_cli_reports_nonzero_stderr() -> None:
     assert result == "CLI call failed for script: bad stderr\n>>> BLOCKED"
 
 
+def test_streaming_run_cli_reports_nonzero_stdout_when_stderr_is_empty() -> None:
+    script = (
+        "import sys\n"
+        "sys.stdin.read()\n"
+        "print('Not logged in \\u00b7 Please run /login')\n"
+        "raise SystemExit(1)\n"
+    )
+
+    result = run_script(script, timeout=5)
+
+    assert result == "CLI call failed for script: Not logged in \u00b7 Please run /login\n>>> BLOCKED"
+
+
+def test_streaming_run_cli_filters_noisy_codex_startup_warnings_on_failure() -> None:
+    script = (
+        "import sys\n"
+        "sys.stdin.read()\n"
+        "print('2026-07-28T16:06:03.773840Z  WARN codex_models_manager::model_info: Unknown model gpt-5.6-sol is used.', file=sys.stderr)\n"
+        "print('2026-07-28T16:06:04.930636Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt', file=sys.stderr)\n"
+        "print('2026-07-28T16:06:04.988650Z  WARN codex_core_skills::loader: ignoring interface.icon_small', file=sys.stderr)\n"
+        "print('2026-07-28T16:06:04.891436Z  WARN codex_core::session_startup_prewarm: startup websocket prewarm setup failed', file=sys.stderr)\n"
+        "print('2026-07-28T16:19:06.096570Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell', file=sys.stderr)\n"
+        "print('warning: Model metadata for `gpt-5.6-sol` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.', file=sys.stderr)\n"
+        "print('warning: Skill descriptions were shortened to fit the 2% skills context budget.', file=sys.stderr)\n"
+        "print('ERROR: real model failure', file=sys.stderr)\n"
+        "raise SystemExit(1)\n"
+    )
+
+    result = run_script(script, timeout=5)
+
+    assert result == "CLI call failed for script: ERROR: real model failure\n>>> BLOCKED"
+
+
 def test_streaming_run_cli_detects_token_exhaustion_on_failure() -> None:
     script = (
         "import sys\n"

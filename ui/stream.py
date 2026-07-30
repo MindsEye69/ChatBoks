@@ -12,6 +12,7 @@ from rich.rule import Rule
 from rich.text import Text
 
 from encoding_utils import configure_utf8_stdio
+from version import CHATBOKS_VERSION_LABEL
 
 
 DEFAULT_COLORS = {
@@ -38,6 +39,7 @@ class Stream:
         self._agent_output_needs_newline = False
 
     def banner(self, project: str) -> None:
+        self.console.print(f"[dim]{CHATBOKS_VERSION_LABEL}[/dim]", justify="right")
         self.console.print(Rule(f"[bold]CHATBOKS - {project.upper()}[/bold]"))
 
     def ready(self) -> None:

@@ -23,6 +23,7 @@ and do not expose local control surfaces to untrusted networks or users.
 - `context/builder.py`: packages CodeGraph, recent ChatBoks history, and active task
 - `context/summarizer.py`: deterministic fallback summary for token resets
 - `ui/stream.py`: Rich terminal UI
+- `version.py`: root ChatBoks version source
 - `hooks/post-commit`: optional async handoff hook
 
 ## Protocol

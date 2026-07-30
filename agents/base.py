@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import re
 import subprocess
 import threading
 import time
@@ -398,7 +399,11 @@ class BaseAgent:
                 raise TokenExhaustionError(
                     combined_output or f"{self.name} exhausted its token context."
                 )
-            error_output = stderr.strip() or "No stderr captured."
+            error_output = "\n".join(
+                part.strip()
+                for part in (self.filter_cli_stderr(stderr), stdout)
+                if part.strip()
+            ) or "No stderr/stdout captured."
             return f"CLI call failed for {self.name}: {error_output}\n>>> BLOCKED"
         output = stdout.strip()
         if self.is_token_exhaustion(output):
@@ -554,6 +559,29 @@ class BaseAgent:
             process.wait(timeout=1)
         except subprocess.TimeoutExpired:
             pass
+
+    @staticmethod
+    def filter_cli_stderr(stderr: str) -> str:
+        filtered_lines: list[str] = []
+        for line in stderr.splitlines():
+            if BaseAgent.is_noisy_codex_startup_warning(line):
+                continue
+            filtered_lines.append(line)
+        return "\n".join(filtered_lines)
+
+    @staticmethod
+    def is_noisy_codex_startup_warning(line: str) -> bool:
+        stripped = line.strip()
+        if stripped.startswith("warning: Model metadata for "):
+            return True
+        if stripped.startswith("warning: Skill descriptions were shortened "):
+            return True
+        return bool(
+            re.match(
+                r".*\bWARN\s+codex_(core|core_plugins|core_skills|models_manager)::",
+                stripped,
+            )
+        )
 
     @staticmethod
     def short_codegraph_status(codegraph: str) -> str:
