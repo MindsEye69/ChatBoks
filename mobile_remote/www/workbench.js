@@ -1168,11 +1168,36 @@ function renderBuildChoices(proposal) {
   els.approveButton.classList.toggle("hidden", candidates.length > 0);
 }
 
+function criteriaGateText(gate) {
+  const reasonLabels = {
+    multi_agent: "Multi-agent prompt",
+    broad: "Broad scope",
+    durable: "Durable protocol or memory impact",
+    security: "Safety, auth, remote access, or execution impact",
+    ambiguous: "Ambiguous outcome",
+  };
+  const agents = uniqueAgents(gate.agents || []).map(agentDisplayName).join(", ") || "selected agents";
+  const reasons = (gate.reasons || []).map((reason) => reasonLabels[reason] || reason).join(", ") || "criteria gate";
+  const lines = [
+    `Task: ${gate.routed_text || gate.original_text || "No task text was recorded."}`,
+    `Agents: ${agents}`,
+    `Why paused: ${reasons}`,
+    "",
+    "Minimum acceptance criteria:",
+    "- Desired outcome is explicit enough that agents can verify completion.",
+    "- Safety, auth, remote access, or durable memory impact is named when relevant.",
+    "- Verification evidence is expected before TASK_COMPLETE.",
+  ];
+  return lines.join("\n");
+}
+
 function renderApproval(data) {
   const proposal = data.proposal || null;
   const awaitingApproval = data.status === "awaiting_approval" && proposal;
-  els.approvalPanel.classList.toggle("hidden", !awaitingApproval);
-  if (!awaitingApproval) {
+  const gate = data.criteria_gate || null;
+  const awaitingCriteria = data.status === "awaiting_criteria" && gate;
+  els.approvalPanel.classList.toggle("hidden", !awaitingApproval && !awaitingCriteria);
+  if (!awaitingApproval && !awaitingCriteria) {
     state.approvalActive = false;
     state.approvalProposalId = "";
     setApprovalControls(false);
@@ -1180,6 +1205,28 @@ function renderApproval(data) {
     els.approvalCommandPreview.textContent = "";
     els.approvalHelper.textContent = "";
     els.approvalBuildActions.innerHTML = "";
+    els.dismissButton.classList.remove("hidden");
+    els.approveButton.textContent = "Build with primary";
+    return;
+  }
+  if (awaitingCriteria) {
+    const gateId = String(gate.id || `${gate.routed_text || gate.original_text || "criteria"}`);
+    if (state.approvalProposalId !== gateId) {
+      els.approvalModification.value = "";
+      setApprovalStatus("Choose whether to run this task, add criteria, or cancel it.");
+    }
+    state.approvalActive = true;
+    state.approvalProposalId = gateId;
+    els.approvalMeta.textContent = "Acceptance criteria gate";
+    els.approvalSummary.textContent = "Approve, modify, or reject before agents run";
+    els.approvalEstimate.textContent = "No agent has started this task yet.";
+    els.approvalHelper.textContent = "Approve starts the selected agents. Modify appends extra criteria. Reject cancels this pending task.";
+    els.approvalRaw.textContent = criteriaGateText(gate);
+    els.approvalBuildActions.innerHTML = "";
+    els.approveButton.textContent = "Approve criteria";
+    els.approveButton.classList.remove("hidden");
+    els.dismissButton.classList.add("hidden");
+    setApprovalControls(false);
     return;
   }
   const proposalId = String(proposal.id || `${proposal.proposed_by || "agent"}:${proposal.summary || ""}`);
@@ -1198,6 +1245,8 @@ function renderApproval(data) {
     .join(" | ") || formatExecutionEstimate(proposal.execution_estimate);
   els.approvalHelper.textContent = "Review the plans, then choose the one agent allowed to build. Modify requires a note; Dismiss closes the gate without execution.";
   els.approvalRaw.textContent = proposalRawText(proposal);
+  els.approveButton.textContent = "Build with primary";
+  els.dismissButton.classList.remove("hidden");
   renderBuildChoices(proposal);
   setApprovalControls(false);
 }
@@ -1797,7 +1846,7 @@ async function sendPrompt(text) {
 
 async function submitApproval(action) {
   if (!state.approvalActive) {
-    setApprovalStatus("No active proposal is waiting for approval.", "error");
+    setApprovalStatus("No active decision is waiting for approval.", "error");
     return;
   }
   const note = els.approvalModification.value.trim();
