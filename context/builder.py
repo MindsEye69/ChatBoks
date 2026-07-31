@@ -9,6 +9,7 @@ from typing import Any
 
 from context.summarizer import Summarizer
 from context.transcript import find_last_summary_checkpoint, is_transcript_turn
+from session_journal import safe_session_id
 
 _SAFE_COL = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -21,24 +22,39 @@ class ContextBuilder:
         self.summarizer = Summarizer(int(self.context_config.get("summary_max_items", 32) or 32))
 
     def build(self, state: dict[str, Any], chatboks_md: Path) -> str:
+        chatboks_md = self.session_transcript_path(state, chatboks_md)
         if state.get("round_intent") == "triad_brainstorm":
-            # A fresh ideation round must not compete with an older transcript for attention.
-            return "\n\n".join(
-                [
-                    "[TRIAD CONTEXT]\nPrior transcript, sleep memory, and outcomes are intentionally omitted for independent ideas.",
-                    self.load_codegraph_status(),
-                    self.load_round_context(state),
-                    self.load_active_task(state),
-                ]
-            )
+            # Fresh ideation stays independent. An interrupted round needs its
+            # checkpoint so agents can continue without repeating completed work.
+            interrupted = state.get("status") == "awaiting_resume" or bool(state.get("completed_agents"))
+            parts = [
+                (
+                    "[TRIAD CONTEXT]\nDurable session memory and recent turns are included because this round is resuming."
+                    if interrupted
+                    else "[TRIAD CONTEXT]\nPrior transcript, sleep memory, and outcomes are intentionally omitted for independent ideas."
+                ),
+                self.load_codegraph_status(),
+            ]
+            if interrupted:
+                recent_turns = int(self.context_config.get("resume_recent_turns", 8) or 8)
+                parts.extend(
+                    [
+                        self.load_session_memory(state),
+                        self.load_recent_chatboks(chatboks_md, turns=recent_turns),
+                    ]
+                )
+            parts.extend([self.load_round_context(state), self.load_active_task(state)])
+            return "\n\n".join(parts)
         mode = self.context_mode(state)
         if mode == "lean":
+            recent_turns = int(self.context_config.get("resume_recent_turns", 8) or 8)
             return "\n\n".join(
                 [
                     self.load_codegraph_status(),
+                    self.load_session_memory(state),
                     self.load_sleep_memory(),
                     self.load_outcome_summary(),
-                    self.load_recent_chatboks(chatboks_md, turns=3),
+                    self.load_recent_chatboks(chatboks_md, turns=recent_turns),
                     self.load_round_context(state),
                     self.load_active_task(state),
                     self.load_handoff(state),
@@ -47,6 +63,7 @@ class ContextBuilder:
         return "\n\n".join(
             [
                 self.load_codegraph(full=mode == "full"),
+                self.load_session_memory(state),
                 self.load_sleep_memory(),
                 self.load_recent_chatboks(chatboks_md),
                 self.load_round_context(state),
@@ -54,6 +71,28 @@ class ContextBuilder:
                 self.load_handoff(state),
             ]
         )
+
+    def session_transcript_path(self, state: dict[str, Any], fallback: Path) -> Path:
+        session = state.get("session")
+        if not session:
+            return fallback
+        candidate = self.project_path / ".chatboks" / "sessions" / safe_session_id(session) / "journal.md"
+        return candidate if candidate.exists() else fallback
+
+    def load_session_memory(self, state: dict[str, Any]) -> str:
+        session = state.get("session")
+        if not session:
+            return "[SESSION MEMORY] No durable session checkpoint."
+        path = self.project_path / ".chatboks" / "sessions" / safe_session_id(session) / "memory.md"
+        if not path.exists():
+            return "[SESSION MEMORY] No durable session checkpoint."
+        text = path.read_text(encoding="utf-8-sig", errors="replace").strip()
+        if not text:
+            return "[SESSION MEMORY] Durable session checkpoint is empty."
+        max_chars = int(self.context_config.get("session_memory_max_chars", 12_000) or 12_000)
+        if max_chars > 0 and len(text) > max_chars:
+            text = text[:max_chars].rstrip() + "\n[SESSION MEMORY TRUNCATED]"
+        return text
 
     def context_mode(self, state: dict[str, Any]) -> str:
         mode = str(state.get("context_mode") or self.context_config.get("mode") or "lean").lower()

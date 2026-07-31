@@ -193,7 +193,10 @@ Consent required:
 
 ChatBoks may retain:
 
-- `chatboks.md`: readable transcript.
+- `.chatboks/sessions/<session>/events.jsonl`: append-only machine event and audit stream.
+- `.chatboks/sessions/<session>/journal.md`: readable per-task transcript.
+- `.chatboks/sessions/<session>/snapshot.json` and `memory.md`: restart state and compact agent recovery context.
+- `chatboks.md`: compatibility mirror of the active session.
 - `.chatboks/state.json`: current orchestration state.
 - `.chatboks/outcomes.jsonl`: manually recorded wins/failures.
 - `.chatboks/agent_status.json`: agent availability.
@@ -203,7 +206,8 @@ ChatBoks may retain:
 Deletion expectation:
 
 - Project-local `.chatboks` files can be deleted to clear local operational memory, with the tradeoff that resume, availability, outcomes, and diagnostics history are lost.
-- `chatboks.md` remains the primary durable conversation record unless archived or edited by the user.
+- The per-session journal and atomic snapshot are the primary durable recovery record. JSONL preserves an append-only machine audit stream. Editing `chatboks.md` or an optional Obsidian mirror does not rewrite prior events.
+- A configured `obsidian_vault` creates additional Markdown copies under `ChatBoks/<project>/<session>/`; deleting the project-local session store remains necessary to clear ChatBoks recovery memory.
 
 ### Local Models
 
@@ -239,7 +243,8 @@ Cloud fallback must not be automatic until the "not allowed yet" items below are
 
 | Data class | Where retained | Can be deleted by user | Consent required before retention or sharing |
 |---|---|---|---|
-| Full transcript | `chatboks.md` | Yes, by editing/archiving/deleting | For secrets or sensitive third-party/private data |
+| Full transcript | `.chatboks/sessions/<session>/events.jsonl`, `journal.md`, active `chatboks.md` mirror, optional Obsidian mirror | Yes, by deleting every retained copy | For secrets or sensitive third-party/private data; explicit vault configuration for Obsidian copies |
+| Session recovery memory | `.chatboks/sessions/<session>/snapshot.json`, `memory.md`, optional Obsidian mirror | Yes | For sensitive task text or cross-project reuse |
 | Live state | `.chatboks/state.json` | Yes | No, unless it contains sensitive task text |
 | Packet memory | `.chatboks/packets.jsonl` | Yes | For secrets, private data, or cross-project facts |
 | Sleep memory | `.chatboks/sleep/` | Yes | For sensitive content and cross-project reuse |

@@ -46,6 +46,7 @@ share/python-wheels/
 .mypy_cache/
 .ruff_cache/
 .playwright-cli/
+output/playwright/
 .tox/
 .nox/
 .coverage

@@ -16,6 +16,7 @@ except ImportError:  # pragma: no cover - hook install should catch this
     yaml = None
 
 from encoding_utils import configure_utf8_stdio, utf8_env
+from session_journal import SessionJournal
 
 
 def main() -> int:
@@ -43,7 +44,16 @@ def main() -> int:
         return 0
 
     state = load_state(state_path)
-    append_commit_message(chatboks_md, project_path)
+    commit_message = append_commit_message(chatboks_md, project_path)
+    if commit_message and state.get("session"):
+        vault_value = project_config.get("obsidian_vault") or config.get("obsidian_vault")
+        vault_path = Path(str(vault_value)).expanduser().resolve() if vault_value else None
+        SessionJournal(
+            project_path,
+            args.project,
+            str(state["session"]),
+            obsidian_vault=vault_path,
+        ).append("system", commit_message)
     if state.get("status") != "handoff":
         return 0
 
@@ -73,15 +83,17 @@ def load_state(path: Path) -> dict[str, Any]:
         return {}
 
 
-def append_commit_message(chatboks_md: Path, project_path: Path) -> None:
+def append_commit_message(chatboks_md: Path, project_path: Path) -> str:
     commit_msg = git_output(project_path, ["git", "log", "-1", "--pretty=%B"]).strip()
     commit_hash = git_output(project_path, ["git", "log", "-1", "--pretty=%h"]).strip()
     author = git_output(project_path, ["git", "log", "-1", "--pretty=%an"]).strip()
     if not commit_hash:
-        return
+        return ""
+    message = f"Commit by {author}: {commit_msg} ({commit_hash})"
     chatboks_md.parent.mkdir(parents=True, exist_ok=True)
     with chatboks_md.open("a", encoding="utf-8") as handle:
-        handle.write(f"\n[SYSTEM] Commit by {author}: {commit_msg} ({commit_hash})\n")
+        handle.write(f"\n[SYSTEM] {message}\n")
+    return message
 
 
 def git_output(project_path: Path, command: list[str]) -> str:

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatBoks Workbench</title>
   <link rel="icon" type="image/png" href="./assets/chatboks-cube.png">
-  <link rel="stylesheet" href="./workbench.css?v=20260730-current-task-lanes">
+  <link rel="stylesheet" href="./workbench.css?v=20260731-command-completion">
 </head>
 <body>
   <div class="workbench-shell">
@@ -105,6 +105,10 @@
         </div>
         <div class="round-spacer"></div>
         <div class="round-actions">
+          <label class="history-search">
+            <span class="sr-only">Search active session history</span>
+            <input id="historySearch" type="search" placeholder="Search session" autocomplete="off">
+          </label>
           <button id="focusButton" class="ghost-button focus-button" type="button" aria-pressed="false"
                   aria-label="Focus mode — hide the rails and the top bar">
             <span class="focus-glyph" aria-hidden="true">⤢</span> <span id="focusLabel">Focus</span>
@@ -199,7 +203,13 @@
         <div id="selectedSkills" class="selected-skills hidden" aria-label="Selected skills"></div>
         <div class="composer-input">
           <label for="workbenchPrompt">YOU &gt;</label>
-          <textarea id="workbenchPrompt" rows="5" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
+          <div class="composer-editor">
+            <textarea id="workbenchPrompt" rows="5" dir="ltr" placeholder="Ask a question or give an instruction..."
+                      autocomplete="off" aria-autocomplete="list" aria-controls="commandCompletionPalette"
+                      aria-expanded="false"></textarea>
+            <div id="commandCompletionPalette" class="command-completion-palette hidden" role="listbox"
+                 aria-label="Command completions"></div>
+          </div>
         </div>
         <div class="composer-toolbar">
           <button class="ghost-button" type="button">Upload</button>
@@ -340,6 +350,6 @@
     </section>
   </div>
 
-  <script src="./workbench.js?v=20260730-current-task-lanes"></script>
+  <script src="./workbench.js?v=20260731-command-completion"></script>
 </body>
 </html>

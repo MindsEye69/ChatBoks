@@ -30,6 +30,7 @@ from context.builder import ContextBuilder
 from context.packets import ThoughtPacket, extract_packets, packet_records_from_jsonl, split_observed_by_anchor
 from encoding_utils import configure_utf8_stdio, utf8_env
 from router import Router, RoutingDecision
+from session_journal import SessionJournal, atomic_write_json, list_session_metadata, new_session_id
 from ui.stream import Stream
 
 
@@ -2749,6 +2750,8 @@ class Chatboks:
         if self._internal_write:
             return
         self.state = self.load_state()
+        self.ensure_session_journal()
+        self.refresh_session_memory()
         if self.state.get("status") == "handoff":
             self.stream.system("External handoff detected.")
             self.handle_handoff()
@@ -4060,8 +4063,10 @@ class Chatboks:
         try:
             with self.chatboks_md.open("a", encoding="utf-8") as handle:
                 handle.write(line)
+            self.current_session_journal().append(sender, text)
         finally:
             self._internal_write = False
+        self.refresh_session_memory()
         if sender.lower() != "you":
             streamed_response = getattr(self, "_streamed_agent_responses", {}).pop(sender.lower(), None)
             suppress_duplicate_stream_message = getattr(self.stream, "suppress_duplicate_stream_messages", True)
@@ -4192,6 +4197,92 @@ class Chatboks:
             )
         if not self.state_file.exists():
             self.save_state()
+        self.ensure_session_journal()
+
+    def current_session_journal(self) -> SessionJournal:
+        session_id = str(self.state.get("session") or "session")
+        return SessionJournal(
+            self.proj_path,
+            self.project,
+            session_id,
+            obsidian_vault=self.obsidian_vault_path(),
+        )
+
+    def obsidian_vault_path(self) -> Path | None:
+        configured = (
+            self.proj_config.get("obsidian_vault")
+            or self.config.get("obsidian_vault")
+            or os.environ.get("CHATBOKS_OBSIDIAN_VAULT")
+        )
+        return Path(str(configured)).expanduser().resolve() if configured else None
+
+    def current_session_transcript(self) -> Path:
+        journal = self.current_session_journal()
+        journal.ensure(self.chatboks_md, list(self.proj_config.get("agents") or []))
+        return journal.journal_path
+
+    def ensure_session_journal(self) -> None:
+        journal = self.current_session_journal()
+        journal.ensure(self.chatboks_md, list(self.proj_config.get("agents") or []))
+        journal.save_snapshot(self.state)
+        if not journal.memory_path.exists():
+            self.refresh_session_memory()
+
+    def refresh_session_memory(self) -> None:
+        context = getattr(self, "context", None)
+        if context is None or not self.chatboks_md.exists():
+            return
+        journal = self.current_session_journal()
+        journal.ensure(self.chatboks_md, list(self.proj_config.get("agents") or []))
+        summary = context.summarize(self.chatboks_md)
+        if isinstance(summary, str):
+            journal.write_memory(self.state, summary)
+
+    def session_history(self) -> list[dict[str, Any]]:
+        return list_session_metadata(self.proj_path, self.project, self.obsidian_vault_path())
+
+    def start_new_session(self) -> str:
+        self.ensure_project_files()
+        self.refresh_session_memory()
+        session_id = new_session_id()
+        context = dict(self.state.get("context") or {})
+        context["token_counts"] = {}
+        context["session_budget_warning_emitted"] = False
+        context["session_budget_limit_emitted"] = False
+        self.state.update(
+            {
+                "session": session_id,
+                "session_format_version": 1,
+                "session_started_at": self.timestamp(),
+                "status": "idle",
+                "active_task": None,
+                "last_agent": None,
+                "next_agent": "you",
+                "round": 0,
+                "round_intent": "respond",
+                "expected_agents": [],
+                "completed_agents": [],
+                "proposal": None,
+                "criteria_gate": None,
+                "confirmation": None,
+                "blocked_reason": None,
+                "handoff_to": None,
+                "handoff_reason": None,
+                "handoff_context": None,
+                "handoff_depth": 0,
+                "context": context,
+                "workbench_ui": {},
+            }
+        )
+        journal = self.current_session_journal()
+        self._internal_write = True
+        try:
+            self.chatboks_md.write_text(journal.header(list(self.proj_config.get("agents") or [])), encoding="utf-8")
+            journal.ensure(self.chatboks_md, list(self.proj_config.get("agents") or []))
+            self.save_state()
+        finally:
+            self._internal_write = False
+        return session_id
 
     def load_state(self) -> dict[str, Any]:
         if self.state_file.exists():
@@ -4200,7 +4291,9 @@ class Chatboks:
 
     def save_state(self) -> None:
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
-        self.state_file.write_text(json.dumps(self.state, indent=2), encoding="utf-8")
+        atomic_write_json(self.state_file, self.state)
+        if hasattr(self, "proj_path") and self.state.get("session"):
+            self.current_session_journal().save_snapshot(self.state)
 
     def update_state(self, updates: dict[str, Any]) -> None:
         self.state.update(updates)
@@ -4209,7 +4302,9 @@ class Chatboks:
     def default_state(self) -> dict[str, Any]:
         return {
             "project": self.project,
-            "session": self.timestamp(),
+            "session": new_session_id(),
+            "session_format_version": 1,
+            "session_started_at": self.timestamp(),
             "status": "initializing",
             "active_task": None,
             "last_agent": None,
@@ -4231,6 +4326,7 @@ class Chatboks:
                 "session_budget_warning_emitted": False,
                 "session_budget_limit_emitted": False,
             },
+            "workbench_ui": {},
         }
 
     def load_config(self, config_path: Path | None) -> dict[str, Any]:
@@ -4240,6 +4336,9 @@ class Chatboks:
         return yaml.safe_load(path.read_text(encoding="utf-8-sig")) or {}
 
     def normalize_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        state.setdefault("session", new_session_id())
+        state.setdefault("session_format_version", 1)
+        state.setdefault("session_started_at", self.timestamp())
         state.setdefault("round_intent", "respond")
         mode = str(state.get("context_mode", "lean")).lower()
         state["context_mode"] = mode if mode in {"lean", "normal", "full"} else "lean"
@@ -4259,6 +4358,8 @@ class Chatboks:
         state.setdefault("handoff_to", None)
         state["handoff_depth"] = max(0, int(state.get("handoff_depth", 0) or 0))
         state.setdefault("help_pin", True)
+        if not isinstance(state.get("workbench_ui"), dict):
+            state["workbench_ui"] = {}
 
         # Sanitize untrusted free-text fields that come from agent output or state.json.
         for field in ("handoff_reason", "handoff_context", "active_task"):

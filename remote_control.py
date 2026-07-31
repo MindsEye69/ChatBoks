@@ -30,6 +30,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from command_completion import catalog_for_chatboks, completion_options
 from context.packets import packet_records_from_jsonl
 from context.transcript import is_transcript_turn
 from agents.base import BaseAgent
@@ -40,8 +41,9 @@ from ui.stream import Stream
 
 
 TRANSCRIPT_LIMIT = 120
-MAX_TRANSCRIPT_LIMIT = TRANSCRIPT_LIMIT
+MAX_TRANSCRIPT_LIMIT = 10_000
 COMMAND_MAX_CHARS = 6000
+HISTORY_QUERY_MAX_CHARS = 240
 MODEL_NAME_MAX_CHARS = 120
 SKILL_SELECTION_LIMIT = 4
 SKILL_CONTENT_LIMIT = 12_000
@@ -210,7 +212,7 @@ def normalize_agent_model(agent_name: str, model: str) -> str:
     return model.strip()
 
 
-def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[dict[str, Any]]:
+def parse_chatboks_messages(path: Path, limit: int | None = TRANSCRIPT_LIMIT) -> list[dict[str, Any]]:
     if not path.exists():
         return []
 
@@ -239,8 +241,12 @@ def parse_chatboks_messages(path: Path, limit: int = TRANSCRIPT_LIMIT) -> list[d
         if current is not None:
             current["text"] += ("\n" if current["text"] else "") + line
 
+    if limit is not None and limit <= 0:
+        return []
+    selected = messages if limit is None else messages[-limit:]
+    start = 0 if limit is None else max(0, len(messages) - limit)
     trimmed = []
-    for index, message in enumerate(messages[-limit:], start=max(0, len(messages) - limit)):
+    for index, message in enumerate(selected, start=start):
         trimmed.append({"id": index, "sender": message["sender"], "text": message["text"].strip()})
     return trimmed
 
@@ -841,6 +847,11 @@ class RemoteEventBuffer:
         with self._lock:
             return [event for event in self._events if int(event["id"]) > cursor]
 
+    def clear(self) -> None:
+        with self._lock:
+            self._events = []
+            self._next_id = 1
+
 
 class RemoteAuth:
     def __init__(self, admin_token: str) -> None:
@@ -1012,6 +1023,15 @@ class RemoteSession:
     def available_projects(self) -> list[str]:
         return sorted((self.app.config.get("projects") or {}).keys())
 
+    def command_completions(self, value: str) -> dict[str, list[dict[str, str]]]:
+        options = completion_options(value, catalog_for_chatboks(self.app))
+        return {
+            "options": [
+                {"replacement": replacement, "label": label}
+                for replacement, label in options[:32]
+            ]
+        }
+
     def model_selection(self) -> dict[str, dict[str, Any]]:
         agents = self.app.config.get("agents") or {}
         selection: dict[str, dict[str, Any]] = {}
@@ -1179,6 +1199,7 @@ class RemoteSession:
             self.app.ensure_project_files()
             if self.app.state.get("status") in {"active", "handoff", "paused"} and self.app.state.get("active_task"):
                 self.app.update_state({"status": "awaiting_resume", "next_agent": "you"})
+                self.app.refresh_session_memory()
                 self.events.append("system", "system", "Previous work was paused. Choose whether to continue it or end the task.")
             if self.app.state.get("status") == "initializing":
                 self.app.initialize_agents()
@@ -1273,6 +1294,7 @@ class RemoteSession:
         with self.lock:
             if self._stop_requested and self.app.state.get("active_task"):
                 self.app.update_state({"status": "awaiting_resume", "next_agent": "you"})
+            self.app.refresh_session_memory()
             self.stop_active_codegraph()
 
     def update_claude(self) -> dict[str, str]:
@@ -1574,29 +1596,50 @@ class RemoteSession:
         with self.lock:
             if self.command_running():
                 raise ValueError("Stop the running agent command before starting a new task.")
-            self.app.update_state(
-                {
-                    "status": "idle",
-                    "next_agent": "you",
-                    "active_task": None,
-                    "proposal": None,
-                    "criteria_gate": None,
-                    "confirmation": None,
-                    "blocked_reason": None,
-                    "expected_agents": [],
-                    "completed_agents": [],
-                    "round_intent": "respond",
-                    "handoff_to": None,
-                    "handoff_reason": None,
-                    "handoff_context": None,
-                    "handoff_depth": 0,
-                }
-            )
+            self.app.start_new_session()
+            self._command_text = None
+            self.events.clear()
             self.app.append_message("system", "New task started. Previous task state cleared.")
             self.events.append("system", "system", "New task ready.")
-            return self.snapshot(cursor=0)
+            return self.snapshot(cursor=0, transcript_limit=MAX_TRANSCRIPT_LIMIT)
 
-    def snapshot(self, cursor: int = 0, transcript_limit: int = TRANSCRIPT_LIMIT) -> dict[str, Any]:
+    def save_workbench_ui(self, payload: Any) -> dict[str, Any]:
+        if not isinstance(payload, dict):
+            raise ValueError("Workbench state must be an object.")
+        session = str(payload.get("session") or "")
+        if session and session != str(self.app.state.get("session") or ""):
+            raise ValueError("Workbench state belongs to a different session.")
+        lanes: dict[str, dict[str, Any]] = {}
+        for raw_agent, raw_state in dict(payload.get("lanes") or {}).items():
+            agent = canonical_agent_name(raw_agent)
+            if not agent or not isinstance(raw_state, dict):
+                continue
+            try:
+                ratio = min(1.0, max(0.0, float(raw_state.get("scroll_ratio", 1.0))))
+                history_limit = min(MAX_TRANSCRIPT_LIMIT, max(10, int(raw_state.get("history_limit", 60))))
+            except (TypeError, ValueError):
+                continue
+            lanes[agent] = {
+                "at_bottom": bool(raw_state.get("at_bottom", False)),
+                "scroll_ratio": ratio,
+                "history_limit": history_limit,
+            }
+        selected_skills = [str(item)[:240] for item in list(payload.get("selected_skills") or [])[:SKILL_SELECTION_LIMIT]]
+        requested_theme = str(payload.get("theme") or "carbon")
+        workbench_ui = {
+            "theme": requested_theme if requested_theme in {"carbon", "chrome", "console"} else "carbon",
+            "history_query": str(payload.get("history_query") or "")[:HISTORY_QUERY_MAX_CHARS],
+            "composer_draft": str(payload.get("composer_draft") or "")[:COMMAND_MAX_CHARS],
+            "composer_expanded": bool(payload.get("composer_expanded", False)),
+            "focus_mode": bool(payload.get("focus_mode", False)),
+            "selected_skills": selected_skills,
+            "lanes": lanes,
+        }
+        with self.lock:
+            self.app.update_state({"workbench_ui": workbench_ui})
+        return {"saved": True, "session": self.app.state.get("session")}
+
+    def snapshot(self, cursor: int = 0, transcript_limit: int | None = TRANSCRIPT_LIMIT) -> dict[str, Any]:
         with self.lock:
             try:
                 self.app.state = self.app.load_state()
@@ -1639,13 +1682,25 @@ class RemoteSession:
                 fallback_config,
                 active_agents,
             )
-            transcript = parse_chatboks_messages(self.app.chatboks_md, limit=transcript_limit)
+            transcript_path = (
+                self.app.current_session_transcript()
+                if hasattr(self.app, "current_session_transcript")
+                else self.app.chatboks_md
+            )
+            transcript = parse_chatboks_messages(transcript_path, limit=transcript_limit)
             packet_path = getattr(self.app, "packet_file", None)
             return {
                 "project": self.app.project,
                 "projects": self.available_projects(),
                 "project_catalog": self.project_catalog(),
                 "session": self.app.state.get("session"),
+                "session_history": self.app.session_history() if hasattr(self.app, "session_history") else [],
+                "session_journal": str(transcript_path),
+                "resume_context_ready": bool(
+                    hasattr(self.app, "current_session_journal")
+                    and self.app.current_session_journal().memory_path.exists()
+                ),
+                "workbench_ui": dict(self.app.state.get("workbench_ui") or {}),
                 "status": self.app.state.get("status"),
                 "active_task": self.app.state.get("active_task"),
                 "next_agent": self.app.state.get("next_agent"),
@@ -1673,6 +1728,8 @@ class RemoteSession:
                 "skills": self.skills_catalog(),
                 "session_budget": session_budget if isinstance(session_budget, dict) else None,
                 "transcript": transcript,
+                "transcript_limit": "all" if transcript_limit is None else transcript_limit,
+                "transcript_complete": transcript_limit is None or len(transcript) < transcript_limit,
                 "trace": trace_snapshot(transcript, packet_path if isinstance(packet_path, Path) else None),
                 "events": self.events.since(cursor),
             }
@@ -1820,6 +1877,18 @@ class RemoteHandler(BaseHTTPRequestHandler):
             payload["bridge"] = self.server.bridge_status_payload()
             self.respond_json(payload)
             return
+        if parsed.path == "/api/completions":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+            value = str(query.get("q", [""])[0])
+            if len(value) > COMMAND_MAX_CHARS:
+                self.respond_error(HTTPStatus.BAD_REQUEST, "Completion text is too long.")
+                return
+            self.respond_json(self.server.session.command_completions(value))
+            return
         if parsed.path == "/api/session":
             if not self.origin_allowed():
                 return
@@ -1828,7 +1897,13 @@ class RemoteHandler(BaseHTTPRequestHandler):
             query = urllib.parse.parse_qs(parsed.query)
             try:
                 cursor = parse_query_int(query, "cursor", 0)
-                limit = parse_query_int(query, "limit", TRANSCRIPT_LIMIT, maximum=MAX_TRANSCRIPT_LIMIT)
+                raw_limit = str(query.get("limit", [""])[0]).strip().lower()
+                limit = None if raw_limit == "all" else parse_query_int(
+                    query,
+                    "limit",
+                    TRANSCRIPT_LIMIT,
+                    maximum=MAX_TRANSCRIPT_LIMIT,
+                )
             except ValueError as exc:
                 self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
                 return
@@ -1993,6 +2068,17 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 return
             try:
                 self.respond_json(self.server.session.start_new_task())
+            except ValueError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == "/api/session/ui":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                self.respond_json(self.server.session.save_workbench_ui(payload))
             except ValueError as exc:
                 self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
             return

@@ -4,6 +4,7 @@ import json
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
@@ -39,6 +40,7 @@ class FakeSession:
     def __init__(self) -> None:
         self.commands: list[str] = []
         self.snapshot_calls: list[tuple[int, int]] = []
+        self.completion_queries: list[str] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
 
@@ -51,7 +53,11 @@ class FakeSession:
             "monitor": {"pid": 1234},
         }
 
-    def snapshot(self, cursor: int = 0, transcript_limit: int = 120) -> dict[str, object]:
+    def command_completions(self, value: str) -> dict[str, object]:
+        self.completion_queries.append(value)
+        return {"options": [{"replacement": "/mode brainstorm", "label": "Brainstorm mode"}]}
+
+    def snapshot(self, cursor: int = 0, transcript_limit: int | None = 120) -> dict[str, object]:
         self.snapshot_calls.append((cursor, transcript_limit))
         return {
             "project": self.project,
@@ -147,6 +153,8 @@ def test_parse_chatboks_messages_reads_multiline_turns(tmp_path: Path):
         {"id": 1, "sender": "you", "text": "hello\ncontinued"},
         {"id": 2, "sender": "codex", "text": "hi there"},
     ]
+
+    assert parse_chatboks_messages(transcript, limit=None) == messages
     print("PASS: remote transcript parsing keeps multiline turns intact")
 
 
@@ -374,6 +382,47 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
     print("PASS: remote bridge accepts an authorized command and forwards it")
 
 
+def test_remote_bridge_returns_project_aware_command_completions():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        query = urllib.parse.quote("/mode br", safe="")
+        request = urllib.request.Request(
+            f"{base}/api/completions?q={query}",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert session.completion_queries == ["/mode br"]
+        assert payload["options"] == [
+            {"replacement": "/mode brainstorm", "label": "Brainstorm mode"}
+        ]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge returns command completion options")
+
+
+def test_remote_session_command_completions_use_shared_project_catalog():
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = SimpleNamespace(
+        config={"agents": {"claude": {}, "codex": {}}},
+        proj_config={"agents": ["claude", "codex"], "direct_agents": ["coordinator"]},
+        list_native_skills=lambda: [("implement", "implementation workflow")],
+    )
+
+    assert session.command_completions("/session st")["options"] == [
+        {"replacement": "/session start", "label": "run DasDashboard start checks"}
+    ]
+    assert session.command_completions("/skills im")["options"] == [
+        {"replacement": "/skills implement", "label": "implementation workflow"}
+    ]
+    assert session.command_completions("@co")["options"] == [
+        {"replacement": "@codex", "label": "route directly to agent"}
+    ]
+
+
 def test_remote_bridge_starts_new_task_for_authorized_client():
     session = FakeSession()
     server, thread, base = run_server(session, "secret-token")
@@ -437,6 +486,24 @@ def test_remote_bridge_clamps_session_transcript_limit():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge clamps oversized transcript limits")
+
+
+def test_remote_bridge_accepts_explicit_full_transcript_request():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/session?cursor=4&limit=all",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5):
+            pass
+        assert session.snapshot_calls[-1] == (4, None)
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge explicitly restores the complete transcript")
 
 
 def test_remote_bridge_rejects_oversized_json_body():
@@ -1153,6 +1220,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "workbench.js" in body
             assert "composerExpandButton" in body
             assert "activePromptText" in body
+            assert "commandCompletionPalette" in body
 
         with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1168,8 +1236,14 @@ def test_remote_bridge_serves_static_ui_files():
             assert "activePromptFromSession" in body
             assert "renderActivePrompt(cleaned)" in body
             assert "laneTranscriptForSession" in body
-            assert "transcript.slice(startIndex)" in body
-            assert "String(item.text || \"\").trim() === activePrompt" in body
+            assert "return transcript;" in body
+            assert 'HISTORY_RESTORE_QUERY = "all"' in body
+            assert "theme: state.theme" in body
+            assert "updateCommandCompletions" in body
+            assert "selectCommandCompletion" in body
+            assert 'event.key === "Tab"' in body
+            assert "lane-prompt-pip" in body
+            assert "function mergeTranscript" in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1180,6 +1254,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert "card-copy-button" in body
             assert "message-card-tools" in body
             assert "active-prompt-card" in body
+            assert "lane-prompt-nav" in body
+            assert "history-search" in body
     finally:
         server.shutdown()
         thread.join(timeout=5)

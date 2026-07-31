@@ -2,7 +2,9 @@ const STORAGE_KEY = "chatboks-workbench";
 const SESSION_POLL_MS = 1500;
 const SESSION_POLL_BUSY_MS = 350;
 const WORKBENCH_POLL_MS = 10000;
-const LANE_MESSAGE_LIMIT = 10;
+const TRANSCRIPT_POLL_LIMIT = 120;
+const HISTORY_RESTORE_QUERY = "all";
+const LANE_MESSAGE_LIMIT = 60;
 const LANE_AGENT_LIMIT = 3;
 // applies to the working agents only; the coordinator lane is additive
 const COORDINATOR_LANE_AGENT = "coordinator";
@@ -77,6 +79,17 @@ const state = {
   skills: [],
   selectedSkills: [],
   skillsFilter: "All",
+  sessionId: "",
+  transcript: [],
+  historyLoaded: false,
+  historyQuery: "",
+  latestSession: null,
+  uiSaveTimer: null,
+  uiRestoredSession: "",
+  completionOptions: [],
+  completionIndex: 0,
+  completionRequest: 0,
+  completionTimer: null,
 };
 
 const previewSession = {
@@ -158,9 +171,9 @@ for (const id of [
   "approvalBuildActions", "approveButton", "modifyButton", "rejectButton", "dismissButton",
   "attentionPanel", "attentionMeta", "attentionTitle", "attentionSummary", "attentionRaw", "attentionGuidance",
   "resumePanel", "resumeSummary", "resumeButton", "endTaskButton",
-    "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
+    "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus", "historySearch",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
-    "composerCard", "composerExpandButton", "workbenchPrompt", "sendStatus", "sendButton", "stopButton",
+    "composerCard", "composerExpandButton", "workbenchPrompt", "commandCompletionPalette", "sendStatus", "sendButton", "stopButton",
     "skillsButton", "skillsPanel", "skillsCloseButton", "skillsSearch", "skillsFilters", "skillsList", "selectedSkills",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
   "bridgeDot", "bridgePid", "bridgePairTtl", "bridgeOperator",
@@ -205,6 +218,7 @@ function setTheme(theme) {
     swatch.setAttribute("aria-pressed", String(swatch.dataset.setTheme === state.theme));
   }
   saveSettings();
+  scheduleWorkbenchUiSave();
 }
 
 function setFocusMode(on) {
@@ -212,6 +226,7 @@ function setFocusMode(on) {
   document.body.classList.toggle("is-focus", state.focusMode);
   els.focusButton.setAttribute("aria-pressed", String(state.focusMode));
   els.focusLabel.textContent = state.focusMode ? "Exit focus" : "Focus";
+  scheduleWorkbenchUiSave();
 }
 
 function enforceLeftToRightText(element) {
@@ -447,6 +462,8 @@ async function connect() {
 }
 
 function resetSessionState() {
+  window.clearTimeout(state.uiSaveTimer);
+  state.uiSaveTimer = null;
   state.eventCursor = 0;
   state.streams = {};
   state.eventMessages = {};
@@ -454,8 +471,51 @@ function resetSessionState() {
   state.trace = {};
   state.lanes = {};
   state.activePrompt = "";
+  state.sessionId = "";
+  state.transcript = [];
+  state.historyLoaded = false;
+  state.historyQuery = "";
+  state.latestSession = null;
+  state.uiRestoredSession = "";
+  if (els.historySearch) els.historySearch.value = "";
   renderActivePrompt("");
   els.agentLanes.innerHTML = "";
+}
+
+function scheduleWorkbenchUiSave() {
+  if (!state.sessionId || !state.token || !state.bridgeUrl) return;
+  window.clearTimeout(state.uiSaveTimer);
+  state.uiSaveTimer = window.setTimeout(saveWorkbenchUi, 350);
+}
+
+async function saveWorkbenchUi() {
+  state.uiSaveTimer = null;
+  const lanes = {};
+  for (const [agent, lane] of Object.entries(state.lanes)) {
+    const scrollRange = Math.max(0, lane.stream.scrollHeight - lane.stream.clientHeight);
+    lanes[agent] = {
+      at_bottom: lane.atBottom !== false,
+      scroll_ratio: scrollRange > 0 ? lane.stream.scrollTop / scrollRange : 1,
+      history_limit: lane.historyLimit || LANE_MESSAGE_LIMIT,
+    };
+  }
+  try {
+    await apiFetch("/api/session/ui", {
+      method: "POST",
+      body: JSON.stringify({
+        session: state.sessionId,
+        theme: state.theme,
+        history_query: state.historyQuery,
+        composer_draft: els.workbenchPrompt.value,
+        composer_expanded: state.composerExpanded,
+        focus_mode: state.focusMode,
+        selected_skills: state.selectedSkills,
+        lanes,
+      }),
+    });
+  } catch {
+    // Session polling reports connection failures; UI-state persistence is best effort.
+  }
 }
 
 /* ---------- polling ---------- */
@@ -503,7 +563,8 @@ function scheduleSessionPoll() {
 
 async function refreshSession() {
   try {
-    const data = await apiFetch(`/api/session?cursor=${state.eventCursor}`);
+    const limit = state.historyLoaded ? TRANSCRIPT_POLL_LIMIT : HISTORY_RESTORE_QUERY;
+    const data = await apiFetch(`/api/session?cursor=${state.eventCursor}&limit=${limit}`);
     applySession(data);
     state.connectionFailures = 0;
     state.authBlocked = false;
@@ -881,6 +942,9 @@ function ensureLanes(agents) {
 
     const stream = document.createElement("div");
     stream.className = "agent-stream";
+    const promptNav = document.createElement("nav");
+    promptNav.className = "lane-prompt-nav hidden";
+    promptNav.setAttribute("aria-label", `${laneDisplayName(agent)} prompt navigation`);
     const jumpButton = document.createElement("button");
     jumpButton.className = "lane-jump-button hidden";
     jumpButton.type = "button";
@@ -891,22 +955,28 @@ function ensureLanes(agents) {
       stream.scrollTop = stream.scrollHeight;
       updateLaneScrollState(agent);
     });
-    stream.addEventListener("scroll", () => updateLaneScrollState(agent));
+    stream.addEventListener("scroll", () => {
+      updateLaneScrollState(agent);
+      scheduleWorkbenchUiSave();
+    });
 
     pane.appendChild(header);
     pane.appendChild(stream);
+    pane.appendChild(promptNav);
     pane.appendChild(jumpButton);
     els.agentLanes.appendChild(pane);
     state.lanes[agent] = {
       ...(state.lanes[agent] || {}),
       pane,
       stream,
+      promptNav,
       jumpButton,
       statusDot: dot,
       statusLabel,
       activity,
       atBottom: true,
       savedScrollTop: 0,
+      historyLimit: LANE_MESSAGE_LIMIT,
     };
   }
 }
@@ -944,6 +1014,41 @@ function updateLaneScrollState(agent) {
   lane.atBottom = distanceFromBottom < 48;
   lane.savedScrollTop = lane.stream.scrollTop;
   lane.jumpButton?.classList.toggle("hidden", lane.atBottom);
+  updatePromptNavigation(lane);
+}
+
+function updatePromptNavigation(lane) {
+  if (!lane?.promptNav) return;
+  const anchors = [...lane.stream.querySelectorAll("[data-prompt-anchor]")];
+  let currentId = anchors[0]?.dataset.promptAnchor || "";
+  const threshold = lane.stream.scrollTop + 36;
+  for (const anchor of anchors) {
+    if (anchor.offsetTop <= threshold) currentId = anchor.dataset.promptAnchor;
+  }
+  for (const pip of lane.promptNav.querySelectorAll("button")) {
+    pip.classList.toggle("active", pip.dataset.target === currentId);
+  }
+}
+
+function renderPromptNavigation(agent, lane) {
+  lane.promptNav.replaceChildren();
+  const anchors = [...lane.stream.querySelectorAll("[data-prompt-anchor]")];
+  lane.promptNav.classList.toggle("hidden", anchors.length < 2);
+  anchors.forEach((anchor, index) => {
+    const button = document.createElement("button");
+    const prompt = anchor.dataset.promptText || "";
+    button.type = "button";
+    button.className = "lane-prompt-pip";
+    button.dataset.target = anchor.dataset.promptAnchor;
+    button.setAttribute("aria-label", `Jump to prompt ${index + 1}`);
+    button.title = `Prompt ${index + 1}: ${prompt.slice(0, 100)}`;
+    button.addEventListener("click", () => {
+      lane.stream.scrollTop = Math.max(0, anchor.offsetTop - 16);
+      updateLaneScrollState(agent);
+    });
+    lane.promptNav.appendChild(button);
+  });
+  updatePromptNavigation(lane);
 }
 
 async function chooseAgentModel(agent, select) {
@@ -1001,18 +1106,61 @@ function renderLanes(transcript) {
     if (eventMessages.length && latestUserMessage && !seenTranscriptIndexes.has(latestUserMessage.index)) {
       messages.push(latestUserMessage);
     }
-    const recent = [...messages, ...eventMessages].slice(-LANE_MESSAGE_LIMIT);
+    const combined = [...messages, ...eventMessages];
+    const query = state.historyQuery.trim().toLowerCase();
+    let visible = combined;
+    if (query) {
+      const matchingIndexes = new Set();
+      combined.forEach((message, index) => {
+        if (String(message.text || "").toLowerCase().includes(query)) {
+          matchingIndexes.add(index);
+          if (canonicalAgent(message.sender) !== "you") {
+            for (let promptIndex = index - 1; promptIndex >= 0; promptIndex -= 1) {
+              if (canonicalAgent(combined[promptIndex].sender) === "you") {
+                matchingIndexes.add(promptIndex);
+                break;
+              }
+            }
+          }
+        }
+      });
+      visible = combined.filter((_message, index) => matchingIndexes.has(index));
+    }
+    const historyLimit = query ? Math.max(LANE_MESSAGE_LIMIT, visible.length) : (lane.historyLimit || LANE_MESSAGE_LIMIT);
+    const hasEarlier = visible.length > historyLimit;
+    const recent = visible.slice(-historyLimit);
     if (!recent.length && !state.streams[agent]) {
       const empty = document.createElement("p");
       empty.className = "lane-empty";
       empty.textContent = laneEmptyText(agent);
       lane.stream.appendChild(empty);
+      lane.promptNav.replaceChildren();
       continue;
     }
+    if (hasEarlier) {
+      const loadEarlier = document.createElement("button");
+      loadEarlier.type = "button";
+      loadEarlier.className = "load-earlier-button";
+      loadEarlier.textContent = `Load ${Math.min(LANE_MESSAGE_LIMIT, visible.length - historyLimit)} earlier`;
+      loadEarlier.addEventListener("click", () => {
+        lane.historyLimit = historyLimit + LANE_MESSAGE_LIMIT;
+        renderLanes(state.transcript);
+        scheduleWorkbenchUiSave();
+      });
+      lane.stream.appendChild(loadEarlier);
+    }
     for (const message of recent) {
-      lane.stream.appendChild(
-        messageCard(message.text, { user: canonicalAgent(message.sender) === "you" }),
-      );
+      const isPrompt = canonicalAgent(message.sender) === "you";
+      if (isPrompt) {
+        const anchor = document.createElement("div");
+        const promptId = `${agent}-${message.id ?? message.index}`;
+        anchor.dataset.promptAnchor = promptId;
+        anchor.dataset.promptText = String(message.text || "");
+        anchor.appendChild(messageCard(message.text, { user: true }));
+        lane.stream.appendChild(anchor);
+      } else {
+        lane.stream.appendChild(messageCard(message.text));
+      }
     }
     const active = state.streams[agent];
     if (active) {
@@ -1032,6 +1180,7 @@ function renderLanes(transcript) {
     } else {
       lane.stream.scrollTop = Math.min(previousScrollTop, lane.stream.scrollHeight);
     }
+    renderPromptNavigation(agent, lane);
     updateLaneScrollState(agent);
   }
 }
@@ -1446,24 +1595,7 @@ function hasVisibleTask(data) {
 }
 
 function laneTranscriptForSession(data, transcript = []) {
-  if (!hasVisibleTask(data)) {
-    return [];
-  }
-  const activePrompt = String(data.command_text || data.active_task || "").trim();
-  let startIndex = -1;
-  if (activePrompt) {
-    for (let index = transcript.length - 1; index >= 0; index -= 1) {
-      const item = transcript[index] || {};
-      if (canonicalAgent(item.sender) === "you" && String(item.text || "").trim() === activePrompt) {
-        startIndex = index;
-        break;
-      }
-    }
-  }
-  if (startIndex < 0) {
-    startIndex = latestUserPrompt(transcript).index;
-  }
-  return startIndex >= 0 ? transcript.slice(startIndex) : [];
+  return transcript;
 }
 
 function renderActivePrompt(text) {
@@ -1983,6 +2115,7 @@ function renderSkills() {
       else if (state.selectedSkills.length < 4) state.selectedSkills = [...state.selectedSkills, skill.id];
       else showError("Choose up to four skills for one prompt.");
       renderSkills();
+      scheduleWorkbenchUiSave();
     });
     els.skillsList.appendChild(row);
   }
@@ -1994,7 +2127,39 @@ function setSkillsPanel(open) {
   if (open) els.skillsSearch.focus();
 }
 
+function mergeTranscript(existing, incoming) {
+  const merged = new Map();
+  for (const message of [...(existing || []), ...(incoming || [])]) {
+    const key = message.id === undefined || message.id === null
+      ? `${canonicalAgent(message.sender)}:${String(message.text || "")}`
+      : String(message.id);
+    merged.set(key, message);
+  }
+  return [...merged.values()].sort((left, right) => Number(left.id || 0) - Number(right.id || 0));
+}
+
 function applySession(data) {
+  const incomingSessionId = String(data.session || "");
+  if (state.sessionId && incomingSessionId && state.sessionId !== incomingSessionId) {
+    resetSessionState();
+  }
+  state.sessionId = incomingSessionId;
+  const shouldRestoreUi = Boolean(incomingSessionId) && state.uiRestoredSession !== incomingSessionId;
+  const savedUi = shouldRestoreUi && data.workbench_ui && typeof data.workbench_ui === "object"
+    ? data.workbench_ui
+    : null;
+  if (savedUi) {
+    setTheme(savedUi.theme || state.theme);
+    state.historyQuery = String(savedUi.history_query || "");
+    els.historySearch.value = state.historyQuery;
+    state.selectedSkills = Array.isArray(savedUi.selected_skills) ? savedUi.selected_skills : [];
+    els.workbenchPrompt.value = String(savedUi.composer_draft || "");
+    setFocusMode(Boolean(savedUi.focus_mode));
+    setComposerExpanded(Boolean(savedUi.composer_expanded), { focus: false });
+  }
+  state.latestSession = data;
+  state.transcript = mergeTranscript(state.transcript, data.transcript || []);
+  state.historyLoaded = state.historyLoaded || Boolean(data.transcript_complete);
   state.projectCatalog = Array.isArray(data.project_catalog) ? data.project_catalog : [];
   state.modelSelection = data.model_selection || {};
   state.skills = Array.isArray(data.skills) ? data.skills : state.skills;
@@ -2015,6 +2180,12 @@ function applySession(data) {
   els.roleCallButton.classList.toggle("hidden", !state.directAgents.includes("coordinator"));
 
   ensureLanes(state.agents);
+  if (savedUi?.lanes) {
+    for (const [agent, lane] of Object.entries(state.lanes)) {
+      const savedLane = savedUi.lanes[agent];
+      if (savedLane) lane.historyLimit = Number(savedLane.history_limit || LANE_MESSAGE_LIMIT);
+    }
+  }
   renderModelSelectors(state.modelSelection);
   renderProjects(data.projects || [], data.project || "");
   renderTokenBalances(data.token_usage, data.session_budget);
@@ -2025,10 +2196,22 @@ function applySession(data) {
     ingestEvents(events);
   }
 
-  const transcript = data.transcript || [];
+  const transcript = state.transcript;
   renderActivePrompt(activePromptFromSession(data, transcript));
   renderLanes(laneTranscriptForSession(data, transcript));
-  updatePreviewButton(data);
+  if (savedUi?.lanes) {
+    window.requestAnimationFrame(() => {
+      for (const [agent, lane] of Object.entries(state.lanes)) {
+        const savedLane = savedUi.lanes[agent];
+        if (!savedLane) continue;
+        const scrollRange = Math.max(0, lane.stream.scrollHeight - lane.stream.clientHeight);
+        lane.stream.scrollTop = savedLane.at_bottom ? lane.stream.scrollHeight : scrollRange * Number(savedLane.scroll_ratio || 0);
+        updateLaneScrollState(agent);
+      }
+    });
+  }
+  if (shouldRestoreUi) state.uiRestoredSession = incomingSessionId;
+  updatePreviewButton({ ...data, transcript });
   updateLaneActivity(data);
   renderCoordinator(data);
   renderApproval(data);
@@ -2059,6 +2242,96 @@ function applySession(data) {
   }
 }
 
+/* ---------- command completion ---------- */
+
+function commandCompletionVisible() {
+  return !els.commandCompletionPalette.classList.contains("hidden") && state.completionOptions.length > 0;
+}
+
+function hideCommandCompletions() {
+  window.clearTimeout(state.completionTimer);
+  state.completionTimer = null;
+  state.completionOptions = [];
+  state.completionIndex = 0;
+  els.commandCompletionPalette.replaceChildren();
+  els.commandCompletionPalette.classList.add("hidden");
+  els.workbenchPrompt.setAttribute("aria-expanded", "false");
+  els.workbenchPrompt.removeAttribute("aria-activedescendant");
+}
+
+function renderCommandCompletions(options) {
+  state.completionOptions = Array.isArray(options) ? options : [];
+  if (!state.completionOptions.length) {
+    hideCommandCompletions();
+    return;
+  }
+  state.completionIndex = Math.min(state.completionIndex, state.completionOptions.length - 1);
+  els.commandCompletionPalette.replaceChildren();
+  state.completionOptions.forEach((option, index) => {
+    const button = document.createElement("button");
+    const replacement = document.createElement("code");
+    const label = document.createElement("span");
+    button.type = "button";
+    button.id = `command-completion-${index}`;
+    button.className = `command-completion-option${index === state.completionIndex ? " is-selected" : ""}`;
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(index === state.completionIndex));
+    replacement.textContent = String(option.replacement || "");
+    label.textContent = String(option.label || "");
+    button.append(replacement, label);
+    button.addEventListener("mousedown", (event) => event.preventDefault());
+    button.addEventListener("click", () => selectCommandCompletion(index));
+    els.commandCompletionPalette.appendChild(button);
+  });
+  els.commandCompletionPalette.classList.remove("hidden");
+  els.workbenchPrompt.setAttribute("aria-expanded", "true");
+  els.workbenchPrompt.setAttribute("aria-activedescendant", `command-completion-${state.completionIndex}`);
+}
+
+function moveCommandCompletion(delta) {
+  if (!commandCompletionVisible()) return;
+  const count = state.completionOptions.length;
+  state.completionIndex = (state.completionIndex + delta + count) % count;
+  renderCommandCompletions(state.completionOptions);
+  document.getElementById(`command-completion-${state.completionIndex}`)?.scrollIntoView({ block: "nearest" });
+}
+
+function selectCommandCompletion(index = state.completionIndex) {
+  const option = state.completionOptions[index];
+  if (!option?.replacement) return false;
+  els.workbenchPrompt.value = option.replacement;
+  els.workbenchPrompt.setSelectionRange(els.workbenchPrompt.value.length, els.workbenchPrompt.value.length);
+  hideCommandCompletions();
+  scheduleWorkbenchUiSave();
+  els.workbenchPrompt.focus();
+  return true;
+}
+
+async function updateCommandCompletions() {
+  const value = els.workbenchPrompt.value;
+  const stripped = value.trimStart();
+  const relevant = stripped.startsWith("/") || stripped.startsWith("@") || /^APPROVE(?:\s|$)/i.test(stripped);
+  const request = ++state.completionRequest;
+  if (!relevant || !state.connected) {
+    hideCommandCompletions();
+    return;
+  }
+  try {
+    const data = await apiFetch(`/api/completions?q=${encodeURIComponent(value)}`);
+    if (request !== state.completionRequest || value !== els.workbenchPrompt.value) return;
+    state.completionIndex = 0;
+    renderCommandCompletions(data.options || []);
+  } catch {
+    if (request === state.completionRequest) hideCommandCompletions();
+  }
+}
+
+function scheduleCommandCompletions() {
+  state.completionRequest += 1;
+  window.clearTimeout(state.completionTimer);
+  state.completionTimer = window.setTimeout(updateCommandCompletions, 80);
+}
+
 /* ---------- composer ---------- */
 
 function setSendState(sending, message) {
@@ -2069,7 +2342,7 @@ function setSendState(sending, message) {
   }
 }
 
-function setComposerExpanded(expanded) {
+function setComposerExpanded(expanded, { focus = true } = {}) {
   state.composerExpanded = Boolean(expanded);
   els.composerCard.classList.toggle("is-expanded", state.composerExpanded);
   els.composerExpandButton.setAttribute("aria-expanded", String(state.composerExpanded));
@@ -2079,7 +2352,8 @@ function setComposerExpanded(expanded) {
   );
   els.composerExpandButton.title = state.composerExpanded ? "Collapse prompt composer" : "Expand prompt composer";
   els.composerExpandButton.querySelector("span").textContent = state.composerExpanded ? "v" : "^";
-  els.workbenchPrompt.focus();
+  if (focus) els.workbenchPrompt.focus();
+  scheduleWorkbenchUiSave();
 }
 
 function flashSendStatus() {
@@ -2132,6 +2406,7 @@ async function startNewTask() {
       flashSendStatus();
       showError("");
       els.workbenchPrompt.value = "";
+      scheduleWorkbenchUiSave();
       renderActivePrompt("");
       els.workbenchPrompt.focus();
   } catch (error) {
@@ -2146,6 +2421,7 @@ async function sendPrompt(text) {
   if (!cleaned || els.sendButton.disabled) {
     return false;
   }
+  hideCommandCompletions();
   setSendState(true, "Sending to ChatBoks...");
   renderActivePrompt(cleaned);
   try {
@@ -2155,6 +2431,7 @@ async function sendPrompt(text) {
     });
     els.workbenchPrompt.value = "";
     applySession(data);
+    scheduleWorkbenchUiSave();
     scheduleSessionPoll();
     return true;
   } catch (error) {
@@ -2232,6 +2509,18 @@ for (const swatch of document.querySelectorAll(".swatch")) {
 }
 
 els.focusButton.addEventListener("click", () => setFocusMode(!state.focusMode));
+els.historySearch.addEventListener("input", () => {
+  state.historyQuery = els.historySearch.value;
+  for (const lane of Object.values(state.lanes)) {
+    lane.historyLimit = LANE_MESSAGE_LIMIT;
+  }
+  renderLanes(state.transcript);
+  scheduleWorkbenchUiSave();
+});
+els.workbenchPrompt.addEventListener("input", () => {
+  scheduleWorkbenchUiSave();
+  scheduleCommandCompletions();
+});
 
 els.connectionToggle.addEventListener("click", () => {
   setConnectionPanel(els.connectionPanel.classList.contains("hidden"));
@@ -2314,10 +2603,33 @@ for (const textField of [els.workbenchPrompt, els.approvalModification]) {
 els.approvalModification.addEventListener("input", () => updateApprovalActionState("MODIFY"));
 els.workbenchPrompt.addEventListener("keydown", (event) => {
   enforceLeftToRightText(els.workbenchPrompt);
+  if (commandCompletionVisible()) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      moveCommandCompletion(event.key === "ArrowDown" ? 1 : -1);
+      return;
+    }
+    if (event.key === "Tab" || (event.key === "Enter" && !event.shiftKey)) {
+      event.preventDefault();
+      selectCommandCompletion();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      hideCommandCompletions();
+      return;
+    }
+  }
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendPrompt(els.workbenchPrompt.value);
   }
+});
+els.workbenchPrompt.addEventListener("blur", () => {
+  window.setTimeout(() => {
+    if (!els.commandCompletionPalette.contains(document.activeElement)) hideCommandCompletions();
+  }, 120);
 });
 
 els.newTaskButton.addEventListener("click", () => startNewTask());

@@ -74,7 +74,7 @@ def test_lean_context_omits_broad_codegraph_dumps():
         assert "Call/import relationships" not in payload
         assert "build_massive_context" not in payload
         assert "[CLAUDE] turn two" in payload
-        assert "[YOU] turn one" not in payload
+        assert "[YOU] turn one" in payload
 
 
 def test_triad_brainstorm_context_omits_prior_transcript_and_keeps_active_task_last():
@@ -96,6 +96,40 @@ def test_triad_brainstorm_context_omits_prior_transcript_and_keeps_active_task_l
         assert "[CHATBOKS RECENT" not in payload
         assert "old task that must not steer" not in payload
         assert payload.endswith("Give three improvements to fresh task recovery.")
+
+
+def test_interrupted_triad_brainstorm_restores_checkpoint_and_recent_turns():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        _make_codegraph(root)
+        session = "resume-triad"
+        session_dir = root / ".chatboks" / "sessions" / session
+        session_dir.mkdir(parents=True)
+        (session_dir / "journal.md").write_text(
+            "[YOU] brainstorm recovery improvements\n[CLAUDE] durable journal is complete\n",
+            encoding="utf-8",
+        )
+        (session_dir / "memory.md").write_text(
+            "[SESSION MEMORY - READ-ONLY RESTORE CONTEXT]\nNext: Codex should continue the partial triad.",
+            encoding="utf-8",
+        )
+        state = _state("lean")
+        state.update(
+            {
+                "session": session,
+                "status": "awaiting_resume",
+                "round_intent": "triad_brainstorm",
+                "active_task": "Brainstorm recovery improvements.",
+                "completed_agents": ["claude"],
+            }
+        )
+
+        payload = ContextBuilder(root, {}).build(state, root / "chatboks.md")
+
+        assert "because this round is resuming" in payload
+        assert "[SESSION MEMORY - READ-ONLY RESTORE CONTEXT]" in payload
+        assert "durable journal is complete" in payload
+        assert "Completed agents: claude" in payload
 
 
 def test_transcript_turns_include_direct_agent_aliases():
