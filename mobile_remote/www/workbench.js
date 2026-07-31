@@ -30,13 +30,14 @@ const AGENT_IMAGES = {
   claude: "./assets/claude.png",
   codex: "./assets/codex.png",
   coordinator: "./assets/orchestrator.png",
+  codex_spark: "./assets/spark.png",
 };
 
 /* Themes live in workbench.css as [data-theme="..."] blocks. The picked one
    is persisted with the rest of the workbench settings, so the app reopens in
    whatever the operator last chose. LEGACY_THEMES migrates the old two-way
    dark/light setting that earlier builds wrote to localStorage. */
-const THEMES = ["carbon", "chrome", "console"];
+const THEMES = ["carbon", "chrome", "console", "lumen"];
 const DEFAULT_THEME = "carbon";
 const LEGACY_THEMES = { dark: "carbon", light: "chrome" };
 

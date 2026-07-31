@@ -164,6 +164,58 @@
   --radius: 6px;
 }
 
+/* Lumen — carries the overlay app's own palette (see theme.css in the Lumen
+   repo: --bg1/--bg2/--ac1/--ac2/--glow/--panel/--nb) onto this stylesheet's
+   token names, so every existing component rule re-skins for free. */
+:root[data-theme="lumen"] {
+  color-scheme: dark;
+
+  --ground:      #06071a;
+  --ground-sunk: #040511;
+  --surface:     #0b0d26;
+  --surface-2:   #11142e;
+  --line:        rgba(150, 170, 255, 0.18);
+  --line-strong: rgba(150, 170, 255, 0.35);
+  --text:        #eef1ff;
+  --muted:       #9aa2c8;
+  --faint:       #6b7396;
+  --accent:      #8ab6ff;
+  --accent-wash: rgba(138, 182, 255, 0.14);
+  --accent-ink:  #06071a;
+  --teal:        #63c9e8;
+  --info:        #c792ff;
+  --chrome:      #aab4d9;
+  --sheen:       rgba(224, 228, 255, 0.028);
+  --ok:          #4fd8a0;
+  --ok-wash:     rgba(79, 216, 160, 0.14);
+  --on-ok:       #06231a;
+  --warn:        #e0b23c;
+  --warn-wash:   rgba(224, 178, 60, 0.13);
+  --bad:         #ff7a90;
+  --bad-wash:    rgba(255, 122, 144, 0.13);
+  --lane-claude: #63c9e8;
+  --lane-codex:  #c792ff;
+  --lane-coord:  #aab4d9;
+  --lane-spark:  #8ab6ff;
+  --mark-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
+  --shadow:      0 1px 0 rgba(224, 228, 255, 0.05), 0 14px 40px rgba(0, 0, 0, 0.45), 0 0 40px rgba(122, 146, 255, 0.1);
+
+  --bg: var(--ground);
+  --bg-soft: var(--ground-sunk);
+  --panel: var(--surface);
+  --panel-strong: var(--surface-2);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --accent-soft: var(--accent-wash);
+  --green: var(--ok);
+  --green-soft: var(--ok-wash);
+  --blue: var(--info);
+  --blue-soft: var(--accent-wash);
+  --radius: 10px;
+
+  font-family: 'Sora', "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -175,6 +227,14 @@ body {
   color: var(--text);
   overflow: hidden;
   user-select: none;
+}
+
+/* Lumen's night-sky glow — a radial wash behind the flat --ground colour,
+   matching the source mockup instead of the other themes' flat fill. */
+:root[data-theme="lumen"] body {
+  background:
+    radial-gradient(circle at 28% 14%, #090b22 0%, #050613 46%, #02030a 100%) fixed,
+    var(--ground);
 }
 
 button,
