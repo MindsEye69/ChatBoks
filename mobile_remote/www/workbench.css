@@ -1720,6 +1720,49 @@ dd {
   box-shadow: 0 0 12px color-mix(in srgb, var(--warn) 70%, transparent);
 }
 
+.selected-skills,
+.skills-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skill-chip,
+.skill-filter {
+  min-height: 28px;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 52%, var(--border));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--text);
+  font-size: 11px;
+}
+
+.skills-panel {
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-strong);
+}
+
+.skills-panel-head { display: flex; align-items: center; justify-content: space-between; }
+.skills-panel input { width: 100%; min-height: 34px; }
+.skills-list { display: grid; gap: 6px; max-height: 250px; overflow: auto; }
+.skill-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 5px; background: transparent; color: var(--text); text-align: left; }
+.skill-row span { display: grid; gap: 2px; min-width: 0; }
+.skill-row small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill-row .skill-compat {
+  color: color-mix(in srgb, var(--good) 72%, white);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.skill-row .skill-compat.warning { color: var(--bad); }
+.skill-row em { color: var(--accent); font-size: 11px; font-style: normal; font-weight: 700; }
+.skill-row.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
 .stop-button {
   min-height: 34px;
   padding: 0 12px;

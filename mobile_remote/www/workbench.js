@@ -74,6 +74,9 @@ const state = {
   composerExpanded: false,
   activePrompt: "",
   newTaskClicks: 0,
+  skills: [],
+  selectedSkills: [],
+  skillsFilter: "All",
 };
 
 const previewSession = {
@@ -158,6 +161,7 @@ for (const id of [
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
     "composerCard", "composerExpandButton", "workbenchPrompt", "sendStatus", "sendButton", "stopButton",
+    "skillsButton", "skillsPanel", "skillsCloseButton", "skillsSearch", "skillsFilters", "skillsList", "selectedSkills",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
   "bridgeDot", "bridgePid", "bridgePairTtl", "bridgeOperator",
   "progressList", "progressCount", "progressPercent",
@@ -1910,9 +1914,92 @@ function renderTrace(trace = {}) {
 
 /* ---------- session apply ---------- */
 
+function selectedSkillItems() {
+  return state.skills.filter((skill) => state.selectedSkills.includes(skill.id));
+}
+
+function skillAgentLabel(skill) {
+  const agents = Array.isArray(skill.agents) ? skill.agents : [];
+  if (agents.includes("claude") && agents.includes("codex")) return "Claude + Codex";
+  if (agents.includes("claude")) return "Claude only";
+  if (agents.includes("codex")) return "Codex only";
+  return "Check support";
+}
+
+function renderSkills() {
+  const selected = selectedSkillItems();
+  els.selectedSkills.replaceChildren();
+  els.selectedSkills.classList.toggle("hidden", !selected.length);
+  for (const skill of selected) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "skill-chip";
+    chip.textContent = `${skill.name} ×`;
+    chip.title = `Remove ${skill.name}`;
+    chip.addEventListener("click", () => {
+      state.selectedSkills = state.selectedSkills.filter((id) => id !== skill.id);
+      renderSkills();
+    });
+    els.selectedSkills.appendChild(chip);
+  }
+  els.skillsFilters.replaceChildren();
+  const categories = ["All", ...new Set(state.skills.map((skill) => skill.category))];
+  for (const category of categories) {
+    const filter = document.createElement("button");
+    filter.type = "button";
+    filter.className = "skill-filter";
+    filter.textContent = category;
+    filter.setAttribute("aria-pressed", String(state.skillsFilter === category));
+    filter.addEventListener("click", () => { state.skillsFilter = category; renderSkills(); });
+    els.skillsFilters.appendChild(filter);
+  }
+  const query = els.skillsSearch.value.trim().toLowerCase();
+  const visible = state.skills.filter((skill) => {
+    const matchesFilter = state.skillsFilter === "All" || skill.category === state.skillsFilter;
+    const text = `${skill.name} ${skill.summary} ${skill.source} ${skillAgentLabel(skill)}`.toLowerCase();
+    return matchesFilter && (!query || text.includes(query));
+  });
+  els.skillsList.replaceChildren();
+  for (const skill of visible) {
+    const row = document.createElement("button");
+    row.type = "button";
+    const active = state.selectedSkills.includes(skill.id);
+    row.className = `skill-row${active ? " active" : ""}`;
+    const copy = document.createElement("span");
+    const name = document.createElement("strong");
+    const summary = document.createElement("small");
+    const meta = document.createElement("small");
+    const action = document.createElement("em");
+    const agentLabel = skillAgentLabel(skill);
+    name.textContent = skill.name;
+    summary.textContent = `${skill.source} · ${skill.summary}`;
+    meta.className = agentLabel.includes("only") || agentLabel === "Check support" ? "skill-compat warning" : "skill-compat";
+    meta.textContent = agentLabel;
+    action.textContent = active ? "Selected" : "Add";
+    copy.append(name, summary, meta);
+    row.append(copy, action);
+    row.addEventListener("click", () => {
+      if (active) state.selectedSkills = state.selectedSkills.filter((id) => id !== skill.id);
+      else if (state.selectedSkills.length < 4) state.selectedSkills = [...state.selectedSkills, skill.id];
+      else showError("Choose up to four skills for one prompt.");
+      renderSkills();
+    });
+    els.skillsList.appendChild(row);
+  }
+}
+
+function setSkillsPanel(open) {
+  els.skillsPanel.classList.toggle("hidden", !open);
+  els.skillsButton.setAttribute("aria-expanded", String(open));
+  if (open) els.skillsSearch.focus();
+}
+
 function applySession(data) {
   state.projectCatalog = Array.isArray(data.project_catalog) ? data.project_catalog : [];
   state.modelSelection = data.model_selection || {};
+  state.skills = Array.isArray(data.skills) ? data.skills : state.skills;
+  state.selectedSkills = state.selectedSkills.filter((id) => state.skills.some((skill) => skill.id === id));
+  renderSkills();
   els.topbarProject.textContent = data.project || "-";
   els.topbarSession.textContent = data.session || "-";
   const awaitingApproval = data.status === "awaiting_approval";
@@ -2064,7 +2151,7 @@ async function sendPrompt(text) {
   try {
     const data = await apiFetch("/api/command", {
       method: "POST",
-      body: JSON.stringify({ text: cleaned }),
+      body: JSON.stringify({ text: cleaned, skills: state.selectedSkills }),
     });
     els.workbenchPrompt.value = "";
     applySession(data);
@@ -2214,6 +2301,9 @@ els.forgetButton.addEventListener("click", () => {
 
 els.sendButton.addEventListener("click", () => sendPrompt(els.workbenchPrompt.value));
 els.composerExpandButton.addEventListener("click", () => setComposerExpanded(!state.composerExpanded));
+els.skillsButton.addEventListener("click", () => setSkillsPanel(els.skillsPanel.classList.contains("hidden")));
+els.skillsCloseButton.addEventListener("click", () => setSkillsPanel(false));
+els.skillsSearch.addEventListener("input", renderSkills);
 for (const textField of [els.workbenchPrompt, els.approvalModification]) {
   enforceLeftToRightText(textField);
   textField.addEventListener("focus", () => enforceLeftToRightText(textField));

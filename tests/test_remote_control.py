@@ -65,7 +65,8 @@ class FakeSession:
             "events": [{"id": cursor + 1, "sender": "system", "text": "ok"}],
         }
 
-    def submit(self, text: str) -> dict[str, object]:
+    def submit(self, text: str, skills: object | None = None) -> dict[str, object]:
+        _ = skills
         self.commands.append(text)
         return self.snapshot()
 

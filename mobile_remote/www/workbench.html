@@ -196,6 +196,7 @@
                 aria-label="Expand prompt composer" title="Expand prompt composer">
           <span aria-hidden="true">⌃</span>
         </button>
+        <div id="selectedSkills" class="selected-skills hidden" aria-label="Selected skills"></div>
         <div class="composer-input">
           <label for="workbenchPrompt">YOU &gt;</label>
           <textarea id="workbenchPrompt" rows="5" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
@@ -203,11 +204,18 @@
         <div class="composer-toolbar">
           <button class="ghost-button" type="button">Upload</button>
           <button class="ghost-button" type="button">Auto v</button>
+          <button id="skillsButton" class="ghost-button" type="button" aria-expanded="false">Skills</button>
           <span id="sendStatus">Uses best available model</span>
           <button id="stopButton" class="stop-button hidden" type="button">Stop</button>
           <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
           <button id="sendButton" class="send-button" type="button">Send</button>
         </div>
+        <section id="skillsPanel" class="skills-panel hidden" aria-label="Choose workflow skills">
+          <div class="skills-panel-head"><strong>Skills</strong><button id="skillsCloseButton" class="ghost-button compact" type="button">Close</button></div>
+          <input id="skillsSearch" type="search" placeholder="Search skills">
+          <div id="skillsFilters" class="skills-filters"></div>
+          <div id="skillsList" class="skills-list"></div>
+        </section>
       </section>
 
       <section id="systemDrawer" class="coordinator-card system-drawer hidden" aria-label="System coordinator">
