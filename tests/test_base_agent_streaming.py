@@ -290,6 +290,21 @@ def test_streaming_run_cli_detects_token_exhaustion_on_failure() -> None:
     with pytest.raises(TokenExhaustionError, match="context length exceeded"):
         run_script(script, timeout=5)
 
+def test_streaming_run_cli_preserves_successful_context_window_report() -> None:
+    script = (
+        "import sys\n"
+        "sys.stdin.read()\n"
+        "print('Finding: context window wording is part of this valid report.')\n"
+        "print('>>> TASK_COMPLETE')\n"
+    )
+
+    result = run_script(script, timeout=5)
+
+    assert result == (
+        "Finding: context window wording is part of this valid report.\n"
+        ">>> TASK_COMPLETE"
+    )
+
 
 def test_call_uses_extended_max_timeout_for_streaming_heartbeat() -> None:
     with tempfile.TemporaryDirectory() as tmp:
@@ -336,6 +351,7 @@ if __name__ == "__main__":
         test_dynamic_idle_timeout_scales_with_prompt_size,
         test_streaming_run_cli_reports_nonzero_stderr,
         test_streaming_run_cli_detects_token_exhaustion_on_failure,
+        test_streaming_run_cli_preserves_successful_context_window_report,
         test_call_uses_extended_max_timeout_for_streaming_heartbeat,
         test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion,
     ]

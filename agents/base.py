@@ -444,8 +444,6 @@ class BaseAgent:
             ) or "No stderr/stdout captured."
             return f"CLI call failed for {self.name}: {error_output}\n>>> BLOCKED"
         output = stdout.strip()
-        if self.is_token_exhaustion(output):
-            raise TokenExhaustionError(output)
         return output or f"{self.name} returned no output.\n>>> BLOCKED"
 
     @staticmethod
