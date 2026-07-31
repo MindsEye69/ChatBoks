@@ -290,6 +290,40 @@ def test_streaming_run_cli_detects_token_exhaustion_on_failure() -> None:
     with pytest.raises(TokenExhaustionError, match="context length exceeded"):
         run_script(script, timeout=5)
 
+def test_streaming_run_cli_ignores_stdout_context_window_on_failure() -> None:
+    script = (
+        "import sys\n"
+        "sys.stdin.read()\n"
+        "print('context window is 200k tokens')\n"
+        "raise SystemExit(1)\n"
+    )
+
+    result = run_script(script, timeout=5)
+
+    assert result == "CLI call failed for script: context window is 200k tokens\n>>> BLOCKED"
+
+def test_streaming_run_cli_ignores_stdout_context_window_on_timeout() -> None:
+    script = (
+        "import sys, time\n"
+        "sys.stdin.read()\n"
+        "print('context window is 200k tokens', flush=True)\n"
+        "time.sleep(10)\n"
+    )
+
+    with pytest.raises(AgentTimeoutError):
+        run_script(script, idle_timeout=0.3, max_timeout=5)
+
+def test_streaming_run_cli_detects_token_exhaustion_from_stderr_on_timeout() -> None:
+    script = (
+        "import sys, time\n"
+        "sys.stdin.read()\n"
+        "print('context length exceeded', file=sys.stderr, flush=True)\n"
+        "time.sleep(10)\n"
+    )
+
+    with pytest.raises(TokenExhaustionError, match="context length exceeded"):
+        run_script(script, idle_timeout=0.3, max_timeout=5)
+
 def test_streaming_run_cli_preserves_successful_context_window_report() -> None:
     script = (
         "import sys\n"
@@ -351,6 +385,9 @@ if __name__ == "__main__":
         test_dynamic_idle_timeout_scales_with_prompt_size,
         test_streaming_run_cli_reports_nonzero_stderr,
         test_streaming_run_cli_detects_token_exhaustion_on_failure,
+        test_streaming_run_cli_ignores_stdout_context_window_on_failure,
+        test_streaming_run_cli_ignores_stdout_context_window_on_timeout,
+        test_streaming_run_cli_detects_token_exhaustion_from_stderr_on_timeout,
         test_streaming_run_cli_preserves_successful_context_window_report,
         test_call_uses_extended_max_timeout_for_streaming_heartbeat,
         test_run_cli_falls_back_to_secondary_adapter_profile_after_token_exhaustion,

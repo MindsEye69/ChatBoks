@@ -378,7 +378,7 @@ class BaseAgent:
                 stderr_chars=len("".join(stderr_parts)),
             )
             self._untrack_process(process)
-            if self.is_token_exhaustion(combined_output):
+            if self.is_token_exhaustion("".join(stderr_parts)):
                 raise TokenExhaustionError(
                     combined_output or f"{self.name} exhausted its token context."
                 )
@@ -433,7 +433,7 @@ class BaseAgent:
             combined_output = "\n".join(
                 part.strip() for part in (stderr, stdout) if part.strip()
             )
-            if self.is_token_exhaustion(combined_output):
+            if self.is_token_exhaustion(stderr):
                 raise TokenExhaustionError(
                     combined_output or f"{self.name} exhausted its token context."
                 )
