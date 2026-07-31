@@ -56,11 +56,40 @@ def test_execute_proposal_clears_active_proposal():
         app.router.primary.return_value = "codex"
         app.call_agent_with_token_recovery = MagicMock(return_value="Applied.\n>>> TASK_COMPLETE")
         app.append_message = MagicMock()
+        app.state["active_task"] = "ship approved fix"
+        app.state["criteria_gate"] = {"id": "criteria_test"}
+        app.state["confirmation"] = {"id": "confirm_test"}
+        app.state["blocked_reason"] = "old_block"
 
         app.execute_proposal()
 
         assert app.state["status"] == "idle"
+        assert app.state["next_agent"] == "you"
+        assert app.state["active_task"] is None
         assert app.state["proposal"] is None
+        assert app.state["criteria_gate"] is None
+        assert app.state["confirmation"] is None
+        assert app.state["blocked_reason"] is None
+
+
+def test_blocked_execute_proposal_preserves_task_but_clears_gate():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.router.primary.return_value = "codex"
+        app.call_agent_with_token_recovery = MagicMock(return_value="Need help.\n>>> BLOCKED")
+        app.append_message = MagicMock()
+        app.state["active_task"] = "ship approved fix"
+        app.state["criteria_gate"] = {"id": "criteria_test"}
+        app.state["confirmation"] = {"id": "confirm_test"}
+
+        app.execute_proposal()
+
+        assert app.state["status"] == "blocked"
+        assert app.state["next_agent"] == "you"
+        assert app.state["active_task"] == "ship approved fix"
+        assert app.state["proposal"] is None
+        assert app.state["criteria_gate"] is None
+        assert app.state["confirmation"] is None
 
 
 def test_handle_proposal_includes_execution_cost_estimate_when_configured():

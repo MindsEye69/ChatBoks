@@ -3385,12 +3385,21 @@ class Chatboks:
         response = self.call_agent_with_token_recovery(lead, mode="execute")
         self.append_message(lead, response)
         signal = self.parse_signal(response)
-        self.update_state(
-            {
-                "status": "idle" if signal != "BLOCKED" else "blocked",
-                "proposal": None,
-            }
-        )
+        next_state = {
+            "status": "idle" if signal != "BLOCKED" else "blocked",
+            "proposal": None,
+            "next_agent": "you",
+            "criteria_gate": None,
+            "confirmation": None,
+        }
+        if signal != "BLOCKED":
+            next_state.update(
+                {
+                    "active_task": None,
+                    "blocked_reason": None,
+                }
+            )
+        self.update_state(next_state)
 
     def estimate_execution_cost(self, requested_builder: str | None = None) -> dict[str, Any]:
         lead = self.estimate_execution_target(requested_builder)
