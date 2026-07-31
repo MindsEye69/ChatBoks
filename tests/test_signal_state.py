@@ -742,6 +742,7 @@ def test_agent_timeout_recovery_blocks_when_git_diff_repeats():
 if __name__ == "__main__":
     test_parse_signal_uses_declared_priority()
     test_execute_proposal_clears_active_proposal()
+    test_blocked_execute_proposal_preserves_task_but_clears_gate()
     test_handle_proposal_includes_execution_cost_estimate_when_configured()
     test_handle_proposal_marks_cost_unavailable_when_rates_missing()
     test_check_token_limit_uses_default_warning_threshold()
