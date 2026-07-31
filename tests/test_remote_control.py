@@ -1144,6 +1144,11 @@ def test_remote_bridge_serves_static_ui_files():
             assert response.status == 200
             assert response.headers["Content-Type"].startswith("image/png")
 
+        with urllib.request.urlopen(f"{base}/assets/spark.png", timeout=5) as response:
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("image/png")
+            assert int(response.headers["Content-Length"]) > 0
+
         with urllib.request.urlopen(f"{base}/workbench", timeout=5) as response:
             body = response.read().decode("utf-8")
             assert response.status == 200
@@ -1151,6 +1156,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "Content-Security-Policy" in response.headers
             assert "workbench.js" in body
             assert "composerExpandButton" in body
+            assert "attentionToggleButton" in body
             assert "activePromptText" in body
 
         with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
@@ -1169,6 +1175,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert "laneTranscriptForSession" in body
             assert "transcript.slice(startIndex)" in body
             assert "String(item.text || \"\").trim() === activePrompt" in body
+            assert "function setComposerHeight" in body
+            assert "function setAttentionCollapsed" in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")
