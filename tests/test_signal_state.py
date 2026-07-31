@@ -530,7 +530,8 @@ def test_streamed_agent_response_is_persisted_without_duplicate_render():
 
         agent = MagicMock()
 
-        def fake_call(_context: str) -> str:
+        def fake_call(_context: str, mode: str = "respond") -> str:
+            assert mode == "respond"
             agent.stdout_callback("Live ")
             agent.stdout_callback("answer\n>>> TASK_COMPLETE\n")
             return "Live answer\n>>> TASK_COMPLETE"
@@ -547,6 +548,27 @@ def test_streamed_agent_response_is_persisted_without_duplicate_render():
         assert app.stream.agent_output_delta.call_count == 2
         app.stream.agent_output_finish.assert_called_once_with("codex")
         app.stream.message.assert_not_called()
+
+
+def test_agent_round_forwards_triad_mode_to_agent_call():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config = {
+            "agents": {"coordinator": {"token_warning": 100_000}},
+            "context": {"max_token_recovery_retries": 0, "max_timeout_recovery_retries": 0},
+        }
+        app.state["context"]["token_counts"]["coordinator"] = 0
+        app.context.build.return_value = "[TRIAD CONTEXT]\n[ACTIVE TASK]\nImprove recovery."
+
+        agent = MagicMock()
+        agent.stdout_callback = None
+        agent.call.return_value = "Three candidates.\n>>> TASK_COMPLETE"
+        app.router.get_agent.return_value = agent
+
+        response = app.call_agent_with_token_recovery("coordinator", mode="triad_brainstorm")
+
+        assert response == "Three candidates.\n>>> TASK_COMPLETE"
+        agent.call.assert_called_once_with(app.context.build.return_value, mode="triad_brainstorm")
 
 
 def test_remote_streamed_agent_response_still_emits_final_message_event():

@@ -27,12 +27,18 @@ class CoordinatorAgent(BaseAgent):
     def build_prompt(self, context: str, mode: str) -> str:
         max_chars = int(self.config.get("max_prompt_chars", 8000))
         if len(context) > max_chars:
-            context = (
-                context[:max_chars]
-                + "\n\n[TRUNCATED_FOR_COORDINATOR]\n"
-                + "Coordinator receives compact context only. Ask Claude or Codex for deep code work."
+            prefix = "[TRUNCATED_FOR_COORDINATOR]\n"
+            keep = max(1, max_chars - len(prefix))
+            context = prefix + context[-keep:]
+        if mode == "triad_brainstorm":
+            instruction = (
+                "Give exactly three independent, practical improvements for the active task. Format each as "
+                "`1. Title - Outcome; Effort: S/M/L; Risk: ...`. Do not challenge other ideas, discuss routing, "
+                "model status, or workflow mechanics. End with exactly >>> TASK_COMPLETE."
             )
-        instruction = (
+            return f"[AGENT TURN INSTRUCTION]\n{instruction}\n\n{context}\n"
+        else:
+            instruction = (
             "You are Coordinator for ChatBoks: a local, cheap coordinator for setup, "
             "diagnostics, routing, summaries, and small status checks. You do not have tools. "
             "Do not emit JSON, markdown fences, fake tool calls, or END_OF_MESSAGE. "
@@ -54,13 +60,13 @@ class CoordinatorAgent(BaseAgent):
             "review, vision, browser testing, or git work is needed, recommend the right agent "
             "instead of pretending to do it. End with exactly one ChatBoks signal: "
             ">>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
-        )
+            )
         return f"{self.role}\n\n[AGENT TURN INSTRUCTION]\n{instruction}\n\n{context}\n"
 
     def command(self) -> list[str]:
         return [str(self.config.get("cli", "ollama"))]
 
-    def call(self, context_package: str) -> str:
+    def call(self, context_package: str, mode: str = "respond") -> str:
         current_request = self.extract_current_request(context_package)
         lowered_request = current_request.lower()
         if self.is_role_call_request(current_request):
@@ -69,7 +75,7 @@ class CoordinatorAgent(BaseAgent):
             return self.join_response()
         if self.is_next_step_request(lowered_request):
             return self.next_step_response(lowered_request)
-        return super().call(context_package)
+        return super().call(context_package, mode=mode)
 
     def configured_model(self) -> str:
         return str(self.config.get("model", "gemma3:4b"))
@@ -116,6 +122,35 @@ class CoordinatorAgent(BaseAgent):
                 "Only localhost, 127.x.x.x, or ::1 endpoints are permitted.\n>>> BLOCKED"
             )
         model = self.configured_model()
+        triad_brainstorm = "[TRIAD CONTEXT]" in prompt
+        if triad_brainstorm:
+            system_prompt = (
+                "Return exactly three concise, independent improvements for the active task. "
+                "Each must include title, outcome, effort (S/M/L), and one risk. "
+                "Do not critique other suggestions or discuss ChatBoks workflow. "
+                "End with >>> TASK_COMPLETE."
+            )
+        else:
+            system_prompt = (
+                "You are Coordinator in ChatBoks. Plain text only. No JSON. "
+                "No markdown fences. No tool calls. Prefer one concrete next action "
+                "grounded in the provided context over broad category questions. "
+                "For setup checks, provide one concrete next diagnostic command when "
+                "possible. Valid local commands include /help, /agent, /mode, /context, "
+                "/usage, /suggest-outcome, /wins, /failures, and /outcomes. For "
+                "environment checks, prefer python doctor.py <project> or /agent. For "
+                "model-switch validation, prefer @coordinator role call or @coordinator what's next "
+                "for ChatBoks? as the next check. Do not suggest /context unless the "
+                "user is explicitly asking about context mode. Do not invent commands "
+                "such as /status. For summaries, diffs, resume packets, or planning "
+                "reviews, include key evidence when present: files changed, tests run, "
+                "risks, and the next action. Use >>> QUESTION only when the response "
+                "body contains a direct question the human must answer. If you are "
+                "giving a recommendation, status, or next action without a human "
+                "question, use >>> TASK_COMPLETE. For outcome-scoring requests, suggest "
+                "concrete /win or /fail commands but do not claim they were recorded. "
+                "End with exactly one of >>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
+            )
         payload = {
             "model": model,
             "think": self.config.get("think", False),
@@ -123,32 +158,13 @@ class CoordinatorAgent(BaseAgent):
             "messages": [
                 {
                     "role": "system",
-                    "content": (
-                        "You are Coordinator in ChatBoks. Plain text only. No JSON. "
-                        "No markdown fences. No tool calls. Prefer one concrete next action "
-                        "grounded in the provided context over broad category questions. "
-                        "For setup checks, provide one concrete next diagnostic command when "
-                        "possible. Valid local commands include /help, /agent, /mode, /context, "
-                        "/usage, /suggest-outcome, /wins, /failures, and /outcomes. For "
-                        "environment checks, prefer python doctor.py <project> or /agent. For "
-                        "model-switch validation, prefer @coordinator role call or @coordinator what's next "
-                        "for ChatBoks? as the next check. Do not suggest /context unless the "
-                        "user is explicitly asking about context mode. Do not invent commands "
-                        "such as /status. For summaries, diffs, resume packets, or planning "
-                        "reviews, include key evidence when present: files changed, tests run, "
-                        "risks, and the next action. Use >>> QUESTION only when the response "
-                        "body contains a direct question the human must answer. If you are "
-                        "giving a recommendation, status, or next action without a human "
-                        "question, use >>> TASK_COMPLETE. For outcome-scoring requests, suggest "
-                        "concrete /win or /fail commands but do not claim they were recorded. "
-                        "End with exactly one of >>> TASK_COMPLETE, >>> QUESTION, or >>> BLOCKED."
-                    ),
+                    "content": system_prompt,
                 },
                 {"role": "user", "content": prompt},
             ],
             "options": {
                 "temperature": float(self.config.get("temperature", 0.1)),
-                "num_predict": int(self.config.get("num_predict", 512)),
+                "num_predict": min(int(self.config.get("num_predict", 512)), 256) if triad_brainstorm else int(self.config.get("num_predict", 512)),
             },
         }
         request = urllib.request.Request(

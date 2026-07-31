@@ -219,6 +219,61 @@ def test_brainstorm_ideation_prompt_bypasses_criteria_gate():
         print("PASS: brainstorm ideation prompts bypass the criteria gate")
 
 
+def test_triad_brainstorm_publishes_an_attributed_shortlist():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "1. Faster task feedback - outcome; S; risk: visual noise.\n>>> TASK_COMPLETE",
+                "1. Durable session recovery - outcome; M; risk: state migration.\n>>> TASK_COMPLETE",
+                "1. Clear agent status - outcome; S; risk: stale availability.\n>>> TASK_COMPLETE",
+            ]
+        )
+
+        app.run_agent_round(
+            initiator="improve ChatBoks",
+            agents=["claude", "codex", "coordinator"],
+            intent="triad_brainstorm",
+        )
+
+        assert app.state["status"] == "idle"
+        assert app.state["active_task"] is None
+        synthesis_calls = [
+            call.args[1]
+            for call in app.append_message.call_args_list
+            if call.args[0] == "coordinator" and "[ORCHESTRATOR SYNTHESIS]" in call.args[1]
+        ]
+        assert len(synthesis_calls) == 1
+        assert "[Claude] Faster task feedback" in synthesis_calls[0]
+        assert "[Codex] Durable session recovery" in synthesis_calls[0]
+        assert "[Coordinator] Clear agent status" in synthesis_calls[0]
+        print("PASS: triad brainstorm publishes an attributed shortlist")
+
+
+def test_triad_synthesis_ignores_packets_and_prefaces():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        synthesis = app.format_triad_synthesis(
+            ["claude", "codex", "coordinator"],
+            {
+                "claude": (
+                    "**Stance: ADD**\n\n## Candidate 1: Recovery snapshots\n"
+                    "Outcome: durable resume.\n\n>>> PACKET\nobserved: not a candidate\n>>> PACKET_END\n"
+                    ">>> TASK_COMPLETE"
+                ),
+                "codex": "1. Progress ledger\n2. Resume gate\n>>> TASK_COMPLETE",
+                "coordinator": "1. Status flags\n>>> TASK_COMPLETE",
+            },
+        )
+
+        assert "[Claude] Recovery snapshots" in synthesis
+        assert "[Codex] Progress ledger" in synthesis
+        assert "[Coordinator] Status flags" in synthesis
+        assert "Stance: ADD" not in synthesis
+        assert "observed: not a candidate" not in synthesis
+
+
 def test_criteria_approval_resumes_routed_prompt_without_rerouting():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))

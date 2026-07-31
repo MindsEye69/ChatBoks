@@ -51,6 +51,7 @@ class Router:
         }
         routing_config = self.project_config.get("routing_intelligence") or {}
         self.routing_intelligence_enabled = bool(routing_config.get("enabled"))
+        self.role_prompt_interactive: bool | None = None
 
     def primary(self) -> str:
         configured = self.project_config.get("primary")
@@ -108,6 +109,21 @@ class Router:
         if requested in {"all", "team", "everyone"}:
             cleaned = remainder.strip() or text
             return RoutingDecision(list(self.agent_names), cleaned, strategy="explicit_all")
+        if requested in {"triad", "brainstorm3"}:
+            cleaned = remainder.strip() or text
+            triad_agents = self.triad_agents()
+            if len(triad_agents) < 3:
+                return RoutingDecision(
+                    self.normal_round_agents(collaboration_mode),
+                    text,
+                    note="Triad routing needs three configured agents; using the normal round instead.",
+                )
+            return RoutingDecision(
+                triad_agents,
+                cleaned,
+                note="Triad brainstorm: Claude, Codex, and Coordinator will contribute before synthesis.",
+                strategy="explicit_triad",
+            )
 
         aliases = {
             "coord": "coordinator",
@@ -153,6 +169,19 @@ class Router:
                 normalized.append(name)
         return normalized
 
+    def triad_agents(self) -> list[str]:
+        """Return the configured working pair plus the local Coordinator when available."""
+        ordered = [*self.agent_names, *self.direct_agent_names]
+        configured = self.project_config.get("triad_agents")
+        candidates = configured if isinstance(configured, list) else ordered
+        allowed = set(ordered)
+        triad: list[str] = []
+        for item in candidates:
+            name = str(item).strip()
+            if name in allowed and name in self.config.get("agents", {}) and name not in triad:
+                triad.append(name)
+        return triad
+
     def route_mode_strategy(
         self,
         text: str,
@@ -179,6 +208,21 @@ class Router:
             )
         if strategy == "full_round":
             return RoutingDecision(self.normal_round_agents(collaboration_mode), text)
+        if strategy == "triad_brainstorm":
+            triad_agents = self.triad_agents()
+            if len(triad_agents) < 3:
+                return RoutingDecision(
+                    self.normal_round_agents(collaboration_mode),
+                    text,
+                    note=f"Mode strategy: {role} needs three configured agents; using the normal round.",
+                    strategy="full_round",
+                )
+            return RoutingDecision(
+                triad_agents,
+                text,
+                note=f"Mode strategy: {role} runs a three-agent brainstorm with synthesis.",
+                strategy="mode_triad_brainstorm",
+            )
         if strategy == "confirm_round":
             return RoutingDecision(
                 [self.primary()],
@@ -358,7 +402,11 @@ class Router:
         role_file = agent_config.get("role_file")
         if role_file:
             # Project-local role file: requires trust approval before loading.
-            approved = load_role_with_approval(self.project_path, role_file)
+            approved = load_role_with_approval(
+                self.project_path,
+                role_file,
+                interactive=self.role_prompt_interactive,
+            )
             if approved is not None:
                 return self.with_shared_protocol(approved)
             # Fall back to the installed role file in the chatboks source directory.

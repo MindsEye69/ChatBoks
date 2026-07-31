@@ -124,6 +124,7 @@ HELP_COMMANDS = [
     ("/latency", "Show recent agent CLI latency splits."),
     ("@claude / @codex / @spark / @coordinator", "Route the next prompt exclusively to one agent."),
     ("@all ...", "Opt into the full configured non-direct project team for one prompt."),
+    ("@triad ...", "Run Claude, Codex, and Coordinator as an independent brainstorm, then publish a shortlist."),
     ("APPROVE / MODIFY / REJECT", "Respond to a proposal gate."),
     ("/dismiss", "Discard the active proposal without executing it."),
     ("exit / quit / bye", "End the ChatBoks terminal session."),
@@ -358,13 +359,17 @@ class Chatboks:
         if self.should_gate_acceptance_criteria(text, agents, decision):
             self.handle_criteria_pending(text, routed_text, agents, exclusive_agent, decision)
             return
-        self.start_routed_agent_round(routed_text, agents, exclusive_agent)
+        if self.is_triad_strategy(decision.strategy):
+            self.start_routed_agent_round(routed_text, agents, exclusive_agent, strategy=decision.strategy)
+        else:
+            self.start_routed_agent_round(routed_text, agents, exclusive_agent)
 
     def start_routed_agent_round(
         self,
         routed_text: str,
         agents: list[str],
         exclusive_agent: str | None = None,
+        strategy: str = "",
     ) -> None:
         next_agent = exclusive_agent or agents[0]
         self.update_state(
@@ -379,7 +384,18 @@ class Chatboks:
                 "criteria_gate": None,
             }
         )
-        self.run_agent_round(initiator=routed_text, agents=agents)
+        intent = "triad_brainstorm" if self.is_triad_strategy(strategy) else "respond"
+        if intent == "triad_brainstorm":
+            self.run_agent_round(initiator=routed_text, agents=agents, intent=intent)
+        else:
+            self.run_agent_round(initiator=routed_text, agents=agents)
+
+    @staticmethod
+    def is_triad_strategy(strategy: str | None) -> bool:
+        return str(strategy or "").strip().lower() in {
+            "explicit_triad",
+            "mode_triad_brainstorm",
+        }
 
     def should_gate_acceptance_criteria(
         self,
@@ -388,6 +404,8 @@ class Chatboks:
         decision: RoutingDecision,
     ) -> bool:
         if not self.criteria_gate_enabled():
+            return False
+        if self.is_triad_strategy(decision.strategy):
             return False
         if decision.exclusive_agent:
             return False
@@ -3068,6 +3086,7 @@ class Chatboks:
 
         for _ in range(max_rounds):
             pending_proposals: list[tuple[str, str]] = []
+            round_responses: dict[str, str] = {}
             completed_agent: str | None = None
             self.state["round"] = int(self.state.get("round", 0)) + 1
             self.state["round_intent"] = intent
@@ -3078,7 +3097,10 @@ class Chatboks:
             for index, agent_name in enumerate(active_agents):
                 is_last_agent = index == len(active_agents) - 1
                 next_agent = "you" if is_last_agent else active_agents[index + 1]
-                response = self.call_agent_with_token_recovery(agent_name, mode="respond")
+                response = self.call_agent_with_token_recovery(
+                    agent_name,
+                    mode="triad_brainstorm" if intent == "triad_brainstorm" else "respond",
+                )
                 signal = self.parse_signal(response)
 
                 if signal is None:
@@ -3108,6 +3130,7 @@ class Chatboks:
                     continue
 
                 self.append_message(agent_name, response)
+                round_responses[agent_name] = response
                 self.update_token_count(agent_name, response)
                 if signal != "BLOCKED":
                     self.mark_agent_completed(agent_name)
@@ -3142,6 +3165,9 @@ class Chatboks:
                     completed_agent = agent_name
                     if not is_last_agent:
                         continue
+                    if intent == "triad_brainstorm":
+                        self.complete_triad_brainstorm(active_agents, round_responses)
+                        return
                     confirmation = self.confirm_completion_if_needed(agent_name, response, initiator, active_agents, intent)
                     if confirmation == "confirmed":
                         self.maybe_announce_direct_standby_agents(initiator, active_agents)
@@ -3177,6 +3203,9 @@ class Chatboks:
                 return
 
             if self.all_expected_agents_completed():
+                if intent == "triad_brainstorm":
+                    self.complete_triad_brainstorm(active_agents, round_responses)
+                    return
                 self.maybe_announce_direct_standby_agents(initiator, active_agents)
                 self.stream.system("Round complete. Awaiting next instruction.")
                 self.update_state({"status": "idle", "next_agent": "you"})
@@ -3184,6 +3213,70 @@ class Chatboks:
 
         self.stream.escalate("Agents have not reached consensus. Your call.")
         self.update_state({"status": "awaiting_approval", "next_agent": "you"})
+
+    def complete_triad_brainstorm(
+        self,
+        active_agents: list[str],
+        responses: dict[str, str],
+    ) -> None:
+        """Publish a small, inspectable rollup without pretending it is model consensus."""
+        synthesis = self.format_triad_synthesis(active_agents, responses)
+        self.append_message("coordinator", synthesis)
+        self.stream.system("Triad brainstorm complete. Review the shortlist in the Orchestrator lane.")
+        self.update_state(
+            {
+                "status": "idle",
+                "next_agent": "you",
+                "active_task": None,
+                "confirmation": None,
+                "handoff_depth": 0,
+            }
+        )
+
+    def format_triad_synthesis(self, active_agents: list[str], responses: dict[str, str]) -> str:
+        candidates_by_agent = {
+            agent_name: self.extract_triad_candidates(responses.get(agent_name, ""))
+            for agent_name in active_agents
+        }
+        lines = [
+            "[ORCHESTRATOR SYNTHESIS]",
+            "Actionable shortlist, ordered by each contributor's stated priority. This is not a claimed consensus.",
+        ]
+        ordinal = 1
+        max_candidates = max((len(items) for items in candidates_by_agent.values()), default=0)
+        for index in range(max_candidates):
+            for agent_name in active_agents:
+                items = candidates_by_agent.get(agent_name, [])
+                if index >= len(items):
+                    continue
+                lines.append(f"{ordinal}. [{agent_name.title()}] {items[index]}")
+                ordinal += 1
+        if ordinal == 1:
+            lines.append("No structured candidates were extracted. Review the agent outputs directly before choosing a next action.")
+        else:
+            lines.append("Choose a named item for a proposal, or route a selected item to @codex for implementation planning.")
+        return "\n".join(lines)
+
+    def extract_triad_candidates(self, response: str, limit: int = 3) -> list[str]:
+        body = self.strip_signal_suffix(response).split(">>> PACKET", 1)[0]
+        candidates: list[str] = []
+        for raw_line in body.splitlines():
+            line = " ".join(raw_line.strip().split())
+            if not line:
+                continue
+            match = re.match(
+                r"^(?:#{1,6}\s*)?(?:[-*]\s*)?(?:candidate\s*)?\d+\s*[.):\-]\s*(.+)$",
+                line,
+                flags=re.IGNORECASE,
+            )
+            if not match:
+                continue
+            line = match.group(1).strip().strip("*").strip()
+            if line not in candidates:
+                candidates.append(line[:360])
+            if len(candidates) >= limit:
+                break
+        return candidates
 
     def parse_signal(self, response: str) -> str | None:
         upper = response.upper()
@@ -3534,7 +3627,7 @@ class Chatboks:
                 if mode == "execute":
                     response = agent.execute(context_pkg)
                 else:
-                    response = agent.call(context_pkg)
+                    response = agent.call(context_pkg, mode=mode)
                 if self.stop_requested():
                     return "Work stopped by the user.\n>>> BLOCKED"
                 if streamed_output_parts and response.strip() == "".join(streamed_output_parts).strip():

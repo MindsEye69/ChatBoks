@@ -381,6 +381,34 @@ def test_coordinator_prompt_lists_real_local_commands():
         print("PASS: Coordinator prompt names valid local commands")
 
 
+def test_coordinator_prompt_preserves_active_task_when_context_is_capped():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(
+            Path(tmp),
+            {"cli": "ollama", "project_name": "chatboks", "max_prompt_chars": 120},
+            "Coordinator role",
+        )
+        context = "obsolete context " * 20 + "\n[ACTIVE TASK]\nGive three practical recovery improvements."
+
+        prompt = agent.build_prompt(context, mode="triad_brainstorm")
+
+        assert "Give three practical recovery improvements." in prompt
+        assert "[TRUNCATED_FOR_COORDINATOR]" in prompt
+        print("PASS: Coordinator context cap preserves the active task tail")
+
+
+def test_coordinator_triad_prompt_is_compact_and_requires_candidates():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = CoordinatorAgent(Path(tmp), {"cli": "ollama"}, "Long role text that should not be repeated.")
+
+        prompt = agent.build_prompt("[TRIAD CONTEXT]\n[ACTIVE TASK]\nImprove recovery.", mode="triad_brainstorm")
+
+        assert "Long role text" not in prompt
+        assert "exactly three independent" in prompt
+        assert "[ACTIVE TASK]" in prompt
+        print("PASS: Coordinator triad prompt is compact and task-focused")
+
+
 def test_coordinator_prompt_requests_evidence_for_summaries_and_diffs():
     with tempfile.TemporaryDirectory() as tmp:
         agent = CoordinatorAgent(

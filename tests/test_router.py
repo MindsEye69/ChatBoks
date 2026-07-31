@@ -20,6 +20,7 @@ def _config(
     role_routes: dict | None = None,
     mode_strategies: dict | None = None,
     direct_agents: list[str] | None = None,
+    triad_agents: list[str] | None = None,
     round_agents: list[str] | None = None,
     default_agents: list[str] | None = None,
     routing_intelligence: bool = False,
@@ -33,6 +34,8 @@ def _config(
         proj["mode_strategies"] = mode_strategies
     if direct_agents is not None:
         proj["direct_agents"] = direct_agents
+    if triad_agents is not None:
+        proj["triad_agents"] = triad_agents
     if round_agents is not None:
         proj["round_agents"] = round_agents
     if default_agents is not None:
@@ -256,6 +259,22 @@ def test_route_at_all_no_body_falls_back_to_full_text():
     print("PASS: @all with no body falls back to original text")
 
 
+def test_route_at_triad_includes_configured_direct_coordinator():
+    r = _router(
+        "claude",
+        "codex",
+        direct_agents=["coordinator"],
+        triad_agents=["claude", "codex", "coordinator"],
+    )
+    d = r.route_user_prompt_details("@triad improve the workbench")
+
+    assert d.agents == ["claude", "codex", "coordinator"]
+    assert d.cleaned_prompt == "improve the workbench"
+    assert d.exclusive_agent is None
+    assert d.strategy == "explicit_triad"
+    print("PASS: @triad includes the configured direct Coordinator")
+
+
 # ---------------------------------------------------------------------------
 # Router.route_user_prompt_details — @agent exclusive
 # ---------------------------------------------------------------------------
@@ -410,6 +429,22 @@ def test_route_mode_strategy_full_round():
     assert d is not None
     assert d.agents == ["claude", "codex"]
     print("PASS: full_round strategy routes to all agents")
+
+
+def test_route_mode_strategy_triad_brainstorm():
+    r = _router(
+        "claude",
+        "codex",
+        direct_agents=["coordinator"],
+        triad_agents=["claude", "codex", "coordinator"],
+        mode_strategies={"brainstorm": "triad_brainstorm"},
+    )
+    d = r.route_mode_strategy("ideas?", "brainstorm")
+
+    assert d is not None
+    assert d.agents == ["claude", "codex", "coordinator"]
+    assert d.strategy == "mode_triad_brainstorm"
+    print("PASS: triad_brainstorm mode strategy includes Coordinator")
 
 
 def test_route_mode_strategy_confirm_round():

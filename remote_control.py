@@ -917,6 +917,9 @@ class RemoteSession:
         self.project = project
         self.config_path = config_path
         self.app = Chatboks(project, trigger="manual", config_path=config_path)
+        # The desktop and mobile bridge have no trustworthy terminal prompt surface.
+        # Unapproved local roles fall back to the installed role instead of blocking.
+        self.app.router.role_prompt_interactive = False
         self.lock = threading.RLock()
         self._command_thread: threading.Thread | None = None
         self._command_text: str | None = None
@@ -1404,13 +1407,30 @@ class RemoteSession:
                 raise ValueError("There is no paused task to resolve.")
             task = str(self.app.state.get("active_task") or "").strip()
             if normalized == "end":
-                self.app.update_state({"status": "idle", "next_agent": self.app.router.primary(), "active_task": None})
+                self.app.update_state(
+                    {
+                        "status": "idle",
+                        "next_agent": "you",
+                        "active_task": None,
+                        "proposal": None,
+                        "criteria_gate": None,
+                        "confirmation": None,
+                        "blocked_reason": None,
+                        "expected_agents": [],
+                        "completed_agents": [],
+                        "round_intent": "respond",
+                        "handoff_to": None,
+                        "handoff_reason": None,
+                        "handoff_context": None,
+                        "handoff_depth": 0,
+                    }
+                )
                 self.events.append("system", "system", "Previous task ended without restarting agents.")
                 return self.snapshot(cursor=0)
             if not task:
-                self.app.update_state({"status": "idle", "next_agent": self.app.router.primary()})
+                self.app.update_state({"status": "idle", "next_agent": "you"})
                 return self.snapshot(cursor=0)
-            self.app.update_state({"status": "idle", "next_agent": self.app.router.primary()})
+            self.app.update_state({"status": "idle", "next_agent": "you"})
             self.events.append("system", "system", "Continuing the paused task by user request.")
             return self.submit(task)
 
@@ -1418,11 +1438,10 @@ class RemoteSession:
         with self.lock:
             if self.command_running():
                 raise ValueError("Stop the running agent command before starting a new task.")
-            primary = self.app.router.primary()
             self.app.update_state(
                 {
                     "status": "idle",
-                    "next_agent": primary,
+                    "next_agent": "you",
                     "active_task": None,
                     "proposal": None,
                     "criteria_gate": None,
@@ -1430,6 +1449,11 @@ class RemoteSession:
                     "blocked_reason": None,
                     "expected_agents": [],
                     "completed_agents": [],
+                    "round_intent": "respond",
+                    "handoff_to": None,
+                    "handoff_reason": None,
+                    "handoff_context": None,
+                    "handoff_depth": 0,
                 }
             )
             self.app.append_message("system", "New task started. Previous task state cleared.")

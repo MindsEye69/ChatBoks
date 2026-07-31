@@ -21,6 +21,16 @@ class ContextBuilder:
         self.summarizer = Summarizer(int(self.context_config.get("summary_max_items", 32) or 32))
 
     def build(self, state: dict[str, Any], chatboks_md: Path) -> str:
+        if state.get("round_intent") == "triad_brainstorm":
+            # A fresh ideation round must not compete with an older transcript for attention.
+            return "\n\n".join(
+                [
+                    "[TRIAD CONTEXT]\nPrior transcript, sleep memory, and outcomes are intentionally omitted for independent ideas.",
+                    self.load_codegraph_status(),
+                    self.load_round_context(state),
+                    self.load_active_task(state),
+                ]
+            )
         mode = self.context_mode(state)
         if mode == "lean":
             return "\n\n".join(
@@ -342,8 +352,7 @@ class ContextBuilder:
         )
 
     def load_round_context(self, state: dict[str, Any]) -> str:
-        return "\n".join(
-            [
+        lines = [
                 "[ROUND CONTEXT]",
                 f"Intent: {state.get('round_intent', 'respond')}",
                 f"Collaboration mode: {state.get('collaboration_mode', 'default')}",
@@ -353,8 +362,13 @@ class ContextBuilder:
                 f"Completed agents: {', '.join(state.get('completed_agents') or []) or 'none'}",
                 f"Next agent: {state.get('next_agent') or 'unknown'}",
                 f"Handoff depth: {state.get('handoff_depth', 0)}",
-            ]
-        )
+        ]
+        if state.get("round_intent") == "triad_brainstorm":
+            lines.append(
+                "Triad protocol: provide three comparable candidates, then end with >>> TASK_COMPLETE. "
+                "The Orchestrator will publish an attributed shortlist after all three agents finish."
+            )
+        return "\n".join(lines)
 
     @staticmethod
     def format_agent_status(statuses: dict[str, dict[str, str]]) -> str:

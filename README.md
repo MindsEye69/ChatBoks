@@ -175,6 +175,10 @@ Codex Spark lane for a small scoped coding task. Use `@all ...` to opt into the 
 for one prompt. Local/direct agents can fill a main seat only when explicitly marked with `can_fill_main_seat: true` and
 selected as a fallback for an exhausted agent.
 
+For independent three-agent ideation, use `@triad ...`. In ChatBoks, `/mode brainstorm` uses the same triad route:
+Claude, Codex, and Coordinator each contribute three comparable candidates, then the Orchestrator publishes an
+attributed shortlist. `@all` remains the non-direct project team so existing two-agent workflows keep their meaning.
+
 ## Model-Specific Commands
 
 ChatBoks owns raw slash commands. A prompt such as `/help` or `/graph` is handled locally and is never sent to a model.

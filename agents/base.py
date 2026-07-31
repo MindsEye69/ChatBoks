@@ -97,8 +97,8 @@ class BaseAgent:
     def initialize(self, codegraph: str) -> str:
         return f"Codegraph loaded. Ready.\n\n{self.short_codegraph_status(codegraph)}"
 
-    def call(self, context_package: str) -> str:
-        prompt = self.build_prompt(context_package, mode="respond")
+    def call(self, context_package: str, mode: str = "respond") -> str:
+        prompt = self.build_prompt(context_package, mode=mode)
         return self.run_cli(prompt, timeout=300, max_timeout=900)
 
     def reinitialize(self, codegraph: str, summary: str, state: dict[str, Any]) -> str:
@@ -126,6 +126,14 @@ class BaseAgent:
             instruction = "Execute the approved proposal. Report what changed and end with >>> TASK_COMPLETE or >>> BLOCKED."
         elif mode == "resume":
             instruction = "Resume from the compressed context. Confirm readiness or ask a focused question."
+        elif mode == "triad_brainstorm":
+            instruction = (
+                "This is an independent triad brainstorm. Do not write, edit, move, or delete files; do not run "
+                "state-changing commands, installs, commits, or network changes. Return exactly three concrete "
+                "candidates for the active task. For each, give a short title, the outcome, effort (S/M/L), and "
+                "one material risk. Do not discuss routing, model availability, or how the workflow should operate. "
+                "Do not ask the human to choose a category. End with >>> TASK_COMPLETE unless genuinely blocked."
+            )
         else:
             instruction = (
                 "This is a planning turn. Do not write, edit, move, or delete files; do not run "

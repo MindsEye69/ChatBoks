@@ -323,6 +323,25 @@ def test_router_unapproved_project_role_falls_back_to_installed_role():
         assert "Coordinator's Role - ChatBoks" in result
 
 
+def test_router_can_disable_role_file_prompts_for_remote_sessions():
+    with tempfile.TemporaryDirectory() as tmp:
+        project = Path(tmp)
+        router = Router(
+            {
+                "projects": {"chatboks": {"agents": ["coordinator"]}},
+                "agents": {"coordinator": {}},
+            },
+            "chatboks",
+            project,
+        )
+        router.role_prompt_interactive = False
+
+        with patch("router.load_role_with_approval", return_value=None) as load_role:
+            router.load_role("coordinator", {"role_file": "COORDINATOR.md"})
+
+        load_role.assert_called_once_with(project, "COORDINATOR.md", interactive=False)
+
+
 def test_router_fallback_uses_role_basename_only():
     with tempfile.TemporaryDirectory() as tmp:
         project = Path(tmp)

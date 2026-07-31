@@ -13,7 +13,7 @@ projects:
       confirmation: confirm_round
       diagnose: solo_claude
       bugsearch: full_round
-      brainstorm: full_round
+      brainstorm: triad_brainstorm
     role_routes:
       implement: [codex, claude]
       review: [claude, codex]
@@ -21,6 +21,7 @@ projects:
       bugsearch: [claude, codex]
       diagnose: [claude, codex]
       brainstorm: [claude, codex]
+    triad_agents: [claude, codex, coordinator]
   taskfish:
     path: C:\Users\MindsEye\Desktop\Tasker\tasker-poc
     agents: [claude, codex]

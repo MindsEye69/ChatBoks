@@ -77,6 +77,27 @@ def test_lean_context_omits_broad_codegraph_dumps():
         assert "[YOU] turn one" not in payload
 
 
+def test_triad_brainstorm_context_omits_prior_transcript_and_keeps_active_task_last():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        root = Path(tmp)
+        _make_codegraph(root)
+        chat = root / "chatboks.md"
+        chat.write_text(
+            "[YOU] old task that must not steer a fresh brainstorm\n[CLAUDE] stale answer\n",
+            encoding="utf-8",
+        )
+        state = _state("lean")
+        state["round_intent"] = "triad_brainstorm"
+        state["active_task"] = "Give three improvements to fresh task recovery."
+
+        payload = ContextBuilder(root, {}).build(state, chat)
+
+        assert "[TRIAD CONTEXT]" in payload
+        assert "[CHATBOKS RECENT" not in payload
+        assert "old task that must not steer" not in payload
+        assert payload.endswith("Give three improvements to fresh task recovery.")
+
+
 def test_transcript_turns_include_direct_agent_aliases():
     assert is_transcript_turn("[ANTIGRAV] challenge noted") is True
     assert is_transcript_turn("[ANTIGRAVITY] challenge noted") is True

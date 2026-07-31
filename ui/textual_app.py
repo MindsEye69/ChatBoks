@@ -878,7 +878,10 @@ class ChatboksTextualApp(App[None]):
         return {str(name): str(summary or "native workflow skill") for name, summary in skills}
 
     def agent_route_choice_labels(self) -> dict[str, str]:
-        routes = {"@all": "route to all configured main agents"}
+        routes = {
+            "@all": "route to all configured main agents",
+            "@triad": "brainstorm with Claude, Codex, and Coordinator, then synthesize",
+        }
         for agent in self.agent_choice_labels():
             routes[f"@{agent}"] = "route directly to agent"
         routes["@spark"] = "route to Codex Spark"
