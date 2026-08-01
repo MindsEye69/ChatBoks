@@ -249,7 +249,7 @@ def test_triad_brainstorm_publishes_an_attributed_shortlist():
 
         app.run_agent_round(
             initiator="improve ChatBoks",
-            agents=["claude", "codex", "coordinator"],
+            agents=["claude", "codex", "codex_spark"],
             intent="triad_brainstorm",
         )
 
@@ -263,7 +263,7 @@ def test_triad_brainstorm_publishes_an_attributed_shortlist():
         assert len(synthesis_calls) == 1
         assert "[Claude] Faster task feedback" in synthesis_calls[0]
         assert "[Codex] Durable session recovery" in synthesis_calls[0]
-        assert "[Coordinator] Clear agent status" in synthesis_calls[0]
+        assert "[Codex Spark] Clear agent status" in synthesis_calls[0]
         print("PASS: triad brainstorm publishes an attributed shortlist")
 
 
@@ -271,7 +271,7 @@ def test_triad_synthesis_ignores_packets_and_prefaces():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
         synthesis = app.format_triad_synthesis(
-            ["claude", "codex", "coordinator"],
+            ["claude", "codex", "codex_spark"],
             {
                 "claude": (
                     "**Stance: ADD**\n\n## Candidate 1: Recovery snapshots\n"
@@ -279,13 +279,13 @@ def test_triad_synthesis_ignores_packets_and_prefaces():
                     ">>> TASK_COMPLETE"
                 ),
                 "codex": "1. Progress ledger\n2. Resume gate\n>>> TASK_COMPLETE",
-                "coordinator": "1. Status flags\n>>> TASK_COMPLETE",
+                "codex_spark": "1. Status flags\n>>> TASK_COMPLETE",
             },
         )
 
         assert "[Claude] Recovery snapshots" in synthesis
         assert "[Codex] Progress ledger" in synthesis
-        assert "[Coordinator] Status flags" in synthesis
+        assert "[Codex Spark] Status flags" in synthesis
         assert "Stance: ADD" not in synthesis
         assert "observed: not a candidate" not in synthesis
 

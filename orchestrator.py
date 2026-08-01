@@ -3190,6 +3190,12 @@ class Chatboks:
                     self.update_state({"handoff_depth": 0})
                     return
                 if signal == "BLOCKED":
+                    if not is_last_agent and self.is_automatic_recovery_failure(response):
+                        self.mark_agent_completed(agent_name)
+                        self.stream.system(
+                            f"{agent_name} could not complete after automatic recovery; continuing with {next_agent}."
+                        )
+                        continue
                     if completed_agent:
                         self.stream.system(
                             f"{agent_name} blocked after {completed_agent} completed the task; treating as a warning."
@@ -3256,7 +3262,8 @@ class Chatboks:
                 items = candidates_by_agent.get(agent_name, [])
                 if index >= len(items):
                     continue
-                lines.append(f"{ordinal}. [{agent_name.title()}] {items[index]}")
+                agent_label = agent_name.replace("_", " ").title()
+                lines.append(f"{ordinal}. [{agent_label}] {items[index]}")
                 ordinal += 1
         if ordinal == 1:
             lines.append("No structured candidates were extracted. Review the agent outputs directly before choosing a next action.")
@@ -3986,6 +3993,18 @@ class Chatboks:
                 "Partial output has been checkpointed where available; user input is needed before continuing.",
                 ">>> BLOCKED",
             ]
+        )
+
+    @staticmethod
+    def is_automatic_recovery_failure(response: str) -> bool:
+        first_line = response.strip().splitlines()[0].lower() if response.strip() else ""
+        return any(
+            marker in first_line
+            for marker in (
+                "timed out and automatic recovery did not complete.",
+                "hit token exhaustion and automatic recovery did not complete.",
+                "appears to be looping during timeout recovery.",
+            )
         )
 
     @staticmethod

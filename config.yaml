@@ -21,7 +21,7 @@ projects:
       bugsearch: [claude, codex]
       diagnose: [claude, codex]
       brainstorm: [claude, codex]
-    triad_agents: [claude, codex, coordinator]
+    triad_agents: [claude, codex, codex_spark]
   taskfish:
     path: C:\Users\MindsEye\Desktop\Tasker\tasker-poc
     agents: [claude, codex]
