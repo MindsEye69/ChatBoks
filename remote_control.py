@@ -36,7 +36,7 @@ from context.transcript import is_transcript_turn
 from agents.base import BaseAgent
 from agents.codex import CODEX_MODEL_CHOICES, normalize_codex_model
 from encoding_utils import configure_utf8_stdio
-from orchestrator import DEFAULT_AGENT_FALLBACKS, Chatboks
+from orchestrator import COLLABORATION_MODES, DEFAULT_AGENT_FALLBACKS, Chatboks
 from ui.stream import Stream
 
 
@@ -63,6 +63,16 @@ OPERATOR_STATUS_FILENAME = "remote_bridge.json"
 OPERATOR_PROBE_TIMEOUT_SECONDS = 2.0
 WORKBENCH_STATUS_CACHE_SECONDS = 5.0
 CODEGRAPH_STOP_TIMEOUT_SECONDS = 3.0
+
+
+def is_collaboration_mode_command(text: str) -> bool:
+    command = text.strip().split(maxsplit=1)[0].lower()
+    if command in {"/mode", "/modes"}:
+        return True
+    direct_mode = command.removeprefix("/")
+    return command.startswith("/") and (
+        direct_mode in COLLABORATION_MODES or direct_mode in {"reset", "standard"}
+    )
 _cpu_sample_lock = threading.Lock()
 _cpu_sample: tuple[int, int] | None = None
 WORKBENCH_WWW_ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "mobile_remote" / "www"
@@ -1438,7 +1448,8 @@ class RemoteSession:
             return self.snapshot(cursor=0)
 
     def command_running(self) -> bool:
-        return self._command_thread is not None and self._command_thread.is_alive()
+        command_thread = getattr(self, "_command_thread", None)
+        return command_thread is not None and command_thread.is_alive()
 
     def skills_catalog(self) -> list[dict[str, Any]]:
         project_path = getattr(self.app, "proj_path", None)
@@ -1519,6 +1530,13 @@ class RemoteSession:
             prepared = f"{skill_context}{cleaned}"
             self._command_text = cleaned
             detail = f" with {', '.join(skill_names)}" if skill_names else ""
+            if is_collaboration_mode_command(cleaned):
+                self.events.append("system", "system", f"Command accepted{detail}.")
+                try:
+                    self.app.handle_user_input(cleaned)
+                finally:
+                    self._command_text = None
+                return self.snapshot(cursor=0)
             self.events.append("system", "system", f"Command accepted{detail}. Waiting for agents.")
             self._command_thread = threading.Thread(
                 target=self._run_command,
@@ -1606,9 +1624,6 @@ class RemoteSession:
     def save_workbench_ui(self, payload: Any) -> dict[str, Any]:
         if not isinstance(payload, dict):
             raise ValueError("Workbench state must be an object.")
-        session = str(payload.get("session") or "")
-        if session and session != str(self.app.state.get("session") or ""):
-            raise ValueError("Workbench state belongs to a different session.")
         lanes: dict[str, dict[str, Any]] = {}
         for raw_agent, raw_state in dict(payload.get("lanes") or {}).items():
             agent = canonical_agent_name(raw_agent)
@@ -1636,17 +1651,28 @@ class RemoteSession:
             "lanes": lanes,
         }
         with self.lock:
+            self.refresh_app_state_for_snapshot()
+            session = str(payload.get("session") or "")
+            if session and session != str(self.app.state.get("session") or ""):
+                raise ValueError("Workbench state belongs to a different session.")
             self.app.update_state({"workbench_ui": workbench_ui})
         return {"saved": True, "session": self.app.state.get("session")}
 
+    def refresh_app_state_for_snapshot(self) -> None:
+        # The command thread owns in-memory orchestration state while active.
+        # Reloading a pre-write disk snapshot here can resurrect stale fields,
+        # which a later workbench UI save would then persist.
+        if self.command_running():
+            return
+        try:
+            self.app.state = self.app.load_state()
+        except (OSError, ValueError, json.JSONDecodeError):
+            # Keep the in-memory state for this poll and retry next time.
+            pass
+
     def snapshot(self, cursor: int = 0, transcript_limit: int | None = TRANSCRIPT_LIMIT) -> dict[str, Any]:
         with self.lock:
-            try:
-                self.app.state = self.app.load_state()
-            except (OSError, ValueError, json.JSONDecodeError):
-                # A streaming token checkpoint may be writing at this exact instant.
-                # Keep the in-memory state for this one fast UI poll and retry next time.
-                pass
+            self.refresh_app_state_for_snapshot()
             context = self.app.state.get("context") or {}
             token_counts = dict(context.get("token_counts") or {})
             session_budget = self.app.session_token_budget()

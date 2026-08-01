@@ -132,6 +132,20 @@ def completion_options(value: str, catalog: CompletionCatalog) -> list[tuple[str
     parts = stripped.split()
     trailing_space = stripped.endswith(" ")
     command = parts[0].lower() if parts else stripped.lower()
+    if len(parts) <= 1:
+        direct_modes = {
+            f"/{mode}": f"set collaboration mode: {label}"
+            for mode, label in catalog.modes.items()
+        }
+        if command in direct_modes:
+            return []
+        matches = [
+            (replacement, label)
+            for replacement, label in sorted(direct_modes.items())
+            if replacement.startswith(command)
+        ]
+        if matches:
+            return matches
     if command in {"/mode", "/modes"}:
         return complete_word(stripped, "/mode", catalog.modes)
     if command in {"/context", "/ctx"}:

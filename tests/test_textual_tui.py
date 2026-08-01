@@ -189,6 +189,7 @@ def test_textual_app_completion_palette_covers_fixed_choice_commands() -> None:
     app = ChatboksTextualApp(chatboks)
 
     assert ("/mode brainstorm", "Brainstorm mode") in app.completion_options("/mode br")
+    assert ("/default", "set collaboration mode: Standard relay") in app.completion_options("/def")
     assert ("/context lean", "small context package") in app.completion_options("/context l")
     assert ("/agent codex", "configured agent") in app.completion_options("/agent co")
     assert ("/agent codex", "configured agent") in app.completion_options("/agent ")

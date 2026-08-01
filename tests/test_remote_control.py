@@ -26,6 +26,7 @@ from remote_control import (
     git_environment,
     is_allowed_bind_host,
     is_allowed_app_origin,
+    is_collaboration_mode_command,
     is_tailnet_ipv4_host,
     parse_chatboks_messages,
     packet_trace_from_file,
@@ -752,6 +753,71 @@ def test_remote_session_snapshot_returns_while_command_is_running(tmp_path: Path
         if session._command_thread is not None:
             session._command_thread.join(timeout=5)
     print("PASS: remote session snapshots remain responsive during long commands")
+
+
+def test_remote_session_does_not_reload_stale_state_during_command(tmp_path: Path):
+    started = threading.Event()
+    release = threading.Event()
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", started, release)
+    app.state["collaboration_mode"] = "implement"
+    load_calls = 0
+
+    def stale_load_state() -> dict[str, object]:
+        nonlocal load_calls
+        load_calls += 1
+        return {**app.state, "collaboration_mode": "brainstorm"}
+
+    app.load_state = stale_load_state  # type: ignore[method-assign]
+    session.app = app
+
+    try:
+        payload = session.submit("@codex slow task")
+        assert started.wait(timeout=1)
+        assert payload["collaboration_mode"] == "implement"
+        assert session.snapshot()["collaboration_mode"] == "implement"
+        assert load_calls == 0
+    finally:
+        release.set()
+        if session._command_thread is not None:
+            session._command_thread.join(timeout=5)
+    print("PASS: active command state cannot be replaced by a stale disk snapshot")
+
+
+def test_remote_session_applies_mode_commands_before_returning_snapshot(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", threading.Event(), threading.Event())
+    app.state["collaboration_mode"] = "brainstorm"
+
+    def apply_mode(text: str) -> None:
+        assert text == "/mode implement"
+        app.state["collaboration_mode"] = "implement"
+
+    app.handle_user_input = apply_mode  # type: ignore[method-assign]
+    session.app = app
+
+    payload = session.submit("/mode implement")
+
+    assert is_collaboration_mode_command("/mode implement") is True
+    assert is_collaboration_mode_command("/default") is True
+    assert is_collaboration_mode_command("implement") is False
+    assert payload["collaboration_mode"] == "implement"
+    assert payload["command_running"] is False
+    assert session._command_thread is None
+    assert "Waiting for agents" not in session.events.since(0)[-1]["text"]
+    print("PASS: mode commands update the desktop snapshot synchronously")
 
 
 def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):

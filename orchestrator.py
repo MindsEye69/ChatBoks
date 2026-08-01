@@ -113,7 +113,7 @@ HELP_COMMANDS = [
     ("/graph", "Show CodeGraph and Graphify freshness."),
     ("/model-commands", "List registered model-specific executable commands."),
     ("/mode", "Show the current collaboration mode and available modes."),
-    ("/mode <name>", "Set prompt framing: default, brainstorm, bugsearch, implement, review, confirmation, diagnose."),
+    ("/mode <name>", "Set prompt framing; /default, /brainstorm, /bugsearch, and other mode names work as shortcuts."),
     ("/test confirmation-risk", "Run a local no-agent smoke for confirmation packet risk gating."),
     ("/test claude-auth", "Check Claude Code auth state without calling the model."),
     ("/win ...", "Record a collaboration win without calling agents."),
@@ -666,6 +666,10 @@ class Chatboks:
             return False
 
         command = stripped.split(maxsplit=1)[0].lower()
+        direct_mode = command.removeprefix("/")
+        if direct_mode in COLLABORATION_MODES or direct_mode in {"reset", "standard"}:
+            self.handle_mode_command(f"/mode {direct_mode}")
+            return True
         if command in {"/help", "/h", "/?"}:
             self.handle_help_command(stripped)
             return True

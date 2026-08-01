@@ -53,6 +53,22 @@ def test_mode_command_updates_state_without_agent_round():
         print("PASS: /mode updates state without routing to agents")
 
 
+def test_direct_default_mode_alias_updates_state_without_agent_round():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["collaboration_mode"] = "brainstorm"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["brainstorm"]
+        app.append_message = MagicMock()
+        app.run_agent_round = MagicMock()
+
+        app.handle_user_input("/default")
+
+        assert app.state["collaboration_mode"] == "default"
+        assert app.state["collaboration_mode_instruction"] == COLLABORATION_MODES["default"]
+        app.append_message.assert_called_once_with("system", "Collaboration mode set to default.")
+        app.run_agent_round.assert_not_called()
+
+
 def test_mode_status_lists_available_modes():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
