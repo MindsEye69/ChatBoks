@@ -940,6 +940,20 @@ def test_proposal_snapshot_truncates_large_raw_text():
     print("PASS: proposal snapshots cap raw proposal text")
 
 
+def test_proposal_snapshot_exposes_brainstorm_mode_transition():
+    payload = proposal_snapshot(
+        {
+            "id": "brainstorm-test",
+            "source_task": "improve uploads",
+            "mode_transition": {"from": "brainstorm", "to": "implement"},
+        }
+    )
+
+    assert payload is not None
+    assert payload["source_task"] == "improve uploads"
+    assert payload["mode_transition"] == {"from": "brainstorm", "to": "implement"}
+
+
 def test_remote_bridge_allows_capacitor_origin_preflight():
     server, thread, base = run_server(FakeSession(), "secret-token")
     try:

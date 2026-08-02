@@ -518,9 +518,18 @@ def proposal_snapshot(proposal: Any) -> dict[str, Any] | None:
                 "execution_estimate": item.get("execution_estimate"),
             }
         )
+    transition = proposal.get("mode_transition")
+    safe_transition = None
+    if isinstance(transition, dict):
+        safe_transition = {
+            "from": str(transition.get("from") or "")[:32],
+            "to": str(transition.get("to") or "")[:32],
+        }
     return {
         "id": proposal.get("id"),
         "summary": proposal.get("summary"),
+        "source_task": str(proposal.get("source_task") or "")[:COMMAND_MAX_CHARS],
+        "mode_transition": safe_transition,
         "proposed_by": proposal.get("proposed_by"),
         "raw": raw[:REMOTE_PROPOSAL_RAW_LIMIT],
         "raw_truncated": len(raw) > REMOTE_PROPOSAL_RAW_LIMIT,

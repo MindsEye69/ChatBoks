@@ -3088,6 +3088,8 @@ class Chatboks:
         agents: list[str] | None = None,
         intent: str = "respond",
     ) -> None:
+        if initiator and not str(self.state.get("active_task") or "").strip():
+            self.update_state({"active_task": initiator})
         active_agents = agents or list(self.proj_config["agents"])
         max_rounds = int(self.config.get("rounds", {}).get("max_before_escalate", 3))
 
@@ -3233,18 +3235,64 @@ class Chatboks:
         responses: dict[str, str],
     ) -> None:
         """Publish a small, inspectable rollup without pretending it is model consensus."""
+        source_task = str(self.state.get("active_task") or "").strip()
         synthesis = self.format_triad_synthesis(active_agents, responses)
         self.append_message("coordinator", synthesis)
-        self.stream.system("Triad brainstorm complete. Review the shortlist in the Orchestrator lane.")
+        proposal = self.brainstorm_transition_proposal(source_task, synthesis, responses)
+        self.stream.system(
+            "Triad brainstorm complete. Choose whether to switch to implement mode and which agent should build."
+        )
         self.update_state(
             {
-                "status": "idle",
+                "status": "awaiting_approval",
                 "next_agent": "you",
-                "active_task": None,
+                "active_task": source_task,
+                "proposal": proposal,
                 "confirmation": None,
                 "handoff_depth": 0,
             }
         )
+        self.stream.proposal(self.format_proposal_gate(proposal, proposal["execution_estimate"]))
+
+    def brainstorm_transition_proposal(
+        self,
+        source_task: str,
+        synthesis: str,
+        responses: dict[str, str],
+    ) -> dict[str, Any]:
+        builders = self.execution_agent_choices()
+        candidates = []
+        for agent_name in builders:
+            raw = str(responses.get(agent_name) or synthesis).strip()
+            candidates.append(
+                {
+                    "agent": agent_name,
+                    "summary": self.extract_first_line(raw),
+                    "raw": raw,
+                    "execution_estimate": self.estimate_execution_cost(agent_name),
+                }
+            )
+        proposed_by = builders[0] if builders else ""
+        estimate = (
+            candidates[0]["execution_estimate"]
+            if candidates
+            else self.estimate_execution_cost(None)
+        )
+        return {
+            "id": f"brainstorm_{int(time.time())}",
+            "summary": "Brainstorm complete. Approve a builder to continue.",
+            "raw": synthesis,
+            "source_task": source_task,
+            "proposed_by": proposed_by,
+            "candidates": candidates,
+            "endorsed_by": [],
+            "challenged_by": [],
+            "execution_estimate": estimate,
+            "mode_transition": {
+                "from": str(self.state.get("collaboration_mode") or "brainstorm"),
+                "to": "implement",
+            },
+        }
 
     def format_triad_synthesis(self, active_agents: list[str], responses: dict[str, str]) -> str:
         candidates_by_agent = {
@@ -3394,6 +3442,8 @@ class Chatboks:
     def handle_approval(self, text: str) -> None:
         parts = text.strip().split()
         verdict = parts[0].upper() if parts else ""
+        proposal = self.state.get("proposal")
+        transition = proposal.get("mode_transition") if isinstance(proposal, dict) else None
 
         if verdict in {"APPROVE", "YES", "Y", "OK", "GO"}:
             if len(parts) > 2:
@@ -3403,10 +3453,35 @@ class Chatboks:
             builder = self.resolve_proposal_builder(requested_builder)
             if not builder:
                 return
-            self.stream.system(f"Approved. Executing with {builder}...")
-            self.update_state({"status": "executing", "next_agent": builder})
+            transition_target = str(transition.get("to") or "").strip().lower() if isinstance(transition, dict) else ""
+            updates: dict[str, Any] = {"status": "executing", "next_agent": builder}
+            if transition_target in COLLABORATION_MODES:
+                updates.update(
+                    {
+                        "collaboration_mode": transition_target,
+                        "collaboration_mode_instruction": COLLABORATION_MODES[transition_target],
+                    }
+                )
+                self.stream.system(
+                    f"Approved. Switched to {transition_target} mode; executing with {builder}..."
+                )
+            else:
+                self.stream.system(f"Approved. Executing with {builder}...")
+            self.update_state(updates)
             self.execute_proposal(builder)
         elif verdict == "REJECT":
+            if isinstance(transition, dict):
+                transition_source = str(transition.get("from") or "brainstorm").strip().lower()
+                self.stream.system(f"Build cancelled. Remaining in {transition_source} mode.")
+                self.update_state(
+                    {
+                        "status": "idle",
+                        "next_agent": "you",
+                        "active_task": None,
+                        "proposal": None,
+                    }
+                )
+                return
             self.stream.system("Rejected. Agents notified.")
             self.append_message("you", "Proposal rejected. Please revise.")
             self.update_state({"status": "active", "proposal": None})

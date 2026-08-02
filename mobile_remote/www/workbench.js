@@ -1445,14 +1445,19 @@ function proposalCandidates(proposal) {
 
 function renderBuildChoices(proposal) {
   const candidates = proposalCandidates(proposal);
+  const transition = proposal.mode_transition || null;
   els.approvalBuildActions.innerHTML = "";
   for (const candidate of candidates) {
     const agent = canonicalAgent(candidate.agent);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "approval-button builder-action";
-    button.textContent = `Build with ${agentDisplayName(agent)}`;
-    button.title = `Approve this plan and let only ${agentDisplayName(agent)} make changes`;
+    button.textContent = transition
+      ? `Switch & build with ${agentDisplayName(agent)}`
+      : `Build with ${agentDisplayName(agent)}`;
+    button.title = transition
+      ? `Switch to ${transition.to || "implement"} mode and let only ${agentDisplayName(agent)} make changes`
+      : `Approve this plan and let only ${agentDisplayName(agent)} make changes`;
     button.disabled = state.approvalSubmitting;
     button.addEventListener("click", () => submitApproval(`APPROVE ${agent}`));
     button.addEventListener("focus", () => updateApprovalActionState(`APPROVE ${agent}`));
@@ -1508,6 +1513,7 @@ function renderApproval(data) {
     els.approvalBuildActions.innerHTML = "";
     els.dismissButton.classList.remove("hidden");
     els.approveButton.textContent = "Build with primary";
+    els.rejectButton.textContent = "Reject";
     setApprovalDetails("Proposal details", false);
     return;
   }
@@ -1527,6 +1533,7 @@ function renderApproval(data) {
     setApprovalDetails("Criteria details", true);
     els.approvalBuildActions.innerHTML = "";
     els.approveButton.textContent = "Approve criteria";
+    els.rejectButton.textContent = "Reject";
     els.approveButton.classList.remove("hidden");
     els.dismissButton.classList.add("hidden");
     setApprovalControls(false);
@@ -1541,15 +1548,25 @@ function renderApproval(data) {
   state.approvalProposalId = proposalId;
   const proposer = proposal.proposed_by ? agentDisplayName(proposal.proposed_by) : "Agent";
   const candidates = proposalCandidates(proposal);
-  els.approvalMeta.textContent = candidates.length > 1 ? `${candidates.length} plans ready` : `${proposer} proposal`;
-  els.approvalSummary.textContent = candidates.length > 1 ? "Choose who should build" : proposal.summary || "Review proposal";
+  const transition = proposal.mode_transition || null;
+  els.approvalMeta.textContent = transition
+    ? "Brainstorm complete"
+    : candidates.length > 1 ? `${candidates.length} plans ready` : `${proposer} proposal`;
+  els.approvalSummary.textContent = transition
+    ? `Switch to ${transition.to || "implement"} mode and choose who builds?`
+    : candidates.length > 1 ? "Choose who should build" : proposal.summary || "Review proposal";
   els.approvalEstimate.textContent = candidates
     .map((candidate) => `${agentDisplayName(candidate.agent)}: ${formatExecutionEstimate(candidate.execution_estimate)}`)
     .join(" | ") || formatExecutionEstimate(proposal.execution_estimate);
-  els.approvalHelper.textContent = "Review the plans, then choose the one agent allowed to build. Modify requires a note; Dismiss closes the gate without execution.";
+  els.approvalHelper.textContent = transition
+    ? `ChatBoks will stay in ${transition.from || "brainstorm"} mode and no files will be changed until you approve one builder. Reject keeps the current mode active.`
+    : "Review the plans, then choose the one agent allowed to build. Modify requires a note; Dismiss closes the gate without execution.";
   els.approvalRaw.textContent = proposalRawText(proposal);
   setApprovalDetails("Proposal details", false);
   els.approveButton.textContent = "Build with primary";
+  els.rejectButton.textContent = transition
+    ? `Stay in ${String(transition.from || "brainstorm").replace(/^./, (letter) => letter.toUpperCase())}`
+    : "Reject";
   els.dismissButton.classList.remove("hidden");
   renderBuildChoices(proposal);
   setApprovalControls(false);
