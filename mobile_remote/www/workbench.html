@@ -1,18 +1,18 @@
 <!doctype html>
-<html lang="en" data-theme="carbon">
+<html lang="en" class="lumen-workbench" data-theme="lumen">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatBoks Workbench</title>
-  <link rel="icon" type="image/png" href="./assets/chatboks-cube.png">
-  <link rel="stylesheet" href="./workbench.css?v=20260731-command-completion">
+  <link rel="icon" type="image/png" href="./assets/chatboks-mark.png">
+  <link rel="stylesheet" href="./workbench.css?v=20260802-lumen-workbench">
 </head>
 <body>
   <div class="workbench-shell">
 
     <header class="workspace-topbar">
       <div class="brand-row">
-        <div class="brand-mark"><img src="./assets/chatboks-cube.png" alt="ChatBoks"></div>
+        <div class="brand-mark"><img src="./assets/chatboks-mark.png" alt="ChatBoks"></div>
         <div class="brand-name">ChatBoks</div>
       </div>
 
@@ -39,12 +39,14 @@
         <button id="systemDrawerButton" class="ghost-button" type="button" aria-expanded="false">Coordinator</button>
 
         <div class="theme-pick" role="group" aria-label="Theme">
-          <button class="swatch" type="button" data-set-theme="carbon" style="--sw-bg:#0d0d13; --sw-ac:#9d6be8"
-                  aria-pressed="false" aria-label="Carbon theme" title="Carbon — carbon black, violet accent"></button>
-          <button class="swatch" type="button" data-set-theme="chrome" style="--sw-bg:#edeff4; --sw-ac:#6a3cb0"
-                  aria-pressed="false" aria-label="Chrome theme" title="Chrome — light, violet accent"></button>
-          <button class="swatch" type="button" data-set-theme="console" style="--sw-bg:#0f1213; --sw-ac:#e0912f"
-                  aria-pressed="false" aria-label="Console theme" title="Console — graphite, amber accent"></button>
+          <button class="swatch" type="button" data-set-theme="lumen" style="--sw-bg:#06071a; --sw-ac:#8ab6ff"
+                  aria-pressed="false" aria-label="Lumen theme" title="Lumen — night-sky navy, ice-blue accent"></button>
+          <button class="swatch" type="button" data-set-theme="ember" style="--sw-bg:#100704; --sw-ac:#ffab5e"
+                  aria-pressed="false" aria-label="Ember theme" title="Ember — warm black, orange and coral"></button>
+          <button class="swatch" type="button" data-set-theme="verdant" style="--sw-bg:#02120c; --sw-ac:#5ce6a8"
+                  aria-pressed="false" aria-label="Verdant theme" title="Verdant — forest green and sky blue"></button>
+          <button class="swatch" type="button" data-set-theme="mono" style="--sw-bg:#0b0d0c; --sw-ac:#a8cbb3"
+                  aria-pressed="false" aria-label="Monochrome theme" title="Monochrome — graphite with soft green text"></button>
         </div>
       </div>
     </header>
@@ -59,7 +61,7 @@
       <nav class="rail-section" aria-label="Projects">
         <button id="railProjectsButton" class="rail-project-button" type="button" aria-haspopup="dialog">
           <span class="folder-icon" aria-hidden="true"></span>
-          <span>Projects</span>
+          <span class="rail-project-copy"><strong>Projects</strong><small><span id="railProjectName">chatboks</span> · pinned</small></span>
         </button>
       </nav>
 
@@ -104,6 +106,10 @@
           <span id="statStatus" class="status-pill muted-pill">-</span>
         </div>
         <div class="round-spacer"></div>
+        <div class="round-phase" aria-label="Session phase">
+          <span id="idlePhase" class="phase-pill">Idle</span>
+          <span id="livePhase" class="phase-pill active">Mid-session</span>
+        </div>
         <div class="round-actions">
           <label class="history-search">
             <span class="sr-only">Search active session history</span>
@@ -170,6 +176,8 @@
       </section>
 
       <section id="attentionPanel" class="attention-panel hidden" aria-live="polite">
+        <button id="attentionToggleButton" class="attention-toggle ghost-button" type="button"
+                aria-expanded="true">Hide</button>
         <div>
           <div class="event-meta"><span id="attentionMeta"></span></div>
           <h3 id="attentionTitle">Decision needed</h3>
@@ -197,8 +205,8 @@
 
       <section id="composerCard" class="composer-card" aria-label="Prompt composer">
         <button id="composerExpandButton" class="composer-expand-handle" type="button" aria-expanded="false"
-                aria-label="Expand prompt composer" title="Expand prompt composer">
-          <span aria-hidden="true">⌃</span>
+                aria-label="Resize prompt composer" title="Drag to resize. Double-click to reset.">
+          <span aria-hidden="true"></span>
         </button>
         <div id="selectedSkills" class="selected-skills hidden" aria-label="Selected skills"></div>
         <div class="composer-input">
@@ -350,6 +358,6 @@
     </section>
   </div>
 
-  <script src="./workbench.js?v=20260731-command-completion"></script>
+  <script src="./workbench.js?v=20260802-lumen-workbench"></script>
 </body>
 </html>

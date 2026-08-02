@@ -92,6 +92,7 @@ WORKBENCH_STATIC_ROUTES = {
     "/assets/claude.png": ("assets/claude.png", "image/png"),
     "/assets/codex.png": ("assets/codex.png", "image/png"),
     "/assets/orchestrator.png": ("assets/orchestrator.png", "image/png"),
+    "/assets/spark.png": ("assets/spark.png", "image/png"),
 }
 ALLOWED_APP_ORIGINS = {
     "capacitor://localhost",

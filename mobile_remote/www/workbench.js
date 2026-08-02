@@ -1,4 +1,5 @@
 const STORAGE_KEY = "chatboks-workbench";
+const LUMEN_MIGRATION_KEY = "chatboks-lumen-redesign-v1";
 const SESSION_POLL_MS = 1500;
 const SESSION_POLL_BUSY_MS = 350;
 const WORKBENCH_POLL_MS = 10000;
@@ -12,14 +13,15 @@ const COORD_FEED_LIMIT = 6;
 const COORD_FEED_EXPANDED_LIMIT = 40;
 const TRACE_ROW_LIMIT = 6;
 const DEFAULT_AGENTS = ["claude", "codex", "gemini"];
+const PREVIEW_AGENTS = ["claude", "codex", "codex_spark"];
 
 const KNOWN_AGENT_STYLES = new Set(["claude", "codex", "gemini", "antigravity", "codex_spark", "coordinator"]);
 const AGENT_LABELS = {
-  codex_spark: "Codex Spark",
+  codex_spark: "Spark",
   coordinator: "Coordinator",
 };
 const AGENT_GLYPHS = {
-  codex_spark: "SX",
+  codex_spark: "SP",
   coordinator: "CO",
 };
 const LANE_LABELS = {
@@ -32,15 +34,24 @@ const AGENT_IMAGES = {
   claude: "./assets/claude.png",
   codex: "./assets/codex.png",
   coordinator: "./assets/orchestrator.png",
+  codex_spark: "./assets/spark.png",
 };
 
 /* Themes live in workbench.css as [data-theme="..."] blocks. The picked one
    is persisted with the rest of the workbench settings, so the app reopens in
    whatever the operator last chose. LEGACY_THEMES migrates the old two-way
    dark/light setting that earlier builds wrote to localStorage. */
-const THEMES = ["carbon", "chrome", "console"];
-const DEFAULT_THEME = "carbon";
-const LEGACY_THEMES = { dark: "carbon", light: "chrome" };
+const THEMES = ["lumen", "ember", "verdant", "mono"];
+const LUMEN_WORKBENCH_THEMES = new Set(THEMES);
+const DEFAULT_THEME = "lumen";
+const LEGACY_THEMES = {
+  dark: "lumen",
+  light: "lumen",
+  carbon: "lumen",
+  chrome: "lumen",
+  console: "lumen",
+  orchid: "mono",
+};
 
 const state = {
   token: "",
@@ -74,6 +85,9 @@ const state = {
   projectCatalog: [],
   modelSelection: {},
   composerExpanded: false,
+  composerHeight: 0,
+  attentionCollapsed: false,
+  attentionKey: "",
   activePrompt: "",
   newTaskClicks: 0,
   skills: [],
@@ -112,20 +126,20 @@ const previewSession = {
   active_task: "multi-agent-refactor",
   next_agent: "codex",
   round: 3,
-  expected_agents: DEFAULT_AGENTS,
-  completed_agents: ["claude", "codex", "gemini"],
+  expected_agents: PREVIEW_AGENTS,
+  completed_agents: PREVIEW_AGENTS,
   collaboration_mode: "Default",
   context_mode: "full",
   command_running: false,
   command_text: "",
-  agents: DEFAULT_AGENTS,
-  lane_agents: DEFAULT_AGENTS,
+  agents: PREVIEW_AGENTS,
+  lane_agents: PREVIEW_AGENTS,
   agent_statuses: {},
   direct_agents: ["coordinator"],
   token_usage: [
     { agent: "claude", used: 42, limit: 100, warning: 80, percent: 42 },
     { agent: "codex", used: 26, limit: 100, warning: 80, percent: 26 },
-    { agent: "gemini", used: 86, limit: 100, warning: 80, percent: 86 },
+    { agent: "codex_spark", used: 11, limit: 100, warning: 80, percent: 11 },
   ],
   session_budget: null,
   transcript: [
@@ -169,9 +183,10 @@ for (const id of [
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalHelper", "approvalRaw", "approvalModification", "approvalStatus", "approvalCommandPreview",
   "approvalBuildActions", "approveButton", "modifyButton", "rejectButton", "dismissButton",
-  "attentionPanel", "attentionMeta", "attentionTitle", "attentionSummary", "attentionRaw", "attentionGuidance",
+  "attentionPanel", "attentionToggleButton", "attentionMeta", "attentionTitle", "attentionSummary", "attentionRaw", "attentionGuidance",
   "resumePanel", "resumeSummary", "resumeButton", "endTaskButton",
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus", "historySearch",
+    "railProjectName", "idlePhase", "livePhase",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
     "composerCard", "composerExpandButton", "workbenchPrompt", "commandCompletionPalette", "sendStatus", "sendButton", "stopButton",
     "skillsButton", "skillsPanel", "skillsCloseButton", "skillsSearch", "skillsFilters", "skillsList", "selectedSkills",
@@ -191,18 +206,29 @@ function loadSettings() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     state.token = saved.token || "";
     state.bridgeUrl = saved.bridgeUrl || "";
-    state.theme = normaliseTheme(saved.theme);
+    state.composerHeight = Number(saved.composerHeight) || 0;
+    const lumenMigrated = localStorage.getItem(LUMEN_MIGRATION_KEY) === "1";
+    state.theme = lumenMigrated ? normaliseTheme(saved.theme) : DEFAULT_THEME;
+    if (!lumenMigrated) {
+      localStorage.setItem(LUMEN_MIGRATION_KEY, "1");
+    }
   } catch {
     state.token = "";
     state.bridgeUrl = "";
     state.theme = DEFAULT_THEME;
+    state.composerHeight = 0;
   }
   els.token.value = state.token;
   els.bridgeUrl.value = state.bridgeUrl || "";
 }
 
 function saveSettings() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: state.token, bridgeUrl: state.bridgeUrl, theme: state.theme }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    token: state.token,
+    bridgeUrl: state.bridgeUrl,
+    theme: state.theme,
+    composerHeight: state.composerHeight,
+  }));
 }
 
 function normaliseTheme(value) {
@@ -214,6 +240,7 @@ function normaliseTheme(value) {
 function setTheme(theme) {
   state.theme = normaliseTheme(theme);
   document.documentElement.dataset.theme = state.theme;
+  document.documentElement.classList.toggle("lumen-workbench", LUMEN_WORKBENCH_THEMES.has(state.theme));
   for (const swatch of document.querySelectorAll(".swatch")) {
     swatch.setAttribute("aria-pressed", String(swatch.dataset.setTheme === state.theme));
   }
@@ -1548,9 +1575,17 @@ function renderAttention(data) {
   const status = String(data.status || "").toLowerCase();
   const signal = status === "awaiting_input" ? "QUESTION" : status === "blocked" ? "BLOCKED" : "";
   els.attentionPanel.classList.toggle("hidden", !signal);
-  if (!signal) return;
+  if (!signal) {
+    state.attentionKey = "";
+    return;
+  }
   const message = latestSignalMessage(data.transcript || [], signal);
   const raw = String(message?.text || data.active_task || "No agent detail was recorded in this session snapshot.");
+  const attentionKey = `${signal}:${message?.id || raw}`;
+  if (attentionKey !== state.attentionKey) {
+    state.attentionKey = attentionKey;
+    setAttentionCollapsed(false);
+  }
   const isQuestion = signal === "QUESTION";
   els.attentionMeta.textContent = `${agentDisplayName(message?.sender || data.next_agent || "agent")} · ${signal}`;
   els.attentionTitle.textContent = isQuestion ? "Question needs your input" : "Work is blocked";
@@ -1559,6 +1594,13 @@ function renderAttention(data) {
   els.attentionGuidance.textContent = isQuestion
     ? "Reply in the composer below to continue."
     : "Reply in the composer below with direction, a workaround, or a new task.";
+}
+
+function setAttentionCollapsed(collapsed) {
+  state.attentionCollapsed = Boolean(collapsed);
+  els.attentionPanel.classList.toggle("is-collapsed", state.attentionCollapsed);
+  els.attentionToggleButton.textContent = state.attentionCollapsed ? "Show blocker" : "Hide";
+  els.attentionToggleButton.setAttribute("aria-expanded", String(!state.attentionCollapsed));
 }
 
 /* ---------- left rail ---------- */
@@ -2166,6 +2208,7 @@ function applySession(data) {
   state.selectedSkills = state.selectedSkills.filter((id) => state.skills.some((skill) => skill.id === id));
   renderSkills();
   els.topbarProject.textContent = data.project || "-";
+  els.railProjectName.textContent = data.project || "chatboks";
   els.topbarSession.textContent = data.session || "-";
   const awaitingApproval = data.status === "awaiting_approval";
   const statusText = data.command_running ? "Working" : awaitingApproval ? "Approval needed" : data.status || "unknown";
@@ -2174,6 +2217,9 @@ function applySession(data) {
   els.sessionButton.textContent = awaitingApproval ? "Approval" : data.command_running ? "Working" : "Session";
 
   state.commandRunning = Boolean(data.command_running);
+  const isMidSession = state.commandRunning || !["idle", "offline", "complete"].includes(String(data.status || "idle"));
+  els.idlePhase.classList.toggle("active", !isMidSession);
+  els.livePhase.classList.toggle("active", isMidSession);
   els.stopButton.classList.toggle("hidden", !state.commandRunning);
   state.agents = deriveLaneAgents(data);
   state.directAgents = uniqueAgents(data.direct_agents || []);
@@ -2354,6 +2400,23 @@ function setComposerExpanded(expanded, { focus = true } = {}) {
   els.composerExpandButton.querySelector("span").textContent = state.composerExpanded ? "v" : "^";
   if (focus) els.workbenchPrompt.focus();
   scheduleWorkbenchUiSave();
+}
+
+function composerHeightBounds() {
+  const available = els.workArea?.clientHeight || window.innerHeight;
+  return { min: 170, max: Math.max(250, available - 250) };
+}
+
+function setComposerHeight(height, persist = true) {
+  const bounds = composerHeightBounds();
+  const nextHeight = Math.round(Math.min(bounds.max, Math.max(bounds.min, Number(height) || 250)));
+  state.composerHeight = nextHeight;
+  document.documentElement.style.setProperty("--composer-height", `${nextHeight}px`);
+  if (persist) saveSettings();
+}
+
+function resetComposerHeight() {
+  setComposerHeight(Math.min(260, Math.round(window.innerHeight * 0.24)));
 }
 
 function flashSendStatus() {
@@ -2589,7 +2652,34 @@ els.forgetButton.addEventListener("click", () => {
 });
 
 els.sendButton.addEventListener("click", () => sendPrompt(els.workbenchPrompt.value));
-els.composerExpandButton.addEventListener("click", () => setComposerExpanded(!state.composerExpanded));
+els.attentionToggleButton.addEventListener("click", () => setAttentionCollapsed(!state.attentionCollapsed));
+els.composerExpandButton.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) return;
+  event.preventDefault();
+  const startY = event.clientY;
+  const startHeight = els.composerCard.getBoundingClientRect().height;
+  els.composerExpandButton.setPointerCapture(event.pointerId);
+  const resize = (moveEvent) => setComposerHeight(startHeight + startY - moveEvent.clientY, false);
+  const finish = () => {
+    els.composerExpandButton.removeEventListener("pointermove", resize);
+    els.composerExpandButton.removeEventListener("pointerup", finish);
+    els.composerExpandButton.removeEventListener("pointercancel", finish);
+    saveSettings();
+  };
+  els.composerExpandButton.addEventListener("pointermove", resize);
+  els.composerExpandButton.addEventListener("pointerup", finish);
+  els.composerExpandButton.addEventListener("pointercancel", finish);
+});
+els.composerExpandButton.addEventListener("dblclick", resetComposerHeight);
+els.composerExpandButton.addEventListener("keydown", (event) => {
+  if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const bounds = composerHeightBounds();
+  if (event.key === "Home") setComposerHeight(bounds.min);
+  else if (event.key === "End") setComposerHeight(bounds.max);
+  else setComposerHeight(state.composerHeight + (event.key === "ArrowUp" ? 24 : -24));
+});
+window.addEventListener("resize", () => setComposerHeight(state.composerHeight || 220, false));
 els.skillsButton.addEventListener("click", () => setSkillsPanel(els.skillsPanel.classList.contains("hidden")));
 els.skillsCloseButton.addEventListener("click", () => setSkillsPanel(false));
 els.skillsSearch.addEventListener("input", renderSkills);
@@ -2762,6 +2852,7 @@ async function startWorkbench() {
   }
   setTheme(state.theme);
   setFocusMode(state.focusMode);
+  window.requestAnimationFrame(() => setComposerHeight(state.composerHeight || 220, false));
   if (state.token) {
     setConnectionState("Connecting to local Workbench...", "muted");
     connect().catch(() => setConnectionPanel(true));
