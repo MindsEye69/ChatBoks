@@ -17,7 +17,8 @@ and do not expose local control surfaces to untrusted networks or users.
 ## Files
 
 - `orchestrator.py`: main terminal process and approval gates
-- `config.yaml`: projects, agent roles, token limits, and CodeGraph settings
+- `config.yaml`: shared projects, agent defaults, token limits, and CodeGraph settings
+- `~/.chatboks/settings.json`: per-user Workbench preferences such as model overrides
 - `router.py`: chooses the primary agent and wrapper instances
 - `agents/`: CLI wrappers for Claude, Codex, and Antigravity
 - `context/builder.py`: packages CodeGraph, recent ChatBoks history, and active task

@@ -649,7 +649,7 @@ def test_remote_model_choices_hide_unsupported_codex_chatgpt_account_model():
     print("PASS: remote model picker maps unsupported Codex 5.6 models to GPT-5.5")
 
 
-def test_remote_session_set_agent_model_persists_normalized_codex_choice(tmp_path: Path):
+def test_remote_session_set_agent_model_persists_normalized_codex_choice_per_user(tmp_path: Path):
     import yaml
 
     config_path = tmp_path / "config.yaml"
@@ -660,18 +660,56 @@ def test_remote_session_set_agent_model_persists_normalized_codex_choice(tmp_pat
     session = RemoteSession.__new__(RemoteSession)
     session.lock = threading.RLock()
     session.config_path = config_path
+    session.user_settings_path = tmp_path / "settings.json"
     session._command_thread = None
     session.events = RemoteEventBuffer()
     session.app = SimpleNamespace(config=yaml.safe_load(config_path.read_text(encoding="utf-8")))
     session.snapshot = lambda cursor=0: {"model_selection": session.model_selection()}  # type: ignore[method-assign]
+    original_config = config_path.read_text(encoding="utf-8")
 
     payload = session.set_agent_model("codex", "gpt-5.6")
-    stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    stored = json.loads(session.user_settings_path.read_text(encoding="utf-8"))
 
-    assert stored["agents"]["codex"]["model"] == "gpt-5.5"
+    assert config_path.read_text(encoding="utf-8") == original_config
+    assert stored["agent_models"]["codex"] == "gpt-5.5"
     assert payload["model_selection"]["codex"]["current"] == "gpt-5.5"
     assert session.events.since(0)[-1]["text"].endswith("Unsupported gpt-5.6 was mapped automatically.")
-    print("PASS: remote model picker persists normalized Codex model choices")
+    print("PASS: remote model picker persists normalized Codex model choices per user")
+
+
+def test_remote_session_applies_user_model_settings_without_rewriting_shared_defaults(tmp_path: Path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"agent_models": {"claude": None, "codex": "gpt-5.6"}}),
+        encoding="utf-8",
+    )
+    session = RemoteSession.__new__(RemoteSession)
+    session.user_settings_path = settings_path
+    session.app = SimpleNamespace(
+        config={
+            "agents": {
+                "claude": {"model": "opus"},
+                "codex": {"model": "gpt-5.5"},
+            }
+        }
+    )
+
+    session._apply_user_model_settings()
+
+    assert "model" not in session.app.config["agents"]["claude"]
+    assert session.app.config["agents"]["codex"]["model"] == "gpt-5.5"
+    print("PASS: per-user model overrides include explicit CLI defaults and normalized models")
+
+
+def test_remote_session_keeps_shared_model_default_without_user_override(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.user_settings_path = tmp_path / "missing-settings.json"
+    session.app = SimpleNamespace(config={"agents": {"claude": {"model": "opus"}}})
+
+    session._apply_user_model_settings()
+
+    assert session.app.config["agents"]["claude"]["model"] == "opus"
+    print("PASS: shared model defaults remain active without a per-user override")
 
 
 def test_remote_session_remove_project_updates_only_the_registry(tmp_path: Path):

@@ -37,6 +37,7 @@ from agents.base import BaseAgent
 from agents.codex import CODEX_MODEL_CHOICES, normalize_codex_model
 from encoding_utils import configure_utf8_stdio
 from orchestrator import COLLABORATION_MODES, DEFAULT_AGENT_FALLBACKS, Chatboks
+from session_journal import atomic_write_json
 from ui.stream import Stream
 
 
@@ -45,6 +46,7 @@ MAX_TRANSCRIPT_LIMIT = 10_000
 COMMAND_MAX_CHARS = 6000
 HISTORY_QUERY_MAX_CHARS = 240
 MODEL_NAME_MAX_CHARS = 120
+DEFAULT_USER_SETTINGS_PATH = Path("~/.chatboks/settings.json").expanduser()
 SKILL_SELECTION_LIMIT = 4
 SKILL_CONTENT_LIMIT = 12_000
 SKILL_TOTAL_CONTENT_LIMIT = 24_000
@@ -1002,10 +1004,17 @@ class RemoteStream(Stream):
 
 
 class RemoteSession:
-    def __init__(self, project: str, config_path: Path | None = None) -> None:
+    def __init__(
+        self,
+        project: str,
+        config_path: Path | None = None,
+        user_settings_path: Path | None = None,
+    ) -> None:
         self.project = project
         self.config_path = config_path
+        self.user_settings_path = user_settings_path or DEFAULT_USER_SETTINGS_PATH
         self.app = Chatboks(project, trigger="manual", config_path=config_path)
+        self._apply_user_model_settings()
         # The desktop and mobile bridge have no trustworthy terminal prompt surface.
         # Unapproved local roles fall back to the installed role instead of blocking.
         self.app.router.role_prompt_interactive = False
@@ -1060,6 +1069,36 @@ class RemoteSession:
             }
         return selection
 
+    def _load_user_settings(self) -> dict[str, Any]:
+        try:
+            payload = json.loads(self.user_settings_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {}
+        except (OSError, json.JSONDecodeError):
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def _apply_user_model_settings(self) -> None:
+        agent_models = self._load_user_settings().get("agent_models")
+        if not isinstance(agent_models, dict):
+            return
+        agents = self.app.config.get("agents") or {}
+        for agent_name, configured in agent_models.items():
+            if agent_name not in MODEL_CHOICES or agent_name not in agents:
+                continue
+            agent_config = agents.get(agent_name)
+            if not isinstance(agent_config, dict):
+                continue
+            selected = normalize_agent_model(agent_name, str(configured or ""))
+            if len(selected) > MODEL_NAME_MAX_CHARS or not all(
+                char.isalnum() or char in "._:-" for char in selected
+            ):
+                continue
+            if selected:
+                agent_config["model"] = selected
+            else:
+                agent_config.pop("model", None)
+
     def set_agent_model(self, agent: str, model: str) -> dict[str, Any]:
         agent_name = canonical_agent_name(agent)
         if agent_name not in MODEL_CHOICES:
@@ -1074,14 +1113,17 @@ class RemoteSession:
             agent_config = (self.app.config.get("agents") or {}).get(agent_name)
             if not isinstance(agent_config, dict):
                 raise ValueError(f"{agent_name.title()} is not configured.")
+            user_settings = self._load_user_settings()
+            agent_models = user_settings.get("agent_models")
+            if not isinstance(agent_models, dict):
+                agent_models = {}
+            agent_models[agent_name] = selected or None
+            user_settings["agent_models"] = agent_models
+            atomic_write_json(self.user_settings_path, user_settings)
             if selected:
                 agent_config["model"] = selected
             else:
                 agent_config.pop("model", None)
-            config_path = self.config_path or Path("~/.chatboks/config.yaml").expanduser()
-            if not config_path.exists():
-                raise ValueError("ChatBoks configuration was not found.")
-            config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
             if requested and selected != requested:
                 message = f"{agent_name.title()} model set to {selected} for the next task. Unsupported {requested} was mapped automatically."
             else:
@@ -1434,6 +1476,7 @@ class RemoteSession:
             self.stop_active_codegraph()
             self.project = target
             self.app = Chatboks(target, trigger="manual", config_path=self.config_path)
+            self._apply_user_model_settings()
             self.app.router.role_prompt_interactive = False
             self._command_thread = None
             self._command_text = None
