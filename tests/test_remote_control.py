@@ -1417,6 +1417,12 @@ def test_remote_bridge_serves_static_ui_files():
             assert "body.is-compact-workbench" in body
             assert "height: 100dvh" in body
             assert "overflow-wrap: anywhere" in body
+            assert "--phi-major:   61.8%" in body
+            assert "--phi-support: 23.6%" in body
+            assert "--phi-accent:  14.6%" in body
+            assert "--accent:      #8eb79c" in body
+            assert "--ok:          #79c39a" in body
+            assert "--focus:       #9b91b7" in body
             assert ".lane-toolbar {\n  display: none" in body.replace("\r\n", "\n")
             assert "body.is-compact-workbench .lane-toolbar" in body
 

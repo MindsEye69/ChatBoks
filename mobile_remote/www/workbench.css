@@ -170,39 +170,44 @@
 :root[data-theme="lumen"] {
   color-scheme: dark;
 
-  --theme-bg1: #090b22;
-  --theme-bg2: #050613;
-  --theme-bg3: #02030a;
-  --ground:      #06071a;
-  --ground-sunk: #040511;
-  --surface:     #0b0d26;
-  --surface-2:   #11142e;
-  --line:        rgba(150, 170, 255, 0.18);
-  --line-strong: rgba(150, 170, 255, 0.35);
-  --text:        #eef1ff;
-  --muted:       #9aa2c8;
-  --faint:       #6b7396;
-  --accent:      #8ab6ff;
-  --accent-2:    #c792ff;
-  --accent-wash: rgba(138, 182, 255, 0.14);
-  --accent-ink:  #06071a;
-  --teal:        #63c9e8;
-  --info:        #c792ff;
-  --chrome:      #aab4d9;
-  --sheen:       rgba(224, 228, 255, 0.028);
-  --ok:          #4fd8a0;
-  --ok-wash:     rgba(79, 216, 160, 0.14);
-  --on-ok:       #06231a;
-  --warn:        #e0b23c;
-  --warn-wash:   rgba(224, 178, 60, 0.13);
-  --bad:         #ff7a90;
-  --bad-wash:    rgba(255, 122, 144, 0.13);
-  --lane-claude: #63c9e8;
-  --lane-codex:  #c792ff;
-  --lane-coord:  #aab4d9;
-  --lane-spark:  #8ab6ff;
+  --phi-major:   61.8%;
+  --phi-minor:   38.2%;
+  --phi-support: 23.6%;
+  --phi-accent:  14.6%;
+  --theme-bg1: #1a201d;
+  --theme-bg2: #121614;
+  --theme-bg3: #0a0c0b;
+  --ground:      #0a0c0b;
+  --ground-sunk: #070908;
+  --surface:     rgba(18, 22, 20, 0.92);
+  --surface-2:   rgba(26, 32, 29, 0.94);
+  --line:        rgba(174, 193, 181, 0.16);
+  --line-strong: rgba(174, 193, 181, 0.32);
+  --text:        #eff3ef;
+  --muted:       #a8b3ab;
+  --faint:       #839087;
+  --accent:      #8eb79c;
+  --accent-2:    #b8cfbe;
+  --accent-wash: rgba(142, 183, 156, 0.14);
+  --accent-ink:  #09100c;
+  --teal:        #69c89b;
+  --info:        #9b91b7;
+  --focus:       #9b91b7;
+  --chrome:      #b7c0b9;
+  --sheen:       rgba(184, 207, 190, 0.024);
+  --ok:          #79c39a;
+  --ok-wash:     rgba(121, 195, 154, 0.14);
+  --on-ok:       #06140d;
+  --warn:        #d1a35e;
+  --warn-wash:   rgba(209, 163, 94, 0.14);
+  --bad:         #d97b78;
+  --bad-wash:    rgba(217, 123, 120, 0.14);
+  --lane-claude: #c88463;
+  --lane-codex:  #69c89b;
+  --lane-coord:  #a8b3ab;
+  --lane-spark:  #9b91b7;
   --mark-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
-  --shadow:      0 1px 0 rgba(224, 228, 255, 0.05), 0 14px 40px rgba(0, 0, 0, 0.45), 0 0 40px rgba(122, 146, 255, 0.1);
+  --shadow:      0 1px 0 rgba(184, 207, 190, 0.04), 0 14px 40px rgba(0, 0, 0, 0.48), 0 0 36px rgba(142, 183, 156, 0.045);
 
   --bg: var(--ground);
   --bg-soft: var(--ground-sunk);
@@ -237,7 +242,7 @@ body {
    matching the source mockup instead of the other themes' flat fill. */
 :root.lumen-workbench body {
   background:
-    radial-gradient(circle at 28% 14%, #090b22 0%, #050613 46%, #02030a 100%) fixed,
+    radial-gradient(circle at 28% 14%, var(--theme-bg1) 0%, var(--theme-bg2) var(--phi-minor, 38.2%), var(--theme-bg3) 100%) fixed,
     var(--ground);
 }
 
@@ -3255,9 +3260,9 @@ body.is-focus .round-bar { border-top: 0; }
 }
 
 :root.lumen-workbench .token-row .meter { height: 7px; background: var(--line); }
-:root.lumen-workbench .token-row .meter span { background: linear-gradient(90deg, #78cfe5, var(--accent-2)); }
-:root.lumen-workbench .codex .meter span { background: linear-gradient(90deg, #bc77ed, var(--accent-2)); }
-:root.lumen-workbench .gemini .meter span { background: linear-gradient(90deg, #55c7b8, var(--accent-2)); }
+:root.lumen-workbench .token-row .meter span { background: linear-gradient(90deg, var(--lane-claude), var(--accent-2)); }
+:root.lumen-workbench .codex .meter span { background: linear-gradient(90deg, var(--lane-codex), var(--teal)); }
+:root.lumen-workbench .gemini .meter span { background: linear-gradient(90deg, var(--lane-spark), var(--info)); }
 :root[data-theme="mono"] .token-row .meter span,
 :root[data-theme="mono"] .codex .meter span,
 :root[data-theme="mono"] .gemini .meter span {
@@ -3599,7 +3604,7 @@ body.is-focus .round-bar { border-top: 0; }
   min-width: 126px;
   min-height: 50px;
   border-radius: 999px;
-  background: linear-gradient(100deg, var(--accent), var(--accent-2));
+  background: linear-gradient(100deg, var(--accent) 0 var(--phi-major, 61.8%), var(--accent-2));
   color: var(--accent-ink);
   font-size: 13px;
   letter-spacing: .16em;
@@ -3894,6 +3899,22 @@ body.is-focus .round-bar { border-top: 0; }
     height: 132px !important;
     min-height: 132px;
   }
+}
+
+:root[data-theme="lumen"] :is(button, input, textarea, select):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--focus) 82%, white);
+  outline-offset: 2px;
+}
+
+:root[data-theme="lumen"] .signal-handoff,
+:root[data-theme="lumen"] .handoff-label,
+:root[data-theme="lumen"] .handoff-arrow {
+  color: var(--lane-claude);
+}
+
+:root[data-theme="lumen"] .signal-handoff {
+  border-color: color-mix(in srgb, var(--lane-claude) var(--phi-minor), transparent);
+  background: color-mix(in srgb, var(--lane-claude) var(--phi-accent), transparent);
 }
 
 /* Focus is a true workspace mode: after the rails and top bar are hidden,
