@@ -2501,7 +2501,7 @@ body.is-focus .focus-button {
 }
 
 .lane-toolbar {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -3737,6 +3737,7 @@ body.is-focus .round-bar { border-top: 0; }
 }
 
 :root.lumen-workbench body.is-compact-workbench .lane-toolbar {
+  display: flex;
   min-height: 62px;
   padding: 7px 8px;
   background: var(--surface);

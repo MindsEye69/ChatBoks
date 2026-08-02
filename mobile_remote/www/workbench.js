@@ -58,7 +58,7 @@ const state = {
   bridgeUrl: "",
   theme: DEFAULT_THEME,
   focusMode: false,
-  laneView: "task",
+  laneView: "compare",
   activeLane: "",
   laneSelectionPinned: false,
   compactMode: false,
@@ -213,7 +213,7 @@ function loadSettings() {
     state.token = saved.token || "";
     state.bridgeUrl = saved.bridgeUrl || "";
     state.composerHeight = Number(saved.composerHeight) || 0;
-    state.laneView = saved.laneView === "compare" ? "compare" : "task";
+    state.laneView = saved.laneView === "task" ? "task" : "compare";
     state.activeLane = canonicalAgent(saved.activeLane || "");
     const lumenMigrated = localStorage.getItem(LUMEN_MIGRATION_KEY) === "1";
     state.theme = lumenMigrated ? normaliseTheme(saved.theme) : DEFAULT_THEME;
@@ -225,7 +225,7 @@ function loadSettings() {
     state.bridgeUrl = "";
     state.theme = DEFAULT_THEME;
     state.composerHeight = 0;
-    state.laneView = "task";
+    state.laneView = "compare";
     state.activeLane = "";
   }
   els.token.value = state.token;
@@ -300,7 +300,10 @@ function syncLanePresentation() {
   if (!els.agentLanes || !els.compareButton || !els.laneTabs) return;
   const roster = Object.keys(state.lanes);
   if (!roster.includes(state.activeLane)) state.activeLane = roster[0] || "";
-  const effectiveView = state.compactMode ? "task" : state.laneView;
+  // Tabs are a compact-screen navigation pattern. Normal PC and Focus views
+  // always retain the simultaneous multi-agent columns, regardless of an old
+  // persisted task-view preference.
+  const effectiveView = state.compactMode ? "task" : "compare";
   els.agentLanes.dataset.view = effectiveView;
   els.compareButton.setAttribute("aria-pressed", String(effectiveView === "compare"));
   els.compareButton.textContent = effectiveView === "compare" ? "Task view" : "Compare";

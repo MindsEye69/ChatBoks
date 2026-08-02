@@ -1364,6 +1364,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "function mergeTranscript" in body
             assert "function setLaneView" in body
             assert "function setActiveLane" in body
+            assert 'const effectiveView = state.compactMode ? "task" : "compare"' in body
             assert "function applyResponsiveMode" in body
             assert "function renderHandoff" in body
             assert "function renderHandoffIdentity" in body
@@ -1378,6 +1379,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert "body.is-compact-workbench" in body
             assert "height: 100dvh" in body
             assert "overflow-wrap: anywhere" in body
+            assert ".lane-toolbar {\n  display: none" in body.replace("\r\n", "\n")
+            assert "body.is-compact-workbench .lane-toolbar" in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")

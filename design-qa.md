@@ -144,6 +144,7 @@ WRAPFIX 2 result: passed
 
 - Selected ImageGen reference: `C:\Users\rowbi\Desktop\Organized\Under Development\Chatboks\mobile-layout-reference.png` (393 × 852 aspect ratio).
 - Implemented target: automatic compact mode at 820 px and below, plus coarse-pointer devices up to 1024 px.
+- Normal PC and Focus layouts always retain the simultaneous four-column agent view; the tab toolbar is rendered only in compact mode.
 - Implemented hierarchy: compact header, horizontally scrollable model tabs with source avatar assets, one active agent transcript, handoff status, decision dock, and a composer pinned to the bottom safe area.
 - Handoffs now expose bounded `handoff_to` and `handoff_reason` values from the bridge. A new explicit handoff fingerprint switches the selected tab even when the same `next_agent` was already known; a later manual choice remains pinned until the next real transition.
 - Mobile tab interaction includes automatic `scrollIntoView`, Arrow Left/Right wrapping, Home/End navigation, roving tab focus, and linked `tab`/`tabpanel` accessibility state.
