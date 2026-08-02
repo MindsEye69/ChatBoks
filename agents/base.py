@@ -4,6 +4,7 @@ import json
 import os
 import queue
 import re
+import shutil
 import subprocess
 import threading
 import time
@@ -99,7 +100,12 @@ class BaseAgent:
 
     def call(self, context_package: str, mode: str = "respond") -> str:
         prompt = self.build_prompt(context_package, mode=mode)
-        return self.run_cli(prompt, timeout=300, max_timeout=900)
+        return self.run_cli(
+            prompt,
+            timeout=300,
+            max_timeout=900,
+            adapter_profile=self.profile_for_mode(mode),
+        )
 
     def reinitialize(self, codegraph: str, summary: str, state: dict[str, Any]) -> str:
         prompt = self.build_prompt(
@@ -115,11 +121,25 @@ class BaseAgent:
             ),
             mode="resume",
         )
-        return self.run_cli(prompt, timeout=120)
+        return self.run_cli(
+            prompt,
+            timeout=120,
+            adapter_profile=self.profile_for_mode("resume"),
+        )
 
     def execute(self, context_package: str) -> str:
         prompt = self.build_prompt(context_package, mode="execute")
-        return self.run_cli(prompt, timeout=600, max_timeout=1200)
+        return self.run_cli(
+            prompt,
+            timeout=600,
+            max_timeout=1200,
+            adapter_profile=self.profile_for_mode("execute"),
+        )
+
+    def profile_for_mode(self, mode: str) -> str | None:
+        key = "execution_adapter_profile" if mode == "execute" else "planning_adapter_profile"
+        value = str(self.config.get(key) or "").strip()
+        return value or None
 
     def build_prompt(self, context: str, mode: str) -> str:
         if mode == "execute":
@@ -169,14 +189,16 @@ class BaseAgent:
             args = self.default_args
         return [self.expand_adapter_arg(arg) for arg in args]
 
-    def adapter_run_plan(self) -> list[dict[str, Any]]:
+    def adapter_run_plan(self, adapter_profile: str | None = None) -> list[dict[str, Any]]:
         plan: list[dict[str, Any]] = [
             {
                 "label": "primary",
-                "adapter_profile": self.config.get("adapter_profile") or self.default_adapter_profile,
-                "adapter_args": self.config.get("adapter_args"),
+                "adapter_profile": adapter_profile or self.config.get("adapter_profile") or self.default_adapter_profile,
+                "adapter_args": None if adapter_profile else self.config.get("adapter_args"),
             }
         ]
+        if adapter_profile:
+            return plan
         fallback_profiles = self.config.get("fallback_profiles") or []
         if not isinstance(fallback_profiles, list):
             return plan
@@ -198,10 +220,11 @@ class BaseAgent:
         timeout: float = 120,
         idle_timeout: float | None = None,
         max_timeout: float | None = None,
+        adapter_profile: str | None = None,
     ) -> str:
         self.last_adapter_fallback_used = False
         last_error: TokenExhaustionError | None = None
-        plan = self.adapter_run_plan()
+        plan = self.adapter_run_plan(adapter_profile)
         for index, adapter_override in enumerate(plan):
             profile = str(
                 adapter_override.get("adapter_profile")
@@ -235,7 +258,7 @@ class BaseAgent:
         idle_timeout: float | None = None,
         max_timeout: float | None = None,
     ) -> str:
-        use_shell = os.name == "nt"
+        use_shell = self.requires_shell(command)
         run_command = subprocess.list2cmdline(command) if use_shell else command
         env = utf8_env()
         env["CHATBOKS"] = "1"
@@ -271,9 +294,10 @@ class BaseAgent:
         def read_stream(name: str, stream: Any) -> None:
             try:
                 while True:
-                    # Agent stdout drives the visible live response, while stderr is diagnostic-only.
-                    # Drain stderr in chunks so verbose Codex startup logs do not create one queue item per byte.
-                    chunk = stream.read(1 if name == "stdout" else 4096)
+                    # Pipes must be drained incrementally. A large blocking read
+                    # on stderr can hide an early failure marker until the child
+                    # exits, which defeats first-output and token-limit handling.
+                    chunk = stream.read(1)
                     if not chunk:
                         break
                     output_queue.put((name, chunk, time.monotonic()))
@@ -363,6 +387,8 @@ class BaseAgent:
                 remember_output,
                 self.stdout_callback,
             )
+            for reader in readers:
+                reader.join(timeout=1)
             ended_at = time.monotonic()
             combined_output = "\n".join(
                 part.strip()
@@ -453,6 +479,18 @@ class BaseAgent:
             return f"CLI call failed for {self.name}: {error_output}\n>>> BLOCKED"
         output = stdout.strip()
         return output or f"{self.name} returned no output.\n>>> BLOCKED"
+
+    @staticmethod
+    def requires_shell(command: list[str]) -> bool:
+        """Use cmd.exe only for Windows batch wrappers, never for normal executables."""
+        if os.name != "nt" or not command:
+            return False
+        executable = str(command[0]).strip().strip('"')
+        suffix = Path(executable).suffix.lower()
+        if suffix in {".cmd", ".bat"}:
+            return True
+        resolved = shutil.which(executable)
+        return bool(resolved and Path(resolved).suffix.lower() in {".cmd", ".bat"})
 
     @staticmethod
     def drain_output(
@@ -596,7 +634,14 @@ class BaseAgent:
             try:
                 process.wait(timeout=1)
             except subprocess.TimeoutExpired:
-                pass
+                # taskkill can be denied in restricted Windows sessions. The
+                # directly-owned process must still be reaped so pipes and the
+                # project directory are not left locked.
+                process.kill()
+                try:
+                    process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    pass
             return
         process.kill()
         try:

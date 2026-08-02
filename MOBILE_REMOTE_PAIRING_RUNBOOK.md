@@ -4,10 +4,10 @@ This file exists so future Codex/Claude sessions can generate a fresh ChatBoks m
 
 ## What Changed
 
-`remote_control.py` writes a local runtime operator file when the bridge starts:
+`remote_control.py` writes a local runtime operator file in the current user's private application-data area when the bridge starts. On Windows the default is:
 
 ```text
-.chatboks/remote_bridge.json
+%LOCALAPPDATA%\ChatBoks\remote_bridge.json
 ```
 
 That file is ignored by git. It contains the local bridge URL, current one-time pairing code, expiry, and an admin token that can rotate the pairing code on the running bridge.
@@ -20,13 +20,13 @@ This runbook is safe to commit because it contains only generic commands and pla
 
 Do not commit any of these local runtime artifacts:
 
-- `.chatboks/remote_bridge.json`
+- `%LOCALAPPDATA%\ChatBoks\remote_bridge.json`
 - live pairing codes
 - admin bearer tokens
 - mobile session tokens
 - personal tailnet hostnames or device IPs copied from a running session
 
-Before pushing remote-control changes, run a quick search for the current live code/token if one was printed in chat or terminal output. The operator file itself should remain untracked because `.chatboks/` is ignored.
+Before pushing remote-control changes, run a quick search for the current live code/token if one was printed in chat or terminal output. The default operator file lives outside the repository and must never be committed.
 
 ## Generate A New Pairing Code
 
@@ -57,7 +57,7 @@ The bridge is probably not running, or the current shell is not in the project r
 Check:
 
 ```powershell
-Test-Path .chatboks\remote_bridge.json
+Test-Path "$env:LOCALAPPDATA\ChatBoks\remote_bridge.json"
 ```
 
 If the file is elsewhere, pass it explicitly:
@@ -95,7 +95,7 @@ On startup, the bridge prints:
 4. Pairing code is invalidated after successful use.
 5. `--rotate-pair-code` asks the running bridge to create and print a fresh one.
 
-Only the admin token from `.chatboks/remote_bridge.json` can rotate pairing codes. A normal mobile session token cannot.
+Only the admin token from `%LOCALAPPDATA%\ChatBoks\remote_bridge.json` can rotate pairing codes. A normal mobile session token cannot.
 
 ## Troubleshooting
 

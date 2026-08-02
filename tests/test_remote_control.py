@@ -9,10 +9,14 @@ import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from remote_control import (
     MAX_JSON_BODY_BYTES,
     MAX_TRANSCRIPT_LIMIT,
     MODEL_CHOICES,
+    PAIR_FAILURE_LIMIT,
+    PairingRateLimited,
     RemoteEventBuffer,
     RemoteAuth,
     RemoteBridgeServer,
@@ -853,6 +857,30 @@ def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):
     print("PASS: remote session snapshots include compact proposal metadata")
 
 
+def test_remote_session_snapshot_includes_handoff_metadata(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", threading.Event(), threading.Event())
+    app.state.update({
+        "last_agent": "claude",
+        "next_agent": "codex",
+        "handoff_to": "codex",
+        "handoff_reason": "Implementation is ready.",
+    })
+    session.app = app
+
+    payload = session.snapshot()
+
+    assert payload["handoff_to"] == "codex"
+    assert payload["handoff_reason"] == "Implementation is ready."
+    print("PASS: remote session snapshots expose handoff metadata")
+
+
 def test_remote_session_snapshot_includes_trace_payload(tmp_path: Path):
     session = RemoteSession.__new__(RemoteSession)
     session.project = "chatboks"
@@ -1010,6 +1038,19 @@ def test_remote_bridge_rejects_invalid_pair_code():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge rejects invalid pairing codes")
+
+
+def test_remote_auth_rate_limits_repeated_invalid_pair_codes():
+    auth = RemoteAuth("admin-token")
+
+    for _ in range(PAIR_FAILURE_LIMIT - 1):
+        assert auth.exchange_pair_code("BADCODE", "127.0.0.1") is None
+
+    with pytest.raises(PairingRateLimited):
+        auth.exchange_pair_code("BADCODE", "127.0.0.1")
+
+    with pytest.raises(PairingRateLimited):
+        auth.exchange_pair_code(auth.current_pair_code()[0], "127.0.0.1")
 
 
 def test_remote_bridge_invalidates_pair_code_after_successful_exchange():
@@ -1293,6 +1334,9 @@ def test_remote_bridge_serves_static_ui_files():
             assert "attentionToggleButton" in body
             assert "activePromptText" in body
             assert "commandCompletionPalette" in body
+            assert 'id="laneTabs"' in body
+            assert 'id="compareButton"' in body
+            assert 'id="handoffBar"' in body
 
         with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1318,6 +1362,22 @@ def test_remote_bridge_serves_static_ui_files():
             assert 'event.key === "Tab"' in body
             assert "lane-prompt-pip" in body
             assert "function mergeTranscript" in body
+            assert "function setLaneView" in body
+            assert "function setActiveLane" in body
+            assert "function applyResponsiveMode" in body
+            assert "function renderHandoff" in body
+            assert "function renderHandoffIdentity" in body
+            assert "handoffTransition" in body
+            assert "explicitHandoffChanged" in body
+            assert "scrollIntoView" in body
+            assert 'event.key === "ArrowRight"' in body
+
+        with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
+            body = response.read().decode("utf-8")
+            assert response.status == 200
+            assert "body.is-compact-workbench" in body
+            assert "height: 100dvh" in body
+            assert "overflow-wrap: anywhere" in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1330,6 +1390,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "active-prompt-card" in body
             assert "lane-prompt-nav" in body
             assert "history-search" in body
+            assert '.agent-lanes[data-view="task"]' in body
     finally:
         server.shutdown()
         thread.join(timeout=5)

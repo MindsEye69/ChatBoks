@@ -58,6 +58,9 @@ COORDINATOR_LANE_AGENT = "coordinator"
 MAX_JSON_BODY_BYTES = 64 * 1024
 PAIR_CODE_LENGTH = 8
 PAIR_CODE_TTL_SECONDS = 300
+PAIR_FAILURE_LIMIT = 5
+PAIR_FAILURE_WINDOW_SECONDS = 60
+PAIR_LOCKOUT_SECONDS = 60
 SESSION_TOKEN_TTL_SECONDS = 8 * 60 * 60
 OPERATOR_STATUS_FILENAME = "remote_bridge.json"
 OPERATOR_PROBE_TIMEOUT_SECONDS = 2.0
@@ -864,6 +867,10 @@ class RemoteEventBuffer:
             self._next_id = 1
 
 
+class PairingRateLimited(RuntimeError):
+    """Raised when one client repeatedly submits invalid pairing codes."""
+
+
 class RemoteAuth:
     def __init__(self, admin_token: str) -> None:
         self.admin_token = admin_token
@@ -871,6 +878,8 @@ class RemoteAuth:
         self._pair_code = self._new_pair_code()
         self._pair_code_expires_at = time.time() + PAIR_CODE_TTL_SECONDS
         self._session_tokens: dict[str, float] = {}
+        self._pair_failures: dict[str, list[float]] = {}
+        self._pair_lockouts: dict[str, float] = {}
 
     def _new_pair_code(self) -> str:
         alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -888,19 +897,38 @@ class RemoteAuth:
             self._pair_code_expires_at = time.time() + PAIR_CODE_TTL_SECONDS
             return self._pair_code, PAIR_CODE_TTL_SECONDS
 
-    def exchange_pair_code(self, pair_code: str) -> tuple[str, int] | None:
+    def exchange_pair_code(self, pair_code: str, client_id: str = "local") -> tuple[str, int] | None:
         normalized = pair_code.strip().upper()
         if not normalized:
             return None
         with self._lock:
+            now = time.time()
+            locked_until = self._pair_lockouts.get(client_id, 0)
+            if locked_until > now:
+                raise PairingRateLimited("Too many invalid pairing attempts")
+            if locked_until:
+                self._pair_lockouts.pop(client_id, None)
             self._refresh_pair_code_if_needed()
             if not secrets.compare_digest(normalized, self._pair_code):
+                failures = [
+                    timestamp
+                    for timestamp in self._pair_failures.get(client_id, [])
+                    if now - timestamp < PAIR_FAILURE_WINDOW_SECONDS
+                ]
+                failures.append(now)
+                self._pair_failures[client_id] = failures
+                if len(failures) >= PAIR_FAILURE_LIMIT:
+                    self._pair_failures.pop(client_id, None)
+                    self._pair_lockouts[client_id] = now + PAIR_LOCKOUT_SECONDS
+                    raise PairingRateLimited("Too many invalid pairing attempts")
                 return None
             token = secrets.token_urlsafe(32)
             expires_at = time.time() + SESSION_TOKEN_TTL_SECONDS
             self._session_tokens[token] = expires_at
             self._pair_code = self._new_pair_code()
             self._pair_code_expires_at = time.time() + PAIR_CODE_TTL_SECONDS
+            self._pair_failures.pop(client_id, None)
+            self._pair_lockouts.pop(client_id, None)
             return token, SESSION_TOKEN_TTL_SECONDS
 
     def authorize(self, token: str) -> bool:
@@ -1641,13 +1669,19 @@ class RemoteSession:
                 "history_limit": history_limit,
             }
         selected_skills = [str(item)[:240] for item in list(payload.get("selected_skills") or [])[:SKILL_SELECTION_LIMIT]]
-        requested_theme = str(payload.get("theme") or "carbon")
+        requested_theme = str(payload.get("theme") or "lumen")
+        theme_aliases = {"carbon": "lumen", "chrome": "lumen", "console": "lumen", "orchid": "mono"}
+        requested_theme = theme_aliases.get(requested_theme, requested_theme)
+        lane_view = "compare" if str(payload.get("lane_view") or "task") == "compare" else "task"
+        active_lane = canonical_agent_name(payload.get("active_lane"))
         workbench_ui = {
-            "theme": requested_theme if requested_theme in {"carbon", "chrome", "console"} else "carbon",
+            "theme": requested_theme if requested_theme in {"lumen", "ember", "verdant", "mono"} else "lumen",
             "history_query": str(payload.get("history_query") or "")[:HISTORY_QUERY_MAX_CHARS],
             "composer_draft": str(payload.get("composer_draft") or "")[:COMMAND_MAX_CHARS],
             "composer_expanded": bool(payload.get("composer_expanded", False)),
             "focus_mode": bool(payload.get("focus_mode", False)),
+            "lane_view": lane_view,
+            "active_lane": active_lane,
             "selected_skills": selected_skills,
             "lanes": lanes,
         }
@@ -1697,6 +1731,7 @@ class RemoteSession:
                     for agent in [
                         self.app.state.get("next_agent"),
                         self.app.state.get("last_agent"),
+                        self.app.state.get("handoff_to"),
                         *list(self.app.state.get("expected_agents") or []),
                     ]
                     if agent
@@ -1732,6 +1767,8 @@ class RemoteSession:
                 "active_task": self.app.state.get("active_task"),
                 "next_agent": self.app.state.get("next_agent"),
                 "last_agent": self.app.state.get("last_agent"),
+                "handoff_to": self.app.state.get("handoff_to"),
+                "handoff_reason": str(self.app.state.get("handoff_reason") or "")[:1000],
                 "round": self.app.state.get("round"),
                 "expected_agents": list(self.app.state.get("expected_agents") or []),
                 "completed_agents": list(self.app.state.get("completed_agents") or []),
@@ -1840,6 +1877,10 @@ class RemoteBridgeServer(ThreadingHTTPServer):
         self.operator_status_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = self.operator_status_path.with_suffix(self.operator_status_path.suffix + ".tmp")
         tmp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        try:
+            tmp_path.chmod(0o600)
+        except OSError:
+            pass
         tmp_path.replace(self.operator_status_path)
 
     def clear_operator_status(self) -> None:
@@ -1976,7 +2017,11 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
                 return
             pair_code = str(payload.get("pair_code") or "")
-            result = self.server.auth.exchange_pair_code(pair_code)
+            try:
+                result = self.server.auth.exchange_pair_code(pair_code, self.client_address[0])
+            except PairingRateLimited:
+                self.respond_error(HTTPStatus.TOO_MANY_REQUESTS, "Too many invalid pairing attempts. Try again later.")
+                return
             self.server.write_operator_status()
             if result is None:
                 self.respond_error(HTTPStatus.FORBIDDEN, "Invalid or expired pairing code")
@@ -2247,7 +2292,13 @@ class RemoteHandler(BaseHTTPRequestHandler):
 
 
 def default_operator_status_path() -> Path:
-    return Path.cwd() / ".chatboks" / OPERATOR_STATUS_FILENAME
+    if os.name == "nt":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        base = Path(local_app_data) if local_app_data else Path.home() / "AppData" / "Local"
+        return base / "ChatBoks" / OPERATOR_STATUS_FILENAME
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+    base = Path(runtime_dir) / "chatboks" if runtime_dir else Path.home() / ".chatboks"
+    return base / OPERATOR_STATUS_FILENAME
 
 
 def read_operator_status_payload(path: Path) -> tuple[dict[str, Any] | None, str | None]:
@@ -2395,7 +2446,7 @@ def main() -> int:
         "--operator-file",
         type=Path,
         default=None,
-        help=f"Runtime operator file path (default: .chatboks/{OPERATOR_STATUS_FILENAME})",
+        help=f"Runtime operator file path (default: per-user runtime data/{OPERATOR_STATUS_FILENAME})",
     )
     parser.add_argument(
         "--rotate-pair-code",

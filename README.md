@@ -421,7 +421,11 @@ agents:
 Known built-in profiles:
 
 - `claude_code_print_v1`
+- `claude_code_plan_v1` (read-only planning)
+- `claude_code_workspace_v1` (approved workspace execution)
 - `codex_exec_v1`
+- `codex_exec_plan_v1` (read-only planning)
+- `codex_exec_workspace_v1` (approved workspace execution)
 - `codex_spark_exec_v1`
 - `agy_run_v1`
 
@@ -448,6 +452,28 @@ agents:
 ```
 
 `doctor.py` reports the selected adapter profile and warns when a named profile is unknown.
+
+Planning and execution profiles can be separated so analysis does not inherit write authority:
+
+```yaml
+agents:
+  codex:
+    planning_adapter_profile: codex_exec_plan_v1
+    execution_adapter_profile: codex_exec_workspace_v1
+```
+
+## Windows Desktop Build
+
+`build-workbench.ps1` creates a versioned, non-UPX executable and a SHA-256 checksum. It does not silently install
+build dependencies. Use `-InstallBuildDependencies` only after reviewing the pinned `requirements-build.txt`.
+
+For a distributable release that Windows can establish reputation for, sign with a trusted Authenticode certificate:
+
+```powershell
+.\build-workbench.ps1 -CertificateThumbprint <thumbprint> -RequireSignature
+```
+
+An unsigned local build is a development artifact and may still be blocked by Microsoft Smart App Control.
 
 ## Optional Graphify Map
 

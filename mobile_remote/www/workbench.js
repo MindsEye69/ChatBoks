@@ -58,6 +58,13 @@ const state = {
   bridgeUrl: "",
   theme: DEFAULT_THEME,
   focusMode: false,
+  laneView: "task",
+  activeLane: "",
+  laneSelectionPinned: false,
+  compactMode: false,
+  lastObservedNextAgent: "",
+  lastObservedHandoffKey: "",
+  lastObservedCommandRunning: false,
   connected: false,
   eventCursor: 0,
   sessionTimer: null,
@@ -178,7 +185,7 @@ for (const id of [
   "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "claudeUpdateButton", "systemDrawer",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
-  "agentLanes", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
+  "agentLanes", "laneTabs", "compareButton", "handoffBar", "handoffFrom", "handoffTo", "handoffReason", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalHelper", "approvalRaw", "approvalModification", "approvalStatus", "approvalCommandPreview",
   "approvalBuildActions", "approveButton", "modifyButton", "rejectButton", "dismissButton",
@@ -206,6 +213,8 @@ function loadSettings() {
     state.token = saved.token || "";
     state.bridgeUrl = saved.bridgeUrl || "";
     state.composerHeight = Number(saved.composerHeight) || 0;
+    state.laneView = saved.laneView === "compare" ? "compare" : "task";
+    state.activeLane = canonicalAgent(saved.activeLane || "");
     const lumenMigrated = localStorage.getItem(LUMEN_MIGRATION_KEY) === "1";
     state.theme = lumenMigrated ? normaliseTheme(saved.theme) : DEFAULT_THEME;
     if (!lumenMigrated) {
@@ -216,6 +225,8 @@ function loadSettings() {
     state.bridgeUrl = "";
     state.theme = DEFAULT_THEME;
     state.composerHeight = 0;
+    state.laneView = "task";
+    state.activeLane = "";
   }
   els.token.value = state.token;
   els.bridgeUrl.value = state.bridgeUrl || "";
@@ -227,6 +238,8 @@ function saveSettings() {
     bridgeUrl: state.bridgeUrl,
     theme: state.theme,
     composerHeight: state.composerHeight,
+    laneView: state.laneView,
+    activeLane: state.activeLane,
   }));
 }
 
@@ -253,6 +266,101 @@ function setFocusMode(on) {
   els.focusButton.setAttribute("aria-pressed", String(state.focusMode));
   els.focusLabel.textContent = state.focusMode ? "Exit focus" : "Focus";
   scheduleWorkbenchUiSave();
+}
+
+function setLaneView(view) {
+  state.laneView = view === "compare" ? "compare" : "task";
+  state.laneSelectionPinned = state.laneView === "task" && state.laneSelectionPinned;
+  syncLanePresentation();
+  saveSettings();
+  scheduleWorkbenchUiSave();
+}
+
+function setActiveLane(agent, pinned = true) {
+  const canonical = canonicalAgent(agent);
+  if (!canonical || !state.lanes[canonical]) return;
+  const changed = state.activeLane !== canonical;
+  state.activeLane = canonical;
+  state.laneSelectionPinned = pinned;
+  syncLanePresentation();
+  if (changed && state.compactMode) {
+    window.requestAnimationFrame(() => {
+      els.laneTabs.querySelector(`[data-lane-tab="${canonical}"]`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    });
+  }
+  saveSettings();
+  scheduleWorkbenchUiSave();
+}
+
+function syncLanePresentation() {
+  if (!els.agentLanes || !els.compareButton || !els.laneTabs) return;
+  const roster = Object.keys(state.lanes);
+  if (!roster.includes(state.activeLane)) state.activeLane = roster[0] || "";
+  const effectiveView = state.compactMode ? "task" : state.laneView;
+  els.agentLanes.dataset.view = effectiveView;
+  els.compareButton.setAttribute("aria-pressed", String(effectiveView === "compare"));
+  els.compareButton.textContent = effectiveView === "compare" ? "Task view" : "Compare";
+  for (const [agent, lane] of Object.entries(state.lanes)) {
+    const active = agent === state.activeLane;
+    lane.pane.classList.toggle("is-active-lane", active);
+    lane.pane.setAttribute("aria-hidden", String(effectiveView === "task" && !active));
+    const tab = els.laneTabs.querySelector(`[data-lane-tab="${agent}"]`);
+    if (tab) {
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", String(active));
+      tab.tabIndex = active ? 0 : -1;
+    }
+  }
+}
+
+function renderLaneTabs() {
+  els.laneTabs.replaceChildren();
+  for (const agent of Object.keys(state.lanes)) {
+    const tab = document.createElement("button");
+    tab.className = `lane-tab ${laneStyleClass(agent)}-tab`;
+    tab.type = "button";
+    tab.role = "tab";
+    tab.id = `lane-tab-${agent}`;
+    tab.dataset.laneTab = agent;
+    tab.setAttribute("aria-controls", `lane-panel-${agent}`);
+    const imageSource = AGENT_IMAGES[canonicalAgent(agent)];
+    if (imageSource) {
+      tab.classList.add("has-avatar");
+      const image = document.createElement("img");
+      image.className = "lane-tab-avatar";
+      image.src = imageSource;
+      image.alt = "";
+      tab.appendChild(image);
+    }
+    const label = document.createElement("span");
+    label.textContent = laneDisplayName(agent);
+    tab.appendChild(label);
+    tab.addEventListener("click", () => {
+      setActiveLane(agent);
+      if (state.laneView !== "task") setLaneView("task");
+    });
+    tab.addEventListener("keydown", (event) => {
+      const roster = Object.keys(state.lanes);
+      const currentIndex = roster.indexOf(agent);
+      let targetIndex = currentIndex;
+      if (event.key === "ArrowRight") targetIndex = (currentIndex + 1) % roster.length;
+      else if (event.key === "ArrowLeft") targetIndex = (currentIndex - 1 + roster.length) % roster.length;
+      else if (event.key === "Home") targetIndex = 0;
+      else if (event.key === "End") targetIndex = roster.length - 1;
+      else return;
+      event.preventDefault();
+      const targetAgent = roster[targetIndex];
+      setActiveLane(targetAgent);
+      if (state.laneView !== "task") setLaneView("task");
+      els.laneTabs.querySelector(`[data-lane-tab="${targetAgent}"]`)?.focus();
+    });
+    els.laneTabs.appendChild(tab);
+  }
+  syncLanePresentation();
 }
 
 function enforceLeftToRightText(element) {
@@ -502,6 +610,9 @@ function resetSessionState() {
   state.historyLoaded = false;
   state.historyQuery = "";
   state.latestSession = null;
+  state.lastObservedNextAgent = "";
+  state.lastObservedHandoffKey = "";
+  state.lastObservedCommandRunning = false;
   state.uiRestoredSession = "";
   if (els.historySearch) els.historySearch.value = "";
   renderActivePrompt("");
@@ -534,6 +645,8 @@ async function saveWorkbenchUi() {
         history_query: state.historyQuery,
         composer_draft: els.workbenchPrompt.value,
         focus_mode: state.focusMode,
+        lane_view: state.laneView,
+        active_lane: state.activeLane,
         selected_skills: state.selectedSkills,
         lanes,
       }),
@@ -896,9 +1009,13 @@ function ensureLanes(agents) {
   }
   els.agentLanes.innerHTML = "";
   state.lanes = {};
+  state.laneSelectionPinned = false;
   for (const agent of roster) {
     const pane = document.createElement("article");
     pane.className = `agent-pane ${laneStyleClass(agent)}-pane`;
+    pane.id = `lane-panel-${agent}`;
+    pane.role = "tabpanel";
+    pane.setAttribute("aria-labelledby", `lane-tab-${agent}`);
 
     const header = document.createElement("header");
     header.className = "agent-header";
@@ -1004,6 +1121,7 @@ function ensureLanes(agents) {
       historyLimit: LANE_MESSAGE_LIMIT,
     };
   }
+  renderLaneTabs();
 }
 
 function renderModelSelectors(selection = {}) {
@@ -1233,6 +1351,57 @@ function updateLaneActivity(data) {
             ? " Needs input"
             : " Online";
   }
+  const nextAgent = canonicalAgent(data.handoff_to || data.next_agent || "");
+  const nextAgentChanged = Boolean(nextAgent) && nextAgent !== state.lastObservedNextAgent;
+  const handoffFrom = canonicalAgent(data.last_agent || "");
+  const explicitHandoff = canonicalAgent(data.handoff_to || "");
+  const handoffKey = explicitHandoff
+    ? `${data.round ?? ""}:${handoffFrom}:${explicitHandoff}:${String(data.handoff_reason || "")}`
+    : "";
+  const explicitHandoffChanged = Boolean(handoffKey) && handoffKey !== state.lastObservedHandoffKey;
+  const commandStarted = Boolean(data.command_running) && !state.lastObservedCommandRunning;
+  const handoffTransition = explicitHandoffChanged
+    || (Boolean(data.command_running) && (nextAgentChanged || commandStarted));
+  const suggested = Object.entries(state.lanes).find(([, lane]) => lane.pane.classList.contains("is-working"))?.[0]
+    || (proposalOwner && state.lanes[proposalOwner] ? proposalOwner : "")
+    || canonicalAgent(data.last_agent || "");
+  if (handoffTransition && state.lanes[nextAgent]) {
+    setActiveLane(nextAgent, false);
+  } else if (suggested && state.lanes[suggested] && !state.laneSelectionPinned) {
+    setActiveLane(suggested, false);
+  } else {
+    syncLanePresentation();
+  }
+  state.lastObservedNextAgent = nextAgent;
+  state.lastObservedHandoffKey = handoffKey;
+  state.lastObservedCommandRunning = Boolean(data.command_running);
+}
+
+function renderHandoffIdentity(element, agent) {
+  element.replaceChildren();
+  const imageSource = AGENT_IMAGES[agent];
+  if (imageSource) {
+    const image = document.createElement("img");
+    image.className = "handoff-avatar";
+    image.src = imageSource;
+    image.alt = "";
+    element.appendChild(image);
+  }
+  const label = document.createElement("span");
+  label.textContent = laneDisplayName(agent);
+  element.appendChild(label);
+}
+
+function renderHandoff(data) {
+  const from = canonicalAgent(data.last_agent || "");
+  const to = canonicalAgent(data.handoff_to || data.next_agent || "");
+  const visible = Boolean(from && to && from !== to && (data.handoff_to || data.command_running));
+  els.handoffBar.classList.toggle("hidden", !visible);
+  if (!visible) return;
+  renderHandoffIdentity(els.handoffFrom, from);
+  renderHandoffIdentity(els.handoffTo, to);
+  els.handoffReason.textContent = String(data.handoff_reason || "").trim();
+  els.handoffReason.classList.toggle("hidden", !els.handoffReason.textContent);
 }
 
 function previewTargetFromTranscript(transcript) {
@@ -2195,6 +2364,8 @@ function applySession(data) {
     state.selectedSkills = Array.isArray(savedUi.selected_skills) ? savedUi.selected_skills : [];
     els.workbenchPrompt.value = String(savedUi.composer_draft || "");
     setFocusMode(Boolean(savedUi.focus_mode));
+    state.laneView = savedUi.lane_view === "compare" ? "compare" : state.laneView;
+    state.activeLane = canonicalAgent(savedUi.active_lane || state.activeLane);
   }
   state.latestSession = data;
   state.transcript = mergeTranscript(state.transcript, data.transcript || []);
@@ -2256,6 +2427,7 @@ function applySession(data) {
   if (shouldRestoreUi) state.uiRestoredSession = incomingSessionId;
   updatePreviewButton({ ...data, transcript });
   updateLaneActivity(data);
+  renderHandoff(data);
   renderCoordinator(data);
   renderApproval(data);
   renderAttention(data);
@@ -2555,6 +2727,7 @@ for (const swatch of document.querySelectorAll(".swatch")) {
 }
 
 els.focusButton.addEventListener("click", () => setFocusMode(!state.focusMode));
+els.compareButton.addEventListener("click", () => setLaneView(state.laneView === "compare" ? "task" : "compare"));
 els.historySearch.addEventListener("input", () => {
   state.historyQuery = els.historySearch.value;
   for (const lane of Object.values(state.lanes)) {
@@ -2792,6 +2965,21 @@ els.previewButton.addEventListener("click", async () => {
 
 let workbenchStarted = false;
 const desktopMode = new URLSearchParams(window.location.search).has("desktop");
+const compactMedia = window.matchMedia("(max-width: 820px), (pointer: coarse) and (max-width: 1024px)");
+
+function applyResponsiveMode() {
+  state.compactMode = compactMedia.matches;
+  document.body.classList.toggle("is-compact-workbench", state.compactMode);
+  els.systemDrawerButton.textContent = state.compactMode ? "Menu" : "Coordinator";
+  syncLanePresentation();
+  if (state.compactMode && state.systemDrawerOpen) {
+    state.systemDrawerOpen = false;
+    syncSystemPanels();
+  }
+}
+
+if (compactMedia.addEventListener) compactMedia.addEventListener("change", applyResponsiveMode);
+else compactMedia.addListener(applyResponsiveMode);
 
 function syncSystemPanels() {
   els.systemDrawer.classList.toggle("hidden", !state.systemDrawerOpen);
@@ -2833,6 +3021,7 @@ async function startWorkbench() {
   }
   setTheme(state.theme);
   setFocusMode(state.focusMode);
+  applyResponsiveMode();
   window.requestAnimationFrame(() => setComposerHeight(state.composerHeight || 300, false));
   if (state.token) {
     setConnectionState("Connecting to local Workbench...", "muted");

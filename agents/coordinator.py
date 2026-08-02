@@ -108,8 +108,9 @@ class CoordinatorAgent(BaseAgent):
         timeout: int = 120,
         idle_timeout: float | None = None,
         max_timeout: float | None = None,
+        adapter_profile: str | None = None,
     ) -> str:
-        _ = idle_timeout
+        _ = idle_timeout, adapter_profile
         current_request = self.extract_current_request(prompt)
         if self.is_role_call_request(current_request):
             return self.role_call_response()

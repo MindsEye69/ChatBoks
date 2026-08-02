@@ -32,6 +32,22 @@ class CodexAgent(BaseAgent):
             "danger-full-access",
             "-",
         ],
+        "codex_exec_plan_v1": [
+            "exec",
+            "-C",
+            "{project_path}",
+            "-s",
+            "read-only",
+            "-",
+        ],
+        "codex_exec_workspace_v1": [
+            "exec",
+            "-C",
+            "{project_path}",
+            "-s",
+            "workspace-write",
+            "-",
+        ],
     }
     default_args = adapter_profiles["codex_exec_v1"]
 
@@ -57,6 +73,26 @@ class CodexSparkAgent(CodexAgent):
             "--dangerously-bypass-approvals-and-sandbox",
             "-s",
             "danger-full-access",
+            "-",
+        ],
+        "codex_spark_plan_v1": [
+            "exec",
+            "-C",
+            "{project_path}",
+            "-m",
+            "gpt-5.3-codex-spark",
+            "-s",
+            "read-only",
+            "-",
+        ],
+        "codex_spark_workspace_v1": [
+            "exec",
+            "-C",
+            "{project_path}",
+            "-m",
+            "gpt-5.3-codex-spark",
+            "-s",
+            "workspace-write",
             "-",
         ],
     }

@@ -2495,13 +2495,126 @@ body.is-focus .focus-button {
 .lane-deck {
   position: relative;
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   min-height: 0;
   background: var(--ground);
 }
 
+.lane-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.lane-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lane-tabs::-webkit-scrollbar { display: none; }
+
+.lane-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: 700 11px var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lane-tab:hover { color: var(--text); background: var(--ground-raised); }
+.lane-tab.active {
+  border-color: var(--line-strong);
+  background: var(--accent-wash);
+  color: var(--text);
+}
+
+.lane-tab:not(.has-avatar)::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--lane-coord);
+}
+
+.claude-tab::before { background: var(--lane-claude); }
+.codex-tab::before { background: var(--lane-codex); }
+.spark-tab::before { background: var(--lane-spark); }
+.lane-tab.has-avatar::before { display: none; }
+
+.lane-tab-avatar {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.handoff-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--accent-wash) 72%, var(--ground));
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.handoff-label {
+  color: var(--accent);
+  font: 700 10px var(--mono);
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.handoff-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+  font-weight: 700;
+}
+.handoff-avatar {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  object-fit: cover;
+}
+.handoff-arrow { color: var(--accent); }
+.handoff-reason {
+  min-width: 0;
+  margin-left: 4px;
+  overflow: hidden;
+  color: var(--faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-button { flex: none; }
+
 .lane-deck .agent-lanes {
-  grid-row: 1;
+  grid-row: 3;
   min-height: 0;
   /* the old rule pinned this to clamp(360px, 58vh, 680px); the deck owns
      the height now, so the lanes fill whatever the shell gives them */
@@ -2517,6 +2630,15 @@ body.is-focus .focus-button {
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
 }
+
+.lane-deck .agent-lanes[data-view="task"] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+}
+
+.lane-deck .agent-lanes[data-view="task"] .agent-pane { display: none; }
+.lane-deck .agent-lanes[data-view="task"] .agent-pane.is-active-lane { display: grid; }
 
 .agent-pane {
   /* two rows so .agent-stream has a bounded height to scroll inside */
@@ -3217,6 +3339,14 @@ body.is-focus .round-bar { border-top: 0; }
   overflow: hidden;
 }
 
+:root.lumen-workbench .lane-toolbar {
+  margin-bottom: 10px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+
 :root.lumen-workbench .lane-deck .agent-lanes {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-rows: minmax(0, 1fr);
@@ -3225,6 +3355,10 @@ body.is-focus .round-bar { border-top: 0; }
   gap: 16px;
   padding: 0;
   background: transparent;
+}
+
+:root.lumen-workbench .lane-deck .agent-lanes[data-view="task"] {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 :root.lumen-workbench .agent-pane {
@@ -3521,26 +3655,212 @@ body.is-focus .round-bar { border-top: 0; }
 }
 
 @media (max-width: 820px) {
-  :root.lumen-workbench .workbench-shell { display: block; min-height: 0; padding: 10px; }
-  :root.lumen-workbench .workspace-topbar { position: relative; flex-wrap: wrap; height: auto; min-height: 78px; margin-bottom: 10px; padding: 14px; }
-  :root.lumen-workbench .workspace-topbar .brand-row { border: 0; }
-  :root.lumen-workbench .crumb { order: 3; width: 100%; }
-  :root.lumen-workbench .topbar-actions { margin-left: auto; }
-  :root.lumen-workbench .topbar-actions > :not(#liveButton):not(.theme-pick) { display: none; }
-  :root.lumen-workbench .left-rail { display: grid; height: auto; grid-template-rows: 60px 64px auto; margin-bottom: 10px; overflow: visible; }
-  :root.lumen-workbench .active-prompt-card,
-  :root.lumen-workbench .rail-footer { display: none; }
-  :root.lumen-workbench .work-area { display: flex; min-height: 880px; }
-  :root.lumen-workbench .round-phase,
-  :root.lumen-workbench .round-actions { display: none; }
-  :root.lumen-workbench .round-cell { flex: 1; padding-inline: 10px; }
-  :root.lumen-workbench .lane-deck .agent-lanes { grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(300px, auto)); }
-  :root.lumen-workbench .lane-deck { overflow: visible; }
-  :root.lumen-workbench .approval-panel,
-  :root.lumen-workbench .attention-panel { position: static; grid-template-columns: 1fr; }
-  :root.lumen-workbench .right-rail { display: grid; grid-template-columns: 1fr; margin-top: 10px; }
-  :root.lumen-workbench .right-rail .rail-scroll { grid-template-columns: 1fr; }
-  :root.lumen-workbench .monitor-strip { min-width: 0; }
+  :root.lumen-workbench body { overflow: hidden; }
+}
+
+/* Compact mode is selected by JavaScript for narrow windows and coarse touch
+   screens. The composer is deliberately preserved while the transcript takes
+   the remaining space and scrolls, so short screens never lose the controls
+   at the bottom. */
+:root.lumen-workbench body.is-compact-workbench {
+  overflow: hidden;
+  min-width: 0;
+}
+
+:root.lumen-workbench body.is-compact-workbench .workbench-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 56px minmax(0, 1fr);
+  gap: 0;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  padding: 0;
+}
+
+:root.lumen-workbench body.is-compact-workbench .workspace-topbar {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+  height: 56px;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+:root.lumen-workbench body.is-compact-workbench .brand-row {
+  gap: 8px;
+  min-width: 0;
+  padding-right: 0;
+  border: 0;
+}
+
+:root.lumen-workbench body.is-compact-workbench .brand-mark { width: 32px; height: 32px; }
+:root.lumen-workbench body.is-compact-workbench .brand-name { font-size: 15px; }
+:root.lumen-workbench body.is-compact-workbench .build-badge,
+:root.lumen-workbench body.is-compact-workbench .crumb,
+:root.lumen-workbench body.is-compact-workbench .theme-pick,
+:root.lumen-workbench body.is-compact-workbench .left-rail,
+:root.lumen-workbench body.is-compact-workbench .right-rail,
+:root.lumen-workbench body.is-compact-workbench .round-bar,
+:root.lumen-workbench body.is-compact-workbench .compare-button { display: none; }
+
+:root.lumen-workbench body.is-compact-workbench .topbar-actions { margin-left: auto; gap: 4px; }
+:root.lumen-workbench body.is-compact-workbench .topbar-actions > :not(#liveButton):not(#systemDrawerButton) { display: none; }
+:root.lumen-workbench body.is-compact-workbench #liveButton,
+:root.lumen-workbench body.is-compact-workbench #systemDrawerButton {
+  display: inline-flex;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+}
+
+:root.lumen-workbench body.is-compact-workbench .work-area {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+:root.lumen-workbench body.is-compact-workbench .lane-deck {
+  flex: 1 1 auto;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+:root.lumen-workbench body.is-compact-workbench .lane-toolbar {
+  min-height: 62px;
+  padding: 7px 8px;
+  background: var(--surface);
+}
+
+:root.lumen-workbench body.is-compact-workbench .lane-tabs {
+  width: 100%;
+  gap: 5px;
+  scroll-snap-type: x proximity;
+}
+
+:root.lumen-workbench body.is-compact-workbench .lane-tab {
+  flex: 0 0 auto;
+  min-width: 84px;
+  justify-content: flex-start;
+  padding: 6px 9px;
+  scroll-snap-align: start;
+}
+
+:root.lumen-workbench body.is-compact-workbench .lane-tab-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+:root.lumen-workbench body.is-compact-workbench .handoff-bar {
+  display: flex;
+  min-height: 35px;
+  padding: 6px 10px;
+  overflow-x: auto;
+}
+
+:root.lumen-workbench body.is-compact-workbench .handoff-reason { display: none; }
+:root.lumen-workbench body.is-compact-workbench .lane-deck .agent-lanes,
+:root.lumen-workbench body.is-compact-workbench .lane-deck .agent-lanes[data-view="task"] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+:root.lumen-workbench body.is-compact-workbench .agent-pane { min-height: 0; }
+:root.lumen-workbench body.is-compact-workbench .agent-header { padding: 8px 10px; }
+:root.lumen-workbench body.is-compact-workbench .agent-header .agent-logo { width: 38px; height: 38px; }
+:root.lumen-workbench body.is-compact-workbench .agent-header h2 { font-size: 15px; }
+:root.lumen-workbench body.is-compact-workbench .agent-model-control { max-width: 112px; }
+:root.lumen-workbench body.is-compact-workbench .agent-stream {
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+:root.lumen-workbench body.is-compact-workbench .message-card,
+:root.lumen-workbench body.is-compact-workbench .message-card * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+:root.lumen-workbench body.is-compact-workbench .approval-panel,
+:root.lumen-workbench body.is-compact-workbench .attention-panel {
+  position: static;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+  max-height: min(31dvh, 230px);
+  padding: 12px;
+  border-radius: 0;
+  overflow-y: auto;
+}
+
+:root.lumen-workbench body.is-compact-workbench .approval-panel .approval-note,
+:root.lumen-workbench body.is-compact-workbench .approval-panel #approvalEstimate,
+:root.lumen-workbench body.is-compact-workbench .approval-panel #approvalHelper,
+:root.lumen-workbench body.is-compact-workbench .approval-panel #approvalCommandPreview { display: none; }
+
+:root.lumen-workbench body.is-compact-workbench .approval-actions { flex-wrap: wrap; }
+:root.lumen-workbench body.is-compact-workbench .composer-card,
+:root.lumen-workbench body.is-compact-workbench .composer-card.is-expanded {
+  flex: 0 0 clamp(138px, 23dvh, 190px);
+  width: 100%;
+  height: clamp(138px, 23dvh, 190px) !important;
+  min-height: 138px;
+  max-height: 190px;
+  padding: 12px 10px max(10px, env(safe-area-inset-bottom));
+  border-radius: 0;
+}
+
+:root.lumen-workbench body.is-compact-workbench .composer-expand-handle { display: none; }
+:root.lumen-workbench body.is-compact-workbench .composer-input { grid-template-columns: 40px minmax(0, 1fr); gap: 10px; }
+:root.lumen-workbench body.is-compact-workbench .composer-input label {
+  width: 40px;
+  height: 40px;
+  border-width: 2px;
+  border-radius: 12px;
+}
+:root.lumen-workbench body.is-compact-workbench .composer-card .composer-input textarea { min-height: 44px; font-size: 14px; }
+:root.lumen-workbench body.is-compact-workbench .composer-toolbar { gap: 7px; }
+:root.lumen-workbench body.is-compact-workbench .composer-toolbar > :nth-child(2),
+:root.lumen-workbench body.is-compact-workbench #skillsButton,
+:root.lumen-workbench body.is-compact-workbench #sendStatus,
+:root.lumen-workbench body.is-compact-workbench .mic-button { display: none; }
+:root.lumen-workbench body.is-compact-workbench .send-button { min-width: 104px; min-height: 44px; margin-left: auto; }
+
+:root.lumen-workbench body.is-compact-workbench .system-drawer:not(.hidden) {
+  position: fixed;
+  inset: 62px 8px max(8px, env(safe-area-inset-bottom));
+  z-index: 90;
+  max-height: none;
+  overflow-y: auto;
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+}
+
+@media (max-height: 680px) {
+  :root.lumen-workbench body.is-compact-workbench .lane-toolbar { min-height: 52px; padding-block: 4px; }
+  :root.lumen-workbench body.is-compact-workbench .lane-tab-avatar { width: 26px; height: 26px; }
+  :root.lumen-workbench body.is-compact-workbench .handoff-bar { min-height: 30px; padding-block: 4px; }
+  :root.lumen-workbench body.is-compact-workbench .composer-card,
+  :root.lumen-workbench body.is-compact-workbench .composer-card.is-expanded {
+    flex-basis: 132px;
+    height: 132px !important;
+    min-height: 132px;
+  }
 }
 
 /* Focus is a true workspace mode: after the rails and top bar are hidden,

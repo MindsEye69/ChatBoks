@@ -15,11 +15,28 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agents.coordinator import CoordinatorAgent
 from context.builder import ContextBuilder, _SAFE_COL
 from orchestrator import Chatboks, COLLABORATION_MODES
+
+
+def test_default_cloud_agent_profiles_do_not_bypass_sandbox_or_permissions():
+    config_path = Path(__file__).resolve().parent.parent / "config.yaml"
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+    for name in ("claude", "codex", "codex_spark"):
+        agent = config["agents"][name]
+        configured = " ".join(
+            str(agent.get(key) or "")
+            for key in ("adapter_profile", "planning_adapter_profile", "execution_adapter_profile")
+        )
+        assert "danger" not in configured.lower()
+        assert agent["planning_adapter_profile"].endswith("plan_v1")
+        assert agent["execution_adapter_profile"].endswith("workspace_v1")
 
 
 # ---------------------------------------------------------------------------
