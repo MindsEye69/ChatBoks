@@ -121,7 +121,11 @@ class Router:
             return RoutingDecision(
                 triad_agents,
                 cleaned,
-                note="Triad brainstorm: Claude, Codex, and Coordinator will contribute before synthesis.",
+                note=(
+                    "Triad brainstorm: "
+                    + ", ".join(name.replace("_", " ").title() for name in triad_agents)
+                    + " will contribute before synthesis."
+                ),
                 strategy="explicit_triad",
             )
 

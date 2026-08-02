@@ -378,6 +378,35 @@ def test_blocked_pauses_before_the_next_agent_runs():
         assert app.state["next_agent"] == "you"
 
 
+def test_automatic_recovery_failure_continues_to_next_agent():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.config["rounds"] = {"max_before_escalate": 3}
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                (
+                    "claude timed out and automatic recovery did not complete.\n"
+                    "Recovery attempts: 1.\n"
+                    ">>> BLOCKED"
+                ),
+                "Codex completed the diagnosis.\n>>> TASK_COMPLETE",
+            ]
+        )
+        app.append_message = MagicMock()
+        app.update_token_count = MagicMock()
+        app.confirm_completion_if_needed = MagicMock(return_value="confirmed")
+        app.maybe_announce_direct_standby_agents = MagicMock()
+
+        app.run_agent_round(initiator="Original task", agents=["claude", "codex"])
+
+        assert app.call_agent_with_token_recovery.call_count == 2
+        assert app.state["status"] == "idle"
+        assert app.state["completed_agents"] == ["claude", "codex"]
+        app.stream.system.assert_any_call(
+            "claude could not complete after automatic recovery; continuing with codex."
+        )
+
+
 def test_modify_clears_the_prior_proposal_before_a_revision_round():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))

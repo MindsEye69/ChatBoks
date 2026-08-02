@@ -4,6 +4,7 @@ import json
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
@@ -25,6 +26,7 @@ from remote_control import (
     git_environment,
     is_allowed_bind_host,
     is_allowed_app_origin,
+    is_collaboration_mode_command,
     is_tailnet_ipv4_host,
     parse_chatboks_messages,
     packet_trace_from_file,
@@ -39,6 +41,7 @@ class FakeSession:
     def __init__(self) -> None:
         self.commands: list[str] = []
         self.snapshot_calls: list[tuple[int, int]] = []
+        self.completion_queries: list[str] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
 
@@ -51,7 +54,11 @@ class FakeSession:
             "monitor": {"pid": 1234},
         }
 
-    def snapshot(self, cursor: int = 0, transcript_limit: int = 120) -> dict[str, object]:
+    def command_completions(self, value: str) -> dict[str, object]:
+        self.completion_queries.append(value)
+        return {"options": [{"replacement": "/mode brainstorm", "label": "Brainstorm mode"}]}
+
+    def snapshot(self, cursor: int = 0, transcript_limit: int | None = 120) -> dict[str, object]:
         self.snapshot_calls.append((cursor, transcript_limit))
         return {
             "project": self.project,
@@ -65,7 +72,8 @@ class FakeSession:
             "events": [{"id": cursor + 1, "sender": "system", "text": "ok"}],
         }
 
-    def submit(self, text: str) -> dict[str, object]:
+    def submit(self, text: str, skills: object | None = None) -> dict[str, object]:
+        _ = skills
         self.commands.append(text)
         return self.snapshot()
 
@@ -146,6 +154,8 @@ def test_parse_chatboks_messages_reads_multiline_turns(tmp_path: Path):
         {"id": 1, "sender": "you", "text": "hello\ncontinued"},
         {"id": 2, "sender": "codex", "text": "hi there"},
     ]
+
+    assert parse_chatboks_messages(transcript, limit=None) == messages
     print("PASS: remote transcript parsing keeps multiline turns intact")
 
 
@@ -373,6 +383,47 @@ def test_remote_bridge_accepts_token_and_forwards_commands():
     print("PASS: remote bridge accepts an authorized command and forwards it")
 
 
+def test_remote_bridge_returns_project_aware_command_completions():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        query = urllib.parse.quote("/mode br", safe="")
+        request = urllib.request.Request(
+            f"{base}/api/completions?q={query}",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert session.completion_queries == ["/mode br"]
+        assert payload["options"] == [
+            {"replacement": "/mode brainstorm", "label": "Brainstorm mode"}
+        ]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge returns command completion options")
+
+
+def test_remote_session_command_completions_use_shared_project_catalog():
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = SimpleNamespace(
+        config={"agents": {"claude": {}, "codex": {}}},
+        proj_config={"agents": ["claude", "codex"], "direct_agents": ["coordinator"]},
+        list_native_skills=lambda: [("implement", "implementation workflow")],
+    )
+
+    assert session.command_completions("/session st")["options"] == [
+        {"replacement": "/session start", "label": "run DasDashboard start checks"}
+    ]
+    assert session.command_completions("/skills im")["options"] == [
+        {"replacement": "/skills implement", "label": "implementation workflow"}
+    ]
+    assert session.command_completions("@co")["options"] == [
+        {"replacement": "@codex", "label": "route directly to agent"}
+    ]
+
+
 def test_remote_bridge_starts_new_task_for_authorized_client():
     session = FakeSession()
     server, thread, base = run_server(session, "secret-token")
@@ -436,6 +487,24 @@ def test_remote_bridge_clamps_session_transcript_limit():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: remote bridge clamps oversized transcript limits")
+
+
+def test_remote_bridge_accepts_explicit_full_transcript_request():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/session?cursor=4&limit=all",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5):
+            pass
+        assert session.snapshot_calls[-1] == (4, None)
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: remote bridge explicitly restores the complete transcript")
 
 
 def test_remote_bridge_rejects_oversized_json_body():
@@ -684,6 +753,71 @@ def test_remote_session_snapshot_returns_while_command_is_running(tmp_path: Path
         if session._command_thread is not None:
             session._command_thread.join(timeout=5)
     print("PASS: remote session snapshots remain responsive during long commands")
+
+
+def test_remote_session_does_not_reload_stale_state_during_command(tmp_path: Path):
+    started = threading.Event()
+    release = threading.Event()
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", started, release)
+    app.state["collaboration_mode"] = "implement"
+    load_calls = 0
+
+    def stale_load_state() -> dict[str, object]:
+        nonlocal load_calls
+        load_calls += 1
+        return {**app.state, "collaboration_mode": "brainstorm"}
+
+    app.load_state = stale_load_state  # type: ignore[method-assign]
+    session.app = app
+
+    try:
+        payload = session.submit("@codex slow task")
+        assert started.wait(timeout=1)
+        assert payload["collaboration_mode"] == "implement"
+        assert session.snapshot()["collaboration_mode"] == "implement"
+        assert load_calls == 0
+    finally:
+        release.set()
+        if session._command_thread is not None:
+            session._command_thread.join(timeout=5)
+    print("PASS: active command state cannot be replaced by a stale disk snapshot")
+
+
+def test_remote_session_applies_mode_commands_before_returning_snapshot(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.project = "chatboks"
+    session.config_path = None
+    session.lock = threading.RLock()
+    session._command_thread = None
+    session._command_text = None
+    session.events = RemoteEventBuffer()
+    app = BlockingFakeApp(tmp_path / "chatboks.md", threading.Event(), threading.Event())
+    app.state["collaboration_mode"] = "brainstorm"
+
+    def apply_mode(text: str) -> None:
+        assert text == "/mode implement"
+        app.state["collaboration_mode"] = "implement"
+
+    app.handle_user_input = apply_mode  # type: ignore[method-assign]
+    session.app = app
+
+    payload = session.submit("/mode implement")
+
+    assert is_collaboration_mode_command("/mode implement") is True
+    assert is_collaboration_mode_command("/default") is True
+    assert is_collaboration_mode_command("implement") is False
+    assert payload["collaboration_mode"] == "implement"
+    assert payload["command_running"] is False
+    assert session._command_thread is None
+    assert "Waiting for agents" not in session.events.since(0)[-1]["text"]
+    print("PASS: mode commands update the desktop snapshot synchronously")
 
 
 def test_remote_session_snapshot_includes_compact_proposal(tmp_path: Path):
@@ -1158,6 +1292,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "composerExpandButton" in body
             assert "attentionToggleButton" in body
             assert "activePromptText" in body
+            assert "commandCompletionPalette" in body
 
         with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1173,10 +1308,16 @@ def test_remote_bridge_serves_static_ui_files():
             assert "activePromptFromSession" in body
             assert "renderActivePrompt(cleaned)" in body
             assert "laneTranscriptForSession" in body
-            assert "transcript.slice(startIndex)" in body
-            assert "String(item.text || \"\").trim() === activePrompt" in body
             assert "function setComposerHeight" in body
             assert "function setAttentionCollapsed" in body
+            assert "return transcript;" in body
+            assert 'HISTORY_RESTORE_QUERY = "all"' in body
+            assert "theme: state.theme" in body
+            assert "updateCommandCompletions" in body
+            assert "selectCommandCompletion" in body
+            assert 'event.key === "Tab"' in body
+            assert "lane-prompt-pip" in body
+            assert "function mergeTranscript" in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1187,6 +1328,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert "card-copy-button" in body
             assert "message-card-tools" in body
             assert "active-prompt-card" in body
+            assert "lane-prompt-nav" in body
+            assert "history-search" in body
     finally:
         server.shutdown()
         thread.join(timeout=5)

@@ -2,7 +2,7 @@
 
 Local multi-agent coding orchestration for Claude, Codex, and other AI agents via a shared relay, CodeGraph context, and human approval.
 
-ChatBoks is a human-supervised multi-agent relay for coding projects. Claude, Codex, and eventually Antigravity collaborate through a shared `chatboks.md` stream while the orchestrator maintains `.chatboks/state.json` for machine-readable state.
+ChatBoks is a human-supervised multi-agent relay for coding projects. Claude, Codex, and eventually Antigravity collaborate through a durable per-task session journal while the orchestrator maintains `.chatboks/state.json` for machine-readable state. The root `chatboks.md` remains a compatibility mirror of the active session.
 
 ## Early Development Notice
 
@@ -22,13 +22,14 @@ and do not expose local control surfaces to untrusted networks or users.
 - `agents/`: CLI wrappers for Claude, Codex, and Antigravity
 - `context/builder.py`: packages CodeGraph, recent ChatBoks history, and active task
 - `context/summarizer.py`: deterministic fallback summary for token resets
+- `session_journal.py`: append-only task journals, atomic snapshots, recovery memory, and optional Obsidian mirrors
 - `ui/stream.py`: Rich terminal UI
 - `version.py`: root ChatBoks version source
 - `hooks/post-commit`: optional async handoff hook
 
 ## Protocol
 
-`chatboks.md` is human-readable. Agent and system messages use tags:
+Each task has a human-readable `.chatboks/sessions/<session>/journal.md`. The active task is mirrored to `chatboks.md`. Agent and system messages use tags:
 
 - `[SYSTEM]`
 - `[CLAUDE]`
@@ -46,7 +47,24 @@ The orchestrator only acts automatically on control lines:
 - `>>> TASK_COMPLETE`: agent finished the work
 - `>>> BLOCKED`: agent cannot proceed
 
-`state.json` is written under each project at `.chatboks/state.json`.
+`state.json` is written atomically under each project at `.chatboks/state.json`. Each session also contains `events.jsonl`, `snapshot.json`, and `memory.md`. `+ New Task` creates a new session directory instead of extending one unbounded project transcript.
+
+## Durable Sessions And Obsidian
+
+After a process restart, ChatBoks restores the active journal, task state, search/draft/scroll UI state, and a compact read-only recovery memory. Fresh agent processes receive that memory, recent turns, active task state, and CodeGraph context instead of rereading the full conversation.
+
+To mirror readable session journals into an Obsidian vault, set `obsidian_vault` globally or on one project:
+
+```yaml
+projects:
+  chatboks:
+    path: .
+    agents: [claude, codex]
+    primary: codex
+    obsidian_vault: C:\Users\you\Documents\ObsidianVault
+```
+
+The session journal and atomic snapshot remain the primary recovery record, while JSONL provides an append-only audit stream. Obsidian receives Markdown under `ChatBoks/<project>/<session>/` for search, linking, and review.
 
 ## Outcome Tracking
 
@@ -131,7 +149,7 @@ Context modes control how much project context each agent receives. New sessions
 /context full
 ```
 
-- `lean`: active task, round state, agent status, last three transcript turns, compact outcomes, and CodeGraph status only.
+- `lean`: active task, durable session memory, round state, agent status, the last eight transcript turns, compact outcomes, and CodeGraph status only.
 - `normal`: current broad context behavior.
 - `full`: maximum broad CodeGraph/file/symbol context for intentionally deep analysis.
 

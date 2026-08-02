@@ -259,20 +259,21 @@ def test_route_at_all_no_body_falls_back_to_full_text():
     print("PASS: @all with no body falls back to original text")
 
 
-def test_route_at_triad_includes_configured_direct_coordinator():
+def test_route_at_triad_includes_configured_direct_spark():
     r = _router(
         "claude",
         "codex",
-        direct_agents=["coordinator"],
-        triad_agents=["claude", "codex", "coordinator"],
+        direct_agents=["coordinator", "codex_spark"],
+        triad_agents=["claude", "codex", "codex_spark"],
     )
     d = r.route_user_prompt_details("@triad improve the workbench")
 
-    assert d.agents == ["claude", "codex", "coordinator"]
+    assert d.agents == ["claude", "codex", "codex_spark"]
     assert d.cleaned_prompt == "improve the workbench"
     assert d.exclusive_agent is None
     assert d.strategy == "explicit_triad"
-    print("PASS: @triad includes the configured direct Coordinator")
+    assert "Codex Spark" in str(d.note)
+    print("PASS: @triad includes the configured direct Spark agent")
 
 
 # ---------------------------------------------------------------------------
@@ -435,16 +436,16 @@ def test_route_mode_strategy_triad_brainstorm():
     r = _router(
         "claude",
         "codex",
-        direct_agents=["coordinator"],
-        triad_agents=["claude", "codex", "coordinator"],
+        direct_agents=["coordinator", "codex_spark"],
+        triad_agents=["claude", "codex", "codex_spark"],
         mode_strategies={"brainstorm": "triad_brainstorm"},
     )
     d = r.route_mode_strategy("ideas?", "brainstorm")
 
     assert d is not None
-    assert d.agents == ["claude", "codex", "coordinator"]
+    assert d.agents == ["claude", "codex", "codex_spark"]
     assert d.strategy == "mode_triad_brainstorm"
-    print("PASS: triad_brainstorm mode strategy includes Coordinator")
+    print("PASS: triad_brainstorm mode strategy includes Spark")
 
 
 def test_route_mode_strategy_confirm_round():

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./workbench.css?v=20260731-wrapfix2">
+  <link rel="stylesheet" href="./workbench.css?v=20260802-lumen-merge">
 </head>
 <body>
   <div class="workbench-shell">
@@ -115,6 +115,10 @@
           <span id="livePhase" class="phase-pill active">Mid-session</span>
         </div>
         <div class="round-actions">
+          <label class="history-search">
+            <span class="sr-only">Search active session history</span>
+            <input id="historySearch" type="search" placeholder="Search session" autocomplete="off">
+          </label>
           <button id="focusButton" class="ghost-button focus-button" type="button" aria-pressed="false"
                   aria-label="Focus mode — hide the rails and the top bar">
             <span class="focus-glyph" aria-hidden="true">⤢</span> <span id="focusLabel">Focus</span>
@@ -208,18 +212,32 @@
                 aria-label="Resize prompt composer" title="Drag to resize. Double-click to reset.">
           <span aria-hidden="true"></span>
         </button>
+        <div id="selectedSkills" class="selected-skills hidden" aria-label="Selected skills"></div>
         <div class="composer-input">
           <label for="workbenchPrompt">YOU &gt;</label>
-          <textarea id="workbenchPrompt" rows="5" dir="ltr" placeholder="Ask a question or give an instruction..."></textarea>
+          <div class="composer-editor">
+            <textarea id="workbenchPrompt" rows="5" dir="ltr" placeholder="Ask a question or give an instruction..."
+                      autocomplete="off" aria-autocomplete="list" aria-controls="commandCompletionPalette"
+                      aria-expanded="false"></textarea>
+            <div id="commandCompletionPalette" class="command-completion-palette hidden" role="listbox"
+                 aria-label="Command completions"></div>
+          </div>
         </div>
         <div class="composer-toolbar">
           <button class="ghost-button" type="button">Upload</button>
           <button class="ghost-button" type="button">Auto v</button>
+          <button id="skillsButton" class="ghost-button" type="button" aria-expanded="false">Skills</button>
           <span id="sendStatus">Uses best available model</span>
           <button id="stopButton" class="stop-button hidden" type="button">Stop</button>
           <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
           <button id="sendButton" class="send-button" type="button">Send</button>
         </div>
+        <section id="skillsPanel" class="skills-panel hidden" aria-label="Choose workflow skills">
+          <div class="skills-panel-head"><strong>Skills</strong><button id="skillsCloseButton" class="ghost-button compact" type="button">Close</button></div>
+          <input id="skillsSearch" type="search" placeholder="Search skills">
+          <div id="skillsFilters" class="skills-filters"></div>
+          <div id="skillsList" class="skills-list"></div>
+        </section>
       </section>
 
       <section id="systemDrawer" class="coordinator-card system-drawer hidden" aria-label="System coordinator">
@@ -344,6 +362,6 @@
     </section>
   </div>
 
-  <script src="./workbench.js?v=20260731-wrapfix2"></script>
+  <script src="./workbench.js?v=20260802-lumen-merge"></script>
 </body>
 </html>
