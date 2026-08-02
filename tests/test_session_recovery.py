@@ -139,11 +139,13 @@ def test_workbench_ui_state_is_validated_and_survives_restart(tmp_path: Path):
     result = remote.save_workbench_ui(
         {
             "session": app.state["session"],
-            "theme": "console",
+            "theme": "verdant",
             "history_query": "accepted decision",
             "composer_draft": "Unsent draft",
             "composer_expanded": True,
             "focus_mode": False,
+            "lane_view": "task",
+            "active_lane": "codex",
             "selected_skills": ["local:test"],
             "lanes": {"codex": {"at_bottom": False, "scroll_ratio": 0.35, "history_limit": 180}},
         }
@@ -152,10 +154,12 @@ def test_workbench_ui_state_is_validated_and_survives_restart(tmp_path: Path):
     restarted = make_app(tmp_path, load_existing=True)
     ui = restarted.state["workbench_ui"]
     assert result["saved"] is True
-    assert ui["theme"] == "console"
+    assert ui["theme"] == "verdant"
     assert ui["history_query"] == "accepted decision"
     assert ui["composer_draft"] == "Unsent draft"
     assert ui["composer_expanded"] is True
+    assert ui["lane_view"] == "task"
+    assert ui["active_lane"] == "codex"
     assert ui["lanes"]["codex"] == {"at_bottom": False, "scroll_ratio": 0.35, "history_limit": 180}
 
 

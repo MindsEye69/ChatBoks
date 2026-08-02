@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatBoks Workbench</title>
   <link rel="icon" type="image/png" href="./assets/chatboks-mark.png">
-  <link rel="stylesheet" href="./workbench.css?v=20260802-lumen-workbench">
+  <link rel="stylesheet" href="./workbench.css?v=20260802-mobile-tabs-v3">
 </head>
 <body>
   <div class="workbench-shell">
@@ -141,6 +141,19 @@
       </section>
 
       <div class="lane-deck">
+        <nav class="lane-toolbar" aria-label="Agent view">
+          <div id="laneTabs" class="lane-tabs" role="tablist" aria-label="Choose active agent"></div>
+          <button id="compareButton" class="ghost-button compare-button" type="button" aria-pressed="false">
+            Compare
+          </button>
+        </nav>
+        <section id="handoffBar" class="handoff-bar hidden" aria-live="polite" aria-label="Agent handoff">
+          <span class="handoff-label">Handoff</span>
+          <span id="handoffFrom" class="handoff-agent"></span>
+          <span class="handoff-arrow" aria-hidden="true">&rarr;</span>
+          <span id="handoffTo" class="handoff-agent"></span>
+          <span id="handoffReason" class="handoff-reason"></span>
+        </section>
         <section class="agent-lanes" id="agentLanes" aria-label="Agent lanes"></section>
       </div>
 
@@ -358,6 +371,6 @@
     </section>
   </div>
 
-  <script src="./workbench.js?v=20260802-lumen-workbench"></script>
+  <script src="./workbench.js?v=20260802-mobile-tabs-v3"></script>
 </body>
 </html>

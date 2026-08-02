@@ -83,7 +83,9 @@ agents:
   claude:
     cli: claude
     model: opus
-    adapter_profile: claude_code_print_v1
+    adapter_profile: claude_code_workspace_v1
+    planning_adapter_profile: claude_code_plan_v1
+    execution_adapter_profile: claude_code_workspace_v1
     first_output_timeout: 180
     token_limit: 180000
     token_warning: 150000
@@ -98,7 +100,9 @@ agents:
         enabled: true
   codex:
     cli: codex
-    adapter_profile: codex_exec_v1
+    adapter_profile: codex_exec_workspace_v1
+    planning_adapter_profile: codex_exec_plan_v1
+    execution_adapter_profile: codex_exec_workspace_v1
     model: gpt-5.5
     token_limit: 120000
     token_warning: 100000
@@ -106,7 +110,9 @@ agents:
     role_file: AGENTS.md
   codex_spark:
     cli: codex
-    adapter_profile: codex_spark_exec_v1
+    adapter_profile: codex_spark_workspace_v1
+    planning_adapter_profile: codex_spark_plan_v1
+    execution_adapter_profile: codex_spark_workspace_v1
     token_limit: 128000
     token_warning: 100000
     can_fill_main_seat: true

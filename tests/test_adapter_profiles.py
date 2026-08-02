@@ -56,7 +56,52 @@ def test_codex_spark_adapter_profile_uses_spark_model():
             "-s",
             "danger-full-access",
             "-",
-        ]
+    ]
+
+
+def test_planning_and_execution_use_separate_capability_profiles(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        agent = CodexAgent(
+            root,
+            {
+                "cli": "codex",
+                "adapter_profile": "codex_exec_workspace_v1",
+                "planning_adapter_profile": "codex_exec_plan_v1",
+                "execution_adapter_profile": "codex_exec_workspace_v1",
+            },
+            "role",
+        )
+        commands: list[list[str]] = []
+
+        def fake_run_cli_once(prompt, command, **kwargs):
+            commands.append(command)
+            return ">>> TASK_COMPLETE"
+
+        monkeypatch.setattr(agent, "run_cli_once", fake_run_cli_once)
+
+        agent.call("inspect")
+        agent.execute("approved")
+
+        assert commands[0] == ["codex", "exec", "-C", str(root), "-s", "read-only", "-"]
+        assert commands[1] == ["codex", "exec", "-C", str(root), "-s", "workspace-write", "-"]
+        assert "--dangerously-bypass-approvals-and-sandbox" not in commands[0]
+        assert "--dangerously-bypass-approvals-and-sandbox" not in commands[1]
+
+
+def test_claude_safe_profiles_avoid_permission_bypass():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        agent = ClaudeAgent(
+            root,
+            {"cli": "claude", "adapter_profile": "claude_code_plan_v1"},
+            "role",
+        )
+
+        command = agent.command()
+
+        assert command == ["claude", "--print", "--permission-mode", "plan"]
+        assert "--dangerously-skip-permissions" not in command
 
 
 def test_codex_model_alias_maps_unsupported_chatgpt_account_model():
@@ -119,6 +164,7 @@ def test_doctor_accepts_known_profile_and_rejects_unknown_profile():
 if __name__ == "__main__":
     test_codex_adapter_profile_expands_project_path()
     test_codex_spark_adapter_profile_uses_spark_model()
+    test_claude_safe_profiles_avoid_permission_bypass()
     test_codex_model_alias_maps_unsupported_chatgpt_account_model()
     test_adapter_args_override_named_profile()
     test_doctor_accepts_known_profile_and_rejects_unknown_profile()
