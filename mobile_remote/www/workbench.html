@@ -226,13 +226,13 @@
         <div class="composer-toolbar">
           <button class="ghost-button" type="button">Upload</button>
           <button class="ghost-button" type="button">Auto v</button>
-          <button id="skillsButton" class="ghost-button" type="button" aria-expanded="false">Skills</button>
+          <button id="skillsButton" class="ghost-button" type="button" aria-expanded="false" aria-controls="skillsPanel">Skills</button>
           <span id="sendStatus">Uses best available model</span>
           <button id="stopButton" class="stop-button hidden" type="button">Stop</button>
           <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
           <button id="sendButton" class="send-button" type="button">Send</button>
         </div>
-        <section id="skillsPanel" class="skills-panel hidden" aria-label="Choose workflow skills">
+        <section id="skillsPanel" class="skills-panel hidden" aria-label="Choose workflow skills" aria-hidden="true">
           <div class="skills-panel-head"><strong>Skills</strong><button id="skillsCloseButton" class="ghost-button compact" type="button">Close</button></div>
           <input id="skillsSearch" type="search" placeholder="Search skills">
           <div id="skillsFilters" class="skills-filters"></div>

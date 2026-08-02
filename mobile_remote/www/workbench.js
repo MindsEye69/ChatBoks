@@ -1734,6 +1734,7 @@ async function removeProject(project) {
 }
 
 function openProjectPicker() {
+  setSkillsPanel(false);
   renderProjectPicker(els.projectSearch.value);
   els.projectDialog.classList.remove("hidden");
   els.projectSearch.focus();
@@ -2164,7 +2165,15 @@ function renderSkills() {
 function setSkillsPanel(open) {
   els.skillsPanel.classList.toggle("hidden", !open);
   els.skillsButton.setAttribute("aria-expanded", String(open));
-  if (open) els.skillsSearch.focus();
+  els.skillsPanel.setAttribute("aria-hidden", String(!open));
+  if (open) {
+    renderSkills();
+    els.skillsSearch.focus();
+  } else {
+    els.skillsSearch.value = "";
+    renderSkills();
+    if (els.skillsPanel.contains(document.activeElement)) els.skillsButton.focus();
+  }
 }
 
 function mergeTranscript(existing, incoming) {
@@ -2634,7 +2643,10 @@ els.forgetButton.addEventListener("click", () => {
   showError("Session token forgotten. Pair again with a fresh desktop code before reconnecting.", "success");
 });
 
-els.sendButton.addEventListener("click", () => sendPrompt(els.workbenchPrompt.value));
+els.sendButton.addEventListener("click", () => {
+  setSkillsPanel(false);
+  sendPrompt(els.workbenchPrompt.value);
+});
 els.attentionToggleButton.addEventListener("click", () => setAttentionCollapsed(!state.attentionCollapsed));
 els.composerExpandButton.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
@@ -2663,8 +2675,21 @@ els.composerExpandButton.addEventListener("keydown", (event) => {
   else setComposerHeight(state.composerHeight + (event.key === "ArrowUp" ? 24 : -24));
 });
 window.addEventListener("resize", () => setComposerHeight(state.composerHeight || 300, false));
-els.skillsButton.addEventListener("click", () => setSkillsPanel(els.skillsPanel.classList.contains("hidden")));
-els.skillsCloseButton.addEventListener("click", () => setSkillsPanel(false));
+els.skillsButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  setSkillsPanel(els.skillsPanel.classList.contains("hidden"));
+});
+els.skillsPanel.addEventListener("click", (event) => event.stopPropagation());
+els.skillsCloseButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setSkillsPanel(false);
+});
+els.skillsCloseButton.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setSkillsPanel(false);
+});
 els.skillsSearch.addEventListener("input", renderSkills);
 for (const textField of [els.workbenchPrompt, els.approvalModification]) {
   enforceLeftToRightText(textField);
@@ -2696,6 +2721,7 @@ els.workbenchPrompt.addEventListener("keydown", (event) => {
   }
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
+    setSkillsPanel(false);
     sendPrompt(els.workbenchPrompt.value);
   }
 });
@@ -2729,7 +2755,9 @@ document.addEventListener("keydown", (event) => {
   // Escape unwinds one layer at a time, outermost first, so leaving focus
   // mode never also closes the picker or the drawer in the same keypress.
   if (event.key === "Escape") {
-    if (!els.projectDialog.classList.contains("hidden")) {
+    if (!els.skillsPanel.classList.contains("hidden")) {
+      setSkillsPanel(false);
+    } else if (!els.projectDialog.classList.contains("hidden")) {
       closeProjectPicker();
     } else if (state.systemDrawerOpen) {
       state.systemDrawerOpen = false;
@@ -2742,6 +2770,12 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     openProjectPicker();
   }
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (els.skillsPanel.classList.contains("hidden")) return;
+  if (els.skillsPanel.contains(event.target) || els.skillsButton.contains(event.target)) return;
+  setSkillsPanel(false);
 });
 
 els.roleCallButton.addEventListener("click", () => sendPrompt("@coordinator role call"));
