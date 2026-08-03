@@ -126,7 +126,11 @@
       </div>
 
       <section id="connectionPanel" class="connection-card hidden" aria-label="Bridge connection">
-        <h2>Bridge connection</h2>
+        <header class="connection-header">
+          <h2>Bridge connection</h2>
+          <button id="connectionCloseButton" class="icon-button connection-close-button" type="button"
+                  aria-label="Close connection settings" title="Close connection settings">&times;</button>
+        </header>
         <p class="connection-hint">Pair with the one-time code shown in the desktop bridge console, or paste a saved session token. Tokens stay in this browser only.</p>
         <div class="connection-grid">
           <input id="bridgeUrl" type="url" placeholder="Bridge URL, e.g. http://127.0.0.1:8765">
@@ -375,6 +379,7 @@
     </section>
   </div>
 
-  <script src="./workbench.js?v=20260802-mobile-tabs-v3"></script>
+<script src="./mobile-version.js"></script>
+<script src="./workbench.js?v=20260802-mobile-tabs-v3"></script>
 </body>
 </html>

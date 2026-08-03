@@ -30,6 +30,18 @@ def version_for_commit_distance(commit_distance: int) -> str:
     return format_development_version(build_number)
 
 
+def android_version_code(version: str) -> int:
+    """Convert the public version into Android's monotonically increasing integer."""
+    valid_version = _valid_version(version)
+    if valid_version is None:
+        raise ValueError("version must use major.minor.build with a two-digit build")
+    major, minor, build = (int(part) for part in valid_version.split("."))
+    version_code = major * 10_000 + minor * 100 + build
+    if version_code <= 0 or version_code > 2_100_000_000:
+        raise ValueError("version is outside Android's supported versionCode range")
+    return version_code
+
+
 def _valid_version(value: str) -> str | None:
     value = value.strip()
     return value if VERSION_PATTERN.fullmatch(value) else None

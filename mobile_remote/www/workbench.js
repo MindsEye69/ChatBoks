@@ -1,4 +1,5 @@
 const STORAGE_KEY = "chatboks-workbench";
+const PACKAGED_APP_VERSION = String(window.CHATBOKS_PACKAGED_VERSION || "").trim();
 const LUMEN_MIGRATION_KEY = "chatboks-lumen-redesign-v1";
 const SESSION_POLL_MS = 1500;
 const SESSION_POLL_BUSY_MS = 350;
@@ -184,7 +185,7 @@ for (const id of [
   "projectButton", "projectDialog", "projectDialogBackdrop", "projectDialogClose", "projectSearch", "projectPath", "projectBrowseButton", "projectAddButton", "projectPickerList",
     "tokenBalances", "activePromptText", "settingsButton", "stripCpu", "stripRam",
   "appVersion", "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "systemDrawerCloseButton", "claudeUpdateButton", "systemDrawer",
-  "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
+  "sessionButton", "connectionToggle", "connectionPanel", "connectionCloseButton", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
   "agentLanes", "laneTabs", "compareButton", "handoffBar", "handoffFrom", "handoffTo", "handoffReason", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
@@ -397,6 +398,10 @@ function setConnectionState(message, tone = "muted") {
 }
 
 function setConnectionPanel(visible) {
+  if (visible && state.compactMode && state.systemDrawerOpen) {
+    state.systemDrawerOpen = false;
+    syncSystemPanels();
+  }
   els.connectionPanel.classList.toggle("hidden", !visible);
 }
 
@@ -2390,7 +2395,7 @@ function applySession(data) {
   state.skills = Array.isArray(data.skills) ? data.skills : state.skills;
   state.selectedSkills = state.selectedSkills.filter((id) => state.skills.some((skill) => skill.id === id));
   renderSkills();
-  els.appVersion.textContent = data.version || "v0.1.00";
+  els.appVersion.textContent = PACKAGED_APP_VERSION || data.version || "v0.1.00";
   els.topbarProject.textContent = data.project || "-";
   els.railProjectName.textContent = data.project || "chatboks";
   els.topbarSession.textContent = data.session || "-";
@@ -2776,6 +2781,7 @@ els.connectionToggle.addEventListener("click", () => {
   setConnectionPanel(els.connectionPanel.classList.contains("hidden"));
 });
 els.settingsButton.addEventListener("click", () => setConnectionPanel(true));
+els.connectionCloseButton.addEventListener("click", () => setConnectionPanel(false));
 
 els.pairButton.addEventListener("click", async () => {
   setConnectionBusy(els.pairButton, true, "Pairing...");
@@ -2784,7 +2790,8 @@ els.pairButton.addEventListener("click", async () => {
     await pairDevice();
     if (await connect()) {
       setConnectionRecovery();
-      showError("Paired and connected. Session token saved in this browser.", "success");
+      showError("");
+      setConnectionPanel(false);
       setSendState(false, "Paired and connected.");
     }
   } catch (error) {
@@ -2805,7 +2812,8 @@ els.connectButton.addEventListener("click", async () => {
   try {
     if (await connect()) {
       setConnectionRecovery();
-      showError("Connected to the bridge.", "success");
+      showError("");
+      setConnectionPanel(false);
       setSendState(false, "Connected to bridge.");
     }
   } catch (error) {
@@ -2943,6 +2951,7 @@ els.projectPath.addEventListener("keydown", (event) => {
 });
 els.systemDrawerButton.addEventListener("click", () => {
   state.systemDrawerOpen = !state.systemDrawerOpen;
+  if (state.systemDrawerOpen && state.compactMode) setConnectionPanel(false);
   syncSystemPanels();
 });
 els.systemDrawerCloseButton.addEventListener("click", () => {

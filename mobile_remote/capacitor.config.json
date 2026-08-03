@@ -4,6 +4,7 @@
   "webDir": "www",
   "server": {
     "androidScheme": "http",
+    "appStartPath": "/workbench.html",
     "cleartext": true,
     "allowNavigation": [
       "100.94.205.69",

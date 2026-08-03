@@ -27,6 +27,7 @@ $env:JAVA_HOME = $jdkDir
 $env:PATH = "$jdkDir\bin;$env:PATH"
 $env:ANDROID_HOME = $sdkDir
 $env:ANDROID_SDK_ROOT = $sdkDir
+$appVersion = & (Join-Path $PSScriptRoot "resolve-version.ps1")
 
 Push-Location $PSScriptRoot
 try {
@@ -36,9 +37,13 @@ finally {
     Pop-Location
 }
 
+$mobileVersionAsset = Join-Path $androidDir "app\src\main\assets\public\mobile-version.js"
+"window.CHATBOKS_PACKAGED_VERSION = `"v$($appVersion.Name)`";" |
+    Set-Content -Path $mobileVersionAsset -Encoding ascii
+
 Push-Location $androidDir
 try {
-    .\gradlew.bat assembleDebug
+    .\gradlew.bat assembleDebug "-PchatboksVersionName=$($appVersion.Name)" "-PchatboksVersionCode=$($appVersion.Code)"
 }
 finally {
     Pop-Location

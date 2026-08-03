@@ -1,0 +1,1 @@
+window.CHATBOKS_PACKAGED_VERSION = "";

@@ -1603,6 +1603,17 @@ dd {
   font-size: 15px;
 }
 
+.connection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.connection-close-button {
+  flex: 0 0 auto;
+}
+
 .connection-hint {
   margin: 0;
   color: var(--muted);
@@ -3745,6 +3756,8 @@ body.is-focus .round-bar { border-top: 0; }
   position: relative;
   grid-column: 1;
   grid-row: 1;
+  flex-direction: row;
+  align-items: center;
   height: 56px;
   min-height: 56px;
   padding: 8px 10px;
@@ -3754,6 +3767,9 @@ body.is-focus .round-bar { border-top: 0; }
 }
 
 :root.lumen-workbench body.is-compact-workbench .brand-row {
+  justify-content: flex-start;
+  width: auto;
+  height: 100%;
   gap: 8px;
   min-width: 0;
   padding-right: 0;
@@ -3909,10 +3925,45 @@ body.is-focus .round-bar { border-top: 0; }
   position: fixed;
   inset: 62px 8px max(8px, env(safe-area-inset-bottom));
   z-index: 90;
+  width: auto;
+  max-width: none;
   max-height: none;
+  box-sizing: border-box;
   overflow-y: auto;
   border-radius: 18px;
+  background: var(--ground);
   box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+}
+
+:root.lumen-workbench body.is-compact-workbench .system-drawer .coordinator-header {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+:root.lumen-workbench body.is-compact-workbench .system-drawer .coordinator-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  gap: 6px;
+}
+
+:root.lumen-workbench body.is-compact-workbench .system-drawer .coordinator-actions > button {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 8px;
+}
+
+:root.lumen-workbench body.is-compact-workbench .connection-card:not(.hidden) {
+  position: fixed;
+  inset: 62px 8px auto;
+  z-index: 100;
+  width: auto;
+  max-height: calc(100dvh - 70px - env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  padding: 16px;
+  overflow-y: auto;
+  border-radius: 18px;
 }
 
 @media (max-height: 680px) {

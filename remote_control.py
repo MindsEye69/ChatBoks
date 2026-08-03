@@ -89,6 +89,7 @@ WORKBENCH_STATIC_ROUTES = {
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/workbench": ("workbench.html", "text/html; charset=utf-8"),
+    "/mobile-version.js": ("mobile-version.js", "text/javascript; charset=utf-8"),
     "/workbench.css": ("workbench.css", "text/css; charset=utf-8"),
     "/workbench.js": ("workbench.js", "text/javascript; charset=utf-8"),
     "/favicon.ico": ("assets/chatboks-mark.png", "image/png"),
