@@ -240,11 +240,12 @@ class Chatboks:
         project: str,
         trigger: str = "manual",
         config_path: Path | None = None,
+        config_override: dict[str, Any] | None = None,
     ) -> None:
         self.project = project
         self.trigger = trigger
         self.config_path = config_path
-        self.config = self.load_config(config_path)
+        self.config = config_override if config_override is not None else self.load_config(config_path)
         if project not in self.config.get("projects", {}):
             known = ", ".join(sorted(self.config.get("projects", {}).keys()))
             raise SystemExit(f"Unknown project '{project}'. Known projects: {known}")

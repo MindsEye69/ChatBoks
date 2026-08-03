@@ -15,6 +15,36 @@ const COORD_FEED_EXPANDED_LIMIT = 40;
 const TRACE_ROW_LIMIT = 6;
 const DEFAULT_AGENTS = ["claude", "codex", "gemini"];
 const PREVIEW_AGENTS = ["claude", "codex", "codex_spark"];
+const embeddedMode = new URLSearchParams(window.location.search).get("embedded") === "1";
+const embeddedSession = embeddedMode
+  ? window.ChatBoksLumenTheme?.parseEmbeddedSessionUrl?.(window.location.href)
+  : null;
+const embeddedHostRequests = new Map();
+const compactWorkbenchQuery = window.matchMedia("(max-width: 1500px)");
+
+function requestEmbeddedHost(action) {
+  if (!embeddedMode || window.parent === window) return Promise.resolve(null);
+  const id = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(() => {
+      embeddedHostRequests.delete(id);
+      resolve(null);
+    }, 30000);
+    embeddedHostRequests.set(id, (value) => {
+      window.clearTimeout(timeout);
+      resolve(value);
+    });
+    window.parent.postMessage({ type: "chatboks:host-request", action, id }, "*");
+  });
+}
+
+window.addEventListener("message", (event) => {
+  if (!embeddedMode || event.source !== window.parent || event.data?.type !== "chatboks:host-response") return;
+  const resolve = embeddedHostRequests.get(event.data.id);
+  if (!resolve) return;
+  embeddedHostRequests.delete(event.data.id);
+  resolve(typeof event.data.path === "string" ? event.data.path : null);
+});
 
 const KNOWN_AGENT_STYLES = new Set(["claude", "codex", "gemini", "antigravity", "codex_spark", "coordinator"]);
 const AGENT_LABELS = {
@@ -112,6 +142,8 @@ const state = {
   completionIndex: 0,
   completionRequest: 0,
   completionTimer: null,
+  compactLane: "",
+  compactPreviousNextAgent: "",
 };
 
 const previewSession = {
@@ -187,7 +219,7 @@ for (const id of [
   "appVersion", "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "systemDrawerCloseButton", "claudeUpdateButton", "systemDrawer",
   "sessionButton", "connectionToggle", "connectionPanel", "connectionCloseButton", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
-  "agentLanes", "laneTabs", "compareButton", "handoffBar", "handoffFrom", "handoffTo", "handoffReason", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
+  "agentLanes", "laneTabs", "compactLaneSwitcher", "compareButton", "handoffBar", "handoffFrom", "handoffTo", "handoffReason", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
   "approvalPanel", "approvalMeta", "approvalSummary", "approvalEstimate",
   "approvalHelper", "approvalRaw", "approvalModification", "approvalStatus", "approvalCommandPreview",
   "approvalBuildActions", "approveButton", "modifyButton", "rejectButton", "dismissButton",
@@ -235,9 +267,13 @@ function loadSettings() {
 }
 
 function saveSettings() {
+  let previous = {};
+  if (embeddedMode) {
+    try { previous = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { previous = {}; }
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    token: state.token,
-    bridgeUrl: state.bridgeUrl,
+    token: embeddedMode ? (previous.token || "") : state.token,
+    bridgeUrl: embeddedMode ? (previous.bridgeUrl || "") : state.bridgeUrl,
     theme: state.theme,
     composerHeight: state.composerHeight,
     laneView: state.laneView,
@@ -622,10 +658,13 @@ function resetSessionState() {
   state.lastObservedNextAgent = "";
   state.lastObservedHandoffKey = "";
   state.lastObservedCommandRunning = false;
+  state.compactLane = "";
+  state.compactPreviousNextAgent = "";
   state.uiRestoredSession = "";
   if (els.historySearch) els.historySearch.value = "";
   renderActivePrompt("");
   els.agentLanes.innerHTML = "";
+  els.compactLaneSwitcher.replaceChildren();
 }
 
 function scheduleWorkbenchUiSave() {
@@ -1030,6 +1069,7 @@ function ensureLanes(agents) {
     pane.id = `lane-panel-${agent}`;
     pane.role = "tabpanel";
     pane.setAttribute("aria-labelledby", `lane-tab-${agent}`);
+    pane.dataset.agent = agent;
 
     const header = document.createElement("header");
     header.className = "agent-header";
@@ -1136,6 +1176,58 @@ function ensureLanes(agents) {
     };
   }
   renderLaneTabs();
+}
+
+function setCompactLane(agent, { focus = false } = {}) {
+  const canonical = canonicalAgent(agent);
+  if (!state.lanes[canonical]) return;
+  state.compactLane = canonical;
+  for (const [laneAgent, lane] of Object.entries(state.lanes)) {
+    const active = laneAgent === canonical;
+    lane.pane.classList.toggle("is-compact-active", active);
+    lane.pane.setAttribute("aria-hidden", compactWorkbenchQuery.matches && !active ? "true" : "false");
+  }
+  for (const button of els.compactLaneSwitcher.querySelectorAll("button[data-agent]")) {
+    const active = button.dataset.agent === canonical;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+    if (active && focus) button.focus();
+  }
+}
+
+function renderCompactLaneSwitcher() {
+  els.compactLaneSwitcher.replaceChildren();
+  for (const agent of Object.keys(state.lanes)) {
+    const button = document.createElement("button");
+    const dot = document.createElement("span");
+    button.type = "button";
+    button.className = "compact-lane-button";
+    button.dataset.agent = agent;
+    button.setAttribute("aria-pressed", "false");
+    dot.className = "compact-lane-dot";
+    dot.setAttribute("aria-hidden", "true");
+    button.append(dot, document.createTextNode(laneDisplayName(agent)));
+    button.addEventListener("click", () => setCompactLane(agent, { focus: true }));
+    els.compactLaneSwitcher.appendChild(button);
+  }
+  setCompactLane(state.compactLane || Object.keys(state.lanes)[0]);
+}
+
+function syncCompactWorkbench(data = state.latestSession || {}) {
+  const compact = compactWorkbenchQuery.matches;
+  document.documentElement.dataset.compactWorkbench = String(compact);
+  els.compactLaneSwitcher.setAttribute("aria-hidden", String(!compact));
+
+  const responsive = window.ChatBoksWorkbenchResponsive;
+  const nextLane = responsive?.resolveCompactLane?.({
+    lanes: Object.keys(state.lanes),
+    current: state.compactLane,
+    nextAgent: data.next_agent,
+    previousNextAgent: state.compactPreviousNextAgent,
+  }) || Object.keys(state.lanes)[0] || "";
+  state.compactPreviousNextAgent = canonicalAgent(data.next_agent);
+  state.compactLane = nextLane;
+  renderCompactLaneSwitcher();
 }
 
 function renderModelSelectors(selection = {}) {
@@ -1951,7 +2043,8 @@ function closeProjectPicker() {
 }
 
 async function browseProjectFolder() {
-  const selectedPath = await window.pywebview?.api?.choose_project_folder?.();
+  const selectedPath = await window.pywebview?.api?.choose_project_folder?.()
+    || await requestEmbeddedHost("choose-project-folder");
   if (selectedPath) els.projectPath.value = selectedPath;
 }
 
@@ -2441,6 +2534,7 @@ function applySession(data) {
   els.roleCallButton.classList.toggle("hidden", !state.directAgents.includes("coordinator"));
 
   ensureLanes(state.agents);
+  syncCompactWorkbench(data);
   if (savedUi?.lanes) {
     for (const [agent, lane] of Object.entries(state.lanes)) {
       const savedLane = savedUi.lanes[agent];
@@ -2911,7 +3005,10 @@ els.composerExpandButton.addEventListener("keydown", (event) => {
   else if (event.key === "End") setComposerHeight(bounds.max);
   else setComposerHeight(state.composerHeight + (event.key === "ArrowUp" ? 24 : -24));
 });
-window.addEventListener("resize", () => setComposerHeight(state.composerHeight || 220, false));
+window.addEventListener("resize", () => {
+  setComposerHeight(state.composerHeight || 220, false);
+  syncCompactWorkbench();
+});
 els.skillsButton.addEventListener("click", (event) => {
   event.stopPropagation();
   setSkillsPanel(els.skillsPanel.classList.contains("hidden"));
@@ -3086,6 +3183,17 @@ function applyResponsiveMode() {
 if (compactMedia.addEventListener) compactMedia.addEventListener("change", applyResponsiveMode);
 else compactMedia.addListener(applyResponsiveMode);
 
+function applyEmbeddedLumenTheme(event) {
+  if (!embeddedMode || event.source !== window.parent) return;
+  const trustedParent = event.origin === "tauri://localhost"
+    || event.origin === "http://tauri.localhost"
+    || event.origin === "http://localhost:5173";
+  if (!trustedParent || event.data?.type !== "chatboks:lumen-theme") return;
+  window.ChatBoksLumenTheme?.applyLumenThemeSnapshot?.(document.documentElement, event.data.snapshot);
+}
+
+if (embeddedMode) window.addEventListener("message", applyEmbeddedLumenTheme);
+
 function syncSystemPanels() {
   els.systemDrawer.classList.toggle("hidden", !state.systemDrawerOpen);
   els.systemDrawerButton.setAttribute("aria-expanded", String(state.systemDrawerOpen));
@@ -3103,6 +3211,21 @@ async function startWorkbench() {
   workbenchStarted = true;
   document.documentElement.dir = "ltr";
   loadSettings();
+  if (embeddedMode) {
+    if (!embeddedSession) {
+      renderOfflineWorkbench();
+      setConnectionState("Lumen did not supply a valid local session.", "error");
+      showError("ChatBoks could not validate the embedded Lumen session.");
+      return;
+    }
+    state.bridgeUrl = embeddedSession.bridgeUrl;
+    state.token = embeddedSession.sessionToken;
+    state.theme = "lumen";
+    document.documentElement.dataset.lumenEmbedded = "true";
+    els.bridgeUrl.value = state.bridgeUrl;
+    els.token.value = state.token;
+    window.history.replaceState(null, "", `${window.location.pathname}?embedded=1`);
+  }
   try {
     const bootstrap = await window.pywebview?.api?.bootstrap?.();
     if (bootstrap?.bridgeUrl && bootstrap?.sessionToken) {
@@ -3124,7 +3247,7 @@ async function startWorkbench() {
     }
     // Browser and mobile clients continue through the explicit pairing flow.
   }
-  setTheme(state.theme);
+  setTheme(embeddedMode ? "lumen" : state.theme);
   setFocusMode(state.focusMode);
   applyResponsiveMode();
   window.requestAnimationFrame(() => setComposerHeight(state.composerHeight || 220, false));

@@ -246,6 +246,10 @@ body {
     var(--ground);
 }
 
+:root[data-lumen-embedded="true"] .theme-pick { display: none; }
+:root[data-lumen-embedded="true"] .workspace-topbar { border-radius: 0 0 20px 20px; }
+:root[data-lumen-embedded="true"] .workbench-shell { padding-top: 0; }
+
 button,
 textarea {
   font: inherit;
@@ -4025,4 +4029,223 @@ body.is-focus .round-bar { border-top: 0; }
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+/* Compact native-window mode. The viewport remains a bounded work surface:
+   one routed agent is visible, while the composer never leaves the window. */
+.compact-lane-switcher { display: none; }
+
+@media (max-width: 1500px) {
+  :root[data-compact-workbench="true"] body {
+    min-width: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .workbench-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 58px minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0 10px 10px;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .workspace-topbar {
+    grid-column: 1;
+    grid-row: 1;
+    flex-wrap: nowrap;
+    width: 100%;
+    height: 58px;
+    min-height: 58px;
+    margin: 0;
+    padding: 0 12px;
+    border-radius: 0 0 18px 18px;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .workspace-topbar .brand-row {
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .brand-name { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .crumb { flex: 1; order: initial; width: auto; overflow: hidden; }
+  :root.lumen-workbench[data-compact-workbench="true"] .crumb-session { max-width: 16ch; }
+  :root.lumen-workbench[data-compact-workbench="true"] .topbar-actions { margin-left: auto; }
+  :root.lumen-workbench[data-compact-workbench="true"] .topbar-actions > :not(#liveButton):not(#connectionToggle) { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .topbar-actions .ghost-button,
+  :root.lumen-workbench[data-compact-workbench="true"] .topbar-actions .status-button {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .left-rail,
+  :root.lumen-workbench[data-compact-workbench="true"] .right-rail { display: none; }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .work-area {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .round-bar {
+    display: flex;
+    flex: 0 0 54px;
+    min-height: 54px;
+    padding: 0 8px;
+    border-radius: 18px;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .round-cell,
+  :root.lumen-workbench[data-compact-workbench="true"] .round-cell:nth-child(2) {
+    display: none;
+    min-width: 0;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .round-next,
+  :root.lumen-workbench[data-compact-workbench="true"] .round-cell:nth-child(4) {
+    display: flex;
+    flex: 1 1 50%;
+    padding: 7px 12px;
+    border: 0;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .round-spacer,
+  :root.lumen-workbench[data-compact-workbench="true"] .round-phase,
+  :root.lumen-workbench[data-compact-workbench="true"] .round-actions { display: none; }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .compact-lane-switcher {
+    display: flex;
+    flex: 0 0 42px;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 76%, transparent);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .compact-lane-switcher::-webkit-scrollbar { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .compact-lane-button {
+    display: inline-flex;
+    flex: 1 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 0 14px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .compact-lane-button.is-active {
+    border-color: var(--line-strong);
+    background: var(--accent-wash);
+    color: var(--text);
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .compact-lane-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 72%, transparent);
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .lane-deck {
+    flex: 1 1 auto;
+    min-height: 110px;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .lane-deck .agent-lanes {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-auto-flow: row;
+    min-width: 0;
+    height: 100%;
+    gap: 0;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .agent-pane:not(.is-compact-active) { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .agent-pane.is-compact-active {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    border-radius: 20px;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .agent-header {
+    min-height: 64px;
+    padding: 8px 14px;
+  }
+  :root.lumen-workbench[data-compact-workbench="true"] .agent-logo { width: 44px; height: 44px; border-radius: 13px; }
+  :root.lumen-workbench[data-compact-workbench="true"] .agent-stream { padding: 12px 14px 16px; }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-card {
+    flex: 0 0 156px;
+    min-height: 156px;
+    max-height: 156px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    padding: 14px 16px 12px;
+    border-radius: 20px;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-expand-handle { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-input { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-input label {
+    width: 44px;
+    height: 44px;
+    border-width: 3px;
+    border-radius: 14px;
+  }
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-card .composer-input textarea {
+    min-height: 58px;
+    font-size: 14px;
+  }
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-toolbar { flex-wrap: nowrap; gap: 8px; }
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-toolbar > .ghost-button:not(#skillsButton),
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-toolbar #sendStatus { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .composer-toolbar #skillsButton,
+  :root.lumen-workbench[data-compact-workbench="true"] .stop-button { min-height: 38px; padding-inline: 12px; }
+  :root.lumen-workbench[data-compact-workbench="true"] .send-button {
+    min-width: 96px;
+    min-height: 42px;
+    margin-left: auto;
+  }
+
+  :root.lumen-workbench[data-compact-workbench="true"] .approval-panel,
+  :root.lumen-workbench[data-compact-workbench="true"] .attention-panel {
+    bottom: 166px;
+    max-height: calc(100% - 176px);
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  :root.lumen-workbench[data-compact-workbench="true"] .crumb-session,
+  :root.lumen-workbench[data-compact-workbench="true"] .crumb-sep,
+  :root.lumen-workbench[data-compact-workbench="true"] #topbarStatus,
+  :root.lumen-workbench[data-compact-workbench="true"] #connectionToggle { display: none; }
+  :root.lumen-workbench[data-compact-workbench="true"] .crumb-button { height: 36px; padding-inline: 12px; font-size: 12px; }
+  :root.lumen-workbench[data-compact-workbench="true"] .compact-lane-button { padding-inline: 11px; font-size: 11px; }
 }

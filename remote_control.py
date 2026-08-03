@@ -10,6 +10,7 @@ The bridge is intentionally conservative:
 from __future__ import annotations
 
 import argparse
+import copy
 import ipaddress
 import json
 import os
@@ -117,6 +118,8 @@ WORKBENCH_STATIC_ROUTES = {
     "/mobile-version.js": ("mobile-version.js", "text/javascript; charset=utf-8"),
     "/workbench.css": ("workbench.css", "text/css; charset=utf-8"),
     "/workbench.js": ("workbench.js", "text/javascript; charset=utf-8"),
+    "/workbench-responsive.js": ("workbench-responsive.js", "text/javascript; charset=utf-8"),
+    "/lumen-theme.js": ("lumen-theme.js", "text/javascript; charset=utf-8"),
     "/favicon.ico": ("assets/chatboks-mark.png", "image/png"),
     "/assets/chatboks-logo.png": ("assets/chatboks-logo.png", "image/png"),
     "/assets/chatboks-mark.png": ("assets/chatboks-mark.png", "image/png"),
@@ -220,6 +223,18 @@ SHELL_CSP = (
     "script-src 'self' 'unsafe-inline'; "
     "connect-src 'self'"
 )
+EMBEDDED_SHELL_CSP = SHELL_CSP.replace(
+    "frame-ancestors 'none'",
+    "frame-ancestors tauri: http://tauri.localhost http://localhost:5173",
+)
+
+
+def workbench_frame_policy(embedded: bool) -> dict[str, str | None]:
+    """Return framing headers for standalone or explicitly embedded Workbench pages."""
+    return {
+        "x_frame_options": None if embedded else "DENY",
+        "content_security_policy": EMBEDDED_SHELL_CSP if embedded else SHELL_CSP,
+    }
 
 
 def is_loopback_host(host: str) -> bool:
@@ -1096,7 +1111,16 @@ class RemoteSession:
         self.config_path = config_path
         self.user_settings_path = user_settings_path or DEFAULT_USER_SETTINGS_PATH
         self.command_source = command_source if command_source in {"remote", "desktop"} else "remote"
-        self.app = Chatboks(project, trigger="manual", config_path=config_path)
+        resolved_config_path = config_path or Path("~/.chatboks/config.yaml").expanduser()
+        if not resolved_config_path.exists():
+            raise SystemExit(f"Missing config file: {resolved_config_path}")
+        self._base_config = yaml.safe_load(resolved_config_path.read_text(encoding="utf-8-sig")) or {}
+        self.app = Chatboks(
+            project,
+            trigger="manual",
+            config_path=config_path,
+            config_override=self._runtime_config(),
+        )
         self._apply_user_model_settings()
         # The desktop and mobile bridge have no trustworthy terminal prompt surface.
         # Unapproved local roles fall back to the installed role instead of blocking.
@@ -1162,6 +1186,30 @@ class RemoteSession:
         except (OSError, json.JSONDecodeError):
             return {}
         return payload if isinstance(payload, dict) else {}
+
+    def _runtime_config(self) -> dict[str, Any]:
+        """Merge local project registrations without mutating shared defaults."""
+        base = copy.deepcopy(getattr(self, "_base_config", getattr(getattr(self, "app", None), "config", {})))
+        projects = base.setdefault("projects", {})
+        registered = self._load_user_settings().get("registered_projects")
+        if not isinstance(registered, dict):
+            return base
+        allowed_fields = {"path", "agents", "direct_agents", "primary", "codegraph"}
+        for raw_name, raw_config in registered.items():
+            name = str(raw_name or "").strip()
+            if not name or name in projects or not isinstance(raw_config, dict):
+                continue
+            path = str(raw_config.get("path") or "").strip()
+            if not path:
+                continue
+            project_config = {
+                key: copy.deepcopy(value)
+                for key, value in raw_config.items()
+                if key in allowed_fields
+            }
+            project_config["path"] = path
+            projects[name] = project_config
+        return base
 
     def _apply_user_model_settings(self) -> None:
         agent_models = self._load_user_settings().get("agent_models")
@@ -1242,10 +1290,6 @@ class RemoteSession:
         if not target_path.is_dir():
             raise ValueError("That project folder does not exist.")
 
-        config_path = self.config_path or Path("~/.chatboks/config.yaml").expanduser()
-        if not config_path.exists():
-            raise ValueError(f"ChatBoks configuration was not found: {config_path}")
-
         with self.lock:
             projects = self.app.config.setdefault("projects", {})
             agent_config = self.app.config.get("agents") or {}
@@ -1274,7 +1318,14 @@ class RemoteSession:
                 (created if was_created else existing).append(registered_name)
 
             if created:
-                config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
+                user_settings = self._load_user_settings()
+                registered_projects = user_settings.get("registered_projects")
+                if not isinstance(registered_projects, dict):
+                    registered_projects = {}
+                for project_name in created:
+                    registered_projects[project_name] = copy.deepcopy(projects[project_name])
+                user_settings["registered_projects"] = registered_projects
+                atomic_write_json(self.user_settings_path, user_settings)
             registered = created + existing
             return {"projects": registered, "created": created, "existing": existing}
 
@@ -1288,13 +1339,14 @@ class RemoteSession:
             if target == self.project:
                 raise ValueError("Switch to another project before removing the active project.")
             projects = self.app.config.get("projects") or {}
-            if target not in projects:
+            user_settings = self._load_user_settings()
+            registered_projects = user_settings.get("registered_projects")
+            if not isinstance(registered_projects, dict) or target not in registered_projects:
                 raise ValueError(f"Unknown project '{target}'.")
-            config_path = self.config_path or Path("~/.chatboks/config.yaml").expanduser()
-            if not config_path.exists():
-                raise ValueError("ChatBoks configuration was not found.")
+            registered_projects.pop(target)
+            user_settings["registered_projects"] = registered_projects
+            atomic_write_json(self.user_settings_path, user_settings)
             projects.pop(target)
-            config_path.write_text(yaml.safe_dump(self.app.config, sort_keys=False, allow_unicode=False), encoding="utf-8")
             return {"removed": target, "projects": self.available_projects()}
 
     @staticmethod
@@ -1560,7 +1612,12 @@ class RemoteSession:
                 raise ValueError("Cannot switch project while a command is running.")
             self.stop_active_codegraph()
             self.project = target
-            self.app = Chatboks(target, trigger="manual", config_path=self.config_path)
+            self.app = Chatboks(
+                target,
+                trigger="manual",
+                config_path=self.config_path,
+                config_override=self._runtime_config(),
+            )
             self._apply_user_model_settings()
             self.app.router.role_prompt_interactive = False
             self._command_thread = None
@@ -2334,7 +2391,9 @@ class RemoteHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path in WORKBENCH_STATIC_ROUTES:
             relative_path, content_type = WORKBENCH_STATIC_ROUTES[parsed.path]
-            self.respond_static(relative_path, content_type)
+            query = urllib.parse.parse_qs(parsed.query)
+            embedded = parsed.path == "/workbench" and query.get("embedded") == ["1"]
+            self.respond_static(relative_path, content_type, embedded=embedded)
             return
         if parsed.path == f"{INTEGRATION_API_PREFIX}/manifest":
             if not self.origin_allowed():
@@ -2800,7 +2859,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def respond_static(self, relative_path: str, content_type: str) -> None:
+    def respond_static(self, relative_path: str, content_type: str, *, embedded: bool = False) -> None:
         file_path = WORKBENCH_WWW_ROOT / relative_path
         try:
             body = file_path.read_bytes()
@@ -2808,7 +2867,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
             self.respond_error(HTTPStatus.NOT_FOUND, "Not found")
             return
         self.send_response(HTTPStatus.OK)
-        self.write_security_headers(include_csp=content_type.startswith("text/html"))
+        self.write_security_headers(include_csp=content_type.startswith("text/html"), embedded=embedded)
         self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
@@ -2836,12 +2895,14 @@ class RemoteHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
 
-    def write_security_headers(self, include_csp: bool = False) -> None:
+    def write_security_headers(self, include_csp: bool = False, *, embedded: bool = False) -> None:
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("X-Frame-Options", "DENY")
+        policy = workbench_frame_policy(embedded)
+        if policy["x_frame_options"]:
+            self.send_header("X-Frame-Options", policy["x_frame_options"])
         if include_csp:
-            self.send_header("Content-Security-Policy", SHELL_CSP)
+            self.send_header("Content-Security-Policy", policy["content_security_policy"])
 
 
 def default_operator_status_path() -> Path:

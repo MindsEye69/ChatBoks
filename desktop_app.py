@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
+import os
 import secrets
 import subprocess
 import sys
 import threading
+import time
 import urllib.parse
 import webbrowser
 from pathlib import Path
@@ -62,6 +65,77 @@ def show_startup_error(error: Exception) -> None:
             "ChatBoks",
             0x10,
         )
+
+
+def embedded_workbench_url(bridge_url: str, session_token: str) -> str:
+    """Build a loopback-only URL whose bearer token is never sent in an HTTP request."""
+    parsed = urllib.parse.urlparse(str(bridge_url or "").strip())
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname not in {"127.0.0.1", "localhost", "::1"}
+        or parsed.port is None
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("Embedded ChatBoks requires a loopback HTTP bridge.")
+    if not session_token or len(session_token) > 256:
+        raise ValueError("Embedded ChatBoks requires a valid session token.")
+    fragment = urllib.parse.urlencode({"sessionToken": session_token}, quote_via=urllib.parse.quote)
+    return f"{bridge_url.rstrip('/')}/workbench?embedded=1#{fragment}"
+
+
+def write_embedded_bootstrap(path: Path, bridge_url: str, session_token: str) -> None:
+    """Publish the one-time Lumen bootstrap atomically inside the user's profile."""
+    target = Path(path).expanduser().resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "version": 1,
+        "url": embedded_workbench_url(bridge_url, session_token),
+        "pid": os.getpid(),
+    }
+    temporary = target.with_suffix(target.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload), encoding="utf-8")
+    temporary.replace(target)
+
+
+def process_is_running(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if sys.platform == "win32":
+        import ctypes
+
+        synchronize = 0x00100000
+        wait_timeout = 0x00000102
+        handle = ctypes.windll.kernel32.OpenProcess(synchronize, False, pid)
+        if not handle:
+            return False
+        try:
+            return ctypes.windll.kernel32.WaitForSingleObject(handle, 0) == wait_timeout
+        finally:
+            ctypes.windll.kernel32.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
+
+
+def wait_for_embed_stop(
+    stop_path: Path,
+    parent_pid: int | None,
+    *,
+    poll_seconds: float = 0.2,
+) -> str:
+    """Keep the background bridge alive until Lumen stops it or exits."""
+    while True:
+        if stop_path.exists():
+            return "stop"
+        if parent_pid is not None and not process_is_running(parent_pid):
+            return "parent-exited"
+        time.sleep(poll_seconds)
 
 
 class DesktopBridge:
@@ -137,6 +211,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="ChatBoks desktop Workbench")
     parser.add_argument("project", nargs="?", help="Project name from config.yaml")
     parser.add_argument("--config", type=Path, default=default_config_path(), help="ChatBoks configuration file")
+    parser.add_argument("--embed-bootstrap", type=Path, help="One-time bootstrap file for a Lumen plugin host")
+    parser.add_argument("--embed-stop", type=Path, help="Stop signal file for a Lumen plugin host")
+    parser.add_argument("--parent-pid", type=int, help="Owning Lumen process id")
     return parser.parse_args(argv)
 
 
@@ -159,23 +236,39 @@ def main(argv: list[str] | None = None) -> int:
     try:
         ensure_gui_stdio()
         bridge = DesktopBridge(args.project or default_project_name(args.config), args.config)
-        import webview
+        if args.embed_bootstrap or args.embed_stop:
+            if not args.embed_bootstrap or not args.embed_stop:
+                raise ValueError("Lumen embed mode requires both bootstrap and stop paths.")
+            args.embed_bootstrap.unlink(missing_ok=True)
+            args.embed_stop.unlink(missing_ok=True)
+            write_embedded_bootstrap(
+                args.embed_bootstrap,
+                bridge.bridge_url,
+                bridge.session_token,
+            )
+            wait_for_embed_stop(args.embed_stop, args.parent_pid)
+        else:
+            import webview
 
-        webview.create_window(
-            "ChatBoks",
-            f"{bridge.bridge_url}/workbench?desktop=1",
-            js_api=bridge,
-            width=1440,
-            height=960,
-            min_size=(1100, 720),
-        )
-        webview.start()
+            webview.create_window(
+                "ChatBoks",
+                f"{bridge.bridge_url}/workbench?desktop=1",
+                js_api=bridge,
+                width=1440,
+                height=960,
+                min_size=(1100, 720),
+            )
+            webview.start()
     except Exception as exc:  # noqa: BLE001 - native entry point must surface startup failures.
         show_startup_error(exc)
         return 1
     finally:
         if "bridge" in locals():
             bridge.close()
+        if args.embed_bootstrap:
+            args.embed_bootstrap.unlink(missing_ok=True)
+        if args.embed_stop:
+            args.embed_stop.unlink(missing_ok=True)
     return 0
 
 

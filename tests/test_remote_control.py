@@ -718,7 +718,7 @@ def test_remote_session_project_catalog_exposes_only_picker_metadata():
     print("PASS: project catalog exposes safe metadata for graphical pickers")
 
 
-def test_remote_session_register_project_persists_a_local_folder(tmp_path: Path):
+def test_remote_session_register_project_persists_a_local_folder_without_touching_shared_config(tmp_path: Path):
     import yaml
 
     config_path = tmp_path / "config.yaml"
@@ -734,17 +734,49 @@ def test_remote_session_register_project_persists_a_local_folder(tmp_path: Path)
     session = RemoteSession.__new__(RemoteSession)
     session.lock = threading.RLock()
     session.config_path = config_path
+    session.user_settings_path = tmp_path / "settings.json"
     session.app = SimpleNamespace(config=yaml.safe_load(config_path.read_text(encoding="utf-8")))
+    original_config = config_path.read_text(encoding="utf-8")
 
     created = session.register_project(str(project_path))
     duplicate = session.register_project(str(project_path))
-    stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    stored = json.loads(session.user_settings_path.read_text(encoding="utf-8"))
 
     assert created == {"projects": ["first-project", "second-project"], "created": ["first-project", "second-project"], "existing": []}
     assert duplicate == {"projects": ["first-project", "second-project"], "created": [], "existing": ["first-project", "second-project"]}
-    assert stored["projects"]["first-project"]["path"] == str(first_project.resolve())
-    assert stored["projects"]["second-project"]["agents"] == ["claude", "codex"]
-    print("PASS: project picker imports a local project folder without duplicate entries")
+    assert config_path.read_text(encoding="utf-8") == original_config
+    assert stored["registered_projects"]["first-project"]["path"] == str(first_project.resolve())
+    assert stored["registered_projects"]["second-project"]["agents"] == ["claude", "codex"]
+    print("PASS: project picker imports a local project folder without touching shared config")
+
+
+def test_remote_session_reloads_registered_projects_from_user_settings(tmp_path: Path):
+    session = RemoteSession.__new__(RemoteSession)
+    session.user_settings_path = tmp_path / "settings.json"
+    session.user_settings_path.write_text(
+        json.dumps(
+            {
+                "registered_projects": {
+                    "private-project": {
+                        "path": str(tmp_path / "Private Project"),
+                        "agents": ["codex"],
+                        "primary": "codex",
+                        "codegraph": False,
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    session._base_config = {
+        "projects": {"chatboks": {"path": ".", "agents": ["codex"]}},
+        "agents": {"codex": {}},
+    }
+
+    runtime = session._runtime_config()
+
+    assert set(runtime["projects"]) == {"chatboks", "private-project"}
+    assert "private-project" not in session._base_config["projects"]
 
 
 def test_remote_model_choices_hide_unsupported_codex_chatgpt_account_model():
@@ -825,22 +857,33 @@ def test_remote_session_remove_project_updates_only_the_registry(tmp_path: Path)
     config_path = tmp_path / "config.yaml"
     project_path = tmp_path / "Removable"
     project_path.mkdir()
-    config_path.write_text(
-        "projects:\n  active:\n    path: .\n  removable:\n    path: " + str(project_path) + "\nagents: {}\n",
-        encoding="utf-8",
-    )
+    config_path.write_text("projects:\n  active:\n    path: .\nagents: {}\n", encoding="utf-8")
     session = RemoteSession.__new__(RemoteSession)
     session.lock = threading.RLock()
     session.config_path = config_path
+    session.user_settings_path = tmp_path / "settings.json"
+    session.user_settings_path.write_text(
+        json.dumps({"registered_projects": {"removable": {"path": str(project_path)}}}),
+        encoding="utf-8",
+    )
     session.project = "active"
     session._command_thread = None
-    session.app = SimpleNamespace(config=yaml.safe_load(config_path.read_text(encoding="utf-8")))
+    session.app = SimpleNamespace(
+        config={
+            "projects": {
+                "active": {"path": "."},
+                "removable": {"path": str(project_path)},
+            }
+        }
+    )
+    original_config = config_path.read_text(encoding="utf-8")
 
     result = session.remove_project("removable")
-    stored = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    stored = json.loads(session.user_settings_path.read_text(encoding="utf-8"))
 
     assert result == {"removed": "removable", "projects": ["active"]}
-    assert "removable" not in stored["projects"]
+    assert config_path.read_text(encoding="utf-8") == original_config
+    assert "removable" not in stored["registered_projects"]
     assert project_path.is_dir()
     print("PASS: project removal only changes the ChatBoks registry")
 
@@ -2002,6 +2045,12 @@ def test_remote_bridge_serves_static_ui_files():
             assert ".lane-toolbar {\n  display: none" in body.replace("\r\n", "\n")
             assert "body.is-compact-workbench .lane-toolbar" in body
 
+        with urllib.request.urlopen(f"{base}/workbench-responsive.js", timeout=5) as response:
+            body = response.read().decode("utf-8")
+            assert response.status == 200
+            assert response.headers["Content-Type"].startswith("text/javascript")
+            assert "resolveCompactLane" in body
+
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")
             assert response.status == 200
@@ -2205,3 +2254,16 @@ def test_rotate_pair_code_helper_reports_stale_operator_file(tmp_path: Path, cap
     assert "Stale remote bridge operator file" in output
     assert "Start the bridge again" in output
     print("PASS: rotate-pair-code helper reports stale operator files clearly")
+
+
+def test_workbench_frame_policy_only_allows_explicit_lumen_embed():
+    from remote_control import workbench_frame_policy
+
+    standalone = workbench_frame_policy(False)
+    embedded = workbench_frame_policy(True)
+
+    assert standalone["x_frame_options"] == "DENY"
+    assert "frame-ancestors 'none'" in standalone["content_security_policy"]
+    assert embedded["x_frame_options"] is None
+    assert "frame-ancestors tauri: http://tauri.localhost http://localhost:5173" in embedded["content_security_policy"]
+    assert "https:" not in embedded["content_security_policy"]
