@@ -253,8 +253,9 @@ def test_triad_brainstorm_publishes_an_attributed_shortlist():
             intent="triad_brainstorm",
         )
 
-        assert app.state["status"] == "idle"
-        assert app.state["active_task"] is None
+        assert app.state["active_task"] == "improve ChatBoks"
+        assert app.state["status"] == "awaiting_approval"
+        assert app.state["proposal"]["mode_transition"]["to"] == "implement"
         synthesis_calls = [
             call.args[1]
             for call in app.append_message.call_args_list
@@ -265,6 +266,98 @@ def test_triad_brainstorm_publishes_an_attributed_shortlist():
         assert "[Codex] Durable session recovery" in synthesis_calls[0]
         assert "[Codex Spark] Clear agent status" in synthesis_calls[0]
         print("PASS: triad brainstorm publishes an attributed shortlist")
+
+
+def test_triad_brainstorm_waits_for_mode_switch_approval_before_building():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state["collaboration_mode"] = "brainstorm"
+        app.state["collaboration_mode_instruction"] = COLLABORATION_MODES["brainstorm"]
+        app.state["active_task"] = "improve file uploads"
+        app.proj_config = {"agents": ["claude", "codex"], "direct_agents": []}
+        app.config = {"agents": {"claude": {}, "codex": {}}, "rounds": {"max_before_escalate": 1}}
+        app.append_message = MagicMock()
+        app.call_agent_with_token_recovery = MagicMock(
+            side_effect=[
+                "1. Safer uploads - Outcome; Effort: M; Risk: validation.\n>>> TASK_COMPLETE",
+                "1. Faster uploads - Outcome; Effort: M; Risk: compatibility.\n>>> TASK_COMPLETE",
+            ]
+        )
+        app.update_token_count = MagicMock()
+        app.estimate_execution_cost = MagicMock(
+            side_effect=lambda agent: {"agent": agent, "total_tokens": 1000}
+        )
+        app.execute_proposal = MagicMock()
+
+        app.run_agent_round(
+            initiator="improve file uploads",
+            agents=["claude", "codex"],
+            intent="triad_brainstorm",
+        )
+
+        assert app.state["status"] == "awaiting_approval"
+        assert app.state["active_task"] == "improve file uploads"
+        assert app.state["proposal"]["mode_transition"] == {
+            "from": "brainstorm",
+            "to": "implement",
+        }
+        assert app.state["collaboration_mode"] == "brainstorm"
+        app.execute_proposal.assert_not_called()
+
+
+def test_brainstorm_approval_switches_to_implement_before_execution():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state.update(
+            {
+                "status": "awaiting_approval",
+                "collaboration_mode": "brainstorm",
+                "collaboration_mode_instruction": COLLABORATION_MODES["brainstorm"],
+                "proposal": {
+                    "id": "brainstorm-test",
+                    "proposed_by": "codex",
+                    "candidates": [{"agent": "codex"}],
+                    "mode_transition": {"from": "brainstorm", "to": "implement"},
+                },
+            }
+        )
+        app.config = {"agents": {"codex": {}}}
+        app.proj_config = {"agents": ["codex"], "direct_agents": []}
+        app.router.primary.return_value = "codex"
+        app.agent_is_available = MagicMock(return_value=True)
+        app.execute_proposal = MagicMock()
+
+        app.handle_approval("APPROVE codex")
+
+        assert app.state["collaboration_mode"] == "implement"
+        assert app.state["collaboration_mode_instruction"] == COLLABORATION_MODES["implement"]
+        app.execute_proposal.assert_called_once_with("codex")
+
+
+def test_rejecting_brainstorm_transition_stays_in_brainstorm_without_rerun():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        app.state.update(
+            {
+                "status": "awaiting_approval",
+                "collaboration_mode": "brainstorm",
+                "collaboration_mode_instruction": COLLABORATION_MODES["brainstorm"],
+                "active_task": "improve file uploads",
+                "proposal": {
+                    "id": "brainstorm-test",
+                    "mode_transition": {"from": "brainstorm", "to": "implement"},
+                },
+            }
+        )
+        app.append_message = MagicMock()
+        app.run_agent_round = MagicMock()
+
+        app.handle_approval("REJECT")
+
+        assert app.state["status"] == "idle"
+        assert app.state["proposal"] is None
+        assert app.state["collaboration_mode"] == "brainstorm"
+        app.run_agent_round.assert_not_called()
 
 
 def test_triad_synthesis_ignores_packets_and_prefaces():
