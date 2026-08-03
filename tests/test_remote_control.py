@@ -832,6 +832,33 @@ def test_remote_session_does_not_reload_stale_state_during_command(tmp_path: Pat
     print("PASS: active command state cannot be replaced by a stale disk snapshot")
 
 
+def test_remote_command_failure_transitions_session_to_blocked() -> None:
+    class FailingApp:
+        def __init__(self) -> None:
+            self.state: dict[str, object] = {"status": "active", "next_agent": "codex"}
+
+        def handle_user_input(self, _text: str) -> None:
+            raise PermissionError("snapshot is temporarily locked")
+
+        def update_state(self, updates: dict[str, object]) -> None:
+            self.state.update(updates)
+
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = FailingApp()
+    session.events = RemoteEventBuffer()
+    session.lock = threading.RLock()
+    session._stop_requested = False
+    session._command_text = "role call"
+
+    session._run_command("role call")
+
+    assert session.app.state["status"] == "blocked"
+    assert session.app.state["next_agent"] == "you"
+    assert "snapshot is temporarily locked" in str(session.app.state["blocked_reason"])
+    assert session._command_text is None
+    assert any(event["kind"] == "error" for event in session.events.since(0))
+
+
 def test_remote_session_applies_mode_commands_before_returning_snapshot(tmp_path: Path):
     session = RemoteSession.__new__(RemoteSession)
     session.project = "chatboks"
@@ -1375,6 +1402,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert 'id="laneTabs"' in body
             assert 'id="compareButton"' in body
             assert 'id="handoffBar"' in body
+            assert 'id="appVersion"' in body
+            assert 'id="systemDrawerCloseButton"' in body
 
         with urllib.request.urlopen(f"{base}/workbench.js", timeout=5) as response:
             body = response.read().decode("utf-8")
@@ -1410,6 +1439,8 @@ def test_remote_bridge_serves_static_ui_files():
             assert "explicitHandoffChanged" in body
             assert "scrollIntoView" in body
             assert 'event.key === "ArrowRight"' in body
+            assert 'if (!data.command_running) state.streams = {}' in body
+            assert 'els.systemDrawerCloseButton.addEventListener("click"' in body
 
         with urllib.request.urlopen(f"{base}/workbench.css", timeout=5) as response:
             body = response.read().decode("utf-8")

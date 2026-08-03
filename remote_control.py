@@ -39,6 +39,7 @@ from encoding_utils import configure_utf8_stdio
 from orchestrator import COLLABORATION_MODES, DEFAULT_AGENT_FALLBACKS, Chatboks
 from session_journal import atomic_write_json
 from ui.stream import Stream
+from version import CHATBOKS_VERSION_LABEL
 
 
 TRANSCRIPT_LIMIT = 120
@@ -50,7 +51,7 @@ DEFAULT_USER_SETTINGS_PATH = Path("~/.chatboks/settings.json").expanduser()
 SKILL_SELECTION_LIMIT = 4
 SKILL_CONTENT_LIMIT = 12_000
 SKILL_TOTAL_CONTENT_LIMIT = 24_000
-SKILL_DISCOVERY_CACHE_SECONDS = 10.0
+SKILL_DISCOVERY_CACHE_SECONDS = 300.0
 REMOTE_PROPOSAL_RAW_LIMIT = 4000
 TRACE_SUMMARY_LIMIT = 140
 LANE_AGENT_LIMIT = 3
@@ -1056,6 +1057,8 @@ class RemoteSession:
         self._codex_update_status = "idle"
         self._claude_login_pid: int | None = None
         self._workbench_cache: tuple[float, dict[str, Any]] | None = None
+        self._skills_cache: tuple[Path, float, dict[str, dict[str, Any]]] | None = None
+        self._skills_refresh_thread: threading.Thread | None = None
         self._codegraph_process: subprocess.Popen[str] | None = None
         self._codegraph_project: str | None = None
         self._codegraph_generation = 0
@@ -1509,6 +1512,7 @@ class RemoteSession:
             self._command_thread = None
             self._command_text = None
             self._workbench_cache = None
+            self._skills_cache = None
             self.events = RemoteEventBuffer()
             self.app.stream = RemoteStream(
                 self.app.config.get("agents", {}),
@@ -1523,6 +1527,16 @@ class RemoteSession:
         command_thread = getattr(self, "_command_thread", None)
         return command_thread is not None and command_thread.is_alive()
 
+    @staticmethod
+    def _public_skills(catalog: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        return [{key: value for key, value in skill.items() if key != "path"} for skill in catalog.values()]
+
+    def _refresh_skills_catalog(self, project_root: Path) -> None:
+        catalog = discover_skills(project_root)
+        with self.lock:
+            if Path(getattr(self.app, "proj_path", "")) == project_root:
+                self._skills_cache = (project_root, time.time(), catalog)
+
     def skills_catalog(self) -> list[dict[str, Any]]:
         project_path = getattr(self.app, "proj_path", None)
         if project_path is None:
@@ -1530,16 +1544,21 @@ class RemoteSession:
         project_root = Path(project_path)
         now = time.time()
         cached = getattr(self, "_skills_cache", None)
-        if (
-            cached is not None
-            and cached[0] == project_root
-            and now - cached[1] < SKILL_DISCOVERY_CACHE_SECONDS
-        ):
-            catalog = cached[2]
-        else:
-            catalog = discover_skills(project_root)
-            self._skills_cache = (project_root, now, catalog)
-        return [{key: value for key, value in skill.items() if key != "path"} for skill in catalog.values()]
+        same_project = cached is not None and cached[0] == project_root
+        if same_project and now - cached[1] < SKILL_DISCOVERY_CACHE_SECONDS:
+            return self._public_skills(cached[2])
+
+        refresh_thread = getattr(self, "_skills_refresh_thread", None)
+        if refresh_thread is None or not refresh_thread.is_alive():
+            refresh_thread = threading.Thread(
+                target=self._refresh_skills_catalog,
+                args=(project_root,),
+                name="chatboks-skill-discovery",
+                daemon=True,
+            )
+            self._skills_refresh_thread = refresh_thread
+            refresh_thread.start()
+        return self._public_skills(cached[2]) if same_project else []
 
     def selected_skill_context(self, selected: Any) -> tuple[list[str], str]:
         if not isinstance(selected, list):
@@ -1623,7 +1642,18 @@ class RemoteSession:
         try:
             self.app.handle_user_input(text)
         except Exception as exc:  # noqa: BLE001
-            self.events.append("error", "system", f"Remote command failed: {exc}")
+            failure = f"Remote command failed: {exc}"
+            self.events.append("error", "system", failure)
+            try:
+                self.app.update_state(
+                    {
+                        "status": "blocked",
+                        "next_agent": "you",
+                        "blocked_reason": failure,
+                    }
+                )
+            except Exception as state_exc:  # noqa: BLE001
+                self.events.append("error", "system", f"Could not persist the blocked state: {state_exc}")
         finally:
             with self.lock:
                 if self._stop_requested:
@@ -1795,6 +1825,7 @@ class RemoteSession:
             transcript = parse_chatboks_messages(transcript_path, limit=transcript_limit)
             packet_path = getattr(self.app, "packet_file", None)
             return {
+                "version": CHATBOKS_VERSION_LABEL,
                 "project": self.app.project,
                 "projects": self.available_projects(),
                 "project_catalog": self.project_catalog(),

@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +16,8 @@ from typing import Any
 SESSION_FORMAT_VERSION = 1
 SESSION_TAIL_EVENTS = 12
 _SAFE_SESSION_RE = re.compile(r"[^A-Za-z0-9._-]+")
+_ATOMIC_WRITE_LOCK = threading.RLock()
+_ATOMIC_REPLACE_ATTEMPTS = 6
 
 
 def new_session_id() -> str:
@@ -27,14 +31,24 @@ def safe_session_id(value: Any) -> str:
 
 
 def atomic_write_text(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-    try:
-        temporary.write_text(text, encoding="utf-8")
-        os.replace(temporary, path)
-    finally:
-        if temporary.exists():
-            temporary.unlink(missing_ok=True)
+    with _ATOMIC_WRITE_LOCK:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+        try:
+            temporary.write_text(text, encoding="utf-8")
+            for attempt in range(_ATOMIC_REPLACE_ATTEMPTS):
+                try:
+                    os.replace(temporary, path)
+                    break
+                except PermissionError:
+                    if attempt == _ATOMIC_REPLACE_ATTEMPTS - 1:
+                        raise
+                    time.sleep(0.01 * (2**attempt))
+        finally:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:

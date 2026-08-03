@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import threading
+import time
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -133,6 +135,49 @@ def test_selected_skill_context_is_bounded_and_explicitly_user_selected() -> Non
 
             with pytest.raises(ValueError, match="combined context limit"):
                 session.selected_skill_context(["local:large-0", "local:large-1", "local:large-2"])
+
+
+def test_workbench_skill_refresh_does_not_block_session_polling() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        skill_path = root / "SKILL.md"
+        started = threading.Event()
+        release = threading.Event()
+        catalog = {
+            "local:slow": {
+                "id": "local:slow",
+                "name": "Slow",
+                "source": "Local",
+                "agents": ["codex"],
+                "category": "Workflow",
+                "summary": "Slow discovery fixture.",
+                "path": skill_path,
+            }
+        }
+
+        def slow_discovery(_project_root: Path) -> dict[str, dict[str, object]]:
+            started.set()
+            release.wait(timeout=2)
+            return catalog
+
+        session = RemoteSession.__new__(RemoteSession)
+        session.app = SimpleNamespace(proj_path=root)
+        session.lock = threading.RLock()
+        session._skills_cache = None
+        session._skills_refresh_thread = None
+
+        with patch("remote_control.discover_skills", side_effect=slow_discovery):
+            before = time.perf_counter()
+            assert session.skills_catalog() == []
+            assert time.perf_counter() - before < 0.5
+            assert started.wait(timeout=1)
+
+            release.set()
+            session._skills_refresh_thread.join(timeout=1)
+            public_catalog = session.skills_catalog()
+
+        assert public_catalog[0]["id"] == "local:slow"
+        assert "path" not in public_catalog[0]
 
 
 if __name__ == "__main__":

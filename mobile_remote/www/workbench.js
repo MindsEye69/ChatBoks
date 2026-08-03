@@ -183,7 +183,7 @@ for (const id of [
     "workArea", "focusButton", "focusLabel", "newTaskButton", "railProjectsButton",
   "projectButton", "projectDialog", "projectDialogBackdrop", "projectDialogClose", "projectSearch", "projectPath", "projectBrowseButton", "projectAddButton", "projectPickerList",
     "tokenBalances", "activePromptText", "settingsButton", "stripCpu", "stripRam",
-  "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "claudeUpdateButton", "systemDrawer",
+  "appVersion", "topbarProject", "topbarSession", "topbarStatus", "liveButton", "liveDot", "liveLabel", "previewButton", "systemDrawerButton", "systemDrawerCloseButton", "claudeUpdateButton", "systemDrawer",
   "sessionButton", "connectionToggle", "connectionPanel", "pairCode", "token", "pairButton",
   "bridgeUrl", "connectButton", "forgetButton", "errorBox", "connectionState", "connectionRecovery",
   "agentLanes", "laneTabs", "compareButton", "handoffBar", "handoffFrom", "handoffTo", "handoffReason", "coordDot", "coordState", "roleCallButton", "systemFeedButton", "logsButton", "systemDetailsButton", "traceButton", "systemDetails", "tracePanel",
@@ -2390,6 +2390,7 @@ function applySession(data) {
   state.skills = Array.isArray(data.skills) ? data.skills : state.skills;
   state.selectedSkills = state.selectedSkills.filter((id) => state.skills.some((skill) => skill.id === id));
   renderSkills();
+  els.appVersion.textContent = data.version || "v0.1.00";
   els.topbarProject.textContent = data.project || "-";
   els.railProjectName.textContent = data.project || "chatboks";
   els.topbarSession.textContent = data.session || "-";
@@ -2424,6 +2425,7 @@ function applySession(data) {
     state.eventCursor = events[events.length - 1].id;
     ingestEvents(events);
   }
+  if (!data.command_running) state.streams = {};
 
   const transcript = state.transcript;
   renderActivePrompt(activePromptFromSession(data, transcript));
@@ -2941,6 +2943,10 @@ els.projectPath.addEventListener("keydown", (event) => {
 });
 els.systemDrawerButton.addEventListener("click", () => {
   state.systemDrawerOpen = !state.systemDrawerOpen;
+  syncSystemPanels();
+});
+els.systemDrawerCloseButton.addEventListener("click", () => {
+  state.systemDrawerOpen = false;
   syncSystemPanels();
 });
 els.claudeUpdateButton.addEventListener("click", updateClaude);

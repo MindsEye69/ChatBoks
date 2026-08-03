@@ -40,6 +40,7 @@ wheels/
 share/python-wheels/
 *.manifest
 *.spec
+chatboks-version.txt
 
 # Test / tooling caches
 .pytest_cache/

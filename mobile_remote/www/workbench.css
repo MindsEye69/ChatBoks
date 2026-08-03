@@ -1055,6 +1055,14 @@ kbd {
   gap: 10px;
 }
 
+.coordinator-close-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
 .ghost-button.is-active {
   border-color: color-mix(in srgb, var(--ok) 40%, transparent);
   background: var(--green-soft);
@@ -2267,6 +2275,19 @@ dd {
   font-weight: 640;
 }
 
+.brand-copy {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.brand-version {
+  margin-top: 1px;
+  color: var(--faint);
+  font: 500 9px var(--mono);
+  line-height: 1;
+}
+
 .crumb {
   display: flex;
   align-items: center;
@@ -3119,6 +3140,11 @@ body.is-focus .round-bar { border-top: 0; }
 :root.lumen-workbench .brand-name {
   font-size: 18px;
   font-weight: 700;
+}
+
+:root.lumen-workbench .brand-version {
+  color: var(--muted);
+  font-size: 9px;
 }
 
 :root.lumen-workbench .build-badge {

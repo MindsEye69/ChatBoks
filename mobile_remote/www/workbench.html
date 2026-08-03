@@ -13,7 +13,10 @@
     <header class="workspace-topbar">
       <div class="brand-row">
         <div class="brand-mark"><img src="./assets/chatboks-mark.png" alt="ChatBoks"></div>
-        <div class="brand-name">ChatBoks</div>
+        <div class="brand-copy">
+          <div class="brand-name">ChatBoks</div>
+          <div id="appVersion" class="brand-version">v0.1.00</div>
+        </div>
       </div>
 
       <!-- project/session breadcrumb. #projectButton wraps #topbarProject
@@ -262,6 +265,7 @@
             <button id="logsButton" class="ghost-button" type="button">Logs</button>
             <button id="systemDetailsButton" class="ghost-button" type="button" aria-expanded="true">Details</button>
             <button id="traceButton" class="ghost-button" type="button" aria-expanded="false">Trace</button>
+            <button id="systemDrawerCloseButton" class="icon-button coordinator-close-button" type="button" aria-label="Close Coordinator" title="Close Coordinator">&times;</button>
           </div>
         </header>
         <div id="systemDetails" class="summary-grid">
