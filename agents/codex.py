@@ -22,6 +22,7 @@ def normalize_codex_model(model: str) -> str:
 class CodexAgent(BaseAgent):
     name = "codex"
     default_adapter_profile = "codex_exec_v1"
+    default_consultation_adapter_profile = "codex_exec_plan_v1"
     adapter_profiles = {
         "codex_exec_v1": [
             "exec",
@@ -62,6 +63,7 @@ class CodexAgent(BaseAgent):
 class CodexSparkAgent(CodexAgent):
     name = "codex_spark"
     default_adapter_profile = "codex_spark_exec_v1"
+    default_consultation_adapter_profile = "codex_spark_plan_v1"
     adapter_profiles = {
         **CodexAgent.adapter_profiles,
         "codex_spark_exec_v1": [

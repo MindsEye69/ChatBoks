@@ -30,6 +30,13 @@ class CoordinatorAgent(BaseAgent):
             prefix = "[TRUNCATED_FOR_COORDINATOR]\n"
             keep = max(1, max_chars - len(prefix))
             context = prefix + context[-keep:]
+        if mode == "consult":
+            instruction = (
+                "You are a read-only peer consultant. Answer the bounded [PEER CONSULTATION] request using the "
+                "provided context. Your response is advisory. Do not suggest tool calls, delegation, or another "
+                "consultation, and do not emit ChatBoks >>> control lines. Return a concise evidence-based answer."
+            )
+            return f"{self.role}\n\n[AGENT TURN INSTRUCTION]\n{instruction}\n\n{context}\n"
         if mode == "triad_brainstorm":
             instruction = (
                 "Give exactly three independent, practical improvements for the active task. Format each as "

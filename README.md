@@ -139,6 +139,44 @@ projects:
   main agent to verify final completion. If the verifier does not confirm, ChatBoks gives the responsible agent one
   bounded repair pass by default and verifies again.
 
+## Peer Consultation
+
+ChatBoks can run a one-shot, read-only peer consultation without creating a separate relay or bypassing the session
+journal:
+
+```text
+/consult claude review the current diff for regressions
+```
+
+An agent can request the same capability during a planning turn when a peer opinion would materially unblock it:
+
+```text
+>>> CONSULT claude
+>>> CONSULT_REQUEST
+Review the proposed retry logic in `agents/base.py` for unsafe edge cases. Do not edit files.
+```
+
+The orchestrator records the request and reply in the active session journal, runs the target using its planning
+(read-only) adapter profile, and resumes the requesting agent with the response. Consultations are advisory: they
+cannot write files, do not create a new agent round, and cannot recursively ping-pong between models.
+
+The defaults allow one peer consultation per routed task, cap requests at 6,000 characters and displayed responses at
+12,000 characters. Configure a project when you need different bounds or want to disable the feature:
+
+```yaml
+projects:
+  chatboks:
+    consultation:
+      enabled: true
+      max_depth: 1
+      max_request_chars: 6000
+      max_response_chars: 12000
+      allowed_agents: [claude, codex]
+```
+
+Only configured project agents are valid targets. An exhausted or blocked target returns an explicit unavailable
+result to the requester; ChatBoks does not silently substitute a different model for a consultation.
+
 ## Context Modes
 
 Context modes control how much project context each agent receives. New sessions default to `lean` to reduce token burn.
