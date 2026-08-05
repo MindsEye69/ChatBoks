@@ -1884,6 +1884,11 @@ dd {
   box-shadow: none;
 }
 
+.live-dot.unverified {
+  background: var(--muted);
+  box-shadow: none;
+}
+
 .live-dot.busy {
   background: var(--accent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--warn) 70%, transparent);

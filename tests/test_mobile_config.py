@@ -43,6 +43,19 @@ def test_successful_mobile_connection_closes_the_connection_panel() -> None:
     assert script.count('showError("");\n      setConnectionPanel(false);') == 2
 
 
+def test_workbench_labels_direct_lanes_without_claiming_runtime_health() -> None:
+    www = ROOT / "mobile_remote" / "www"
+    script = (www / "workbench.js").read_text(encoding="utf-8")
+    styles = (www / "workbench.css").read_text(encoding="utf-8")
+
+    assert "Direct lane. Send @coordinator <message>" in script
+    assert "Direct lane. Send @spark <message>" in script
+    assert '" Direct · @coordinator"' in script
+    assert '" Direct · @spark"' in script
+    assert '" Online"' not in script
+    assert ".live-dot.unverified" in styles
+
+
 def test_android_build_embeds_its_own_visible_version() -> None:
     mobile = ROOT / "mobile_remote"
     html = (mobile / "www" / "workbench.html").read_text(encoding="utf-8")

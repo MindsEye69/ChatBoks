@@ -910,8 +910,12 @@ function laneGlyph(agent) {
 }
 
 function laneEmptyText(agent) {
-  if (canonicalAgent(agent) === "coordinator") {
-    return "Orchestrator is ready. Direct @coordinator replies appear here.";
+  const canonical = canonicalAgent(agent);
+  if (canonical === "coordinator") {
+    return "Direct lane. Send @coordinator <message> in the composer; selecting this lane only changes the view.";
+  }
+  if (canonical === "codex_spark") {
+    return "Direct lane. Send @spark <message> in the composer; selecting this lane only changes the view.";
   }
   return "No messages this session yet.";
 }
@@ -1347,6 +1351,7 @@ function updateLaneActivity(data) {
     const needsInput = (status === "blocked" || status === "awaiting_input") && canonicalAgent(data.last_agent) === agent;
     lane.statusDot.classList.toggle("offline", !state.connected);
     lane.statusDot.classList.toggle("busy", busy);
+    lane.statusDot.classList.toggle("unverified", state.connected && !busy);
     lane.pane.classList.toggle("awaiting-approval", awaitingApproval);
     lane.pane.classList.toggle("needs-input", needsInput);
     lane.pane.classList.toggle("is-working", busy);
@@ -1359,7 +1364,11 @@ function updateLaneActivity(data) {
           ? " Awaiting approval"
           : needsInput
             ? " Needs input"
-            : " Online";
+            : agent === "coordinator"
+              ? " Direct · @coordinator"
+              : agent === "codex_spark"
+                ? " Direct · @spark"
+                : " Configured";
   }
   const nextAgent = canonicalAgent(data.handoff_to || data.next_agent || "");
   const nextAgentChanged = Boolean(nextAgent) && nextAgent !== state.lastObservedNextAgent;
