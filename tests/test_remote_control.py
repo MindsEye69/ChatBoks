@@ -1245,6 +1245,73 @@ def test_remote_workbench_reports_bridge_health_without_secrets(tmp_path: Path):
     print("PASS: workbench reports bridge health without exposing operator secrets")
 
 
+def test_versioned_integration_manifest_requires_token_and_exposes_only_read_operations():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        try:
+            urllib.request.urlopen(f"{base}/api/integration/v1/manifest", timeout=5)
+            assert False, "expected auth failure"
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/manifest",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload["schema"] == "chatboks.integration-manifest/v1"
+        assert payload["service"]["id"] == "chatboks"
+        assert payload["contract"] == {"version": "v1", "stability": "provisional"}
+        assert payload["transport"]["kind"] == "authenticated-loopback-http"
+        assert payload["transport"]["base_url"] == base
+        assert payload["transport"]["authentication"] == "bearer"
+        assert {endpoint["path"] for endpoint in payload["endpoints"]} == {
+            "/api/integration/v1/manifest",
+            "/api/integration/v1/health",
+        }
+        assert {capability["id"] for capability in payload["capabilities"]} == {
+            "integration.discovery",
+            "integration.health",
+        }
+        assert payload["deferred_capabilities"] == [
+            {
+                "id": "execution.lifecycle",
+                "reason": "Requires shared schemas, transport, and task-scoped grants (ECO-002 through ECO-005).",
+            }
+        ]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: versioned integration manifest is authenticated and read-only")
+
+
+def test_versioned_integration_health_reports_current_execution_without_secrets():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/health",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload == {
+            "schema": "chatboks.integration-health/v1",
+            "service": {"id": "chatboks", "version": payload["service"]["version"]},
+            "contract_version": "v1",
+            "status": "ready",
+            "execution": {"session_id": None, "status": "active", "active": False},
+        }
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: versioned integration health is authenticated and bounded")
+
+
 def test_operator_file_guard_rejects_active_bridge(tmp_path: Path):
     operator_file = tmp_path / "remote_bridge.json"
     server, thread, _base = run_server(FakeSession(), "admin-token", operator_file)

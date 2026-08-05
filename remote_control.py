@@ -69,6 +69,10 @@ OPERATOR_STATUS_FILENAME = "remote_bridge.json"
 OPERATOR_PROBE_TIMEOUT_SECONDS = 2.0
 WORKBENCH_STATUS_CACHE_SECONDS = 5.0
 CODEGRAPH_STOP_TIMEOUT_SECONDS = 3.0
+INTEGRATION_API_VERSION = "v1"
+INTEGRATION_API_PREFIX = f"/api/integration/{INTEGRATION_API_VERSION}"
+INTEGRATION_MANIFEST_SCHEMA = "chatboks.integration-manifest/v1"
+INTEGRATION_HEALTH_SCHEMA = "chatboks.integration-health/v1"
 
 
 def is_collaboration_mode_command(text: str) -> bool:
@@ -1954,6 +1958,83 @@ class RemoteBridgeServer(ThreadingHTTPServer):
             "operator_file_exists": operator_exists,
         }
 
+    def integration_manifest_payload(self) -> dict[str, Any]:
+        """Describe the stable, read-only integration surface owned by ChatBoks.
+
+        Execution controls are intentionally not advertised here until the shared
+        contracts, transport, and task-scoped grants from ECO-002 through
+        ECO-005 exist. The existing remote-workbench routes remain private to
+        ChatBoks rather than becoming an accidental cross-application contract.
+        """
+        base_url = f"http://{self.server_address[0]}:{self.server_address[1]}"
+        return {
+            "schema": INTEGRATION_MANIFEST_SCHEMA,
+            "service": {
+                "id": "chatboks",
+                "version": CHATBOKS_VERSION_LABEL,
+            },
+            "contract": {
+                "version": INTEGRATION_API_VERSION,
+                "stability": "provisional",
+            },
+            "transport": {
+                "kind": "authenticated-loopback-http",
+                "base_url": base_url,
+                "authentication": "bearer",
+            },
+            "endpoints": [
+                {
+                    "id": "integration.manifest",
+                    "method": "GET",
+                    "path": f"{INTEGRATION_API_PREFIX}/manifest",
+                    "risk": "read_only",
+                },
+                {
+                    "id": "integration.health",
+                    "method": "GET",
+                    "path": f"{INTEGRATION_API_PREFIX}/health",
+                    "risk": "read_only",
+                },
+            ],
+            "capabilities": [
+                {
+                    "id": "integration.discovery",
+                    "availability": "available",
+                    "risk": "read_only",
+                },
+                {
+                    "id": "integration.health",
+                    "availability": "available",
+                    "risk": "read_only",
+                },
+            ],
+            "deferred_capabilities": [
+                {
+                    "id": "execution.lifecycle",
+                    "reason": "Requires shared schemas, transport, and task-scoped grants (ECO-002 through ECO-005).",
+                }
+            ],
+        }
+
+    def integration_health_payload(self) -> dict[str, Any]:
+        snapshot = self.session.snapshot(cursor=0, transcript_limit=0)
+        command_running = getattr(self.session, "command_running", None)
+        is_busy = bool(command_running()) if callable(command_running) else False
+        return {
+            "schema": INTEGRATION_HEALTH_SCHEMA,
+            "service": {
+                "id": "chatboks",
+                "version": CHATBOKS_VERSION_LABEL,
+            },
+            "contract_version": INTEGRATION_API_VERSION,
+            "status": "busy" if is_busy else "ready",
+            "execution": {
+                "session_id": snapshot.get("session"),
+                "status": snapshot.get("status"),
+                "active": is_busy,
+            },
+        }
+
     def write_operator_status(self) -> None:
         if self.operator_status_path is None:
             return
@@ -2011,6 +2092,20 @@ class RemoteHandler(BaseHTTPRequestHandler):
         if parsed.path in WORKBENCH_STATIC_ROUTES:
             relative_path, content_type = WORKBENCH_STATIC_ROUTES[parsed.path]
             self.respond_static(relative_path, content_type)
+            return
+        if parsed.path == f"{INTEGRATION_API_PREFIX}/manifest":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            self.respond_json(self.server.integration_manifest_payload())
+            return
+        if parsed.path == f"{INTEGRATION_API_PREFIX}/health":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            self.respond_json(self.server.integration_health_payload())
             return
         if parsed.path == "/api/admin/status":
             if not self.origin_allowed():
