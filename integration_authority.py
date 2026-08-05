@@ -131,8 +131,18 @@ class IntegrationAuthorityStore:
         connection.execute("PRAGMA synchronous = FULL")
         return connection
 
+    @contextmanager
+    def _connection_scope(self) -> Iterator[sqlite3.Connection]:
+        """Commit completed work and always release the SQLite file handle."""
+        connection = self._connect()
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
+
     def _initialize(self) -> None:
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             version = int(connection.execute("PRAGMA user_version").fetchone()[0])
             if version > AUTHORITY_SCHEMA_VERSION:
                 raise AuthorityStoreError(
@@ -258,7 +268,7 @@ class IntegrationAuthorityStore:
     ) -> TrustedClient | None:
         client_id = _require_identifier(client_id, "client_id")
         key_id = _require_identifier(key_id, "key_id")
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             row = connection.execute(
                 """
                 SELECT client_id, key_id, public_key, fingerprint, paired_at, revoked_at
@@ -274,7 +284,7 @@ class IntegrationAuthorityStore:
     def trusted_clients(self) -> list[TrustedClient]:
         """Return the active paired keys for a proof verifier snapshot."""
 
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             rows = connection.execute(
                 """
                 SELECT client_id, key_id, public_key, fingerprint, paired_at, revoked_at
@@ -346,7 +356,7 @@ class IntegrationAuthorityStore:
 
     def is_grant_revoked(self, grant_id: str) -> bool:
         grant_id = _require_identifier(grant_id, "grant_id")
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             row = connection.execute(
                 "SELECT 1 FROM grant_revocations WHERE grant_id = ?", (grant_id,)
             ).fetchone()
@@ -452,7 +462,7 @@ class IntegrationAuthorityStore:
         )
 
     def audit_records(self) -> list[AuditRecord]:
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             rows = connection.execute(
                 """
                 SELECT sequence, audit_id, recorded_at, document_json, previous_hash, record_hash

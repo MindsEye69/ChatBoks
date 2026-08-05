@@ -2003,13 +2003,12 @@ class RemoteBridgeServer(ThreadingHTTPServer):
         }
 
     def integration_manifest_payload(self) -> dict[str, Any]:
-        """Describe the stable, read-only integration surface owned by ChatBoks.
+        """Describe ChatBoks' provisional integration surface.
 
-        Execution controls are intentionally not advertised here until ChatBoks
-        owns a protected request flow: paired-client proof verification, local
-        approval, and durable authorization evidence. The existing
-        remote-workbench routes remain private to ChatBoks rather than becoming
-        an accidental cross-application contract.
+        The only write route accepts a paired-client-proof-verified request
+        into the durable local approval queue. It cannot approve, route, or
+        dispatch work. The existing remote-workbench routes remain private to
+        ChatBoks rather than becoming an accidental cross-application contract.
         """
         base_url = f"http://{self.server_address[0]}:{self.server_address[1]}"
         return {

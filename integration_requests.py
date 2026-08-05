@@ -89,8 +89,18 @@ class IntegrationRequestQueue:
         connection.execute("PRAGMA synchronous = FULL")
         return connection
 
+    @contextmanager
+    def _connection_scope(self) -> Iterator[sqlite3.Connection]:
+        """Commit completed work and always release the SQLite file handle."""
+        connection = self._connect()
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
+
     def _initialize(self) -> None:
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             version = int(connection.execute("PRAGMA user_version").fetchone()[0])
             if version > _QUEUE_SCHEMA_VERSION:
                 raise IntegrationRequestError(
@@ -195,7 +205,7 @@ class IntegrationRequestQueue:
         )
 
     def get(self, request_id: str) -> QueuedIntegrationRequest | None:
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             row = connection.execute("SELECT * FROM integration_requests WHERE request_id = ?", (request_id,)).fetchone()
         return self._from_row(row) if row is not None else None
 
@@ -205,7 +215,7 @@ class IntegrationRequestQueue:
         query, params = "SELECT * FROM integration_requests", ()
         if status is not None:
             query, params = f"{query} WHERE status = ?", (status,)
-        with self._connect() as connection:
+        with self._connection_scope() as connection:
             rows = connection.execute(f"{query} ORDER BY received_at DESC", params).fetchall()
         return [self._from_row(row) for row in rows]
 
