@@ -42,6 +42,7 @@ from integration_requests import (
     QueuedIntegrationRequest,
     default_request_queue_path,
 )
+from integration_executions import IntegrationExecutionRegistry, default_execution_registry_path
 from integration_authority import AuthorityStoreError, IntegrationAuthorityStore
 from integration_proofs import (
     FoundationDependencyUnavailable,
@@ -1678,7 +1679,22 @@ class RemoteSession:
             "decided_at": request.decided_at,
             "dispatched_at": request.dispatched_at,
         }
-        if request.execution_session_id:
+        execution_record = None
+        project_path = getattr(self.app, "proj_path", None)
+        if isinstance(project_path, (str, Path)):
+            registry_path = default_execution_registry_path(Path(project_path))
+            if registry_path.exists():
+                execution_record = IntegrationExecutionRegistry(registry_path).get_for_request(
+                    request.request_id
+                )
+        if execution_record is not None:
+            summary["execution"] = {
+                "id": execution_record.execution_id,
+                "status": execution_record.status,
+                "started_at": execution_record.started_at,
+                "completed_at": execution_record.completed_at,
+            }
+        elif request.execution_session_id:
             execution: dict[str, Any] = {"session_id": request.execution_session_id, "status": "unknown"}
             if str(self.app.state.get("session") or "") == request.execution_session_id:
                 execution["status"] = str(self.app.state.get("status") or "unknown")

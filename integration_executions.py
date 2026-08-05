@@ -16,7 +16,7 @@ import sqlite3
 import uuid
 
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 _MAX_IDENTIFIER_CHARS = 128
 _MAX_EVENT_PAGE_SIZE = 128
 _INITIAL_STATUS = "waiting_for_runner"
@@ -44,6 +44,7 @@ class IntegrationExecution:
     started_at: str | None
     completed_at: str | None
     error_code: str | None
+    runner_pid: int | None
 
 
 @dataclass(frozen=True)
@@ -131,7 +132,8 @@ class IntegrationExecutionRegistry:
                     created_at TEXT NOT NULL,
                     started_at TEXT,
                     completed_at TEXT,
-                    error_code TEXT
+                    error_code TEXT,
+                    runner_pid INTEGER
                 );
                 CREATE TABLE IF NOT EXISTS integration_execution_events (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -143,6 +145,12 @@ class IntegrationExecutionRegistry:
                 );
                 """
             )
+            columns = {
+                str(row["name"])
+                for row in connection.execute("PRAGMA table_info(integration_executions)").fetchall()
+            }
+            if "runner_pid" not in columns:
+                connection.execute("ALTER TABLE integration_executions ADD COLUMN runner_pid INTEGER")
             if version < _SCHEMA_VERSION:
                 connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
 
@@ -157,6 +165,7 @@ class IntegrationExecutionRegistry:
             started_at=str(row["started_at"]) if row["started_at"] is not None else None,
             completed_at=str(row["completed_at"]) if row["completed_at"] is not None else None,
             error_code=str(row["error_code"]) if row["error_code"] is not None else None,
+            runner_pid=int(row["runner_pid"]) if row["runner_pid"] is not None else None,
         )
 
     @staticmethod
@@ -197,7 +206,9 @@ class IntegrationExecutionRegistry:
                 (execution_id, request_id, _INITIAL_STATUS, created_at),
             )
             self._append_event(connection, execution_id, "execution_reserved")
-        return IntegrationExecution(execution_id, request_id, _INITIAL_STATUS, None, created_at, None, None, None)
+        return IntegrationExecution(
+            execution_id, request_id, _INITIAL_STATUS, None, created_at, None, None, None, None
+        )
 
     def get(self, execution_id: str) -> IntegrationExecution | None:
         execution_id = _require_identifier(execution_id, "execution_id")
@@ -233,8 +244,63 @@ class IntegrationExecutionRegistry:
             )
             self._append_event(connection, execution_id, "execution_started")
         return IntegrationExecution(
-            execution_id, current.request_id, "running", session_id, current.created_at, started_at, None, None
+            execution_id,
+            current.request_id,
+            "running",
+            session_id,
+            current.created_at,
+            started_at,
+            None,
+            None,
+            current.runner_pid,
         )
+
+    def attach_runner(self, execution_id: str, runner_pid: int) -> IntegrationExecution:
+        """Attach one process-owned runner while an isolated task is being claimed."""
+        execution_id = _require_identifier(execution_id, "execution_id")
+        if isinstance(runner_pid, bool) or not isinstance(runner_pid, int) or runner_pid <= 0:
+            raise IntegrationExecutionError("Runner pid must be a positive integer.")
+        with self._write_transaction() as connection:
+            current = self._current(connection, execution_id)
+            if current.status not in {_INITIAL_STATUS, "running"}:
+                raise IntegrationExecutionError("Only an active or reserved execution may attach a runner.")
+            if current.runner_pid is not None and current.runner_pid != runner_pid:
+                raise IntegrationExecutionError("Execution already has a different runner.")
+            if current.runner_pid == runner_pid:
+                return current
+            connection.execute(
+                "UPDATE integration_executions SET runner_pid = ? WHERE execution_id = ?",
+                (runner_pid, execution_id),
+            )
+            self._append_event(connection, execution_id, "runner_attached")
+        return IntegrationExecution(
+            current.execution_id,
+            current.request_id,
+            current.status,
+            current.session_id,
+            current.created_at,
+            current.started_at,
+            current.completed_at,
+            current.error_code,
+            runner_pid,
+        )
+
+    def mark_runner_failed_to_start(self, execution_id: str, error_code: str) -> IntegrationExecution:
+        """Record a launch failure without pretending that a task ever started."""
+        error_code = _require_identifier(error_code, "error_code")
+        execution_id = _require_identifier(execution_id, "execution_id")
+        with self._write_transaction() as connection:
+            current = self._current(connection, execution_id)
+            if current.status != _INITIAL_STATUS:
+                raise IntegrationExecutionError("Only a reserved execution may fail to start.")
+            return self._transition_in_transaction(
+                connection,
+                current,
+                status="failed",
+                event_type="runner_failed_to_start",
+                completed_at=_utc_now(),
+                error_code=error_code,
+            )
 
     def pause(self, execution_id: str) -> IntegrationExecution:
         return self._transition(
@@ -358,6 +424,7 @@ class IntegrationExecutionRegistry:
             current.started_at,
             completed_at if completed_at is not None else current.completed_at,
             error_code if error_code is not None else current.error_code,
+            current.runner_pid,
         )
 
     def events(

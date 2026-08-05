@@ -34,6 +34,15 @@ from integration_requests import (
     IntegrationRequestQueue,
     default_request_queue_path,
 )
+from integration_executions import (
+    IntegrationExecutionError,
+    IntegrationExecutionRegistry,
+    default_execution_registry_path,
+)
+from integration_execution_runner import (
+    IntegrationExecutionLaunchError,
+    launch_integration_execution,
+)
 from router import Router, RoutingDecision
 from session_journal import SessionJournal, atomic_write_json, list_session_metadata, new_session_id
 from ui.stream import Stream
@@ -219,6 +228,7 @@ class Chatboks:
     ) -> None:
         self.project = project
         self.trigger = trigger
+        self.config_path = config_path
         self.config = self.load_config(config_path)
         if project not in self.config.get("projects", {}):
             known = ", ".join(sorted(self.config.get("projects", {}).keys()))
@@ -753,6 +763,17 @@ class Chatboks:
     def integration_request_queue(self) -> IntegrationRequestQueue:
         return IntegrationRequestQueue(default_request_queue_path(self.proj_path))
 
+    def integration_execution_registry(self) -> IntegrationExecutionRegistry:
+        return IntegrationExecutionRegistry(default_execution_registry_path(self.proj_path))
+
+    def start_integration_execution(self, execution_id: str) -> int:
+        return launch_integration_execution(
+            project=self.project,
+            project_path=self.proj_path,
+            execution_id=execution_id,
+            config_path=getattr(self, "config_path", None),
+        )
+
     def handle_integration_command(self, text: str, *, source: str) -> None:
         """Review local integration requests without treating remote control as approval."""
 
@@ -765,10 +786,16 @@ class Chatboks:
                 self.stream.system(f"Integration requests ({action}): none.")
                 return
             lines = [f"Integration requests ({action}):"]
+            registry_path = default_execution_registry_path(self.proj_path)
+            registry = IntegrationExecutionRegistry(registry_path) if registry_path.exists() else None
             for request in requests:
+                execution = registry.get_for_request(request.request_id) if registry else None
+                execution_note = (
+                    f"; execution {execution.execution_id}/{execution.status}" if execution else ""
+                )
                 lines.append(
                     f"- {request.request_id}: {request.status}; {request.ticket_id}; "
-                    f"{request.capability_id}; from {request.client_id}/{request.key_id}"
+                    f"{request.capability_id}; from {request.client_id}/{request.key_id}{execution_note}"
                 )
             self.stream.system("\n".join(lines))
             return
@@ -797,6 +824,8 @@ class Chatboks:
             request = queue.get(request_id)
             if request is None:
                 raise IntegrationRequestError("Integration request was not found.")
+            if request.status != "approved":
+                raise IntegrationRequestError("Only an explicitly approved integration request may be dispatched.")
             request_input = request.request.get("input")
             prompt = request_input.get("prompt") if isinstance(request_input, dict) else None
             if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 10_000:
@@ -808,24 +837,28 @@ class Chatboks:
             session_id = str(self.state.get("session") or "").strip()
             if not session_id:
                 raise IntegrationRequestError("Dispatch requires an active ChatBoks session.")
+            registry = self.integration_execution_registry()
+            execution = registry.reserve(request_id)
+            if execution.status != "waiting_for_runner":
+                raise IntegrationRequestError(
+                    f"Integration request already has execution {execution.execution_id} ({execution.status})."
+                )
             dispatched = queue.mark_dispatched(request_id, session_id)
-        except IntegrationRequestError as exc:
+        except (IntegrationRequestError, IntegrationExecutionError) as exc:
             self.stream.system(f"Integration request not changed: {exc}")
             return
-
-        routed_prompt = "\n".join(
-            [
-                "[VERIFIED INTEGRATION REQUEST]",
-                f"Request: {dispatched.request_id}",
-                f"Ticket: {dispatched.ticket_id}",
-                f"Capability: {dispatched.capability_id}",
-                f"Client: {dispatched.client_id}/{dispatched.key_id}",
-                "",
-                prompt.strip(),
-            ]
+        try:
+            runner_pid = self.start_integration_execution(execution.execution_id)
+        except IntegrationExecutionLaunchError:
+            registry.mark_runner_failed_to_start(execution.execution_id, "runner_launch_failed")
+            self.stream.system(
+                f"Integration request {dispatched.request_id} was dispatched, but its isolated worker failed to start."
+            )
+            return
+        self.stream.system(
+            f"Integration request {dispatched.request_id} dispatched to isolated execution "
+            f"{execution.execution_id} (runner {runner_pid})."
         )
-        self.stream.system(f"Integration request {dispatched.request_id} dispatched to local ChatBoks routing.")
-        self.handle_user_input(routed_prompt, source="integration_dispatch")
 
     def handle_help_command(self, text: str = "/help") -> None:
         parts = text.split(maxsplit=1)

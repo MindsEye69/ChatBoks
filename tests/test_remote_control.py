@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from integration_requests import QueuedIntegrationRequest
+from integration_executions import IntegrationExecutionRegistry, default_execution_registry_path
 from remote_control import (
     MAX_JSON_BODY_BYTES,
     MAX_TRANSCRIPT_LIMIT,
@@ -1523,6 +1524,43 @@ def test_integration_request_summary_links_dispatched_work_to_its_session():
     assert "input" not in summary
     assert "decision_note" not in summary
     assert "proof_id" not in summary
+
+
+def test_integration_request_summary_prefers_request_owned_execution_status(tmp_path: Path):
+    request_id = "request-isolated-execution-001"
+    registry = IntegrationExecutionRegistry(default_execution_registry_path(tmp_path))
+    execution = registry.start(registry.reserve(request_id).execution_id, "worker-session-001")
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = SimpleNamespace(
+        proj_path=tmp_path,
+        state={"session": "operator-session-001", "status": "active"},
+        session_history=lambda: [],
+    )
+    request = QueuedIntegrationRequest(
+        request_id=request_id,
+        ticket_id="CBX-001",
+        capability_id="execution.lifecycle",
+        correlation_id="correlation-isolated-execution-001",
+        request={"input": {"prompt": "Do not expose this."}},
+        client_id="dasdashboard",
+        key_id="dash-client-key",
+        proof_id="proof-isolated-execution-001",
+        received_at="2026-08-05T09:00:00Z",
+        status="dispatched",
+        decided_at="2026-08-05T09:01:00Z",
+        decision_note="Local review.",
+        dispatched_at="2026-08-05T09:02:00Z",
+        execution_session_id="operator-session-001",
+    )
+
+    summary = session._integration_request_summary(request)
+
+    assert summary["execution"] == {
+        "id": execution.execution_id,
+        "status": "running",
+        "started_at": execution.started_at,
+        "completed_at": None,
+    }
 
 
 def test_versioned_integration_request_creation_requires_bearer_and_queues_only():

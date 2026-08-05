@@ -54,8 +54,8 @@ The local operator workflow is:
 
 1. /integration to inspect pending requests.
 2. /integration approve request-id with an optional review note, or reject it.
-3. /integration dispatch request-id to send an approved input.prompt through
-   normal ChatBoks routing.
+3. /integration dispatch request-id to launch one request-owned worker for the
+   approved input.prompt.
 
 Those approval and dispatch commands are rejected when submitted through the
 remote-workbench bridge. They require a terminal or desktop-originated action.
@@ -63,10 +63,10 @@ remote-workbench bridge. They require a terminal or desktop-originated action.
 Authenticated paired clients can observe request metadata through the versioned
 read-only routes /api/integration/v1/requests and
 /api/integration/v1/requests/request-id. After local dispatch, that metadata
-also identifies the owning ChatBoks session and its current or last recorded
+identifies the operator session and the request-owned execution's durable
 status; the manifest advertises this as execution.sessions.observe. Responses
-omit task input, decision notes, proof IDs, and tokens. They do not grant
-approval or dispatch authority.
+omit task input, decision notes, proof IDs, tokens, worker PIDs, and agent
+output. They do not grant approval or dispatch authority.
 
 GET /api/integration/v1/discovery serves the compatible Foundation 0.2
 application manifest. Its instance ID, version, and authenticated health URL
@@ -79,11 +79,17 @@ events with a bounded `after` cursor. It deliberately omits each event's stored
 detail, so review notes, proof IDs, and request digests stay local.
 
 The project-local execution registry at
-.chatboks/integration-executions.sqlite3 is the foundation for request-scoped
-lifecycle controls. It reserves one execution ID per request and records
-runner state transitions and metadata-only events. It is intentionally not
-wired to ChatBoks' current project-wide stop command: only a future isolated
-runner may attach a running process or session to an execution ID.
+.chatboks/integration-executions.sqlite3 assigns one execution ID per request,
+records a request-owned worker PID, and stores metadata-only state transitions.
+Dispatch starts a separate Python worker process with its own process group;
+the worker invokes the configured primary agent in execute mode without
+writing to the operator's ChatBoks state or journal. Its local-only result is
+stored under .chatboks/integration-executions/execution-id/result.md.
+
+Pause, resume, cancel, and recovery are not exposed yet. They must first be
+wired to this worker's process group and liveness checks; they must never call
+ChatBoks' project-wide stop command, which could terminate unrelated local
+agent work for the same project.
 
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer

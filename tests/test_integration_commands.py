@@ -16,6 +16,7 @@ def _app(root: Path) -> Chatboks:
     app.state = {"session": "session-command-001"}
     app.stream = MagicMock()
     app.handle_user_input = MagicMock()
+    app.start_integration_execution = MagicMock(return_value=4242)
     return app
 
 
@@ -53,7 +54,7 @@ def test_remote_origin_cannot_approve_or_dispatch_integration_request(tmp_path: 
     assert "require a local terminal or desktop operator" in app.stream.system.call_args.args[0]
 
 
-def test_local_operator_must_approve_before_dispatching_to_router(tmp_path: Path):
+def test_local_operator_must_approve_before_dispatching_to_an_isolated_runner(tmp_path: Path):
     app = _app(tmp_path)
     request_id = _queue_request(tmp_path)
 
@@ -64,7 +65,9 @@ def test_local_operator_must_approve_before_dispatching_to_router(tmp_path: Path
     assert queued is not None
     assert queued.status == "dispatched"
     assert queued.execution_session_id == "session-command-001"
-    routed_prompt = app.handle_user_input.call_args.args[0]
-    assert "[VERIFIED INTEGRATION REQUEST]" in routed_prompt
-    assert "Review the integration task." in routed_prompt
-    assert app.handle_user_input.call_args.kwargs["source"] == "integration_dispatch"
+    execution = app.integration_execution_registry().get_for_request(request_id)
+    assert execution is not None
+    assert execution.status == "waiting_for_runner"
+    app.start_integration_execution.assert_called_once_with(execution.execution_id)
+    app.handle_user_input.assert_not_called()
+    assert execution.execution_id in app.stream.system.call_args.args[0]
