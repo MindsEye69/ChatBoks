@@ -59,3 +59,9 @@ The local operator workflow is:
 
 Those approval and dispatch commands are rejected when submitted through the
 remote-workbench bridge. They require a terminal or desktop-originated action.
+
+Authenticated paired clients can observe request metadata through the versioned
+read-only routes /api/integration/v1/requests and
+/api/integration/v1/requests/request-id. These responses omit task input,
+decision notes, proof IDs, and tokens. They do not grant approval or dispatch
+authority.

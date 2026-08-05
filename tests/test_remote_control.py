@@ -46,6 +46,7 @@ class FakeSession:
         self.commands: list[str] = []
         self.snapshot_calls: list[tuple[int, int]] = []
         self.completion_queries: list[str] = []
+        self.integration_request_queries: list[str | None] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
 
@@ -101,6 +102,28 @@ class FakeSession:
             raise ValueError(f"Unknown project '{project}'.")
         self.project = project
         return self.snapshot()
+
+    def integration_requests(self, status: str | None = None) -> list[dict[str, object]]:
+        self.integration_request_queries.append(status)
+        return [
+            {
+                "request_id": "request-observe-001",
+                "ticket_id": "CBX-001",
+                "capability_id": "execution.lifecycle",
+                "correlation_id": "correlation-observe-001",
+                "client": {"id": "dasdashboard", "key_id": "dash-client-key"},
+                "received_at": "2026-08-05T09:00:00Z",
+                "status": "pending",
+                "decided_at": None,
+                "dispatched_at": None,
+            }
+        ]
+
+    def integration_request(self, request_id: str) -> dict[str, object] | None:
+        for request in self.integration_requests():
+            if request["request_id"] == request_id:
+                return request
+        return None
 
 
 class BlockingFakeApp:
@@ -1273,10 +1296,12 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
         assert {endpoint["path"] for endpoint in payload["endpoints"]} == {
             "/api/integration/v1/manifest",
             "/api/integration/v1/health",
+            "/api/integration/v1/requests",
         }
         assert {capability["id"] for capability in payload["capabilities"]} == {
             "integration.discovery",
             "integration.health",
+            "integration.requests.observe",
         }
         assert payload["deferred_capabilities"] == [
             {
@@ -1313,6 +1338,43 @@ def test_versioned_integration_health_reports_current_execution_without_secrets(
         thread.join(timeout=5)
         server.server_close()
     print("PASS: versioned integration health is authenticated and bounded")
+
+
+def test_versioned_integration_request_observation_exposes_metadata_only():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        with pytest.raises(urllib.error.HTTPError) as unauthorized:
+            urllib.request.urlopen(f"{base}/api/integration/v1/requests", timeout=5)
+        assert unauthorized.value.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/requests?status=pending",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload["schema"] == "chatboks.integration-request-list/v1"
+        assert payload["requests"][0]["request_id"] == "request-observe-001"
+        assert payload["requests"][0]["client"]["id"] == "dasdashboard"
+        assert "input" not in payload["requests"][0]
+        assert session.integration_request_queries == ["pending"]
+
+        detail = urllib.request.Request(
+            f"{base}/api/integration/v1/requests/request-observe-001",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(detail, timeout=5) as response:
+            detail_payload = json.loads(response.read().decode("utf-8"))
+        assert detail_payload["schema"] == "chatboks.integration-request/v1"
+        assert detail_payload["request"]["status"] == "pending"
+        assert "proof_id" not in detail_payload["request"]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: versioned integration request observation exposes metadata only")
 
 
 def test_operator_file_guard_rejects_active_bridge(tmp_path: Path):

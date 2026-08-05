@@ -36,6 +36,12 @@ from context.transcript import is_transcript_turn
 from agents.base import BaseAgent
 from agents.codex import CODEX_MODEL_CHOICES, normalize_codex_model
 from encoding_utils import configure_utf8_stdio
+from integration_requests import (
+    IntegrationRequestError,
+    IntegrationRequestQueue,
+    QueuedIntegrationRequest,
+    default_request_queue_path,
+)
 from orchestrator import COLLABORATION_MODES, DEFAULT_AGENT_FALLBACKS, Chatboks
 from session_journal import atomic_write_json
 from ui.stream import Stream
@@ -1652,6 +1658,29 @@ class RemoteSession:
             self._command_thread.start()
             return self.snapshot(cursor=0)
 
+    @staticmethod
+    def _integration_request_summary(request: QueuedIntegrationRequest) -> dict[str, Any]:
+        return {
+            "request_id": request.request_id,
+            "ticket_id": request.ticket_id,
+            "capability_id": request.capability_id,
+            "correlation_id": request.correlation_id,
+            "client": {"id": request.client_id, "key_id": request.key_id},
+            "received_at": request.received_at,
+            "status": request.status,
+            "decided_at": request.decided_at,
+            "dispatched_at": request.dispatched_at,
+        }
+
+    def integration_requests(self, status: str | None = None) -> list[dict[str, Any]]:
+        queue = IntegrationRequestQueue(default_request_queue_path(self.app.proj_path))
+        return [self._integration_request_summary(request) for request in queue.list(status=status)]
+
+    def integration_request(self, request_id: str) -> dict[str, Any] | None:
+        queue = IntegrationRequestQueue(default_request_queue_path(self.app.proj_path))
+        request = queue.get(request_id)
+        return self._integration_request_summary(request) if request is not None else None
+
     def _run_command(self, text: str) -> None:
         try:
             self.app.handle_user_input(text, source="remote")
@@ -1996,6 +2025,12 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "path": f"{INTEGRATION_API_PREFIX}/health",
                     "risk": "read_only",
                 },
+                {
+                    "id": "integration.requests",
+                    "method": "GET",
+                    "path": f"{INTEGRATION_API_PREFIX}/requests",
+                    "risk": "read_only",
+                },
             ],
             "capabilities": [
                 {
@@ -2005,6 +2040,11 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                 },
                 {
                     "id": "integration.health",
+                    "availability": "available",
+                    "risk": "read_only",
+                },
+                {
+                    "id": "integration.requests.observe",
                     "availability": "available",
                     "risk": "read_only",
                 },
@@ -2107,6 +2147,48 @@ class RemoteHandler(BaseHTTPRequestHandler):
             if not self.authorized():
                 return
             self.respond_json(self.server.integration_health_payload())
+            return
+        if parsed.path == f"{INTEGRATION_API_PREFIX}/requests":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+            status = str(query.get("status", [""])[0]).strip() or None
+            try:
+                requests = self.server.session.integration_requests(status)
+            except IntegrationRequestError as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                return
+            self.respond_json(
+                {
+                    "schema": "chatboks.integration-request-list/v1",
+                    "contract_version": INTEGRATION_API_VERSION,
+                    "requests": requests,
+                }
+            )
+            return
+        request_prefix = f"{INTEGRATION_API_PREFIX}/requests/"
+        if parsed.path.startswith(request_prefix):
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            request_id = urllib.parse.unquote(parsed.path[len(request_prefix) :])
+            if not request_id or "/" in request_id or len(request_id) > 128:
+                self.respond_error(HTTPStatus.BAD_REQUEST, "Invalid integration request id.")
+                return
+            request = self.server.session.integration_request(request_id)
+            if request is None:
+                self.respond_error(HTTPStatus.NOT_FOUND, "Integration request not found.")
+                return
+            self.respond_json(
+                {
+                    "schema": "chatboks.integration-request/v1",
+                    "contract_version": INTEGRATION_API_VERSION,
+                    "request": request,
+                }
+            )
             return
         if parsed.path == "/api/admin/status":
             if not self.origin_allowed():
