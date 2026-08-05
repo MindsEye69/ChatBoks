@@ -1278,7 +1278,7 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
         assert payload["deferred_capabilities"] == [
             {
                 "id": "execution.lifecycle",
-                "reason": "Requires shared schemas, transport, and task-scoped grants (ECO-002 through ECO-005).",
+                "reason": "Requires a ChatBoks-owned approval and protected execution flow.",
             }
         ]
     finally:

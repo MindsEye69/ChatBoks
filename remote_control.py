@@ -1961,10 +1961,11 @@ class RemoteBridgeServer(ThreadingHTTPServer):
     def integration_manifest_payload(self) -> dict[str, Any]:
         """Describe the stable, read-only integration surface owned by ChatBoks.
 
-        Execution controls are intentionally not advertised here until the shared
-        contracts, transport, and task-scoped grants from ECO-002 through
-        ECO-005 exist. The existing remote-workbench routes remain private to
-        ChatBoks rather than becoming an accidental cross-application contract.
+        Execution controls are intentionally not advertised here until ChatBoks
+        owns a protected request flow: paired-client proof verification, local
+        approval, and durable authorization evidence. The existing
+        remote-workbench routes remain private to ChatBoks rather than becoming
+        an accidental cross-application contract.
         """
         base_url = f"http://{self.server_address[0]}:{self.server_address[1]}"
         return {
@@ -2011,7 +2012,7 @@ class RemoteBridgeServer(ThreadingHTTPServer):
             "deferred_capabilities": [
                 {
                     "id": "execution.lifecycle",
-                    "reason": "Requires shared schemas, transport, and task-scoped grants (ECO-002 through ECO-005).",
+                    "reason": "Requires a ChatBoks-owned approval and protected execution flow.",
                 }
             ],
         }
