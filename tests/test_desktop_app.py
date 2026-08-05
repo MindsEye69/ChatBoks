@@ -64,6 +64,41 @@ def test_gui_stdio_replaces_missing_console_streams():
     print("PASS: desktop launcher supplies safe GUI output streams")
 
 
+def test_desktop_main_routes_integration_worker_before_desktop_argparse(monkeypatch):
+    calls: list[list[str]] = []
+
+    def fail_parse_args(_argv=None):
+        raise AssertionError("desktop argparse should not run for integration workers")
+
+    def fake_worker_main(argv):
+        calls.append(argv)
+        return 17
+
+    monkeypatch.setattr(desktop_app, "parse_args", fail_parse_args)
+    monkeypatch.setattr("integration_execution_runner.main", fake_worker_main)
+
+    result = desktop_app.main(
+        [
+            desktop_app.INTEGRATION_WORKER_FLAG,
+            "--project",
+            "chatboks",
+            "--execution-id",
+            "execution-11111111-2222-3333-4444-555555555555",
+        ]
+    )
+
+    assert result == 17
+    assert calls == [
+        [
+            "--project",
+            "chatboks",
+            "--execution-id",
+            "execution-11111111-2222-3333-4444-555555555555",
+        ]
+    ]
+    print("PASS: desktop launcher routes integration worker mode")
+
+
 if __name__ == "__main__":
     test_desktop_bridge_bootstraps_a_loopback_client_session()
     test_default_config_path_points_to_the_project_config()

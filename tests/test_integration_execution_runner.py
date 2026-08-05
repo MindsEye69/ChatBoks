@@ -121,6 +121,35 @@ def test_launcher_binds_a_request_owned_worker_pid_before_returning(tmp_path, mo
     assert stored.runner_pid == 5151
     assert calls[0]["cwd"] == tmp_path.resolve()
     assert calls[0]["shell"] is False
+    assert calls[0]["command"][:2] == [
+        runner.sys.executable,
+        str(runner.Path(runner.__file__).resolve()),
+    ]
+
+
+def test_frozen_launcher_reenters_the_packaged_exe_with_worker_sentinel(tmp_path, monkeypatch):
+    executable = tmp_path / "dist" / "ChatBoks.exe"
+    config_path = tmp_path / "config.yaml"
+    monkeypatch.setattr(runner.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(runner.sys, "executable", str(executable))
+
+    command = runner._worker_command(
+        project="chatboks",
+        execution_id="execution-11111111-2222-3333-4444-555555555555",
+        config_path=config_path,
+    )
+
+    assert command == [
+        str(executable),
+        runner.INTEGRATION_WORKER_FLAG,
+        "--project",
+        "chatboks",
+        "--execution-id",
+        "execution-11111111-2222-3333-4444-555555555555",
+        "--config-path",
+        str(config_path.resolve()),
+    ]
+    assert str(runner.Path(runner.__file__).resolve()) not in command
 
 
 def test_worker_ownership_requires_the_exact_runner_script_and_execution_id(tmp_path, monkeypatch):
@@ -139,6 +168,36 @@ def test_worker_ownership_requires_the_exact_runner_script_and_execution_id(tmp_
     assert has_owned_integration_execution_worker(execution) is False
     with pytest.raises(IntegrationExecutionTerminationError, match="not the expected"):
         verify_integration_execution_worker(execution)
+
+
+def test_worker_ownership_accepts_frozen_exe_sentinel_and_exact_execution_id(tmp_path, monkeypatch):
+    execution = _dispatched_execution(tmp_path)
+    registry = IntegrationExecutionRegistry(default_execution_registry_path(tmp_path))
+    registry.attach_runner(execution.execution_id, 5151)
+    execution = registry.get(execution.execution_id)
+    assert execution is not None
+    executable = tmp_path / "dist" / "ChatBoks.exe"
+    monkeypatch.setattr(runner.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(runner.sys, "executable", str(executable))
+
+    expected = (
+        f'"{executable}" {runner.INTEGRATION_WORKER_FLAG} --project chatboks '
+        f"--execution-id {execution.execution_id}"
+    )
+    monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: expected)
+    assert has_owned_integration_execution_worker(execution) is True
+    verify_integration_execution_worker(execution)
+
+    missing_sentinel = f'"{executable}" --project chatboks --execution-id {execution.execution_id}'
+    monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: missing_sentinel)
+    assert has_owned_integration_execution_worker(execution) is False
+
+    wrong_execution = (
+        f'"{executable}" {runner.INTEGRATION_WORKER_FLAG} --project chatboks '
+        f"--execution-id {execution.execution_id}-extra"
+    )
+    monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: wrong_execution)
+    assert has_owned_integration_execution_worker(execution) is False
 
 
 def test_pre_agent_test_fault_is_explicit_and_one_shot(tmp_path, monkeypatch):

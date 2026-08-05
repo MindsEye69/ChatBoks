@@ -11,6 +11,7 @@ import argparse
 import os
 from pathlib import Path
 import re
+import shlex
 import signal
 import subprocess
 import sys
@@ -32,6 +33,7 @@ from integration_executions import (
     default_execution_registry_path,
 )
 from integration_requests import IntegrationRequestQueue, default_request_queue_path
+from integration_worker_protocol import INTEGRATION_WORKER_FLAG
 from router import Router
 from ticket_execution import TicketExecutionValidationError, parse_ticket_execution
 
@@ -112,14 +114,11 @@ def execution_artifact_directory(project_path: Path, execution_id: str) -> Path:
 def _worker_command(
     *, project: str, execution_id: str, config_path: Path | None
 ) -> list[str]:
-    command = [
-        sys.executable,
-        str(Path(__file__).resolve()),
-        "--project",
-        project,
-        "--execution-id",
-        execution_id,
-    ]
+    if getattr(sys, "frozen", False):
+        command = [sys.executable, INTEGRATION_WORKER_FLAG]
+    else:
+        command = [sys.executable, str(Path(__file__).resolve())]
+    command.extend(["--project", project, "--execution-id", execution_id])
     if config_path is not None:
         command.extend(["--config-path", str(config_path.resolve())])
     return command
@@ -199,19 +198,36 @@ def _worker_command_line(runner_pid: int) -> str | None:
 def _worker_command_matches(execution: IntegrationExecution, command_line: str | None) -> bool:
     if not command_line or execution.runner_pid is None:
         return False
+
+    try:
+        tokens = shlex.split(command_line, posix=os.name != "nt")
+    except ValueError:
+        tokens = command_line.split()
+    tokens = [token.strip().strip("\"'") for token in tokens]
+    if "--execution-id" not in tokens:
+        return False
+    try:
+        execution_id_matches = tokens[tokens.index("--execution-id") + 1] == execution.execution_id
+    except IndexError:
+        return False
+    if not execution_id_matches:
+        return False
+
     expected_script = str(Path(__file__).resolve())
-    actual = command_line
+    expected_executable = sys.executable
+    actual_tokens = tokens
     if os.name == "nt":
         expected_script = expected_script.replace("\\", "/").casefold()
-        actual = actual.replace("\\", "/").casefold()
-        execution_id = execution.execution_id.casefold()
-    else:
-        execution_id = execution.execution_id
-    return (
-        expected_script in actual
-        and "--execution-id" in actual
-        and execution_id in actual
+        expected_executable = expected_executable.replace("\\", "/").casefold()
+        actual_tokens = [token.replace("\\", "/").casefold() for token in tokens]
+
+    source_worker = expected_script in actual_tokens
+    frozen_worker = (
+        bool(getattr(sys, "frozen", False))
+        and INTEGRATION_WORKER_FLAG in tokens
+        and expected_executable in actual_tokens
     )
+    return source_worker or frozen_worker
 
 
 def has_owned_integration_execution_worker(execution: IntegrationExecution) -> bool:

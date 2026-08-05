@@ -15,6 +15,7 @@ from typing import Any
 
 import yaml
 
+from integration_worker_protocol import INTEGRATION_WORKER_FLAG
 from remote_control import RemoteAuth, RemoteBridgeServer, RemoteHandler, RemoteSession
 
 
@@ -132,15 +133,29 @@ class DesktopBridge:
         self.thread.join(timeout=3)
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="ChatBoks desktop Workbench")
     parser.add_argument("project", nargs="?", help="Project name from config.yaml")
     parser.add_argument("--config", type=Path, default=default_config_path(), help="ChatBoks configuration file")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
+def _maybe_run_integration_worker(argv: list[str]) -> int | None:
+    if not argv or argv[0] != INTEGRATION_WORKER_FLAG:
+        return None
+    ensure_gui_stdio()
+    from integration_execution_runner import main as run_integration_worker
+
+    return run_integration_worker(argv[1:])
+
+
+def main(argv: list[str] | None = None) -> int:
+    raw_args = list(sys.argv[1:] if argv is None else argv)
+    worker_result = _maybe_run_integration_worker(raw_args)
+    if worker_result is not None:
+        return worker_result
+
+    args = parse_args(raw_args)
     try:
         ensure_gui_stdio()
         bridge = DesktopBridge(args.project or default_project_name(args.config), args.config)
