@@ -65,3 +65,9 @@ read-only routes /api/integration/v1/requests and
 /api/integration/v1/requests/request-id. These responses omit task input,
 decision notes, proof IDs, and tokens. They do not grant approval or dispatch
 authority.
+
+Creating a queued request uses POST /api/integration/v1/requests with exactly
+two fields: clientProof and requestPayload. It requires both the loopback bearer
+token and a valid paired-client proof. Without the optional Foundation package,
+the route reports unavailable. A successful response is pending only; it does
+not approve, route, or dispatch work.

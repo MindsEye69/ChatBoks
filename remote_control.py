@@ -42,6 +42,12 @@ from integration_requests import (
     QueuedIntegrationRequest,
     default_request_queue_path,
 )
+from integration_authority import AuthorityStoreError, IntegrationAuthorityStore
+from integration_proofs import (
+    FoundationDependencyUnavailable,
+    PairedClientProofGate,
+    PairedProofRejected,
+)
 from orchestrator import COLLABORATION_MODES, DEFAULT_AGENT_FALLBACKS, Chatboks
 from session_journal import atomic_write_json
 from ui.stream import Stream
@@ -1681,6 +1687,15 @@ class RemoteSession:
         request = queue.get(request_id)
         return self._integration_request_summary(request) if request is not None else None
 
+    def create_integration_request(
+        self, *, client_proof: str, request_payload: str
+    ) -> dict[str, Any]:
+        decision = PairedClientProofGate(IntegrationAuthorityStore()).verify(
+            client_proof, request_payload
+        )
+        queue = IntegrationRequestQueue(default_request_queue_path(self.app.proj_path))
+        return self._integration_request_summary(queue.submit_verified(decision))
+
     def _run_command(self, text: str) -> None:
         try:
             self.app.handle_user_input(text, source="remote")
@@ -2031,6 +2046,12 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "path": f"{INTEGRATION_API_PREFIX}/requests",
                     "risk": "read_only",
                 },
+                {
+                    "id": "integration.requests.create",
+                    "method": "POST",
+                    "path": f"{INTEGRATION_API_PREFIX}/requests",
+                    "risk": "queues_pending_request",
+                },
             ],
             "capabilities": [
                 {
@@ -2047,6 +2068,11 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "id": "integration.requests.observe",
                     "availability": "available",
                     "risk": "read_only",
+                },
+                {
+                    "id": "integration.requests.create",
+                    "availability": "conditional",
+                    "risk": "queues_pending_request",
                 },
             ],
             "deferred_capabilities": [
@@ -2415,6 +2441,41 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 self.respond_json(self.server.session.save_workbench_ui(payload))
             except ValueError as exc:
                 self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        if parsed.path == f"{INTEGRATION_API_PREFIX}/requests":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                payload = self.read_json_body()
+                if set(payload) != {"clientProof", "requestPayload"}:
+                    raise ValueError("Integration request body requires only clientProof and requestPayload.")
+                client_proof = payload["clientProof"]
+                request_payload = payload["requestPayload"]
+                if not isinstance(client_proof, str) or not isinstance(request_payload, str):
+                    raise ValueError("clientProof and requestPayload must be strings.")
+                result = self.server.session.create_integration_request(
+                    client_proof=client_proof,
+                    request_payload=request_payload,
+                )
+            except FoundationDependencyUnavailable as exc:
+                self.respond_error(HTTPStatus.SERVICE_UNAVAILABLE, str(exc))
+                return
+            except PairedProofRejected as exc:
+                self.respond_error(HTTPStatus.FORBIDDEN, f"Paired client proof rejected: {exc.code}")
+                return
+            except (AuthorityStoreError, IntegrationRequestError, ValueError) as exc:
+                self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                return
+            self.respond_json(
+                {
+                    "schema": "chatboks.integration-request/v1",
+                    "contract_version": INTEGRATION_API_VERSION,
+                    "request": result,
+                },
+                status=HTTPStatus.ACCEPTED,
+            )
             return
         if parsed.path != "/api/command":
             self.respond_error(HTTPStatus.NOT_FOUND, "Not found")

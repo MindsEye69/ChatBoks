@@ -47,6 +47,7 @@ class FakeSession:
         self.snapshot_calls: list[tuple[int, int]] = []
         self.completion_queries: list[str] = []
         self.integration_request_queries: list[str | None] = []
+        self.integration_request_creates: list[tuple[str, str]] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
 
@@ -124,6 +125,15 @@ class FakeSession:
             if request["request_id"] == request_id:
                 return request
         return None
+
+    def create_integration_request(
+        self, *, client_proof: str, request_payload: str
+    ) -> dict[str, object]:
+        self.integration_request_creates.append((client_proof, request_payload))
+        return {
+            **self.integration_requests()[0],
+            "status": "pending",
+        }
 
 
 class BlockingFakeApp:
@@ -1302,6 +1312,7 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
             "integration.discovery",
             "integration.health",
             "integration.requests.observe",
+            "integration.requests.create",
         }
         assert payload["deferred_capabilities"] == [
             {
@@ -1375,6 +1386,46 @@ def test_versioned_integration_request_observation_exposes_metadata_only():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: versioned integration request observation exposes metadata only")
+
+
+def test_versioned_integration_request_creation_requires_bearer_and_queues_only():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    body = json.dumps(
+        {"clientProof": "sef1.proof.signature", "requestPayload": "encoded-request"}
+    ).encode("utf-8")
+    try:
+        unauthorized = urllib.request.Request(
+            f"{base}/api/integration/v1/requests",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as raised:
+            urllib.request.urlopen(unauthorized, timeout=5)
+        assert raised.value.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/requests",
+            data=body,
+            headers={
+                "Authorization": "Bearer secret-token",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            assert response.status == 202
+        assert payload["schema"] == "chatboks.integration-request/v1"
+        assert payload["request"]["status"] == "pending"
+        assert "input" not in payload["request"]
+        assert session.integration_request_creates == [("sef1.proof.signature", "encoded-request")]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+    print("PASS: versioned integration request creation queues pending work only")
 
 
 def test_operator_file_guard_rejects_active_bridge(tmp_path: Path):
