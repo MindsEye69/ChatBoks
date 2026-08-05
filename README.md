@@ -16,6 +16,8 @@ and do not expose local control surfaces to untrusted networks or users.
 
 ## Files
 
+- integration_authority.py: local paired-client public keys, revocations, and authorization audit evidence
+
 - `orchestrator.py`: main terminal process and approval gates
 - `config.yaml`: shared projects, agent defaults, token limits, and CodeGraph settings
 - `~/.chatboks/settings.json`: per-user Workbench preferences such as model overrides
@@ -49,6 +51,14 @@ The orchestrator only acts automatically on control lines:
 - `>>> BLOCKED`: agent cannot proceed
 
 `state.json` is written atomically under each project at `.chatboks/state.json`. Each session also contains `events.jsonl`, `snapshot.json`, and `memory.md`. `+ New Task` creates a new session directory instead of extending one unbounded project transcript.
+
+## Optional Integration Clients
+
+ChatBoks remains a standalone program. Optional applications such as
+DasDashboard can prove which paired client made a request, but they do not
+grant ChatBoks permission to execute work. The local authority model and its
+durable state are described in
+[docs/integration-authority.md](docs/integration-authority.md).
 
 ## Durable Sessions And Obsidian
 
