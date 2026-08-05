@@ -156,11 +156,18 @@ def _worker_command_matches(execution: IntegrationExecution, command_line: str |
     )
 
 
+def has_owned_integration_execution_worker(execution: IntegrationExecution) -> bool:
+    """Return whether the recorded PID still identifies this worker command."""
+    return execution.runner_pid is not None and _worker_command_matches(
+        execution, _worker_command_line(execution.runner_pid)
+    )
+
+
 def verify_integration_execution_worker(execution: IntegrationExecution) -> None:
     """Prove a recorded PID is still this exact request-owned worker command."""
     if execution.runner_pid is None:
         raise IntegrationExecutionTerminationError("Integration execution has no attached runner process.")
-    if not _worker_command_matches(execution, _worker_command_line(execution.runner_pid)):
+    if not has_owned_integration_execution_worker(execution):
         raise IntegrationExecutionTerminationError(
             "The recorded runner is not the expected request-owned worker process."
         )

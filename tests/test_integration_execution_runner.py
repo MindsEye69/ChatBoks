@@ -9,6 +9,7 @@ import pytest
 import integration_execution_runner as runner
 from integration_execution_runner import (
     IntegrationExecutionTerminationError,
+    has_owned_integration_execution_worker,
     launch_integration_execution,
     run_execution,
     verify_integration_execution_worker,
@@ -123,8 +124,10 @@ def test_worker_ownership_requires_the_exact_runner_script_and_execution_id(tmp_
     expected = f'python "{runner.Path(runner.__file__).resolve()}" --execution-id {execution.execution_id}'
 
     monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: expected)
+    assert has_owned_integration_execution_worker(execution) is True
     verify_integration_execution_worker(execution)
 
     monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: "python unrelated_worker.py")
+    assert has_owned_integration_execution_worker(execution) is False
     with pytest.raises(IntegrationExecutionTerminationError, match="not the expected"):
         verify_integration_execution_worker(execution)

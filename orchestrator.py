@@ -42,6 +42,7 @@ from integration_executions import (
 from integration_execution_runner import (
     IntegrationExecutionLaunchError,
     IntegrationExecutionTerminationError,
+    has_owned_integration_execution_worker,
     launch_integration_execution,
     terminate_integration_execution_worker,
     verify_integration_execution_worker,
@@ -783,6 +784,9 @@ class Chatboks:
     def cancel_integration_execution(self, execution: Any) -> None:
         terminate_integration_execution_worker(execution)
 
+    def integration_execution_is_owned(self, execution: Any) -> bool:
+        return has_owned_integration_execution_worker(execution)
+
     def handle_integration_command(self, text: str, *, source: str) -> None:
         """Review local integration requests without treating remote control as approval."""
 
@@ -808,11 +812,11 @@ class Chatboks:
                 )
             self.stream.system("\n".join(lines))
             return
-        if action not in {"approve", "reject", "dispatch", "cancel"} or len(parts) < 3:
+        if action not in {"approve", "reject", "dispatch", "cancel", "recover"} or len(parts) < 3:
             self.stream.system(
                 "Usage: /integration [pending|all], /integration approve <request-id> [note], "
                 "/integration reject <request-id> [note], /integration dispatch <request-id>, "
-                "or /integration cancel <request-id>."
+                "/integration cancel <request-id>, or /integration recover <request-id>."
             )
             return
         if source not in {"terminal", "desktop"}:
@@ -822,6 +826,36 @@ class Chatboks:
             return
         request_id = parts[2]
         note = parts[3] if len(parts) > 3 else ""
+        if action == "recover":
+            try:
+                request = queue.get(request_id)
+                if request is None or request.status != "dispatched":
+                    raise IntegrationRequestError("Only a dispatched integration request may be recovered.")
+                registry = self.integration_execution_registry()
+                execution = registry.get_for_request(request_id)
+                if execution is None:
+                    raise IntegrationRequestError("Dispatched request has no isolated execution record.")
+                if execution.status not in {"running", "cancellation_requested"}:
+                    raise IntegrationRequestError(
+                        f"Integration execution {execution.execution_id} is already {execution.status}."
+                    )
+                if execution.runner_pid is None:
+                    raise IntegrationRequestError(
+                        "Integration execution has no attached worker; it cannot be safely recovered yet."
+                    )
+                if self.integration_execution_is_owned(execution):
+                    self.stream.system(
+                        f"Integration execution {execution.execution_id} still has its verified worker; no recovery action taken."
+                    )
+                    return
+                interrupted = registry.mark_interrupted(execution.execution_id)
+            except (IntegrationRequestError, IntegrationExecutionError) as exc:
+                self.stream.system(f"Integration recovery not completed: {exc}")
+                return
+            self.stream.system(
+                f"Integration execution {interrupted.execution_id} marked interrupted after its worker could not be verified."
+            )
+            return
         if action == "cancel":
             try:
                 request = queue.get(request_id)

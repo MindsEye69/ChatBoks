@@ -20,6 +20,7 @@ def _app(root: Path) -> Chatboks:
     app.start_integration_execution = MagicMock(return_value=4242)
     app.verify_integration_execution = MagicMock()
     app.cancel_integration_execution = MagicMock()
+    app.integration_execution_is_owned = MagicMock(return_value=False)
     return app
 
 
@@ -114,3 +115,41 @@ def test_local_operator_does_not_cancel_when_runner_ownership_cannot_be_proven(t
     assert unchanged.status == "running"
     app.cancel_integration_execution.assert_not_called()
     assert "not completed" in app.stream.system.call_args.args[0]
+
+
+def test_local_operator_marks_an_unverified_worker_interrupted_during_recovery(tmp_path: Path):
+    app = _app(tmp_path)
+    request_id = _queue_request(tmp_path)
+    queue = app.integration_request_queue()
+    queue.approve(request_id)
+    execution = app.integration_execution_registry().reserve(request_id)
+    queue.mark_dispatched(request_id, "session-command-001")
+    app.integration_execution_registry().attach_runner(execution.execution_id, 4242)
+    app.integration_execution_registry().start(execution.execution_id, execution.execution_id)
+
+    Chatboks.handle_integration_command(app, f"/integration recover {request_id}", source="terminal")
+
+    recovered = app.integration_execution_registry().get(execution.execution_id)
+    assert recovered is not None
+    assert recovered.status == "interrupted"
+    app.integration_execution_is_owned.assert_called_once()
+    assert "marked interrupted" in app.stream.system.call_args.args[0]
+
+
+def test_local_recovery_leaves_a_verified_worker_running(tmp_path: Path):
+    app = _app(tmp_path)
+    app.integration_execution_is_owned.return_value = True
+    request_id = _queue_request(tmp_path)
+    queue = app.integration_request_queue()
+    queue.approve(request_id)
+    execution = app.integration_execution_registry().reserve(request_id)
+    queue.mark_dispatched(request_id, "session-command-001")
+    app.integration_execution_registry().attach_runner(execution.execution_id, 4242)
+    app.integration_execution_registry().start(execution.execution_id, execution.execution_id)
+
+    Chatboks.handle_integration_command(app, f"/integration recover {request_id}", source="terminal")
+
+    unchanged = app.integration_execution_registry().get(execution.execution_id)
+    assert unchanged is not None
+    assert unchanged.status == "running"
+    assert "no recovery action" in app.stream.system.call_args.args[0]
