@@ -15,10 +15,11 @@ from typing import Any
 import uuid
 
 
-AUTHORITY_SCHEMA_VERSION = 1
+AUTHORITY_SCHEMA_VERSION = 2
 ED25519_PUBLIC_KEY_BYTES = 32
 _ZERO_HASH = "0" * 64
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+_NONCE_RE = re.compile(r"^[A-Za-z0-9_-]{16,128}$")
 _MAX_DOCUMENT_BYTES = 32 * 1024
 _MAX_JSON_DEPTH = 12
 _MAX_JSON_ITEMS = 256
@@ -162,9 +163,16 @@ class IntegrationAuthorityStore:
                     previous_hash TEXT NOT NULL,
                     record_hash TEXT NOT NULL UNIQUE
                 );
+                CREATE TABLE IF NOT EXISTS client_proof_replays (
+                    proof_id TEXT PRIMARY KEY,
+                    nonce TEXT NOT NULL UNIQUE,
+                    request_id TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    recorded_at TEXT NOT NULL
+                );
                 """
             )
-            if version == 0:
+            if version < AUTHORITY_SCHEMA_VERSION:
                 connection.execute(f"PRAGMA user_version = {AUTHORITY_SCHEMA_VERSION}")
 
     @contextmanager
@@ -330,6 +338,59 @@ class IntegrationAuthorityStore:
                 "SELECT 1 FROM grant_revocations WHERE grant_id = ?", (grant_id,)
             ).fetchone()
         return row is not None
+
+    def consume_client_proof(
+        self, *, proof_id: str, nonce: str, request_id: str, expires_at: datetime
+    ) -> str:
+        """Atomically consume a verified client proof for the Foundation verifier.
+
+        The result is one of accepted, idempotent, proof_replay, or nonce_replay.
+        Expired replay evidence is pruned only after its expiry and is never
+        replaced while it remains valid.
+        """
+
+        proof_id = _require_identifier(proof_id, "proof_id")
+        request_id = _require_identifier(request_id, "request_id")
+        if not isinstance(nonce, str) or not _NONCE_RE.fullmatch(nonce):
+            raise AuthorityStoreError("nonce must be 16-128 URL-safe base64 characters.")
+        if not isinstance(expires_at, datetime) or expires_at.tzinfo is None:
+            raise AuthorityStoreError("expires_at must be a timezone-aware datetime.")
+        expiry = expires_at.astimezone(UTC)
+        now = datetime.now(UTC)
+        if expiry <= now:
+            raise AuthorityStoreError("expires_at must be in the future.")
+        expires_at_text = expiry.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        now_text = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        with self._write_transaction() as connection:
+            connection.execute("DELETE FROM client_proof_replays WHERE expires_at <= ?", (now_text,))
+            existing = connection.execute(
+                "SELECT request_id FROM client_proof_replays WHERE proof_id = ?", (proof_id,)
+            ).fetchone()
+            if existing is not None:
+                return "idempotent" if str(existing["request_id"]) == request_id else "proof_replay"
+            nonce_row = connection.execute(
+                "SELECT 1 FROM client_proof_replays WHERE nonce = ?", (nonce,)
+            ).fetchone()
+            if nonce_row is not None:
+                return "nonce_replay"
+            connection.execute(
+                """
+                INSERT INTO client_proof_replays
+                    (proof_id, nonce, request_id, expires_at, recorded_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (proof_id, nonce, request_id, expires_at_text, now_text),
+            )
+            self._append_audit_locked(
+                connection,
+                {
+                    "event": "client_proof_consumed",
+                    "proof_id": proof_id,
+                    "request_id": request_id,
+                    "expires_at": expires_at_text,
+                },
+            )
+        return "accepted"
 
     def record_authorization(self, document: Mapping[str, Any]) -> AuditRecord:
         """Append an authorization decision or execution result to the audit chain."""

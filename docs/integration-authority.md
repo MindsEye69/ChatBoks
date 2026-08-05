@@ -11,6 +11,7 @@ before a writable integration lifecycle is introduced:
 - paired clients' Ed25519 public keys and fingerprints;
 - logical client revocations without deleting history;
 - caller-validated signed grant-revocation records; and
+- proof-ID and nonce replay evidence retained through the proof's expiry; and
 - a durable, chained authorization audit trail.
 
 By default the SQLite database is stored at

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import hashlib
 from pathlib import Path
 
@@ -77,3 +78,37 @@ def test_authorization_audit_is_chained_and_rejects_unsafe_documents(tmp_path: P
         store.record_authorization({"event": object()})
     with pytest.raises(AuthorityStoreError, match="exceeds"):
         store.record_authorization({"event": "authorization_decision", "detail": "x" * 40000})
+
+
+def test_client_proof_replay_evidence_survives_restart(tmp_path: Path):
+    database = tmp_path / "authority.sqlite3"
+    expiry = datetime.now(UTC) + timedelta(minutes=1)
+    store = IntegrationAuthorityStore(database)
+
+    assert store.consume_client_proof(
+        proof_id="proof-001",
+        nonce="N48f0wD25mYq_sNu",
+        request_id="request-001",
+        expires_at=expiry,
+    ) == "accepted"
+    assert store.consume_client_proof(
+        proof_id="proof-001",
+        nonce="N48f0wD25mYq_sNu",
+        request_id="request-001",
+        expires_at=expiry,
+    ) == "idempotent"
+
+    reopened = IntegrationAuthorityStore(database)
+    assert reopened.consume_client_proof(
+        proof_id="proof-001",
+        nonce="N48f0wD25mYq_sNu",
+        request_id="request-other",
+        expires_at=expiry,
+    ) == "proof_replay"
+    assert reopened.consume_client_proof(
+        proof_id="proof-002",
+        nonce="N48f0wD25mYq_sNu",
+        request_id="request-002",
+        expires_at=expiry,
+    ) == "nonce_replay"
+    assert reopened.verify_audit_chain()
