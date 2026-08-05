@@ -37,3 +37,9 @@ When the protected lifecycle is added, ChatBoks will:
 The shared Foundation contract is used for interoperable request proofs and
 grants. DasDashboard is therefore an optional paired client, never the default
 grant issuer or a required ChatBoks dependency.
+
+To enable proof verification, install the explicit optional requirements file.
+The proof gate verifies an exact request against the locally paired public keys
+and durable replay store, then returns provenance only. It does not authorize
+or start execution; the pending ChatBoks approval flow remains the sole
+authority for that decision.

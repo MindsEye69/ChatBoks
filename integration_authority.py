@@ -271,6 +271,19 @@ class IntegrationAuthorityStore:
         client = self._trusted_client_from_row(row)
         return client if include_revoked or client.revoked_at is None else None
 
+    def trusted_clients(self) -> list[TrustedClient]:
+        """Return the active paired keys for a proof verifier snapshot."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT client_id, key_id, public_key, fingerprint, paired_at, revoked_at
+                FROM trusted_clients WHERE revoked_at IS NULL
+                ORDER BY client_id, key_id
+                """
+            ).fetchall()
+        return [self._trusted_client_from_row(row) for row in rows]
+
     def revoke_trusted_client(self, client_id: str, key_id: str) -> bool:
         """Logically revoke a paired key while preserving its trust history."""
         client_id = _require_identifier(client_id, "client_id")

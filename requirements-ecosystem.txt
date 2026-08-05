@@ -1,0 +1,4 @@
+# Opt-in support for the versioned Shared Ecosystem Foundation contracts.
+# This is deliberately separate from requirements.txt: ChatBoks remains usable
+# without any ecosystem companion or contract package.
+shared-ecosystem-contracts @ git+https://github.com/MindsEye69/Shared-Ecosystem-Foundation.git@0fccce1#subdirectory=packages/python

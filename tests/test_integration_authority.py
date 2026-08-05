@@ -20,6 +20,7 @@ def test_trusted_client_pairing_is_durable_and_refuses_silent_key_replacement(tm
     assert paired.public_key == first_key
     assert paired.fingerprint == hashlib.sha256(first_key).hexdigest()
     assert store.get_trusted_client("das-dashboard", "primary-2026") == paired
+    assert store.trusted_clients() == [paired]
     assert store.register_trusted_client("das-dashboard", "primary-2026", first_key) == paired
     with pytest.raises(AuthorityStoreError, match="Refusing to replace"):
         store.register_trusted_client("das-dashboard", "primary-2026", bytes(reversed(first_key)))
@@ -41,6 +42,7 @@ def test_client_revocation_preserves_history_and_disables_key(tmp_path: Path):
     )
     assert historical is not None
     assert historical.revoked_at is not None
+    assert store.trusted_clients() == []
     assert [record.document["event"] for record in store.audit_records()] == [
         "trusted_client_paired",
         "trusted_client_revoked",
