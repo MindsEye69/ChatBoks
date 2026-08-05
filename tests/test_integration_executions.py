@@ -178,3 +178,15 @@ def test_execution_liveness_warns_on_stale_heartbeat_without_mutating_state(tmp_
         "worker heartbeat is older than 20 seconds",
     )
     assert registry.get(running.execution_id).status == "running"
+
+
+def test_execution_registry_allows_only_explicit_safe_retry_from_interrupted(tmp_path):
+    registry = IntegrationExecutionRegistry(tmp_path / "integration-executions.sqlite3")
+    running = registry.start(registry.reserve("request-execution-retry-001").execution_id, "worker-001")
+    interrupted = registry.mark_interrupted(running.execution_id)
+
+    retry = registry.prepare_safe_retry(interrupted.execution_id)
+
+    assert retry.status == "waiting_for_runner"
+    assert retry.runner_pid is None
+    assert [event.event_type for event in registry.events(retry.execution_id)][-1] == "execution_safe_retry_prepared"

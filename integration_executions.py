@@ -516,6 +516,33 @@ class IntegrationExecutionRegistry:
             completed_at=_utc_now(),
         )
 
+    def prepare_safe_retry(self, execution_id: str) -> IntegrationExecution:
+        """Return an interrupted execution to its launch state after checkpoint review.
+
+        The checkpoint registry decides whether no irreversible step began. This
+        method deliberately contains no automatic retry behavior.
+        """
+        execution_id = _require_identifier(execution_id, "execution_id")
+        with self._write_transaction() as connection:
+            current = self._current(connection, execution_id)
+            if current.status != "interrupted":
+                raise IntegrationExecutionError("Only an interrupted execution may be prepared for safe retry.")
+            connection.execute(
+                """
+                UPDATE integration_executions
+                SET status = ?, session_id = NULL, started_at = NULL, completed_at = NULL,
+                    error_code = NULL, runner_pid = NULL, last_heartbeat_at = NULL,
+                    active_role = NULL, current_operation = NULL, expected_next_transition = NULL
+                WHERE execution_id = ?
+                """,
+                (_INITIAL_STATUS, execution_id),
+            )
+            self._append_event(connection, execution_id, "execution_safe_retry_prepared")
+        return IntegrationExecution(
+            current.execution_id, current.request_id, _INITIAL_STATUS, None, current.created_at,
+            None, None, None, None, None, None, None, None,
+        )
+
     def _transition(
         self,
         execution_id: str,

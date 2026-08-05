@@ -150,6 +150,12 @@ ChatBoks refuses to replay it automatically. A true resume will require future
 agents to emit durable sub-step receipts; it cannot be honestly implemented
 around one opaque LLM call.
 
+There is one explicit, local-only exception: after `/integration recover`, an
+operator may use `/integration resume request-id` only when the checkpoint is
+still `prepared`, meaning `agent_execute` never began. This restarts the worker
+from its safe local stages. It is unavailable for an in-progress, uncertain, or
+completed agent step.
+
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer
 token and a valid paired-client proof. Without the optional Foundation package,

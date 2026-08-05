@@ -345,11 +345,13 @@ def run_execution(
     if execution.status != "waiting_for_runner":
         raise IntegrationExecutionError("Integration execution is not waiting for a runner.")
     checkpoints = IntegrationCheckpointRegistry(default_checkpoint_registry_path(project_path))
-    if checkpoints.get(execution_id) is not None:
+    checkpoint = checkpoints.get(execution_id)
+    if checkpoint is not None and checkpoint.state != "prepared":
         raise IntegrationExecutionError("Execution has a prior checkpoint; automatic replay is refused.")
 
     execution = registry.start(execution_id, execution_id)
-    checkpoints.prepare(execution_id, execution.request_id)
+    if checkpoint is None:
+        checkpoints.prepare(execution_id, execution.request_id)
     heartbeat: _ExecutionHeartbeat | None = None
     agent_step_started = False
     try:

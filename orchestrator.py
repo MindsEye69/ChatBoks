@@ -858,11 +858,12 @@ class Chatboks:
                 )
             self.stream.system("\n".join(lines))
             return
-        if action not in {"approve", "reject", "revoke", "dispatch", "cancel", "recover"} or len(parts) < 3:
+        if action not in {"approve", "reject", "revoke", "dispatch", "cancel", "recover", "resume"} or len(parts) < 3:
             self.stream.system(
                 "Usage: /integration [pending|all], /integration approve <request-id> [note], "
                 "/integration reject <request-id> [note], /integration dispatch <request-id>, "
-                "/integration cancel <request-id>, or /integration recover <request-id>."
+                "/integration cancel <request-id>, /integration recover <request-id>, or "
+                "/integration resume <request-id>."
             )
             return
         if source not in {"terminal", "desktop"}:
@@ -896,12 +897,45 @@ class Chatboks:
                     return
                 interrupted = registry.mark_interrupted(execution.execution_id)
                 checkpoints = IntegrationCheckpointRegistry(default_checkpoint_registry_path(self.proj_path))
-                checkpoints.mark_uncertain(interrupted.execution_id, "worker_not_verified_during_recovery")
+                checkpoint = checkpoints.get(interrupted.execution_id)
+                if checkpoint is not None and checkpoint.state != "prepared":
+                    checkpoints.mark_uncertain(interrupted.execution_id, "worker_not_verified_during_recovery")
             except (IntegrationRequestError, IntegrationExecutionError, IntegrationCheckpointError) as exc:
                 self.stream.system(f"Integration recovery not completed: {exc}")
                 return
             self.stream.system(
                 f"Integration execution {interrupted.execution_id} marked interrupted after its worker could not be verified."
+            )
+            return
+        if action == "resume":
+            try:
+                request = queue.get(request_id)
+                if request is None or request.status != "dispatched":
+                    raise IntegrationRequestError("Only a dispatched integration request may be resumed.")
+                registry = self.integration_execution_registry()
+                execution = registry.get_for_request(request_id)
+                if execution is None or execution.status != "interrupted":
+                    raise IntegrationRequestError("Only an interrupted integration execution may be resumed.")
+                checkpoints = IntegrationCheckpointRegistry(default_checkpoint_registry_path(self.proj_path))
+                checkpoint = checkpoints.get(execution.execution_id)
+                if checkpoint is None or checkpoint.state != "prepared":
+                    raise IntegrationRequestError(
+                        "Safe resume is available only before the agent execution step has started."
+                    )
+                retry = registry.prepare_safe_retry(execution.execution_id)
+            except (IntegrationRequestError, IntegrationExecutionError, IntegrationCheckpointError) as exc:
+                self.stream.system(f"Integration resume not completed: {exc}")
+                return
+            try:
+                runner_pid = self.start_integration_execution(retry.execution_id)
+            except IntegrationExecutionLaunchError:
+                registry.mark_runner_failed_to_start(retry.execution_id, "runner_launch_failed")
+                self.stream.system(
+                    f"Integration execution {retry.execution_id} was prepared for safe resume, but its worker failed to start."
+                )
+                return
+            self.stream.system(
+                f"Integration execution {retry.execution_id} resumed before its agent step (runner {runner_pid})."
             )
             return
         if action == "cancel":
