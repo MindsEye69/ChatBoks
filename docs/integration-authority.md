@@ -43,3 +43,9 @@ The proof gate verifies an exact request against the locally paired public keys
 and durable replay store, then returns provenance only. It does not authorize
 or start execution; the pending ChatBoks approval flow remains the sole
 authority for that decision.
+
+Verified requests enter a project-local SQLite queue before they can affect an
+active ChatBoks session. The queue permits only pending to approved or rejected
+transitions; dispatch is permitted only after local approval. It keeps the
+request content for operator review but never stores the proof token. Do not
+place credentials or other secrets in integration request input.
