@@ -19,6 +19,7 @@ from integration_proofs import PairedProofDecision
 _QUEUE_SCHEMA_VERSION = 2
 _MAX_REQUEST_BYTES = 64 * 1024
 _MAX_NOTE_BYTES = 1_000
+_MAX_EVENT_PAGE_SIZE = 128
 _STATUSES = {"pending", "approved", "rejected", "dispatched"}
 
 
@@ -42,6 +43,15 @@ class QueuedIntegrationRequest:
     decision_note: str | None
     dispatched_at: str | None
     execution_session_id: str | None
+
+
+@dataclass(frozen=True)
+class IntegrationRequestEvent:
+    sequence: int
+    event_id: str
+    request_id: str
+    occurred_at: str
+    event_type: str
 
 
 def default_request_queue_path(project_path: Path) -> Path:
@@ -233,6 +243,38 @@ class IntegrationRequestQueue:
         with self._connection_scope() as connection:
             rows = connection.execute(f"{query} ORDER BY received_at DESC", params).fetchall()
         return [self._from_row(row) for row in rows]
+
+    def events(
+        self, request_id: str, *, after_sequence: int = 0, limit: int = _MAX_EVENT_PAGE_SIZE
+    ) -> list[IntegrationRequestEvent]:
+        """Return metadata-only, cursor-addressable lifecycle events for one request."""
+        if not isinstance(request_id, str) or not request_id or len(request_id) > 128:
+            raise IntegrationRequestError("Integration request id must be a bounded string.")
+        if isinstance(after_sequence, bool) or not isinstance(after_sequence, int) or after_sequence < 0:
+            raise IntegrationRequestError("Event cursor must be a non-negative integer.")
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= _MAX_EVENT_PAGE_SIZE:
+            raise IntegrationRequestError(f"Event page size must be between 1 and {_MAX_EVENT_PAGE_SIZE}.")
+        with self._connection_scope() as connection:
+            rows = connection.execute(
+                """
+                SELECT rowid AS sequence, event_id, request_id, occurred_at, event_type
+                FROM integration_request_events
+                WHERE request_id = ? AND rowid > ?
+                ORDER BY rowid ASC
+                LIMIT ?
+                """,
+                (request_id, after_sequence, limit),
+            ).fetchall()
+        return [
+            IntegrationRequestEvent(
+                sequence=int(row["sequence"]),
+                event_id=str(row["event_id"]),
+                request_id=str(row["request_id"]),
+                occurred_at=str(row["occurred_at"]),
+                event_type=str(row["event_type"]),
+            )
+            for row in rows
+        ]
 
     def approve(self, request_id: str, note: str = "") -> QueuedIntegrationRequest:
         return self._decide(request_id, "approved", note)

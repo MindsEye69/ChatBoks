@@ -38,6 +38,13 @@ def test_queue_requires_explicit_approval_before_dispatch_and_is_durable(tmp_pat
     assert dispatched.status == "dispatched"
     assert dispatched.dispatched_at is not None
     assert dispatched.execution_session_id == "session-queue-001"
+    events = queue.events(queued.request_id)
+    assert [event.event_type for event in events] == [
+        "request_received",
+        "request_approved",
+        "request_dispatched",
+    ]
+    assert queue.events(queued.request_id, after_sequence=events[-1].sequence) == []
 
     reopened = IntegrationRequestQueue(database)
     assert reopened.get(queued.request_id) == dispatched

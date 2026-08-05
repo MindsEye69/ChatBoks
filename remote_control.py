@@ -57,6 +57,7 @@ from version import CHATBOKS_VERSION_LABEL
 TRANSCRIPT_LIMIT = 120
 MAX_TRANSCRIPT_LIMIT = 10_000
 COMMAND_MAX_CHARS = 6000
+INTEGRATION_EVENT_PAGE_SIZE = 128
 HISTORY_QUERY_MAX_CHARS = 240
 MODEL_NAME_MAX_CHARS = 120
 DEFAULT_USER_SETTINGS_PATH = Path("~/.chatboks/settings.json").expanduser()
@@ -1697,6 +1698,27 @@ class RemoteSession:
         request = queue.get(request_id)
         return self._integration_request_summary(request) if request is not None else None
 
+    def integration_request_events(
+        self, request_id: str, *, after_sequence: int = 0, limit: int = INTEGRATION_EVENT_PAGE_SIZE
+    ) -> dict[str, Any] | None:
+        queue = IntegrationRequestQueue(default_request_queue_path(self.app.proj_path))
+        if queue.get(request_id) is None:
+            return None
+        events = queue.events(request_id, after_sequence=after_sequence, limit=limit)
+        return {
+            "request_id": request_id,
+            "events": [
+                {
+                    "sequence": event.sequence,
+                    "event_id": event.event_id,
+                    "occurred_at": event.occurred_at,
+                    "type": event.event_type,
+                }
+                for event in events
+            ],
+            "next_after": events[-1].sequence if events else after_sequence,
+        }
+
     def create_integration_request(
         self, *, client_proof: str, request_payload: str
     ) -> dict[str, Any]:
@@ -2056,6 +2078,12 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "risk": "read_only",
                 },
                 {
+                    "id": "integration.request-events",
+                    "method": "GET",
+                    "path": f"{INTEGRATION_API_PREFIX}/requests/{{request_id}}/events",
+                    "risk": "read_only",
+                },
+                {
                     "id": "integration.requests.create",
                     "method": "POST",
                     "path": f"{INTEGRATION_API_PREFIX}/requests",
@@ -2075,6 +2103,11 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                 },
                 {
                     "id": "integration.requests.observe",
+                    "availability": "available",
+                    "risk": "read_only",
+                },
+                {
+                    "id": "integration.requests.events.observe",
                     "availability": "available",
                     "risk": "read_only",
                 },
@@ -2214,9 +2247,39 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 return
             if not self.authorized():
                 return
-            request_id = urllib.parse.unquote(parsed.path[len(request_prefix) :])
+            request_path = urllib.parse.unquote(parsed.path[len(request_prefix) :])
+            is_event_request = request_path.endswith("/events")
+            request_id = request_path[:-len("/events")] if is_event_request else request_path
             if not request_id or "/" in request_id or len(request_id) > 128:
                 self.respond_error(HTTPStatus.BAD_REQUEST, "Invalid integration request id.")
+                return
+            if is_event_request:
+                query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+                try:
+                    after_sequence = parse_query_int(query, "after", 0)
+                    limit = parse_query_int(
+                        query,
+                        "limit",
+                        INTEGRATION_EVENT_PAGE_SIZE,
+                        minimum=1,
+                        maximum=INTEGRATION_EVENT_PAGE_SIZE,
+                    )
+                    event_payload = self.server.session.integration_request_events(
+                        request_id, after_sequence=after_sequence, limit=limit
+                    )
+                except (IntegrationRequestError, ValueError) as exc:
+                    self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
+                    return
+                if event_payload is None:
+                    self.respond_error(HTTPStatus.NOT_FOUND, "Integration request not found.")
+                    return
+                self.respond_json(
+                    {
+                        "schema": "chatboks.integration-request-event-list/v1",
+                        "contract_version": INTEGRATION_API_VERSION,
+                        **event_payload,
+                    }
+                )
                 return
             request = self.server.session.integration_request(request_id)
             if request is None:

@@ -98,6 +98,13 @@ class ProofVerifiedIntegrationRequestE2ETests(unittest.TestCase):
                         with urllib.request.urlopen(request, timeout=5) as response:
                             self.assertEqual(response.status, 202)
                             responses.append(json.loads(response.read().decode("utf-8")))
+                    events_request = urllib.request.Request(
+                        f"{endpoint}/request-http-e2e-001/events?after=0",
+                        headers={"Authorization": "Bearer bridge-token"},
+                    )
+                    with urllib.request.urlopen(events_request, timeout=5) as response:
+                        self.assertEqual(response.status, 200)
+                        event_payload = json.loads(response.read().decode("utf-8"))
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
@@ -110,6 +117,10 @@ class ProofVerifiedIntegrationRequestE2ETests(unittest.TestCase):
             self.assertEqual(response_request["client"], {"id": "dasdashboard", "key_id": "dash-client-key"})
             self.assertNotIn("input", response_request)
             self.assertNotIn("proof_id", response_request)
+            self.assertEqual(event_payload["schema"], "chatboks.integration-request-event-list/v1")
+            self.assertEqual([event["type"] for event in event_payload["events"]], ["request_received"])
+            self.assertNotIn("detail", event_payload["events"][0])
+            self.assertNotIn("proof_id", event_payload["events"][0])
 
             queue = IntegrationRequestQueue(default_request_queue_path(project_path))
             queued_requests = queue.list()

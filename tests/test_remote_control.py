@@ -48,6 +48,7 @@ class FakeSession:
         self.snapshot_calls: list[tuple[int, int]] = []
         self.completion_queries: list[str] = []
         self.integration_request_queries: list[str | None] = []
+        self.integration_request_event_queries: list[tuple[str, int, int]] = []
         self.integration_request_creates: list[tuple[str, str]] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
@@ -126,6 +127,33 @@ class FakeSession:
             if request["request_id"] == request_id:
                 return request
         return None
+
+    def integration_request_events(
+        self, request_id: str, *, after_sequence: int = 0, limit: int = 128
+    ) -> dict[str, object] | None:
+        self.integration_request_event_queries.append((request_id, after_sequence, limit))
+        if self.integration_request(request_id) is None:
+            return None
+        events = [
+            {
+                "sequence": 1,
+                "event_id": "event-observe-001",
+                "occurred_at": "2026-08-05T09:00:00Z",
+                "type": "request_received",
+            },
+            {
+                "sequence": 2,
+                "event_id": "event-observe-002",
+                "occurred_at": "2026-08-05T09:01:00Z",
+                "type": "request_approved",
+            },
+        ]
+        page = [event for event in events if event["sequence"] > after_sequence][:limit]
+        return {
+            "request_id": request_id,
+            "events": page,
+            "next_after": page[-1]["sequence"] if page else after_sequence,
+        }
 
     def create_integration_request(
         self, *, client_proof: str, request_payload: str
@@ -1308,11 +1336,13 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
             "/api/integration/v1/manifest",
             "/api/integration/v1/health",
             "/api/integration/v1/requests",
+            "/api/integration/v1/requests/{request_id}/events",
         }
         assert {capability["id"] for capability in payload["capabilities"]} == {
             "integration.discovery",
             "integration.health",
             "integration.requests.observe",
+            "integration.requests.events.observe",
             "execution.sessions.observe",
             "integration.requests.create",
         }
@@ -1388,6 +1418,45 @@ def test_versioned_integration_request_observation_exposes_metadata_only():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: versioned integration request observation exposes metadata only")
+
+
+def test_versioned_integration_request_events_are_authenticated_and_metadata_only():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        with pytest.raises(urllib.error.HTTPError) as unauthorized:
+            urllib.request.urlopen(
+                f"{base}/api/integration/v1/requests/request-observe-001/events", timeout=5
+            )
+        assert unauthorized.value.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/requests/request-observe-001/events?after=0&limit=1",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload == {
+            "schema": "chatboks.integration-request-event-list/v1",
+            "contract_version": "v1",
+            "request_id": "request-observe-001",
+            "events": [
+                {
+                    "sequence": 1,
+                    "event_id": "event-observe-001",
+                    "occurred_at": "2026-08-05T09:00:00Z",
+                    "type": "request_received",
+                }
+            ],
+            "next_after": 1,
+        }
+        assert session.integration_request_event_queries == [("request-observe-001", 0, 1)]
+        assert "detail" not in payload["events"][0]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
 
 
 def test_integration_request_summary_links_dispatched_work_to_its_session():

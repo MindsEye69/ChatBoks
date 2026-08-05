@@ -68,6 +68,11 @@ status; the manifest advertises this as execution.sessions.observe. Responses
 omit task input, decision notes, proof IDs, and tokens. They do not grant
 approval or dispatch authority.
 
+The metadata-only route /api/integration/v1/requests/request-id/events exposes
+the queued request's received, approved, rejected, and dispatched lifecycle
+events with a bounded `after` cursor. It deliberately omits each event's stored
+detail, so review notes, proof IDs, and request digests stay local.
+
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer
 token and a valid paired-client proof. Without the optional Foundation package,
