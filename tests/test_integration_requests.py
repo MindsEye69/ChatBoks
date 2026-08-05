@@ -67,7 +67,7 @@ def test_queue_rejects_conflicts_and_terminal_transitions(tmp_path):
         queue.approve(queued.request_id)
 
 
-def test_queue_migrates_v1_database_with_execution_session_link(tmp_path):
+def test_queue_migrates_v1_database_with_execution_session_and_idempotency_fields(tmp_path):
     database = tmp_path / "integration-requests.sqlite3"
     with sqlite3.connect(database) as connection:
         connection.executescript(
@@ -90,6 +90,8 @@ def test_queue_migrates_v1_database_with_execution_session_link(tmp_path):
     with sqlite3.connect(database) as connection:
         columns = {row[1] for row in connection.execute("PRAGMA table_info(integration_requests)")}
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-    assert version == 2
+    assert version == 3
     assert "execution_session_id" in columns
+    assert "idempotency_key" in columns
+    assert "idempotency_digest" in columns
     assert queued.execution_session_id is None

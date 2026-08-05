@@ -24,7 +24,24 @@ def _app(root: Path) -> Chatboks:
     return app
 
 
-def _queue_request(root: Path) -> str:
+def _queue_request(root: Path, *, structured: bool = False) -> str:
+    task_input = (
+        {
+            "ticketExecution": {
+                "schema": "chatboks.ticket-execution/v1",
+                "objective": "Review the bounded ticket execution.",
+                "constraints": ["Keep the worker isolated."],
+                "contextReferences": ["docs/integration-authority.md"],
+                "requestedCapabilities": ["execution.lifecycle"],
+                "approvalPolicy": "local_operator_required",
+                "verificationCriteria": ["Confirm the worker starts."],
+                "budget": {"maxSteps": 4, "maxRuntimeSeconds": 120},
+                "idempotencyKey": "command-ticket-001",
+            }
+        }
+        if structured
+        else {"prompt": "Review the integration task."}
+    )
     request = IntegrationRequestQueue(root / ".chatboks" / "integration-requests.sqlite3").submit_verified(
         PairedProofDecision(
             request={
@@ -35,7 +52,7 @@ def _queue_request(root: Path) -> str:
                 "capabilityId": "execution.lifecycle",
                 "correlationId": "correlation-command-001",
                 "requestedAt": "2026-08-05T09:00:00Z",
-                "input": {"prompt": "Review the integration task."},
+                "input": task_input,
             },
             client_id="dasdashboard",
             key_id="dash-client-key",
@@ -75,6 +92,27 @@ def test_local_operator_must_approve_before_dispatching_to_an_isolated_runner(tm
     app.start_integration_execution.assert_called_once_with(execution.execution_id)
     app.handle_user_input.assert_not_called()
     assert execution.execution_id in app.stream.system.call_args.args[0]
+
+
+def test_structured_ticket_scope_is_visible_locally_and_dispatches_without_a_legacy_prompt(tmp_path: Path):
+    app = _app(tmp_path)
+    request_id = _queue_request(tmp_path, structured=True)
+
+    Chatboks.handle_integration_command(app, "/integration pending", source="terminal")
+
+    pending_output = app.stream.system.call_args.args[0]
+    assert "Review the bounded ticket execution." in pending_output
+    assert "constraints=1" in pending_output
+    assert "verify=1" in pending_output
+    assert "budget=4 steps/120s" in pending_output
+
+    Chatboks.handle_integration_command(app, f"/integration approve {request_id}", source="terminal")
+    Chatboks.handle_integration_command(app, f"/integration dispatch {request_id}", source="terminal")
+
+    queued = app.integration_request_queue().get(request_id)
+    assert queued is not None
+    assert queued.status == "dispatched"
+    app.start_integration_execution.assert_called_once()
 
 
 def test_local_operator_cancels_only_the_verified_isolated_runner(tmp_path: Path):

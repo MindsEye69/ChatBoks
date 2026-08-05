@@ -49,6 +49,7 @@ from integration_execution_runner import (
 )
 from router import Router, RoutingDecision
 from session_journal import SessionJournal, atomic_write_json, list_session_metadata, new_session_id
+from ticket_execution import TicketExecutionValidationError, parse_ticket_execution
 from ui.stream import Stream
 
 
@@ -806,9 +807,26 @@ class Chatboks:
                 execution_note = (
                     f"; execution {execution.execution_id}/{execution.status}" if execution else ""
                 )
+                ticket_note = ""
+                try:
+                    ticket_execution = parse_ticket_execution(request.request)
+                except TicketExecutionValidationError:
+                    ticket_note = "; structured ticket input is invalid"
+                else:
+                    if ticket_execution is not None:
+                        objective = ticket_execution.local_summary()
+                        if len(objective) > 240:
+                            objective = f"{objective[:237]}..."
+                        budget = ticket_execution.budget
+                        ticket_note = (
+                            f"; objective={objective!r}; constraints={len(ticket_execution.constraints)}; "
+                            f"verify={len(ticket_execution.verification_criteria)}; "
+                            f"budget={budget['maxSteps']} steps/{budget['maxRuntimeSeconds']}s"
+                        )
                 lines.append(
                     f"- {request.request_id}: {request.status}; {request.ticket_id}; "
-                    f"{request.capability_id}; from {request.client_id}/{request.key_id}{execution_note}"
+                    f"{request.capability_id}; from {request.client_id}/{request.key_id}"
+                    f"{ticket_note}{execution_note}"
                 )
             self.stream.system("\n".join(lines))
             return
@@ -902,14 +920,19 @@ class Chatboks:
                 raise IntegrationRequestError("Integration request was not found.")
             if request.status != "approved":
                 raise IntegrationRequestError("Only an explicitly approved integration request may be dispatched.")
-            request_input = request.request.get("input")
-            prompt = request_input.get("prompt") if isinstance(request_input, dict) else None
-            if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 10_000:
-                raise IntegrationRequestError(
-                    "Dispatch requires a bounded input.prompt string for the ChatBoks task."
-                )
-            if prompt.lstrip().startswith("/"):
-                raise IntegrationRequestError("Integration task prompts cannot invoke ChatBoks commands.")
+            try:
+                ticket_execution = parse_ticket_execution(request.request)
+            except TicketExecutionValidationError as exc:
+                raise IntegrationRequestError(str(exc)) from exc
+            if ticket_execution is None:
+                request_input = request.request.get("input")
+                prompt = request_input.get("prompt") if isinstance(request_input, dict) else None
+                if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 10_000:
+                    raise IntegrationRequestError(
+                        "Dispatch requires a bounded input.prompt string or ticketExecution payload."
+                    )
+                if prompt.lstrip().startswith("/"):
+                    raise IntegrationRequestError("Integration task prompts cannot invoke ChatBoks commands.")
             session_id = str(self.state.get("session") or "").strip()
             if not session_id:
                 raise IntegrationRequestError("Dispatch requires an active ChatBoks session.")

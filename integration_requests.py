@@ -14,9 +14,10 @@ from typing import Any
 import uuid
 
 from integration_proofs import PairedProofDecision
+from ticket_execution import TicketExecutionValidationError, parse_ticket_execution
 
 
-_QUEUE_SCHEMA_VERSION = 2
+_QUEUE_SCHEMA_VERSION = 3
 _MAX_REQUEST_BYTES = 64 * 1024
 _MAX_NOTE_BYTES = 1_000
 _MAX_EVENT_PAGE_SIZE = 128
@@ -34,6 +35,8 @@ class QueuedIntegrationRequest:
     capability_id: str
     correlation_id: str
     request: dict[str, Any]
+    idempotency_key: str | None
+    idempotency_digest: str | None
     client_id: str
     key_id: str
     proof_id: str
@@ -122,6 +125,7 @@ class IntegrationRequestQueue:
                 CREATE TABLE IF NOT EXISTS integration_requests (
                     request_id TEXT PRIMARY KEY, ticket_id TEXT NOT NULL, capability_id TEXT NOT NULL,
                     correlation_id TEXT NOT NULL, request_json TEXT NOT NULL, request_digest TEXT NOT NULL,
+                    idempotency_key TEXT, idempotency_digest TEXT,
                     client_id TEXT NOT NULL, key_id TEXT NOT NULL, proof_id TEXT NOT NULL UNIQUE,
                     received_at TEXT NOT NULL,
                     status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'rejected', 'dispatched')),
@@ -143,6 +147,21 @@ class IntegrationRequestQueue:
                 connection.execute(
                     "ALTER TABLE integration_requests ADD COLUMN execution_session_id TEXT"
                 )
+            if "idempotency_key" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN idempotency_key TEXT"
+                )
+            if "idempotency_digest" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN idempotency_digest TEXT"
+                )
+            connection.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS integration_requests_idempotency_key
+                ON integration_requests(client_id, ticket_id, idempotency_key)
+                WHERE idempotency_key IS NOT NULL
+                """
+            )
             if version < _QUEUE_SCHEMA_VERSION:
                 connection.execute(f"PRAGMA user_version = {_QUEUE_SCHEMA_VERSION}")
 
@@ -167,6 +186,12 @@ class IntegrationRequestQueue:
             capability_id=str(row["capability_id"]),
             correlation_id=str(row["correlation_id"]),
             request=json.loads(str(row["request_json"])),
+            idempotency_key=str(row["idempotency_key"]) if row["idempotency_key"] is not None else None,
+            idempotency_digest=(
+                str(row["idempotency_digest"])
+                if row["idempotency_digest"] is not None
+                else None
+            ),
             client_id=str(row["client_id"]),
             key_id=str(row["key_id"]),
             proof_id=str(row["proof_id"]),
@@ -192,7 +217,21 @@ class IntegrationRequestQueue:
         correlation_id = _require_string(request, "correlationId")
         if request.get("targetApplicationId") != "chatboks":
             raise IntegrationRequestError("Verified request is not addressed to ChatBoks.")
+        try:
+            ticket_execution = parse_ticket_execution(request)
+        except TicketExecutionValidationError as exc:
+            raise IntegrationRequestError(str(exc)) from exc
+        if ticket_execution is not None and capability_id not in ticket_execution.requested_capabilities:
+            raise IntegrationRequestError(
+                "ticketExecution.requestedCapabilities must include the requested capabilityId."
+            )
         digest = hashlib.sha256(request_json.encode("utf-8")).hexdigest()
+        idempotency_key = ticket_execution.idempotency_key if ticket_execution is not None else None
+        idempotency_digest = (
+            ticket_execution.idempotency_digest(ticket_id=ticket_id, capability_id=capability_id)
+            if ticket_execution is not None
+            else None
+        )
         received_at = _utc_now()
         with self._write_transaction() as connection:
             row = connection.execute(
@@ -209,15 +248,47 @@ class IntegrationRequestQueue:
                 ):
                     return existing
                 raise IntegrationRequestError("A different request or proof already uses this request_id.")
+            proof_row = connection.execute(
+                "SELECT * FROM integration_requests WHERE proof_id = ?", (decision.proof_id,)
+            ).fetchone()
+            if proof_row is not None:
+                raise IntegrationRequestError("A request proof cannot be reused with a different request_id.")
+            if idempotency_key is not None:
+                idempotent_row = connection.execute(
+                    """
+                    SELECT * FROM integration_requests
+                    WHERE client_id = ? AND ticket_id = ? AND idempotency_key = ?
+                    """,
+                    (decision.client_id, ticket_id, idempotency_key),
+                ).fetchone()
+                if idempotent_row is not None:
+                    existing = self._from_row(idempotent_row)
+                    if existing.idempotency_digest == idempotency_digest:
+                        return existing
+                    raise IntegrationRequestError(
+                        "A different ticket payload already uses this idempotencyKey."
+                    )
             connection.execute(
                 """
                 INSERT INTO integration_requests (
                     request_id, ticket_id, capability_id, correlation_id, request_json, request_digest,
-                    client_id, key_id, proof_id, received_at, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                    idempotency_key, idempotency_digest, client_id, key_id, proof_id, received_at, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
                 """,
-                (request_id, ticket_id, capability_id, correlation_id, request_json, digest,
-                 decision.client_id, decision.key_id, decision.proof_id, received_at),
+                (
+                    request_id,
+                    ticket_id,
+                    capability_id,
+                    correlation_id,
+                    request_json,
+                    digest,
+                    idempotency_key,
+                    idempotency_digest,
+                    decision.client_id,
+                    decision.key_id,
+                    decision.proof_id,
+                    received_at,
+                ),
             )
             self._append_event(
                 connection, request_id, "request_received",
@@ -225,8 +296,22 @@ class IntegrationRequestQueue:
                  "proof_id": decision.proof_id, "request_digest": digest},
             )
         return QueuedIntegrationRequest(
-            request_id, ticket_id, capability_id, correlation_id, request, decision.client_id,
-            decision.key_id, decision.proof_id, received_at, "pending", None, None, None, None
+            request_id=request_id,
+            ticket_id=ticket_id,
+            capability_id=capability_id,
+            correlation_id=correlation_id,
+            request=request,
+            idempotency_key=idempotency_key,
+            idempotency_digest=idempotency_digest,
+            client_id=decision.client_id,
+            key_id=decision.key_id,
+            proof_id=decision.proof_id,
+            received_at=received_at,
+            status="pending",
+            decided_at=None,
+            decision_note=None,
+            dispatched_at=None,
+            execution_session_id=None,
         )
 
     def get(self, request_id: str) -> QueuedIntegrationRequest | None:

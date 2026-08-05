@@ -52,7 +52,19 @@ def _queue_verified_request(app: Chatboks) -> str:
                 "capabilityId": "execution.lifecycle",
                 "correlationId": "correlation-worker-e2e-001",
                 "requestedAt": "2026-08-05T09:00:00Z",
-                "input": {"prompt": "Complete the harmless worker lifecycle test."},
+                "input": {
+                    "ticketExecution": {
+                        "schema": "chatboks.ticket-execution/v1",
+                        "objective": "Complete the harmless worker lifecycle test.",
+                        "constraints": ["Do not modify files outside the project."],
+                        "contextReferences": ["chatboks.md"],
+                        "requestedCapabilities": ["execution.lifecycle"],
+                        "approvalPolicy": "local_operator_required",
+                        "verificationCriteria": ["Emit the terminal completion signal."],
+                        "budget": {"maxSteps": 3, "maxRuntimeSeconds": 120},
+                        "idempotencyKey": "worker-e2e-ticket-001",
+                    }
+                },
             },
             client_id="dasdashboard",
             key_id="dash-client-key",

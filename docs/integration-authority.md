@@ -50,12 +50,33 @@ transitions; dispatch is permitted only after local approval. It keeps the
 request content for operator review but never stores the proof token. Do not
 place credentials or other secrets in integration request input.
 
+## Structured ticket execution input
+
+`input.prompt` remains supported for existing paired clients. New integrations
+should instead use `input.ticketExecution` with
+`schema: "chatboks.ticket-execution/v1"`. It requires a bounded objective,
+constraints, context references, requested capability IDs, the fixed
+`local_operator_required` approval policy, verification criteria, a requested
+step/runtime budget, and an idempotency key.
+
+The queue validates this payload before it is stored. Its idempotency key
+deduplicates retries from the same paired client for the same ticket, while a
+changed payload with the same key is rejected. `/integration pending` shows the
+objective, constraint and verification counts, and requested budget to the
+local operator before approval.
+
+The structured fields are still untrusted task material. Context references
+are never opened automatically, and requested capabilities or budgets do not
+grant tools or impose a hard runtime limit yet. Typed capability enforcement is
+CBX-005 work; durable per-step budget receipts and resumable execution are
+CBX-007 work.
+
 The local operator workflow is:
 
 1. /integration to inspect pending requests.
 2. /integration approve request-id with an optional review note, or reject it.
 3. /integration dispatch request-id to launch one request-owned worker for the
-   approved input.prompt.
+   approved legacy `input.prompt` or structured ticket execution input.
 4. /integration cancel request-id to stop that worker only after ChatBoks
    verifies the recorded PID still belongs to the expected worker command.
 5. /integration recover request-id to mark a dispatched execution interrupted
