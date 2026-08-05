@@ -40,6 +40,7 @@ _EXECUTION_ID_PATTERN = re.compile(r"execution-[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0
 _MAX_PROMPT_CHARS = 10_000
 _MAX_RESULT_CHARS = 200_000
 _HEARTBEAT_INTERVAL_SECONDS = 5.0
+_TEST_FAULT_ENVIRONMENT = "CHATBOKS_INTEGRATION_TEST_FAULT"
 _TERMINAL_STATUSES = {"cancelled", "succeeded", "failed", "blocked", "interrupted"}
 
 
@@ -80,6 +81,25 @@ class _ExecutionHeartbeat:
             except Exception:
                 # Observability must not terminate or change the task itself.
                 continue
+
+
+def _claim_pre_agent_test_fault(project_path: Path) -> bool:
+    """Claim one local-only test fault without making production behavior configurable.
+
+    This exists solely to test the safe-resume boundary. The marker is under
+    the selected project's ignored ``.chatboks`` directory and makes the fault
+    one-shot even though a resumed worker inherits its parent's environment.
+    """
+    if os.environ.get(_TEST_FAULT_ENVIRONMENT) != "exit_before_agent_once":
+        return False
+    marker = project_path / ".chatboks" / "integration-test-fault-pre-agent.once"
+    marker.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    try:
+        descriptor = os.open(marker, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        return False
+    os.close(descriptor)
+    return True
 
 
 def execution_artifact_directory(project_path: Path, execution_id: str) -> Path:
@@ -367,6 +387,8 @@ def run_execution(
         heartbeat.start()
         context = context_builder(execution, queued.request, project_path, config)
         checkpoints.record_safe_stage(execution_id, "context_built", context)
+        if _claim_pre_agent_test_fault(project_path):
+            os._exit(75)
         registry.set_activity(
             execution_id,
             active_role=agent_name,

@@ -139,3 +139,11 @@ def test_worker_ownership_requires_the_exact_runner_script_and_execution_id(tmp_
     assert has_owned_integration_execution_worker(execution) is False
     with pytest.raises(IntegrationExecutionTerminationError, match="not the expected"):
         verify_integration_execution_worker(execution)
+
+
+def test_pre_agent_test_fault_is_explicit_and_one_shot(tmp_path, monkeypatch):
+    monkeypatch.setenv(runner._TEST_FAULT_ENVIRONMENT, "exit_before_agent_once")
+
+    assert runner._claim_pre_agent_test_fault(tmp_path) is True
+    assert runner._claim_pre_agent_test_fault(tmp_path) is False
+    assert (tmp_path / ".chatboks" / "integration-test-fault-pre-agent.once").exists()
