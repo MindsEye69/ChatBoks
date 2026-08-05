@@ -68,6 +68,11 @@ status; the manifest advertises this as execution.sessions.observe. Responses
 omit task input, decision notes, proof IDs, and tokens. They do not grant
 approval or dispatch authority.
 
+GET /api/integration/v1/discovery serves the compatible Foundation 0.2
+application manifest. Its instance ID, version, and authenticated health URL
+are derived from the running local bridge. ChatBoks does not advertise a deep
+link or Lumen module until it implements one.
+
 The metadata-only route /api/integration/v1/requests/request-id/events exposes
 the queued request's received, approved, rejected, and dispatched lifecycle
 events with a bounded `after` cursor. It deliberately omits each event's stored

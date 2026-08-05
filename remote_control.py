@@ -86,6 +86,7 @@ INTEGRATION_API_VERSION = "v1"
 INTEGRATION_API_PREFIX = f"/api/integration/{INTEGRATION_API_VERSION}"
 INTEGRATION_MANIFEST_SCHEMA = "chatboks.integration-manifest/v1"
 INTEGRATION_HEALTH_SCHEMA = "chatboks.integration-health/v1"
+ECOSYSTEM_DISCOVERY_MANIFEST_PATH = Path(__file__).with_name("ecosystem.manifest.json")
 
 
 def is_collaboration_mode_command(text: str) -> bool:
@@ -2066,6 +2067,12 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "risk": "read_only",
                 },
                 {
+                    "id": "ecosystem.discovery",
+                    "method": "GET",
+                    "path": f"{INTEGRATION_API_PREFIX}/discovery",
+                    "risk": "read_only",
+                },
+                {
                     "id": "integration.health",
                     "method": "GET",
                     "path": f"{INTEGRATION_API_PREFIX}/health",
@@ -2128,7 +2135,24 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "reason": "Requires a ChatBoks-owned approval and protected execution flow.",
                 }
             ],
+            "discovery": {
+                "format": "shared-ecosystem.application-manifest/0.2.0",
+                "path": f"{INTEGRATION_API_PREFIX}/discovery",
+            },
         }
+
+    def ecosystem_discovery_payload(self) -> dict[str, Any]:
+        """Return the canonical Foundation discovery manifest with runtime bridge facts."""
+        payload = json.loads(ECOSYSTEM_DISCOVERY_MANIFEST_PATH.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("Discovery manifest must be a JSON object.")
+        payload["version"] = CHATBOKS_VERSION_LABEL.removeprefix("v")
+        payload["instanceId"] = f"chatboks-{os.getpid()}-{self.server_address[1]}"
+        payload["health"] = {
+            "endpoint": f"http://{self.server_address[0]}:{self.server_address[1]}{INTEGRATION_API_PREFIX}/health",
+            "authentication": "bearer",
+        }
+        return payload
 
     def integration_health_payload(self) -> dict[str, Any]:
         snapshot = self.session.snapshot(cursor=0, transcript_limit=0)
@@ -2213,6 +2237,16 @@ class RemoteHandler(BaseHTTPRequestHandler):
             if not self.authorized():
                 return
             self.respond_json(self.server.integration_manifest_payload())
+            return
+        if parsed.path == f"{INTEGRATION_API_PREFIX}/discovery":
+            if not self.origin_allowed():
+                return
+            if not self.authorized():
+                return
+            try:
+                self.respond_json(self.server.ecosystem_discovery_payload())
+            except (OSError, ValueError, json.JSONDecodeError):
+                self.respond_error(HTTPStatus.SERVICE_UNAVAILABLE, "Discovery manifest unavailable.")
             return
         if parsed.path == f"{INTEGRATION_API_PREFIX}/health":
             if not self.origin_allowed():

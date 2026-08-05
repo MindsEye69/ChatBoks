@@ -1334,6 +1334,7 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
         assert payload["transport"]["authentication"] == "bearer"
         assert {endpoint["path"] for endpoint in payload["endpoints"]} == {
             "/api/integration/v1/manifest",
+            "/api/integration/v1/discovery",
             "/api/integration/v1/health",
             "/api/integration/v1/requests",
             "/api/integration/v1/requests/{request_id}/events",
@@ -1352,11 +1353,45 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
                 "reason": "Requires a ChatBoks-owned approval and protected execution flow.",
             }
         ]
+        assert payload["discovery"] == {
+            "format": "shared-ecosystem.application-manifest/0.2.0",
+            "path": "/api/integration/v1/discovery",
+        }
     finally:
         server.shutdown()
         thread.join(timeout=5)
         server.server_close()
     print("PASS: versioned integration manifest is authenticated and read-only")
+
+
+def test_versioned_ecosystem_discovery_is_authenticated_and_runtime_scoped():
+    server, thread, base = run_server(FakeSession(), "secret-token")
+    try:
+        with pytest.raises(urllib.error.HTTPError) as unauthorized:
+            urllib.request.urlopen(f"{base}/api/integration/v1/discovery", timeout=5)
+        assert unauthorized.value.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/discovery",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload["applicationId"] == "chatboks"
+        assert payload["displayName"] == "ChatBoks"
+        assert payload["contractVersions"] == ["0.2.0"]
+        assert payload["instanceId"].startswith("chatboks-")
+        assert payload["health"] == {
+            "endpoint": f"{base}/api/integration/v1/health",
+            "authentication": "bearer",
+        }
+        assert "deepLinks" not in payload
+        assert "module" not in payload
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
 
 
 def test_versioned_integration_health_reports_current_execution_without_secrets():
