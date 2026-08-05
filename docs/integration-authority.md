@@ -49,3 +49,13 @@ active ChatBoks session. The queue permits only pending to approved or rejected
 transitions; dispatch is permitted only after local approval. It keeps the
 request content for operator review but never stores the proof token. Do not
 place credentials or other secrets in integration request input.
+
+The local operator workflow is:
+
+1. /integration to inspect pending requests.
+2. /integration approve request-id with an optional review note, or reject it.
+3. /integration dispatch request-id to send an approved input.prompt through
+   normal ChatBoks routing.
+
+Those approval and dispatch commands are rejected when submitted through the
+remote-workbench bridge. They require a terminal or desktop-originated action.

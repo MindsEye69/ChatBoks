@@ -1638,7 +1638,7 @@ class RemoteSession:
             if is_collaboration_mode_command(cleaned):
                 self.events.append("system", "system", f"Command accepted{detail}.")
                 try:
-                    self.app.handle_user_input(cleaned)
+                    self.app.handle_user_input(cleaned, source="remote")
                 finally:
                     self._command_text = None
                 return self.snapshot(cursor=0)
@@ -1654,7 +1654,7 @@ class RemoteSession:
 
     def _run_command(self, text: str) -> None:
         try:
-            self.app.handle_user_input(text)
+            self.app.handle_user_input(text, source="remote")
         except Exception as exc:  # noqa: BLE001
             failure = f"Remote command failed: {exc}"
             self.events.append("error", "system", failure)

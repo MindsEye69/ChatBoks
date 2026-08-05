@@ -114,7 +114,8 @@ class BlockingFakeApp:
         self.started = started
         self.release = release
 
-    def handle_user_input(self, text: str) -> None:
+    def handle_user_input(self, text: str, *, source: str = "terminal") -> None:
+        assert source == "remote"
         self.state["active_task"] = text
         self.started.set()
         assert self.release.wait(timeout=5)
@@ -837,7 +838,8 @@ def test_remote_command_failure_transitions_session_to_blocked() -> None:
         def __init__(self) -> None:
             self.state: dict[str, object] = {"status": "active", "next_agent": "codex"}
 
-        def handle_user_input(self, _text: str) -> None:
+        def handle_user_input(self, _text: str, *, source: str = "terminal") -> None:
+            assert source == "remote"
             raise PermissionError("snapshot is temporarily locked")
 
         def update_state(self, updates: dict[str, object]) -> None:
@@ -870,8 +872,9 @@ def test_remote_session_applies_mode_commands_before_returning_snapshot(tmp_path
     app = BlockingFakeApp(tmp_path / "chatboks.md", threading.Event(), threading.Event())
     app.state["collaboration_mode"] = "brainstorm"
 
-    def apply_mode(text: str) -> None:
+    def apply_mode(text: str, *, source: str = "terminal") -> None:
         assert text == "/mode implement"
+        assert source == "remote"
         app.state["collaboration_mode"] = "implement"
 
     app.handle_user_input = apply_mode  # type: ignore[method-assign]

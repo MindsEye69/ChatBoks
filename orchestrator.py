@@ -29,6 +29,11 @@ from agents.base import AgentTimeoutError, TokenExhaustionError
 from context.builder import ContextBuilder
 from context.packets import ThoughtPacket, extract_packets, packet_records_from_jsonl, split_observed_by_anchor
 from encoding_utils import configure_utf8_stdio, utf8_env
+from integration_requests import (
+    IntegrationRequestError,
+    IntegrationRequestQueue,
+    default_request_queue_path,
+)
 from router import Router, RoutingDecision
 from session_journal import SessionJournal, atomic_write_json, list_session_metadata, new_session_id
 from ui.stream import Stream
@@ -102,6 +107,7 @@ HELP_COMMANDS = [
     ("/skills <name>", "Preview a workflow skill without calling agents."),
     ("/resume", "Show start-of-session readiness: graphs, memory, packets, git, and next action."),
     ("/tickets", "Show Paper Sleuth tickets for this project with suggested next actions."),
+    ("/integration", "Review pending verified integration requests (local operator only)."),
     ("/context", "Show current context mode: lean, normal, or full."),
     ("/context lean|normal|full", "Set how much context agents receive. Lean is default."),
     ("/consult <agent> <question>", "Ask one configured peer for a bounded, read-only second opinion."),
@@ -317,11 +323,11 @@ class Chatboks:
             observer.stop()
             observer.join()
 
-    def handle_user_input(self, text: str) -> None:
+    def handle_user_input(self, text: str, *, source: str = "terminal") -> None:
         if not hasattr(self, "_stop_requested"):
             self._stop_requested = threading.Event()
         self._stop_requested.clear()
-        if self.handle_local_command(text):
+        if self.handle_local_command(text, source=source):
             return
         if not self.ensure_session_token_budget():
             return
@@ -664,7 +670,7 @@ class Chatboks:
             lines.append("User criteria appended to the prompt.")
         return "\n".join(lines)
 
-    def handle_local_command(self, text: str) -> bool:
+    def handle_local_command(self, text: str, *, source: str = "terminal") -> bool:
         stripped = text.strip()
         if not stripped.startswith("/"):
             return False
@@ -708,6 +714,9 @@ class Chatboks:
         if command in {"/ticket", "/tickets"}:
             self.handle_tickets_command(stripped)
             return True
+        if command == "/integration":
+            self.handle_integration_command(stripped, source=source)
+            return True
         if command in {"/context", "/ctx"}:
             self.handle_context_command(stripped)
             return True
@@ -737,9 +746,83 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /tickets, /context, /consult, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /test claude-auth, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /tickets, /integration, /context, /consult, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /test claude-auth, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
+
+    def integration_request_queue(self) -> IntegrationRequestQueue:
+        return IntegrationRequestQueue(default_request_queue_path(self.proj_path))
+
+    def handle_integration_command(self, text: str, *, source: str) -> None:
+        """Review local integration requests without treating remote control as approval."""
+
+        parts = text.split(maxsplit=3)
+        action = parts[1].lower() if len(parts) > 1 else "pending"
+        queue = self.integration_request_queue()
+        if action in {"pending", "all"}:
+            requests = queue.list(status="pending" if action == "pending" else None)
+            if not requests:
+                self.stream.system(f"Integration requests ({action}): none.")
+                return
+            lines = [f"Integration requests ({action}):"]
+            for request in requests:
+                lines.append(
+                    f"- {request.request_id}: {request.status}; {request.ticket_id}; "
+                    f"{request.capability_id}; from {request.client_id}/{request.key_id}"
+                )
+            self.stream.system("\n".join(lines))
+            return
+        if action not in {"approve", "reject", "dispatch"} or len(parts) < 3:
+            self.stream.system(
+                "Usage: /integration [pending|all], /integration approve <request-id> [note], "
+                "/integration reject <request-id> [note], or /integration dispatch <request-id>."
+            )
+            return
+        if source not in {"terminal", "desktop"}:
+            self.stream.system(
+                "Integration approval and dispatch require a local terminal or desktop operator."
+            )
+            return
+        request_id = parts[2]
+        note = parts[3] if len(parts) > 3 else ""
+        try:
+            if action == "approve":
+                request = queue.approve(request_id, note)
+                self.stream.system(f"Integration request {request.request_id} approved locally.")
+                return
+            if action == "reject":
+                request = queue.reject(request_id, note)
+                self.stream.system(f"Integration request {request.request_id} rejected locally.")
+                return
+            request = queue.get(request_id)
+            if request is None:
+                raise IntegrationRequestError("Integration request was not found.")
+            request_input = request.request.get("input")
+            prompt = request_input.get("prompt") if isinstance(request_input, dict) else None
+            if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 10_000:
+                raise IntegrationRequestError(
+                    "Dispatch requires a bounded input.prompt string for the ChatBoks task."
+                )
+            if prompt.lstrip().startswith("/"):
+                raise IntegrationRequestError("Integration task prompts cannot invoke ChatBoks commands.")
+            dispatched = queue.mark_dispatched(request_id)
+        except IntegrationRequestError as exc:
+            self.stream.system(f"Integration request not changed: {exc}")
+            return
+
+        routed_prompt = "\n".join(
+            [
+                "[VERIFIED INTEGRATION REQUEST]",
+                f"Request: {dispatched.request_id}",
+                f"Ticket: {dispatched.ticket_id}",
+                f"Capability: {dispatched.capability_id}",
+                f"Client: {dispatched.client_id}/{dispatched.key_id}",
+                "",
+                prompt.strip(),
+            ]
+        )
+        self.stream.system(f"Integration request {dispatched.request_id} dispatched to local ChatBoks routing.")
+        self.handle_user_input(routed_prompt, source="integration_dispatch")
 
     def handle_help_command(self, text: str = "/help") -> None:
         parts = text.split(maxsplit=1)
