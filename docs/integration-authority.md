@@ -126,6 +126,10 @@ stale warning only; ChatBoks does not terminate or interrupt work automatically
 from that signal. Runner PIDs, task input, result artifacts, and agent output
 remain local.
 
+Execution observation also exposes checkpoint state, safe-stage names,
+result-status, and recovery reason. It never exposes receipt hashes, context,
+configuration, or result content.
+
 The project-local execution registry at
 .chatboks/integration-executions.sqlite3 assigns one execution ID per request,
 records a request-owned worker PID, and stores metadata-only state transitions.

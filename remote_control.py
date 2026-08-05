@@ -42,6 +42,7 @@ from integration_requests import (
     QueuedIntegrationRequest,
     default_request_queue_path,
 )
+from integration_checkpoints import IntegrationCheckpointRegistry, default_checkpoint_registry_path
 from integration_executions import (
     IntegrationExecutionError,
     IntegrationExecutionRegistry,
@@ -1066,6 +1067,23 @@ class RemoteStream(Stream):
         raise RuntimeError(f"Remote stream is non-interactive: {label}")
 
 
+def _checkpoint_metadata(project_path: Path, execution_id: str) -> dict[str, Any] | None:
+    """Return receipt metadata without exposing checkpoint content or hashes."""
+    checkpoint_path = default_checkpoint_registry_path(project_path)
+    if not checkpoint_path.exists():
+        return None
+    checkpoints = IntegrationCheckpointRegistry(checkpoint_path)
+    checkpoint = checkpoints.get(execution_id)
+    if checkpoint is None:
+        return None
+    return {
+        "state": checkpoint.state,
+        "safe_stages": [receipt.stage_id for receipt in checkpoints.stage_receipts(execution_id)],
+        "result_status": checkpoint.result_status,
+        "recovery_reason": checkpoint.recovery_reason,
+    }
+
+
 class RemoteSession:
     def __init__(
         self,
@@ -1706,6 +1724,9 @@ class RemoteSession:
                 "liveness": liveness,
                 "warning": warning,
             }
+            checkpoint = _checkpoint_metadata(Path(project_path), execution_record.execution_id)
+            if checkpoint is not None:
+                summary["checkpoint"] = checkpoint
         elif request.execution_session_id:
             execution: dict[str, Any] = {"session_id": request.execution_session_id, "status": "unknown"}
             if str(self.app.state.get("session") or "") == request.execution_session_id:
@@ -1778,6 +1799,7 @@ class RemoteSession:
                 "liveness": liveness,
                 "warning": warning,
             },
+            "checkpoint": _checkpoint_metadata(self.app.proj_path, execution.execution_id),
             "events": [
                 {
                     "sequence": event.sequence,
