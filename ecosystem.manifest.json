@@ -1,0 +1,42 @@
+{
+  "$schema": "https://github.com/MindsEye69/Shared-Ecosystem-Foundation/schemas/0.2.0/application-manifest.schema.json",
+  "applicationId": "chatboks",
+  "displayName": "ChatBoks",
+  "version": "0.1.0-dev",
+  "contractVersions": ["0.2.0"],
+  "capabilities": [
+    {
+      "id": "integration.discovery",
+      "version": "0.2.0",
+      "risk": "low",
+      "inputSchema": "https://github.com/MindsEye69/Shared-Ecosystem-Foundation/schemas/0.2.0/application-manifest.schema.json",
+      "outputSchema": "https://github.com/MindsEye69/Shared-Ecosystem-Foundation/schemas/0.2.0/application-manifest.schema.json",
+      "requiresApproval": false,
+      "reversibility": "reversible",
+      "availability": "available"
+    },
+    {
+      "id": "execution.lifecycle",
+      "version": "0.3.0",
+      "risk": "high",
+      "inputSchema": "https://github.com/MindsEye69/Shared-Ecosystem-Foundation/schemas/0.1.0/execution-request.schema.json",
+      "outputSchema": "https://github.com/MindsEye69/Shared-Ecosystem-Foundation/schemas/0.1.0/execution-result.schema.json",
+      "requiresApproval": true,
+      "reversibility": "unknown",
+      "availability": "unavailable"
+    }
+  ],
+  "events": [],
+  "permissions": [
+    {
+      "id": "integration.discovery",
+      "risk": "low",
+      "requiresApproval": false
+    },
+    {
+      "id": "execution.lifecycle",
+      "risk": "high",
+      "requiresApproval": true
+    }
+  ]
+}
