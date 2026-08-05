@@ -11,8 +11,10 @@ import argparse
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
+import time
 from typing import Any, Callable
 
 import yaml
@@ -36,6 +38,10 @@ _TERMINAL_STATUSES = {"cancelled", "succeeded", "failed", "blocked", "interrupte
 
 class IntegrationExecutionLaunchError(RuntimeError):
     """The request-owned worker could not be started safely."""
+
+
+class IntegrationExecutionTerminationError(RuntimeError):
+    """A local operator cannot prove or stop the recorded worker process."""
 
 
 def execution_artifact_directory(project_path: Path, execution_id: str) -> Path:
@@ -106,6 +112,90 @@ def launch_integration_execution(
         process.terminate()
         raise IntegrationExecutionLaunchError("Integration worker could not be attached to its execution.") from exc
     return process.pid
+
+
+def _worker_command_line(runner_pid: int) -> str | None:
+    if os.name == "nt":
+        command = f"(Get-CimInstance Win32_Process -Filter 'ProcessId = {runner_pid}').CommandLine"
+        try:
+            result = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=5,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        return result.stdout.strip() or None
+    try:
+        return Path(f"/proc/{runner_pid}/cmdline").read_bytes().decode("utf-8", "replace").replace("\0", " ")
+    except OSError:
+        return None
+
+
+def _worker_command_matches(execution: IntegrationExecution, command_line: str | None) -> bool:
+    if not command_line or execution.runner_pid is None:
+        return False
+    expected_script = str(Path(__file__).resolve())
+    actual = command_line
+    if os.name == "nt":
+        expected_script = expected_script.replace("\\", "/").casefold()
+        actual = actual.replace("\\", "/").casefold()
+        execution_id = execution.execution_id.casefold()
+    else:
+        execution_id = execution.execution_id
+    return (
+        expected_script in actual
+        and "--execution-id" in actual
+        and execution_id in actual
+    )
+
+
+def verify_integration_execution_worker(execution: IntegrationExecution) -> None:
+    """Prove a recorded PID is still this exact request-owned worker command."""
+    if execution.runner_pid is None:
+        raise IntegrationExecutionTerminationError("Integration execution has no attached runner process.")
+    if not _worker_command_matches(execution, _worker_command_line(execution.runner_pid)):
+        raise IntegrationExecutionTerminationError(
+            "The recorded runner is not the expected request-owned worker process."
+        )
+
+
+def terminate_integration_execution_worker(execution: IntegrationExecution) -> None:
+    """Terminate only a verified worker and the children it started for this request."""
+    verify_integration_execution_worker(execution)
+    assert execution.runner_pid is not None
+    if os.name == "nt":
+        try:
+            result = subprocess.run(
+                ["taskkill", "/PID", str(execution.runner_pid), "/T", "/F"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise IntegrationExecutionTerminationError("The verified worker could not be terminated.") from exc
+        if result.returncode != 0:
+            raise IntegrationExecutionTerminationError("The verified worker could not be terminated.")
+    else:
+        try:
+            os.killpg(execution.runner_pid, signal.SIGTERM)
+        except OSError as exc:
+            raise IntegrationExecutionTerminationError("The verified worker could not be terminated.") from exc
+
+    deadline = time.monotonic() + 3
+    while time.monotonic() < deadline:
+        if _worker_command_line(execution.runner_pid) is None:
+            return
+        time.sleep(0.1)
+    raise IntegrationExecutionTerminationError("The verified worker did not exit after cancellation.")
 
 
 def _load_execution_agent(

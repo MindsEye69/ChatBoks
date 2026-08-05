@@ -42,6 +42,7 @@ def test_execution_registry_enforces_isolated_runner_state_transitions(tmp_path)
     paused = registry.pause(started.execution_id)
     resumed = registry.resume(paused.execution_id)
     cancellation_requested = registry.request_cancellation(resumed.execution_id)
+    repeated_cancellation = registry.request_cancellation(resumed.execution_id)
     cancelled = registry.finish(cancellation_requested.execution_id, "cancelled")
 
     assert started.status == "running"
@@ -51,6 +52,7 @@ def test_execution_registry_enforces_isolated_runner_state_transitions(tmp_path)
     assert paused.status == "paused"
     assert resumed.status == "running"
     assert cancellation_requested.status == "cancellation_requested"
+    assert repeated_cancellation == cancellation_requested
     assert cancelled.status == "cancelled"
     assert cancelled.completed_at is not None
     assert [event.event_type for event in registry.events(cancelled.execution_id)] == [

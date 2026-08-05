@@ -330,6 +330,8 @@ class IntegrationExecutionRegistry:
                     event_type="execution_cancelled_before_start",
                     completed_at=_utc_now(),
                 )
+            if current.status == "cancellation_requested":
+                return current
             if current.status not in {"running", "paused"}:
                 raise IntegrationExecutionError("Only an active execution may receive a cancellation request.")
             return self._transition_in_transaction(

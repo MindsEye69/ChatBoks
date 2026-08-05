@@ -41,7 +41,10 @@ from integration_executions import (
 )
 from integration_execution_runner import (
     IntegrationExecutionLaunchError,
+    IntegrationExecutionTerminationError,
     launch_integration_execution,
+    terminate_integration_execution_worker,
+    verify_integration_execution_worker,
 )
 from router import Router, RoutingDecision
 from session_journal import SessionJournal, atomic_write_json, list_session_metadata, new_session_id
@@ -774,6 +777,12 @@ class Chatboks:
             config_path=getattr(self, "config_path", None),
         )
 
+    def verify_integration_execution(self, execution: Any) -> None:
+        verify_integration_execution_worker(execution)
+
+    def cancel_integration_execution(self, execution: Any) -> None:
+        terminate_integration_execution_worker(execution)
+
     def handle_integration_command(self, text: str, *, source: str) -> None:
         """Review local integration requests without treating remote control as approval."""
 
@@ -799,10 +808,11 @@ class Chatboks:
                 )
             self.stream.system("\n".join(lines))
             return
-        if action not in {"approve", "reject", "dispatch"} or len(parts) < 3:
+        if action not in {"approve", "reject", "dispatch", "cancel"} or len(parts) < 3:
             self.stream.system(
                 "Usage: /integration [pending|all], /integration approve <request-id> [note], "
-                "/integration reject <request-id> [note], or /integration dispatch <request-id>."
+                "/integration reject <request-id> [note], /integration dispatch <request-id>, "
+                "or /integration cancel <request-id>."
             )
             return
         if source not in {"terminal", "desktop"}:
@@ -812,6 +822,38 @@ class Chatboks:
             return
         request_id = parts[2]
         note = parts[3] if len(parts) > 3 else ""
+        if action == "cancel":
+            try:
+                request = queue.get(request_id)
+                if request is None or request.status != "dispatched":
+                    raise IntegrationRequestError("Only a dispatched integration request may be cancelled.")
+                registry = self.integration_execution_registry()
+                execution = registry.get_for_request(request_id)
+                if execution is None:
+                    raise IntegrationRequestError("Dispatched request has no isolated execution record.")
+                if execution.status == "waiting_for_runner":
+                    cancelled = registry.request_cancellation(execution.execution_id)
+                    self.stream.system(
+                        f"Integration execution {cancelled.execution_id} cancelled before its worker started."
+                    )
+                    return
+                if execution.status not in {"running", "paused", "cancellation_requested"}:
+                    raise IntegrationRequestError(
+                        f"Integration execution {execution.execution_id} is already {execution.status}."
+                    )
+                self.verify_integration_execution(execution)
+                registry.request_cancellation(execution.execution_id)
+                self.cancel_integration_execution(execution)
+                cancelled = registry.finish(execution.execution_id, "cancelled")
+            except (
+                IntegrationRequestError,
+                IntegrationExecutionError,
+                IntegrationExecutionTerminationError,
+            ) as exc:
+                self.stream.system(f"Integration cancellation not completed: {exc}")
+                return
+            self.stream.system(f"Integration execution {cancelled.execution_id} cancelled locally.")
+            return
         try:
             if action == "approve":
                 request = queue.approve(request_id, note)

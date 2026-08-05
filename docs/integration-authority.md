@@ -56,6 +56,8 @@ The local operator workflow is:
 2. /integration approve request-id with an optional review note, or reject it.
 3. /integration dispatch request-id to launch one request-owned worker for the
    approved input.prompt.
+4. /integration cancel request-id to stop that worker only after ChatBoks
+   verifies the recorded PID still belongs to the expected worker command.
 
 Those approval and dispatch commands are rejected when submitted through the
 remote-workbench bridge. They require a terminal or desktop-originated action.
@@ -86,10 +88,10 @@ the worker invokes the configured primary agent in execute mode without
 writing to the operator's ChatBoks state or journal. Its local-only result is
 stored under .chatboks/integration-executions/execution-id/result.md.
 
-Pause, resume, cancel, and recovery are not exposed yet. They must first be
-wired to this worker's process group and liveness checks; they must never call
-ChatBoks' project-wide stop command, which could terminate unrelated local
-agent work for the same project.
+Cancellation is local-only. It targets the worker's process tree only after a
+command-line ownership check, and never calls ChatBoks' project-wide stop
+command. Pause, resume, and restart recovery remain deferred until they can
+preserve the same ownership guarantee.
 
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer

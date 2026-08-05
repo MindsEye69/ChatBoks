@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from integration_execution_runner import launch_integration_execution, run_execution
+import pytest
+
+import integration_execution_runner as runner
+from integration_execution_runner import (
+    IntegrationExecutionTerminationError,
+    launch_integration_execution,
+    run_execution,
+    verify_integration_execution_worker,
+)
 from integration_executions import IntegrationExecutionRegistry, default_execution_registry_path
 from integration_proofs import PairedProofDecision
 from integration_requests import IntegrationRequestQueue, default_request_queue_path
@@ -104,3 +112,19 @@ def test_launcher_binds_a_request_owned_worker_pid_before_returning(tmp_path, mo
     assert stored.runner_pid == 5151
     assert calls[0]["cwd"] == tmp_path.resolve()
     assert calls[0]["shell"] is False
+
+
+def test_worker_ownership_requires_the_exact_runner_script_and_execution_id(tmp_path, monkeypatch):
+    execution = _dispatched_execution(tmp_path)
+    registry = IntegrationExecutionRegistry(default_execution_registry_path(tmp_path))
+    registry.attach_runner(execution.execution_id, 5151)
+    execution = registry.get(execution.execution_id)
+    assert execution is not None
+    expected = f'python "{runner.Path(runner.__file__).resolve()}" --execution-id {execution.execution_id}'
+
+    monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: expected)
+    verify_integration_execution_worker(execution)
+
+    monkeypatch.setattr(runner, "_worker_command_line", lambda _pid: "python unrelated_worker.py")
+    with pytest.raises(IntegrationExecutionTerminationError, match="not the expected"):
+        verify_integration_execution_worker(execution)
