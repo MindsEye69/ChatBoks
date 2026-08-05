@@ -9,6 +9,7 @@ Runs a human-supervised relay between Claude, Codex, and Antigravity using:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -127,6 +128,7 @@ HELP_COMMANDS = [
     ("/skills", "List native ChatBoks workflow skills."),
     ("/skills <name>", "Preview a workflow skill without calling agents."),
     ("/resume", "Show start-of-session readiness: graphs, memory, packets, git, and next action."),
+    ("/health", "Show passive trajectory health for the current or latest task."),
     ("/tickets", "Show Paper Sleuth tickets for this project with suggested next actions."),
     ("/integration", "Review pending verified integration requests (local operator only)."),
     ("/context", "Show current context mode: lean, normal, or full."),
@@ -164,6 +166,7 @@ HELP_PIN_COMMANDS = [
     "/help",
     "/skills",
     "/resume",
+    "/health",
     "/tickets",
     "/context",
     "/sleep",
@@ -417,6 +420,7 @@ class Chatboks:
                 "criteria_gate": None,
             }
         )
+        self.start_trajectory_health(routed_text)
         intent = "triad_brainstorm" if self.is_triad_strategy(strategy) else "respond"
         if intent == "triad_brainstorm":
             self.run_agent_round(initiator=routed_text, agents=agents, intent=intent)
@@ -733,6 +737,9 @@ class Chatboks:
         if command == "/resume":
             self.handle_resume_command()
             return True
+        if command in {"/health", "/trajectory"}:
+            self.handle_trajectory_health_command(stripped)
+            return True
         if command in {"/ticket", "/tickets"}:
             self.handle_tickets_command(stripped)
             return True
@@ -768,7 +775,7 @@ class Chatboks:
             return True
 
         self.stream.system(
-            "Unknown local command. Try /help, /skills, /resume, /tickets, /integration, /context, /consult, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /test claude-auth, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
+            "Unknown local command. Try /help, /skills, /resume, /health, /tickets, /integration, /context, /consult, /sleep, /session, /agent, /graph, /model-commands, /mode, /test confirmation-risk, /test claude-auth, /usage, /latency, /win, /fail, /outcome, /wins, /failures, /outcomes, or /dismiss."
         )
         return True
 
@@ -1697,6 +1704,7 @@ class Chatboks:
         lines.extend(sleep_lines)
         lines.extend(self.packet_status_lines())
         lines.extend(self.resume_session_lines())
+        lines.extend(self.trajectory_health_lines())
         lines.extend(self.resume_next_action_lines(graphify_lines, has_sleep_memory))
         self.stream.system("\n".join(lines))
 
@@ -2737,6 +2745,199 @@ class Chatboks:
                 f"{summary}"
             )
         self.stream.system("\n".join(lines))
+
+    def handle_trajectory_health_command(self, text: str = "/health") -> None:
+        parts = text.split()
+        if len(parts) > 1:
+            self.stream.system("Usage: /health")
+            return
+        self.stream.system("\n".join(self.trajectory_health_lines()))
+
+    @staticmethod
+    def trajectory_task_fingerprint(task: str) -> str:
+        normalized = " ".join(task.split())
+        if not normalized:
+            return "none"
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+
+    @staticmethod
+    def trajectory_expected_call_seconds(mode: str) -> int:
+        return 600 if mode == "execute" else 300
+
+    def trajectory_health_threshold(self) -> int:
+        raw = self.config.get("trajectory_health", {})
+        if not isinstance(raw, dict):
+            return 3
+        try:
+            return max(2, min(10, int(raw.get("watch_after", 3))))
+        except (TypeError, ValueError):
+            return 3
+
+    def normalized_trajectory_health(self, value: Any) -> dict[str, Any]:
+        raw = value if isinstance(value, dict) else {}
+        turns: list[dict[str, Any]] = []
+        raw_turns = raw.get("turns") if isinstance(raw.get("turns"), list) else []
+        for item in raw_turns[-20:]:
+            if not isinstance(item, dict):
+                continue
+            duration = item.get("duration_seconds")
+            token_estimate = item.get("estimated_output_tokens")
+            try:
+                duration_value = max(0.0, min(86_400.0, float(duration)))
+            except (TypeError, ValueError):
+                duration_value = 0.0
+            try:
+                token_value = max(0, min(10_000_000, int(token_estimate)))
+            except (TypeError, ValueError):
+                token_value = 0
+            digest = str(item.get("worktree_digest") or "").strip().lower()
+            turns.append(
+                {
+                    "agent": self.truncate_for_state(str(item.get("agent") or "unknown"), 80),
+                    "mode": self.truncate_for_state(str(item.get("mode") or "respond"), 80),
+                    "outcome": self.truncate_for_state(str(item.get("outcome") or "unknown"), 80),
+                    "duration_seconds": duration_value,
+                    "estimated_output_tokens": token_value,
+                    "worktree_digest": digest if re.fullmatch(r"[0-9a-f]{16}", digest) else None,
+                }
+            )
+        fingerprint = str(raw.get("task_fingerprint") or "none").strip().lower()
+        if not re.fullmatch(r"(?:none|[0-9a-f]{16})", fingerprint):
+            fingerprint = "none"
+        return {
+            "schema": 1,
+            "task_fingerprint": fingerprint,
+            "started_at": self.truncate_for_state(str(raw.get("started_at") or self.timestamp()), 80),
+            "turns": turns,
+        }
+
+    def trajectory_health_state(self) -> dict[str, Any]:
+        health = self.normalized_trajectory_health(self.state.get("trajectory_health"))
+        self.state["trajectory_health"] = health
+        return health
+
+    def start_trajectory_health(self, task: str) -> None:
+        self.state["trajectory_health"] = {
+            "schema": 1,
+            "task_fingerprint": self.trajectory_task_fingerprint(task),
+            "started_at": self.timestamp(),
+            "turns": [],
+        }
+        self.save_state()
+
+    def trajectory_tracks_worktree(self, mode: str) -> bool:
+        return mode == "execute" or self.state.get("round_intent") == "confirmation_repair"
+
+    def capture_worktree_progress_digest(self) -> str | None:
+        status = self.run_git(["status", "--porcelain"])
+        if status.returncode != 0:
+            return None
+        material = f"{status.stdout}\0{self.capture_git_diff()}"
+        return hashlib.sha256(material.encode("utf-8", errors="replace")).hexdigest()[:16]
+
+    def record_trajectory_attempt(
+        self,
+        agent_name: str,
+        mode: str,
+        duration_seconds: float,
+        outcome: str,
+        response: str = "",
+    ) -> None:
+        health = self.trajectory_health_state()
+        if health["task_fingerprint"] == "none":
+            active_task = str(self.state.get("active_task") or "")
+            health["task_fingerprint"] = self.trajectory_task_fingerprint(active_task)
+            health["started_at"] = self.timestamp()
+
+        worktree_digest = self.capture_worktree_progress_digest() if self.trajectory_tracks_worktree(mode) else None
+        turns = health["turns"]
+        turns.append(
+            {
+                "agent": self.truncate_for_state(agent_name, 80),
+                "mode": self.truncate_for_state(mode, 80),
+                "outcome": self.truncate_for_state(outcome, 80),
+                "duration_seconds": max(0.0, min(86_400.0, duration_seconds)),
+                "estimated_output_tokens": max(0, len(response) // 4),
+                "worktree_digest": worktree_digest,
+            }
+        )
+        health["turns"] = turns[-20:]
+        self.save_state()
+
+    @staticmethod
+    def trailing_trajectory_repetitions(turns: list[dict[str, Any]]) -> int:
+        if not turns:
+            return 0
+        latest = turns[-1]
+        signature = (latest.get("agent"), latest.get("mode"))
+        count = 0
+        for turn in reversed(turns):
+            if (turn.get("agent"), turn.get("mode")) != signature:
+                break
+            count += 1
+        return count
+
+    @staticmethod
+    def trailing_unchanged_worktree_turns(turns: list[dict[str, Any]]) -> int:
+        observed = [turn for turn in turns if turn.get("worktree_digest")]
+        if not observed:
+            return 0
+        latest_digest = observed[-1]["worktree_digest"]
+        count = 0
+        for turn in reversed(observed):
+            if turn.get("worktree_digest") != latest_digest:
+                break
+            count += 1
+        return count
+
+    def trajectory_health_lines(self) -> list[str]:
+        health = self.trajectory_health_state()
+        turns = health["turns"]
+        lines = ["- Trajectory health: passive diagnostics only"]
+        if not turns:
+            lines.extend(
+                [
+                    "  Status: no agent-call observations yet.",
+                    "  Coverage: ChatBoks agent calls only; provider-internal tool calls are not observable.",
+                ]
+            )
+            return lines
+
+        threshold = self.trajectory_health_threshold()
+        latest = turns[-1]
+        repeated = self.trailing_trajectory_repetitions(turns)
+        unchanged = self.trailing_unchanged_worktree_turns(turns)
+        expected = self.trajectory_expected_call_seconds(str(latest["mode"]))
+        warnings: list[str] = []
+        if repeated >= threshold:
+            warnings.append(f"{repeated} repeated {latest['agent']}/{latest['mode']} calls")
+        if unchanged >= threshold:
+            warnings.append(f"no worktree change across {unchanged} execution calls")
+        if float(latest["duration_seconds"]) > expected:
+            warnings.append(f"latest call exceeded its {expected}s expectation")
+        if latest["outcome"] in {"timeout", "token_exhausted", "error"}:
+            warnings.append(f"latest outcome was {latest['outcome']}")
+
+        total_seconds = sum(float(turn["duration_seconds"]) for turn in turns)
+        total_tokens = sum(int(turn["estimated_output_tokens"]) for turn in turns)
+        token_rate = total_tokens / max(total_seconds / 60, 1 / 60)
+        status = "WATCH" if warnings else "HEALTHY"
+        lines.append(f"  Status: {status}" + (" — passive report; no work was stopped." if warnings else "."))
+        lines.append(
+            f"  Latest: {latest['agent']}/{latest['mode']} {latest['outcome']} in "
+            f"{float(latest['duration_seconds']):.1f}s (expected {expected}s)."
+        )
+        lines.append(f"  Agent calls: {len(turns)}; estimated output rate {token_rate:.0f} tokens/min.")
+        if repeated:
+            lines.append(f"  Repeated agent-call signature: {repeated} consecutive.")
+        if unchanged:
+            lines.append(f"  Worktree snapshots: unchanged across {unchanged} observed execution call(s).")
+        else:
+            lines.append("  Worktree snapshots: no execution call observed yet.")
+        lines.append("  Coverage: ChatBoks agent calls only; provider-internal tool calls are not observable.")
+        if warnings:
+            lines.append("  Watch signals: " + "; ".join(warnings) + ".")
+        return lines
 
     def handle_latency_command(self, text: str = "/latency") -> None:
         try:
@@ -4264,6 +4465,8 @@ class Chatboks:
                 else None
             )
             previous_stdout_callback = getattr(agent, "stdout_callback", None)
+            trajectory_outcome = "error"
+            trajectory_response = ""
 
             def stream_stdout_chunk(chunk: str) -> None:
                 nonlocal streamed_output_chars
@@ -4289,14 +4492,19 @@ class Chatboks:
                     response = agent.execute(context_pkg)
                 else:
                     response = agent.call(context_pkg, mode=mode)
+                trajectory_response = response
                 if self.stop_requested():
+                    trajectory_outcome = "stopped"
                     return "Work stopped by the user.\n>>> BLOCKED"
                 if streamed_output_parts and response.strip() == "".join(streamed_output_parts).strip():
                     if not hasattr(self, "_streamed_agent_responses"):
                         self._streamed_agent_responses = {}
                     self._streamed_agent_responses[agent_name.lower()] = response.strip()
+                trajectory_outcome = "completed"
                 return response
             except AgentTimeoutError as exc:
+                trajectory_outcome = "timeout"
+                trajectory_response = exc.partial_output
                 timeout_attempts += 1
                 if not exc.partial_output:
                     return self.timeout_recovery_blocked(agent_name, exc, timeout_attempts)
@@ -4313,6 +4521,8 @@ class Chatboks:
                 ):
                     return self.timeout_recovery_blocked(agent_name, exc, timeout_attempts)
             except TokenExhaustionError as exc:
+                trajectory_outcome = "token_exhausted"
+                trajectory_response = str(exc)
                 if token_attempt >= retries:
                     return self.token_recovery_blocked(agent_name, str(exc), retries)
                 token_attempt += 1
@@ -4331,6 +4541,13 @@ class Chatboks:
                     agent_name,
                     mode,
                     time.monotonic() - activity_started_at,
+                )
+                self.record_trajectory_attempt(
+                    agent_name,
+                    mode,
+                    time.monotonic() - activity_started_at,
+                    trajectory_outcome,
+                    trajectory_response,
                 )
 
         return self.token_recovery_blocked(agent_name, "Retry budget exhausted.", retries)
@@ -5060,6 +5277,7 @@ class Chatboks:
         state["context"].setdefault("token_counts", {})
         state["context"].setdefault("session_budget_warning_emitted", False)
         state["context"].setdefault("session_budget_limit_emitted", False)
+        state["trajectory_health"] = self.normalized_trajectory_health(state.get("trajectory_health"))
         return state
 
     @staticmethod

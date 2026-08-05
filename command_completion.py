@@ -48,6 +48,7 @@ INTEGRATION_CHOICES = {
 ROOT_COMMANDS = {
     "/help": "show the local command guide",
     "/resume": "show project, graph, memory, and session readiness",
+    "/health": "show passive trajectory health for the current or latest task",
     "/tickets": "show Paper Sleuth tickets for this project",
     "/integration": "review local verified integration requests",
     "/context": "show or set the agent context size",

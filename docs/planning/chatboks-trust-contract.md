@@ -196,6 +196,7 @@ ChatBoks may retain:
 - `.chatboks/sessions/<session>/events.jsonl`: append-only machine event and audit stream.
 - `.chatboks/sessions/<session>/journal.md`: readable per-task transcript.
 - `.chatboks/sessions/<session>/snapshot.json` and `memory.md`: restart state and compact agent recovery context.
+- `.chatboks/state.json` may include passive trajectory-health metadata for the current or latest task: a truncated task fingerprint, agent/mode/outcome, call duration, estimated output-token count, and a worktree fingerprint for execution calls. It does not retain task text, agent output, provider-internal tool calls, or raw git diffs in that diagnostic record.
 - `chatboks.md`: compatibility mirror of the active session.
 - `.chatboks/state.json`: current orchestration state.
 - `.chatboks/outcomes.jsonl`: manually recorded wins/failures.
@@ -206,6 +207,7 @@ ChatBoks may retain:
 Deletion expectation:
 
 - Project-local `.chatboks` files can be deleted to clear local operational memory, with the tradeoff that resume, availability, outcomes, and diagnostics history are lost.
+- Deleting `.chatboks/state.json` clears trajectory-health metadata along with live session state; the next startup creates a new state file.
 - The per-session journal and atomic snapshot are the primary durable recovery record. JSONL preserves an append-only machine audit stream. Editing `chatboks.md` or an optional Obsidian mirror does not rewrite prior events.
 - A configured `obsidian_vault` creates additional Markdown copies under `ChatBoks/<project>/<session>/`; deleting the project-local session store remains necessary to clear ChatBoks recovery memory.
 

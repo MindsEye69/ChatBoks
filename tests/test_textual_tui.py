@@ -201,6 +201,7 @@ def test_textual_app_completion_palette_covers_fixed_choice_commands() -> None:
     assert ("/tickets all", "show all Paper Sleuth tickets") in app.completion_options("/tickets ")
     assert ("/tickets open", "show open Paper Sleuth tickets") in app.completion_options("/tickets o")
     assert ("/resume", "show project, graph, memory, and session readiness") in app.completion_options("/res")
+    assert ("/health", "show passive trajectory health for the current or latest task") in app.completion_options("/hea")
     assert ("/integration", "review local verified integration requests") in app.completion_options("/integ")
     assert ("/integration all", "show all local integration requests and execution state") in app.completion_options("/integration ")
     assert ("@codex", "route directly to agent") in app.completion_options("@co")

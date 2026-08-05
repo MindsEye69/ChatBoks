@@ -116,6 +116,7 @@ def test_resume_command_renders_without_agent_round():
         app.sleep_memory_status_lines = MagicMock(return_value=(["- Sleep memory: 3 items"], True))
         app.packet_status_lines = MagicMock(return_value=["- Thought packets: 2 captured"])
         app.resume_session_lines = MagicMock(return_value=["- Session: idle"])
+        app.trajectory_health_lines = MagicMock(return_value=["- Trajectory health: passive diagnostics only"])
         app.resume_next_action_lines = MagicMock(return_value=["- Next action: Ready for work."])
 
         app.handle_user_input("/resume")
@@ -129,6 +130,7 @@ def test_resume_command_renders_without_agent_round():
             "- Sleep memory: 3 items\n"
             "- Thought packets: 2 captured\n"
             "- Session: idle\n"
+            "- Trajectory health: passive diagnostics only\n"
             "- Next action: Ready for work."
         )
         app.run_agent_round.assert_not_called()

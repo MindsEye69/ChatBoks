@@ -54,6 +54,7 @@ Future implementation pieces:
 - Coordinator is now validated against Ollama's direct REST API with `think: false`, and `gemma3:4b` is the current best local balance between usefulness and desktop impact.
 - Secure mobile remote control works over a private Tailscale path with pairing/session tokens, project switching, compact mobile UI, sticky composer, latest-response/full-transcript views, and nonblocking command submission.
 - Optional lane-model bakeoff harness exists for BYOM collaborator models through an OpenAI-compatible API path. GLM-5.2 is technically ready to test but deferred for cost reasons; prioritize free, local, already-paid, or existing-account candidates first.
+- Passive Trajectory Health Reporting is available through `/health` and `/resume`: it reports repeated ChatBoks agent calls, execution worktree movement, per-call duration, and estimated output rate. It is diagnostic-only and never stops or reroutes work.
 
 ## Phase 0 - Onboarding and Compatibility
 
