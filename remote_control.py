@@ -46,6 +46,7 @@ from integration_executions import (
     IntegrationExecutionError,
     IntegrationExecutionRegistry,
     default_execution_registry_path,
+    execution_liveness,
 )
 from integration_authority import AuthorityStoreError, IntegrationAuthorityStore
 from integration_proofs import (
@@ -1692,6 +1693,7 @@ class RemoteSession:
                     request.request_id
                 )
         if execution_record is not None:
+            liveness, warning = execution_liveness(execution_record)
             summary["execution"] = {
                 "id": execution_record.execution_id,
                 "status": execution_record.status,
@@ -1701,6 +1703,8 @@ class RemoteSession:
                 "active_role": execution_record.active_role,
                 "current_operation": execution_record.current_operation,
                 "expected_next_transition": execution_record.expected_next_transition,
+                "liveness": liveness,
+                "warning": warning,
             }
         elif request.execution_session_id:
             execution: dict[str, Any] = {"session_id": request.execution_session_id, "status": "unknown"}
@@ -1759,6 +1763,7 @@ class RemoteSession:
         if execution is None:
             return None
         events = registry.events(execution.execution_id, after_sequence=after_sequence, limit=limit)
+        liveness, warning = execution_liveness(execution)
         return {
             "request_id": request_id,
             "execution": {
@@ -1770,6 +1775,8 @@ class RemoteSession:
                 "active_role": execution.active_role,
                 "current_operation": execution.current_operation,
                 "expected_next_transition": execution.expected_next_transition,
+                "liveness": liveness,
+                "warning": warning,
             },
             "events": [
                 {

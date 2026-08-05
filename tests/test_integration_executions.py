@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 import sqlite3
 
 import pytest
@@ -10,6 +12,7 @@ from integration_executions import (
     IntegrationExecutionError,
     IntegrationExecutionRegistry,
     default_execution_registry_path,
+    execution_liveness,
 )
 
 
@@ -158,3 +161,20 @@ def test_execution_registry_cancels_unstarted_work_without_starting_a_runner(tmp
         "execution_reserved",
         "execution_cancelled_before_start",
     ]
+
+
+def test_execution_liveness_warns_on_stale_heartbeat_without_mutating_state(tmp_path):
+    registry = IntegrationExecutionRegistry(tmp_path / "integration-executions.sqlite3")
+    running = registry.start(registry.reserve("request-execution-liveness-001").execution_id, "worker-001")
+    observed_at = datetime(2026, 8, 5, 12, 0, tzinfo=UTC)
+    stale = replace(
+        running,
+        last_heartbeat_at=(observed_at - timedelta(seconds=21)).isoformat().replace("+00:00", "Z"),
+    )
+
+    assert execution_liveness(running, now=observed_at) == ("recent", None)
+    assert execution_liveness(stale, now=observed_at) == (
+        "stale",
+        "worker heartbeat is older than 20 seconds",
+    )
+    assert registry.get(running.execution_id).status == "running"

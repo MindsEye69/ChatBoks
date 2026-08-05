@@ -121,8 +121,10 @@ state changes with the same bounded cursor. It returns execution identity,
 status, timestamps, bounded active-role/current-operation/expected-transition
 metadata, and event types only. A running worker emits durable heartbeats, so
 an observer can distinguish recent liveness from a stale record without
-guessing from chat output. Runner PIDs, task input, result artifacts, and agent
-output remain local.
+guessing from chat output. A heartbeat older than 20 seconds is reported as a
+stale warning only; ChatBoks does not terminate or interrupt work automatically
+from that signal. Runner PIDs, task input, result artifacts, and agent output
+remain local.
 
 The project-local execution registry at
 .chatboks/integration-executions.sqlite3 assigns one execution ID per request,

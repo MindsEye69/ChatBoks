@@ -127,6 +127,8 @@ def test_approved_request_runs_in_worker_and_is_observable_without_ui_automation
     assert event_payload["execution"]["active_role"] == "antigravity"
     assert event_payload["execution"]["current_operation"] == "succeeded"
     assert event_payload["execution"]["expected_next_transition"] is None
+    assert event_payload["execution"]["liveness"] == "terminal"
+    assert event_payload["execution"]["warning"] is None
     event_types = [event["type"] for event in event_payload["events"]]
     assert "execution_reserved" in event_types
     assert "execution_started" in event_types

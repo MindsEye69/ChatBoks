@@ -39,6 +39,7 @@ from integration_executions import (
     IntegrationExecutionError,
     IntegrationExecutionRegistry,
     default_execution_registry_path,
+    execution_liveness,
 )
 from integration_execution_runner import (
     IntegrationExecutionLaunchError,
@@ -805,9 +806,14 @@ class Chatboks:
             registry = IntegrationExecutionRegistry(registry_path) if registry_path.exists() else None
             for request in requests:
                 execution = registry.get_for_request(request.request_id) if registry else None
-                execution_note = (
-                    f"; execution {execution.execution_id}/{execution.status}" if execution else ""
-                )
+                if execution is None:
+                    execution_note = ""
+                else:
+                    liveness, warning = execution_liveness(execution)
+                    execution_note = (
+                        f"; execution {execution.execution_id}/{execution.status}; liveness={liveness}"
+                        + (f"; warning={warning}" if warning is not None else "")
+                    )
                 ticket_note = ""
                 capability_note = ""
                 try:

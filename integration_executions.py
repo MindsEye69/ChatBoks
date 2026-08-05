@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sqlite3
 import uuid
@@ -20,6 +20,7 @@ _SCHEMA_VERSION = 3
 _MAX_IDENTIFIER_CHARS = 128
 _MAX_METADATA_CHARS = 128
 _MAX_EVENT_PAGE_SIZE = 128
+HEARTBEAT_STALE_AFTER = timedelta(seconds=20)
 _INITIAL_STATUS = "waiting_for_runner"
 _TERMINAL_STATUSES = {"cancelled", "succeeded", "failed", "blocked", "interrupted"}
 _STATUSES = {
@@ -87,6 +88,37 @@ def _optional_metadata(value: object, label: str) -> str | None:
     if not cleaned or len(cleaned) > _MAX_METADATA_CHARS:
         raise IntegrationExecutionError(f"{label} must be a bounded string.")
     return cleaned
+
+
+def execution_liveness(
+    execution: IntegrationExecution, *, now: datetime | None = None
+) -> tuple[str, str | None]:
+    """Classify observed worker liveness without changing durable state.
+
+    A stale heartbeat is a diagnostic signal, not evidence that it is safe to
+    terminate or interrupt the worker. Recovery retains its command-line
+    ownership checks before it makes any state change.
+    """
+    if execution.status in _TERMINAL_STATUSES:
+        return "terminal", None
+    if execution.status == _INITIAL_STATUS:
+        return "not_started", None
+    if execution.status == "paused":
+        return "paused", None
+    if execution.status == "cancellation_requested":
+        return "cancellation_requested", None
+    if execution.status != "running":
+        return "unknown", "execution has an unrecognized non-terminal state"
+    if execution.last_heartbeat_at is None:
+        return "stale", "worker has not published a heartbeat"
+    try:
+        heartbeat_at = datetime.fromisoformat(execution.last_heartbeat_at.replace("Z", "+00:00"))
+    except ValueError:
+        return "stale", "worker heartbeat timestamp is invalid"
+    observed_at = now or datetime.now(UTC)
+    if observed_at - heartbeat_at > HEARTBEAT_STALE_AFTER:
+        return "stale", "worker heartbeat is older than 20 seconds"
+    return "recent", None
 
 
 class IntegrationExecutionRegistry:

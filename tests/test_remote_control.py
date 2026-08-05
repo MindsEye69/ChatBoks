@@ -1655,6 +1655,8 @@ def test_integration_request_summary_prefers_request_owned_execution_status(tmp_
         "active_role": None,
         "current_operation": "preparing_execution",
         "expected_next_transition": "agent_load",
+        "liveness": "recent",
+        "warning": None,
     }
 
 
@@ -1697,6 +1699,8 @@ def test_remote_session_exposes_only_metadata_for_execution_events(tmp_path: Pat
         "active_role": None,
         "current_operation": "preparing_execution",
         "expected_next_transition": "agent_load",
+        "liveness": "recent",
+        "warning": None,
     }
     assert [event["type"] for event in payload["events"]] == [
         "execution_reserved",
