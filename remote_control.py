@@ -42,7 +42,11 @@ from integration_requests import (
     QueuedIntegrationRequest,
     default_request_queue_path,
 )
-from integration_executions import IntegrationExecutionRegistry, default_execution_registry_path
+from integration_executions import (
+    IntegrationExecutionError,
+    IntegrationExecutionRegistry,
+    default_execution_registry_path,
+)
 from integration_authority import AuthorityStoreError, IntegrationAuthorityStore
 from integration_proofs import (
     FoundationDependencyUnavailable,
@@ -1736,6 +1740,41 @@ class RemoteSession:
             "next_after": events[-1].sequence if events else after_sequence,
         }
 
+    def integration_execution_events(
+        self, request_id: str, *, after_sequence: int = 0, limit: int = INTEGRATION_EVENT_PAGE_SIZE
+    ) -> dict[str, Any] | None:
+        """Expose durable worker state changes without disclosing task material or output."""
+        queue = IntegrationRequestQueue(default_request_queue_path(self.app.proj_path))
+        if queue.get(request_id) is None:
+            return None
+        registry_path = default_execution_registry_path(self.app.proj_path)
+        if not registry_path.exists():
+            return None
+        registry = IntegrationExecutionRegistry(registry_path)
+        execution = registry.get_for_request(request_id)
+        if execution is None:
+            return None
+        events = registry.events(execution.execution_id, after_sequence=after_sequence, limit=limit)
+        return {
+            "request_id": request_id,
+            "execution": {
+                "id": execution.execution_id,
+                "status": execution.status,
+                "started_at": execution.started_at,
+                "completed_at": execution.completed_at,
+            },
+            "events": [
+                {
+                    "sequence": event.sequence,
+                    "event_id": event.event_id,
+                    "occurred_at": event.occurred_at,
+                    "type": event.event_type,
+                }
+                for event in events
+            ],
+            "next_after": events[-1].sequence if events else after_sequence,
+        }
+
     def create_integration_request(
         self, *, client_proof: str, request_payload: str
     ) -> dict[str, Any]:
@@ -2107,6 +2146,12 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                     "risk": "read_only",
                 },
                 {
+                    "id": "integration.execution-events",
+                    "method": "GET",
+                    "path": f"{INTEGRATION_API_PREFIX}/requests/{{request_id}}/execution/events",
+                    "risk": "read_only",
+                },
+                {
                     "id": "integration.requests.create",
                     "method": "POST",
                     "path": f"{INTEGRATION_API_PREFIX}/requests",
@@ -2136,6 +2181,11 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                 },
                 {
                     "id": "execution.sessions.observe",
+                    "availability": "available",
+                    "risk": "read_only",
+                },
+                {
+                    "id": "execution.sessions.events.observe",
                     "availability": "available",
                     "risk": "read_only",
                 },
@@ -2298,12 +2348,16 @@ class RemoteHandler(BaseHTTPRequestHandler):
             if not self.authorized():
                 return
             request_path = urllib.parse.unquote(parsed.path[len(request_prefix) :])
-            is_event_request = request_path.endswith("/events")
-            request_id = request_path[:-len("/events")] if is_event_request else request_path
+            is_execution_event_request = request_path.endswith("/execution/events")
+            is_event_request = not is_execution_event_request and request_path.endswith("/events")
+            if is_execution_event_request:
+                request_id = request_path[:-len("/execution/events")]
+            else:
+                request_id = request_path[:-len("/events")] if is_event_request else request_path
             if not request_id or "/" in request_id or len(request_id) > 128:
                 self.respond_error(HTTPStatus.BAD_REQUEST, "Invalid integration request id.")
                 return
-            if is_event_request:
+            if is_event_request or is_execution_event_request:
                 query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
                 try:
                     after_sequence = parse_query_int(query, "after", 0)
@@ -2314,18 +2368,28 @@ class RemoteHandler(BaseHTTPRequestHandler):
                         minimum=1,
                         maximum=INTEGRATION_EVENT_PAGE_SIZE,
                     )
-                    event_payload = self.server.session.integration_request_events(
-                        request_id, after_sequence=after_sequence, limit=limit
-                    )
-                except (IntegrationRequestError, ValueError) as exc:
+                    if is_execution_event_request:
+                        event_payload = self.server.session.integration_execution_events(
+                            request_id, after_sequence=after_sequence, limit=limit
+                        )
+                    else:
+                        event_payload = self.server.session.integration_request_events(
+                            request_id, after_sequence=after_sequence, limit=limit
+                        )
+                except (IntegrationExecutionError, IntegrationRequestError, ValueError) as exc:
                     self.respond_error(HTTPStatus.BAD_REQUEST, str(exc))
                     return
                 if event_payload is None:
-                    self.respond_error(HTTPStatus.NOT_FOUND, "Integration request not found.")
+                    message = "Integration execution not found." if is_execution_event_request else "Integration request not found."
+                    self.respond_error(HTTPStatus.NOT_FOUND, message)
                     return
                 self.respond_json(
                     {
-                        "schema": "chatboks.integration-request-event-list/v1",
+                        "schema": (
+                            "chatboks.integration-execution-event-list/v1"
+                            if is_execution_event_request
+                            else "chatboks.integration-request-event-list/v1"
+                        ),
                         "contract_version": INTEGRATION_API_VERSION,
                         **event_payload,
                     }

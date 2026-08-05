@@ -83,6 +83,12 @@ the queued request's received, approved, rejected, and dispatched lifecycle
 events with a bounded `after` cursor. It deliberately omits each event's stored
 detail, so review notes, proof IDs, and request digests stay local.
 
+After an isolated worker exists, the metadata-only route
+/api/integration/v1/requests/request-id/execution/events exposes that worker's
+state changes with the same bounded cursor. It returns execution identity,
+status, timestamps, and event types only; runner PIDs, task input, result
+artifacts, and agent output remain local.
+
 The project-local execution registry at
 .chatboks/integration-executions.sqlite3 assigns one execution ID per request,
 records a request-owned worker PID, and stores metadata-only state transitions.

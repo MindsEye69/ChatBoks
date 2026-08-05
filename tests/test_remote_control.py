@@ -11,7 +11,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from integration_requests import QueuedIntegrationRequest
+from integration_proofs import PairedProofDecision
+from integration_requests import (
+    IntegrationRequestQueue,
+    QueuedIntegrationRequest,
+    default_request_queue_path,
+)
 from integration_executions import IntegrationExecutionRegistry, default_execution_registry_path
 from remote_control import (
     MAX_JSON_BODY_BYTES,
@@ -50,6 +55,7 @@ class FakeSession:
         self.completion_queries: list[str] = []
         self.integration_request_queries: list[str | None] = []
         self.integration_request_event_queries: list[tuple[str, int, int]] = []
+        self.integration_execution_event_queries: list[tuple[str, int, int]] = []
         self.integration_request_creates: list[tuple[str, str]] = []
         self.project = "chatboks"
         self.projects = ["biosassist", "chatboks"]
@@ -152,6 +158,39 @@ class FakeSession:
         page = [event for event in events if event["sequence"] > after_sequence][:limit]
         return {
             "request_id": request_id,
+            "events": page,
+            "next_after": page[-1]["sequence"] if page else after_sequence,
+        }
+
+    def integration_execution_events(
+        self, request_id: str, *, after_sequence: int = 0, limit: int = 128
+    ) -> dict[str, object] | None:
+        self.integration_execution_event_queries.append((request_id, after_sequence, limit))
+        if self.integration_request(request_id) is None:
+            return None
+        events = [
+            {
+                "sequence": 4,
+                "event_id": "execution-event-observe-004",
+                "occurred_at": "2026-08-05T09:02:00Z",
+                "type": "execution_started",
+            },
+            {
+                "sequence": 5,
+                "event_id": "execution-event-observe-005",
+                "occurred_at": "2026-08-05T09:03:00Z",
+                "type": "execution_succeeded",
+            },
+        ]
+        page = [event for event in events if event["sequence"] > after_sequence][:limit]
+        return {
+            "request_id": request_id,
+            "execution": {
+                "id": "execution-observe-001",
+                "status": "succeeded",
+                "started_at": "2026-08-05T09:02:00Z",
+                "completed_at": "2026-08-05T09:03:00Z",
+            },
             "events": page,
             "next_after": page[-1]["sequence"] if page else after_sequence,
         }
@@ -1339,6 +1378,7 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
             "/api/integration/v1/health",
             "/api/integration/v1/requests",
             "/api/integration/v1/requests/{request_id}/events",
+            "/api/integration/v1/requests/{request_id}/execution/events",
         }
         assert {capability["id"] for capability in payload["capabilities"]} == {
             "integration.discovery",
@@ -1346,6 +1386,7 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
             "integration.requests.observe",
             "integration.requests.events.observe",
             "execution.sessions.observe",
+            "execution.sessions.events.observe",
             "integration.requests.create",
         }
         assert payload["deferred_capabilities"] == [
@@ -1495,6 +1536,52 @@ def test_versioned_integration_request_events_are_authenticated_and_metadata_onl
         server.server_close()
 
 
+def test_versioned_integration_execution_events_are_authenticated_and_metadata_only():
+    session = FakeSession()
+    server, thread, base = run_server(session, "secret-token")
+    try:
+        with pytest.raises(urllib.error.HTTPError) as unauthorized:
+            urllib.request.urlopen(
+                f"{base}/api/integration/v1/requests/request-observe-001/execution/events", timeout=5
+            )
+        assert unauthorized.value.code == 401
+
+        request = urllib.request.Request(
+            f"{base}/api/integration/v1/requests/request-observe-001/execution/events?after=0&limit=1",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        assert payload == {
+            "schema": "chatboks.integration-execution-event-list/v1",
+            "contract_version": "v1",
+            "request_id": "request-observe-001",
+            "execution": {
+                "id": "execution-observe-001",
+                "status": "succeeded",
+                "started_at": "2026-08-05T09:02:00Z",
+                "completed_at": "2026-08-05T09:03:00Z",
+            },
+            "events": [
+                {
+                    "sequence": 4,
+                    "event_id": "execution-event-observe-004",
+                    "occurred_at": "2026-08-05T09:02:00Z",
+                    "type": "execution_started",
+                }
+            ],
+            "next_after": 4,
+        }
+        assert session.integration_execution_event_queries == [("request-observe-001", 0, 1)]
+        assert "runner_pid" not in payload["execution"]
+        assert "detail" not in payload["events"][0]
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+
 def test_integration_request_summary_links_dispatched_work_to_its_session():
     session = RemoteSession.__new__(RemoteSession)
     session.app = SimpleNamespace(
@@ -1561,6 +1648,50 @@ def test_integration_request_summary_prefers_request_owned_execution_status(tmp_
         "started_at": execution.started_at,
         "completed_at": None,
     }
+
+
+def test_remote_session_exposes_only_metadata_for_execution_events(tmp_path: Path):
+    queue = IntegrationRequestQueue(default_request_queue_path(tmp_path))
+    request = queue.submit_verified(
+        PairedProofDecision(
+            request={
+                "requestId": "request-execution-events-001",
+                "contractVersion": "0.1.0",
+                "ticketId": "CBX-001",
+                "targetApplicationId": "chatboks",
+                "capabilityId": "execution.lifecycle",
+                "correlationId": "correlation-execution-events-001",
+                "requestedAt": "2026-08-05T09:00:00Z",
+                "input": {"prompt": "Do not expose this."},
+            },
+            client_id="dasdashboard",
+            key_id="dash-client-key",
+            proof_id="proof-execution-events-001",
+            idempotent=False,
+        )
+    )
+    queue.approve(request.request_id)
+    registry = IntegrationExecutionRegistry(default_execution_registry_path(tmp_path))
+    execution = registry.start(registry.reserve(request.request_id).execution_id, "worker-session-001")
+    queue.mark_dispatched(request.request_id, "operator-session-001")
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = SimpleNamespace(proj_path=tmp_path)
+
+    payload = session.integration_execution_events(request.request_id)
+
+    assert payload is not None
+    assert payload["execution"] == {
+        "id": execution.execution_id,
+        "status": "running",
+        "started_at": execution.started_at,
+        "completed_at": None,
+    }
+    assert [event["type"] for event in payload["events"]] == [
+        "execution_reserved",
+        "execution_started",
+    ]
+    assert "runner_pid" not in payload["execution"]
+    assert "input" not in payload
 
 
 def test_versioned_integration_request_creation_requires_bearer_and_queues_only():
