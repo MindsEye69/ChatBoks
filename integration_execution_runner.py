@@ -21,6 +21,10 @@ from typing import Any, Callable
 import yaml
 
 from context.builder import ContextBuilder
+from integration_checkpoints import (
+    IntegrationCheckpointRegistry,
+    default_checkpoint_registry_path,
+)
 from integration_executions import (
     IntegrationExecution,
     IntegrationExecutionError,
@@ -340,9 +344,14 @@ def run_execution(
         raise RuntimeError("Integration request is not dispatched.")
     if execution.status != "waiting_for_runner":
         raise IntegrationExecutionError("Integration execution is not waiting for a runner.")
+    checkpoints = IntegrationCheckpointRegistry(default_checkpoint_registry_path(project_path))
+    if checkpoints.get(execution_id) is not None:
+        raise IntegrationExecutionError("Execution has a prior checkpoint; automatic replay is refused.")
 
     execution = registry.start(execution_id, execution_id)
+    checkpoints.prepare(execution_id, execution.request_id)
     heartbeat: _ExecutionHeartbeat | None = None
+    agent_step_started = False
     try:
         agent_name, agent, config = agent_loader(project, project_path, config_path)
         registry.set_activity(
@@ -360,15 +369,24 @@ def run_execution(
             current_operation="executing_agent",
             expected_next_transition="agent_completion",
         )
+        checkpoints.begin_agent_step(execution_id)
+        agent_step_started = True
         response = str(agent.execute(context))
         heartbeat.stop()
         heartbeat = None
-        _write_result(project_path, execution_id, response)
         status, error_code = _result_status(response)
+        _write_result(project_path, execution_id, response)
+        checkpoints.finish(execution_id, status, response)
         return registry.finish(execution_id, status, error_code)
     except BaseException as exc:
         if heartbeat is not None:
             heartbeat.stop()
+        checkpoint = checkpoints.get(execution_id)
+        if checkpoint is not None and checkpoint.state != "completed":
+            if agent_step_started:
+                checkpoints.finish(execution_id, "failed", f"Integration worker failed: {exc}")
+            else:
+                checkpoints.mark_uncertain(execution_id, "worker_failed_before_agent_step")
         _write_result(project_path, execution_id, f"Integration worker failed: {exc}\n")
         current = registry.get(execution_id)
         if current is None:

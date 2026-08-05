@@ -35,6 +35,11 @@ from integration_requests import (
     default_request_queue_path,
 )
 from integration_capabilities import IntegrationCapabilityError, get_integration_capability
+from integration_checkpoints import (
+    IntegrationCheckpointError,
+    IntegrationCheckpointRegistry,
+    default_checkpoint_registry_path,
+)
 from integration_executions import (
     IntegrationExecutionError,
     IntegrationExecutionRegistry,
@@ -890,7 +895,9 @@ class Chatboks:
                     )
                     return
                 interrupted = registry.mark_interrupted(execution.execution_id)
-            except (IntegrationRequestError, IntegrationExecutionError) as exc:
+                checkpoints = IntegrationCheckpointRegistry(default_checkpoint_registry_path(self.proj_path))
+                checkpoints.mark_uncertain(interrupted.execution_id, "worker_not_verified_during_recovery")
+            except (IntegrationRequestError, IntegrationExecutionError, IntegrationCheckpointError) as exc:
                 self.stream.system(f"Integration recovery not completed: {exc}")
                 return
             self.stream.system(

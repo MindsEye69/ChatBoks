@@ -15,6 +15,7 @@ from integration_execution_runner import (
     verify_integration_execution_worker,
 )
 from integration_executions import IntegrationExecutionRegistry, default_execution_registry_path
+from integration_checkpoints import IntegrationCheckpointRegistry, default_checkpoint_registry_path
 from integration_proofs import PairedProofDecision
 from integration_requests import IntegrationRequestQueue, default_request_queue_path
 
@@ -68,6 +69,10 @@ def test_runner_executes_only_the_dispatched_request_and_persists_local_result(t
     assert "bounded project context" in seen["context"]
     result = tmp_path / ".chatboks" / "integration-executions" / execution.execution_id / "result.md"
     assert result.read_text(encoding="utf-8").endswith(">>> TASK_COMPLETE")
+    checkpoint = IntegrationCheckpointRegistry(default_checkpoint_registry_path(tmp_path)).get(execution.execution_id)
+    assert checkpoint is not None
+    assert checkpoint.state == "completed"
+    assert checkpoint.result_status == "succeeded"
 
 
 def test_runner_marks_missing_terminal_signal_as_failed_without_leaking_output(tmp_path):

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 from integration_proofs import PairedProofDecision
 from integration_execution_runner import IntegrationExecutionTerminationError
+from integration_checkpoints import IntegrationCheckpointRegistry, default_checkpoint_registry_path
 from integration_requests import IntegrationRequestQueue
 from orchestrator import Chatboks
 
@@ -190,6 +191,27 @@ def test_local_operator_marks_an_unverified_worker_interrupted_during_recovery(t
     assert recovered.status == "interrupted"
     app.integration_execution_is_owned.assert_called_once()
     assert "marked interrupted" in app.stream.system.call_args.args[0]
+
+
+def test_local_recovery_marks_an_unverified_agent_step_uncertain(tmp_path: Path):
+    app = _app(tmp_path)
+    request_id = _queue_request(tmp_path)
+    queue = app.integration_request_queue()
+    queue.approve(request_id)
+    execution = app.integration_execution_registry().reserve(request_id)
+    queue.mark_dispatched(request_id, "session-command-001")
+    app.integration_execution_registry().attach_runner(execution.execution_id, 4242)
+    app.integration_execution_registry().start(execution.execution_id, execution.execution_id)
+    checkpoints = IntegrationCheckpointRegistry(default_checkpoint_registry_path(tmp_path))
+    checkpoints.prepare(execution.execution_id, request_id)
+    checkpoints.begin_agent_step(execution.execution_id)
+
+    Chatboks.handle_integration_command(app, f"/integration recover {request_id}", source="terminal")
+
+    checkpoint = checkpoints.get(execution.execution_id)
+    assert checkpoint is not None
+    assert checkpoint.state == "uncertain"
+    assert checkpoint.recovery_reason == "worker_not_verified_during_recovery"
 
 
 def test_local_recovery_leaves_a_verified_worker_running(tmp_path: Path):
