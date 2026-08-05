@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from integration_requests import QueuedIntegrationRequest
 from remote_control import (
     MAX_JSON_BODY_BYTES,
     MAX_TRANSCRIPT_LIMIT,
@@ -1312,6 +1313,7 @@ def test_versioned_integration_manifest_requires_token_and_exposes_only_read_ope
             "integration.discovery",
             "integration.health",
             "integration.requests.observe",
+            "execution.sessions.observe",
             "integration.requests.create",
         }
         assert payload["deferred_capabilities"] == [
@@ -1386,6 +1388,37 @@ def test_versioned_integration_request_observation_exposes_metadata_only():
         thread.join(timeout=5)
         server.server_close()
     print("PASS: versioned integration request observation exposes metadata only")
+
+
+def test_integration_request_summary_links_dispatched_work_to_its_session():
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = SimpleNamespace(
+        state={"session": "session-current-001", "status": "active"},
+        session_history=lambda: [{"id": "session-old-001", "status": "idle"}],
+    )
+    request = QueuedIntegrationRequest(
+        request_id="request-session-link-001",
+        ticket_id="CBX-001",
+        capability_id="execution.lifecycle",
+        correlation_id="correlation-session-link-001",
+        request={"input": {"prompt": "Do not expose this."}},
+        client_id="dasdashboard",
+        key_id="dash-client-key",
+        proof_id="proof-session-link-001",
+        received_at="2026-08-05T09:00:00Z",
+        status="dispatched",
+        decided_at="2026-08-05T09:01:00Z",
+        decision_note="Local review.",
+        dispatched_at="2026-08-05T09:02:00Z",
+        execution_session_id="session-current-001",
+    )
+
+    summary = session._integration_request_summary(request)
+
+    assert summary["execution"] == {"session_id": "session-current-001", "status": "active"}
+    assert "input" not in summary
+    assert "decision_note" not in summary
+    assert "proof_id" not in summary
 
 
 def test_versioned_integration_request_creation_requires_bearer_and_queues_only():

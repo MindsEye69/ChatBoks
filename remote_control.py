@@ -1664,9 +1664,8 @@ class RemoteSession:
             self._command_thread.start()
             return self.snapshot(cursor=0)
 
-    @staticmethod
-    def _integration_request_summary(request: QueuedIntegrationRequest) -> dict[str, Any]:
-        return {
+    def _integration_request_summary(self, request: QueuedIntegrationRequest) -> dict[str, Any]:
+        summary = {
             "request_id": request.request_id,
             "ticket_id": request.ticket_id,
             "capability_id": request.capability_id,
@@ -1677,6 +1676,17 @@ class RemoteSession:
             "decided_at": request.decided_at,
             "dispatched_at": request.dispatched_at,
         }
+        if request.execution_session_id:
+            execution: dict[str, Any] = {"session_id": request.execution_session_id, "status": "unknown"}
+            if str(self.app.state.get("session") or "") == request.execution_session_id:
+                execution["status"] = str(self.app.state.get("status") or "unknown")
+            elif hasattr(self.app, "session_history"):
+                for session in self.app.session_history():
+                    if str(session.get("id") or "") == request.execution_session_id:
+                        execution["status"] = str(session.get("status") or "unknown")
+                        break
+            summary["execution"] = execution
+        return summary
 
     def integration_requests(self, status: str | None = None) -> list[dict[str, Any]]:
         queue = IntegrationRequestQueue(default_request_queue_path(self.app.proj_path))
@@ -2065,6 +2075,11 @@ class RemoteBridgeServer(ThreadingHTTPServer):
                 },
                 {
                     "id": "integration.requests.observe",
+                    "availability": "available",
+                    "risk": "read_only",
+                },
+                {
+                    "id": "execution.sessions.observe",
                     "availability": "available",
                     "risk": "read_only",
                 },

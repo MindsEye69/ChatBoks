@@ -805,7 +805,10 @@ class Chatboks:
                 )
             if prompt.lstrip().startswith("/"):
                 raise IntegrationRequestError("Integration task prompts cannot invoke ChatBoks commands.")
-            dispatched = queue.mark_dispatched(request_id)
+            session_id = str(self.state.get("session") or "").strip()
+            if not session_id:
+                raise IntegrationRequestError("Dispatch requires an active ChatBoks session.")
+            dispatched = queue.mark_dispatched(request_id, session_id)
         except IntegrationRequestError as exc:
             self.stream.system(f"Integration request not changed: {exc}")
             return

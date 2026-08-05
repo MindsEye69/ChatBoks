@@ -62,9 +62,11 @@ remote-workbench bridge. They require a terminal or desktop-originated action.
 
 Authenticated paired clients can observe request metadata through the versioned
 read-only routes /api/integration/v1/requests and
-/api/integration/v1/requests/request-id. These responses omit task input,
-decision notes, proof IDs, and tokens. They do not grant approval or dispatch
-authority.
+/api/integration/v1/requests/request-id. After local dispatch, that metadata
+also identifies the owning ChatBoks session and its current or last recorded
+status; the manifest advertises this as execution.sessions.observe. Responses
+omit task input, decision notes, proof IDs, and tokens. They do not grant
+approval or dispatch authority.
 
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer

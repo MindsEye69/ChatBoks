@@ -13,6 +13,7 @@ from orchestrator import Chatboks
 def _app(root: Path) -> Chatboks:
     app = Chatboks.__new__(Chatboks)
     app.proj_path = root
+    app.state = {"session": "session-command-001"}
     app.stream = MagicMock()
     app.handle_user_input = MagicMock()
     return app
@@ -62,6 +63,7 @@ def test_local_operator_must_approve_before_dispatching_to_router(tmp_path: Path
     queued = app.integration_request_queue().get(request_id)
     assert queued is not None
     assert queued.status == "dispatched"
+    assert queued.execution_session_id == "session-command-001"
     routed_prompt = app.handle_user_input.call_args.args[0]
     assert "[VERIFIED INTEGRATION REQUEST]" in routed_prompt
     assert "Review the integration task." in routed_prompt

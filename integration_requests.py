@@ -16,7 +16,7 @@ import uuid
 from integration_proofs import PairedProofDecision
 
 
-_QUEUE_SCHEMA_VERSION = 1
+_QUEUE_SCHEMA_VERSION = 2
 _MAX_REQUEST_BYTES = 64 * 1024
 _MAX_NOTE_BYTES = 1_000
 _STATUSES = {"pending", "approved", "rejected", "dispatched"}
@@ -41,6 +41,7 @@ class QueuedIntegrationRequest:
     decided_at: str | None
     decision_note: str | None
     dispatched_at: str | None
+    execution_session_id: str | None
 
 
 def default_request_queue_path(project_path: Path) -> Path:
@@ -114,7 +115,8 @@ class IntegrationRequestQueue:
                     client_id TEXT NOT NULL, key_id TEXT NOT NULL, proof_id TEXT NOT NULL UNIQUE,
                     received_at TEXT NOT NULL,
                     status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'rejected', 'dispatched')),
-                    decided_at TEXT, decision_note TEXT, dispatched_at TEXT
+                    decided_at TEXT, decision_note TEXT, dispatched_at TEXT,
+                    execution_session_id TEXT
                 );
                 CREATE TABLE IF NOT EXISTS integration_request_events (
                     event_id TEXT PRIMARY KEY, request_id TEXT NOT NULL, occurred_at TEXT NOT NULL,
@@ -123,6 +125,14 @@ class IntegrationRequestQueue:
                 );
                 """
             )
+            columns = {
+                str(row["name"])
+                for row in connection.execute("PRAGMA table_info(integration_requests)").fetchall()
+            }
+            if "execution_session_id" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN execution_session_id TEXT"
+                )
             if version < _QUEUE_SCHEMA_VERSION:
                 connection.execute(f"PRAGMA user_version = {_QUEUE_SCHEMA_VERSION}")
 
@@ -155,6 +165,11 @@ class IntegrationRequestQueue:
             decided_at=str(row["decided_at"]) if row["decided_at"] is not None else None,
             decision_note=str(row["decision_note"]) if row["decision_note"] is not None else None,
             dispatched_at=str(row["dispatched_at"]) if row["dispatched_at"] is not None else None,
+            execution_session_id=(
+                str(row["execution_session_id"])
+                if row["execution_session_id"] is not None
+                else None
+            ),
         )
 
     def submit_verified(self, decision: PairedProofDecision) -> QueuedIntegrationRequest:
@@ -201,7 +216,7 @@ class IntegrationRequestQueue:
             )
         return QueuedIntegrationRequest(
             request_id, ticket_id, capability_id, correlation_id, request, decision.client_id,
-            decision.key_id, decision.proof_id, received_at, "pending", None, None, None
+            decision.key_id, decision.proof_id, received_at, "pending", None, None, None, None
         )
 
     def get(self, request_id: str) -> QueuedIntegrationRequest | None:
@@ -244,8 +259,15 @@ class IntegrationRequestQueue:
             self._append_event(connection, request_id, f"request_{outcome}", {"note": note})
         return replace(current, status=outcome, decided_at=decided_at, decision_note=note or None)
 
-    def mark_dispatched(self, request_id: str) -> QueuedIntegrationRequest:
-        """Mark an approved request dispatched immediately before local routing."""
+    def mark_dispatched(
+        self, request_id: str, execution_session_id: str
+    ) -> QueuedIntegrationRequest:
+        """Link approved work to its local ChatBoks session before routing it."""
+        if not isinstance(execution_session_id, str):
+            raise IntegrationRequestError("Dispatch requires a bounded ChatBoks session identifier.")
+        execution_session_id = execution_session_id.strip()
+        if not execution_session_id or len(execution_session_id) > 128:
+            raise IntegrationRequestError("Dispatch requires a bounded ChatBoks session identifier.")
         dispatched_at = _utc_now()
         with self._write_transaction() as connection:
             row = connection.execute("SELECT * FROM integration_requests WHERE request_id = ?", (request_id,)).fetchone()
@@ -255,11 +277,22 @@ class IntegrationRequestQueue:
             if current.status != "approved":
                 raise IntegrationRequestError("Only an explicitly approved integration request may be dispatched.")
             connection.execute(
-                "UPDATE integration_requests SET status = 'dispatched', dispatched_at = ? WHERE request_id = ?",
-                (dispatched_at, request_id),
+                """
+                UPDATE integration_requests
+                SET status = 'dispatched', dispatched_at = ?, execution_session_id = ?
+                WHERE request_id = ?
+                """,
+                (dispatched_at, execution_session_id, request_id),
             )
-            self._append_event(connection, request_id, "request_dispatched", {})
-        return replace(current, status="dispatched", dispatched_at=dispatched_at)
+            self._append_event(
+                connection, request_id, "request_dispatched", {"session_id": execution_session_id}
+            )
+        return replace(
+            current,
+            status="dispatched",
+            dispatched_at=dispatched_at,
+            execution_session_id=execution_session_id,
+        )
 
     @staticmethod
     def _append_event(connection: sqlite3.Connection, request_id: str, event_type: str, detail: Mapping[str, Any]) -> None:
