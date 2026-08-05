@@ -212,6 +212,9 @@ def test_local_recovery_marks_an_unverified_agent_step_uncertain(tmp_path: Path)
     assert checkpoint is not None
     assert checkpoint.state == "uncertain"
     assert checkpoint.recovery_reason == "worker_not_verified_during_recovery"
+    Chatboks.handle_integration_command(app, "/integration all", source="terminal")
+    assert "checkpoint=uncertain" in app.stream.system.call_args.args[0]
+    assert "checkpoint_reason=worker_not_verified_during_recovery" in app.stream.system.call_args.args[0]
 
 
 def test_local_recovery_allows_explicit_safe_resume_before_agent_step(tmp_path: Path):

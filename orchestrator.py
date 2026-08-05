@@ -809,8 +809,11 @@ class Chatboks:
             lines = [f"Integration requests ({action}):"]
             registry_path = default_execution_registry_path(self.proj_path)
             registry = IntegrationExecutionRegistry(registry_path) if registry_path.exists() else None
+            checkpoint_path = default_checkpoint_registry_path(self.proj_path)
+            checkpoints = IntegrationCheckpointRegistry(checkpoint_path) if checkpoint_path.exists() else None
             for request in requests:
                 execution = registry.get_for_request(request.request_id) if registry else None
+                checkpoint_note = ""
                 if execution is None:
                     execution_note = ""
                 else:
@@ -819,6 +822,16 @@ class Chatboks:
                         f"; execution {execution.execution_id}/{execution.status}; liveness={liveness}"
                         + (f"; warning={warning}" if warning is not None else "")
                     )
+                    checkpoint = checkpoints.get(execution.execution_id) if checkpoints else None
+                    if checkpoint is not None:
+                        stages = ",".join(
+                            receipt.stage_id for receipt in checkpoints.stage_receipts(execution.execution_id)
+                        ) or "none"
+                        checkpoint_note = f"; checkpoint={checkpoint.state}; safe_stages={stages}"
+                        if checkpoint.result_status is not None:
+                            checkpoint_note += f"; checkpoint_result={checkpoint.result_status}"
+                        if checkpoint.recovery_reason is not None:
+                            checkpoint_note += f"; checkpoint_reason={checkpoint.recovery_reason}"
                 ticket_note = ""
                 capability_note = ""
                 try:
@@ -854,7 +867,7 @@ class Chatboks:
                 lines.append(
                     f"- {request.request_id}: {request.status}; {request.ticket_id}; "
                     f"{request.capability_id}; from {request.client_id}/{request.key_id}"
-                    f"{capability_note}{ticket_note}{execution_note}"
+                    f"{capability_note}{ticket_note}{execution_note}{checkpoint_note}"
                 )
             self.stream.system("\n".join(lines))
             return

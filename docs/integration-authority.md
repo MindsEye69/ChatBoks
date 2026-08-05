@@ -65,6 +65,10 @@ changed payload with the same key is rejected. `/integration pending` shows the
 objective, constraint and verification counts, and requested budget to the
 local operator before approval.
 
+The local `/integration all` view includes execution liveness plus checkpoint
+state, completed safe-stage names, result status, and any recovery reason.
+ChatBoks therefore remains inspectable without a paired dashboard.
+
 The structured fields are still untrusted task material. Context references
 are never opened automatically. ChatBoks currently allowlists only
 `execution.lifecycle`; structured tickets must declare exactly that capability,
