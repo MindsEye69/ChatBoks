@@ -1090,10 +1090,12 @@ class RemoteSession:
         project: str,
         config_path: Path | None = None,
         user_settings_path: Path | None = None,
+        command_source: str = "remote",
     ) -> None:
         self.project = project
         self.config_path = config_path
         self.user_settings_path = user_settings_path or DEFAULT_USER_SETTINGS_PATH
+        self.command_source = command_source if command_source in {"remote", "desktop"} else "remote"
         self.app = Chatboks(project, trigger="manual", config_path=config_path)
         self._apply_user_model_settings()
         # The desktop and mobile bridge have no trustworthy terminal prompt surface.
@@ -1676,7 +1678,7 @@ class RemoteSession:
             if is_collaboration_mode_command(cleaned):
                 self.events.append("system", "system", f"Command accepted{detail}.")
                 try:
-                    self.app.handle_user_input(cleaned, source="remote")
+                    self.app.handle_user_input(cleaned, source=getattr(self, "command_source", "remote"))
                 finally:
                     self._command_text = None
                 return self.snapshot(cursor=0)
@@ -1823,7 +1825,7 @@ class RemoteSession:
 
     def _run_command(self, text: str) -> None:
         try:
-            self.app.handle_user_input(text, source="remote")
+            self.app.handle_user_input(text, source=getattr(self, "command_source", "remote"))
         except Exception as exc:  # noqa: BLE001
             failure = f"Remote command failed: {exc}"
             self.events.append("error", "system", failure)

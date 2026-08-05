@@ -2565,6 +2565,7 @@ function selectCommandCompletion(index = state.completionIndex) {
   els.workbenchPrompt.value = option.replacement;
   els.workbenchPrompt.setSelectionRange(els.workbenchPrompt.value.length, els.workbenchPrompt.value.length);
   hideCommandCompletions();
+  setSendState(false, "Command completed. Press Enter or Send to run it.");
   scheduleWorkbenchUiSave();
   els.workbenchPrompt.focus();
   return true;
@@ -2711,6 +2712,13 @@ async function sendPrompt(text) {
     });
     els.workbenchPrompt.value = "";
     applySession(data);
+    if (cleaned.startsWith("/")) {
+      state.showSystemFeed = true;
+      state.systemDrawerOpen = true;
+      syncSystemPanels();
+      renderCoordinator(data);
+      setSendState(false, "Local command accepted. Results are in Coordinator.");
+    }
     scheduleWorkbenchUiSave();
     scheduleSessionPoll();
     return true;

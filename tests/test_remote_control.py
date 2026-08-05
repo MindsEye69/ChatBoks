@@ -963,6 +963,32 @@ def test_remote_command_failure_transitions_session_to_blocked() -> None:
     assert any(event["kind"] == "error" for event in session.events.since(0))
 
 
+def test_desktop_session_runs_commands_as_a_local_desktop_operator() -> None:
+    observed_sources: list[str] = []
+
+    class DesktopApp:
+        state: dict[str, object] = {"status": "idle", "next_agent": "you"}
+
+        def handle_user_input(self, _text: str, *, source: str = "terminal") -> None:
+            observed_sources.append(source)
+
+        def update_state(self, updates: dict[str, object]) -> None:
+            self.state.update(updates)
+
+    session = RemoteSession.__new__(RemoteSession)
+    session.app = DesktopApp()
+    session.command_source = "desktop"
+    session.events = RemoteEventBuffer()
+    session.lock = threading.RLock()
+    session._stop_requested = False
+    session._command_text = "/integration all"
+
+    session._run_command("/integration all")
+
+    assert observed_sources == ["desktop"]
+    assert session._command_text is None
+
+
 def test_remote_session_applies_mode_commands_before_returning_snapshot(tmp_path: Path):
     session = RemoteSession.__new__(RemoteSession)
     session.project = "chatboks"

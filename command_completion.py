@@ -41,6 +41,31 @@ TICKET_CHOICES = {
     "open": "show open Paper Sleuth tickets",
     "all": "show all Paper Sleuth tickets",
 }
+INTEGRATION_CHOICES = {
+    "pending": "show pending proof-verified integration requests",
+    "all": "show all local integration requests and execution state",
+}
+ROOT_COMMANDS = {
+    "/help": "show the local command guide",
+    "/resume": "show project, graph, memory, and session readiness",
+    "/tickets": "show Paper Sleuth tickets for this project",
+    "/integration": "review local verified integration requests",
+    "/context": "show or set the agent context size",
+    "/consult": "ask one agent for a bounded second opinion",
+    "/sleep": "save a durable session checkpoint",
+    "/session": "run the optional DasDashboard workflow",
+    "/agent": "show or change agent availability",
+    "/graph": "show CodeGraph and Graphify status",
+    "/model-commands": "list model-specific executable commands",
+    "/mode": "show or set the collaboration mode",
+    "/test": "run a local diagnostic",
+    "/usage": "show or capture provider usage",
+    "/latency": "show recent CLI latency",
+    "/wins": "show recorded collaboration wins",
+    "/failures": "show recorded collaboration failures",
+    "/outcomes": "show recorded collaboration outcomes",
+    "/dismiss": "discard the active proposal",
+}
 OUTCOME_CHOICES = {
     "win": "record a positive collaboration outcome",
     "failure": "record a failed collaboration outcome",
@@ -139,13 +164,43 @@ def completion_options(value: str, catalog: CompletionCatalog) -> list[tuple[str
         }
         if command in direct_modes:
             return []
-        matches = [
+        mode_matches = [
             (replacement, label)
             for replacement, label in sorted(direct_modes.items())
             if replacement.startswith(command)
         ]
-        if matches:
-            return matches
+        subcommand_roots = {
+            "/mode",
+            "/modes",
+            "/context",
+            "/ctx",
+            "/help",
+            "/h",
+            "/?",
+            "/sleep",
+            "/memory",
+            "/test",
+            "/tests",
+            "/ticket",
+            "/tickets",
+            "/integration",
+            "/outcome",
+            "/session",
+            "/skills",
+            "/skill",
+            "/usage",
+            "/agent",
+            "/agents",
+        }
+        if command not in subcommand_roots:
+            root_matches = [
+                (replacement, label)
+                for replacement, label in sorted(ROOT_COMMANDS.items())
+                if replacement.startswith(command) and replacement != command
+            ]
+            matches = mode_matches + root_matches
+            if matches:
+                return matches
     if command in {"/mode", "/modes"}:
         return complete_word(stripped, "/mode", catalog.modes)
     if command in {"/context", "/ctx"}:
@@ -158,6 +213,8 @@ def completion_options(value: str, catalog: CompletionCatalog) -> list[tuple[str
         return complete_word(stripped, "/test", TEST_CHOICES)
     if command in {"/ticket", "/tickets"}:
         return complete_word(stripped, "/tickets", TICKET_CHOICES)
+    if command == "/integration":
+        return complete_word(stripped, "/integration", INTEGRATION_CHOICES)
     if command == "/outcome":
         return complete_word(stripped, "/outcome", OUTCOME_CHOICES)
     if command == "/session":

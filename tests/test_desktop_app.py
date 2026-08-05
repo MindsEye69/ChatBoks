@@ -7,9 +7,10 @@ import desktop_app
 
 
 class FakeSession:
-    def __init__(self, project: str, config_path=None) -> None:
+    def __init__(self, project: str, config_path=None, command_source: str = "remote") -> None:
         self.project = project
         self.config_path = config_path
+        self.command_source = command_source
 
     def close(self) -> None:
         pass
@@ -25,6 +26,7 @@ def test_desktop_bridge_bootstraps_a_loopback_client_session():
         assert bootstrap["bridgeUrl"].startswith("http://127.0.0.1:")
         assert bootstrap["sessionToken"]
         assert bridge.auth.authorize(bootstrap["sessionToken"])
+        assert bridge.session.command_source == "desktop"
         print("PASS: desktop bridge creates a loopback Workbench session")
     finally:
         if bridge is not None:

@@ -1916,6 +1916,12 @@ class Chatboks:
         return bool((result.stdout or "").strip())
 
     def run_git(self, args: list[str]) -> subprocess.CompletedProcess[str]:
+        hidden_window: dict[str, Any] = {}
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+            hidden_window = {"startupinfo": startupinfo, "creationflags": subprocess.CREATE_NO_WINDOW}
         try:
             return subprocess.run(
                 ["git", *args],
@@ -1927,6 +1933,7 @@ class Chatboks:
                 env=utf8_env(),
                 timeout=15,
                 check=False,
+                **hidden_window,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             return subprocess.CompletedProcess(["git", *args], 1, "", str(exc))

@@ -67,7 +67,7 @@ class DesktopBridge:
     """Own a loopback bridge and expose only a short-lived client session to the webview."""
 
     def __init__(self, project: str, config_path: Path | None = None) -> None:
-        self.session = RemoteSession(project, config_path=config_path)
+        self.session = RemoteSession(project, config_path=config_path, command_source="desktop")
         self.auth = RemoteAuth(secrets.token_urlsafe(24))
         self.server = RemoteBridgeServer(
             ("127.0.0.1", 0),

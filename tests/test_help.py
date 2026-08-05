@@ -134,6 +134,25 @@ def test_resume_command_renders_without_agent_round():
         app.run_agent_round.assert_not_called()
         print("PASS: /resume renders locally without routing to agents")
 
+
+def test_resume_git_checks_do_not_flash_windows_in_desktop_build():
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _make_app(Path(tmp))
+        completed = subprocess.CompletedProcess(["git", "status"], 0, "", "")
+
+        with patch("orchestrator.subprocess.run", return_value=completed) as run:
+            result = app.run_git(["status", "--porcelain"])
+
+        assert result.returncode == 0
+        _args, kwargs = run.call_args
+        if sys.platform == "win32":
+            assert kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
+            assert kwargs["startupinfo"].dwFlags & subprocess.STARTF_USESHOWWINDOW
+        else:
+            assert "creationflags" not in kwargs
+        print("PASS: resume git probes hide subprocess windows")
+
+
 def test_session_command_reports_dashboard_usage_without_agent_round():
     with tempfile.TemporaryDirectory() as tmp:
         app = _make_app(Path(tmp))
