@@ -105,8 +105,11 @@ def test_structured_ticket_scope_is_visible_locally_and_dispatches_without_a_leg
     assert "constraints=1" in pending_output
     assert "verify=1" in pending_output
     assert "budget=4 steps/120s" in pending_output
+    assert "risk=high" in pending_output
+    assert "reversibility=unknown" in pending_output
 
     Chatboks.handle_integration_command(app, f"/integration approve {request_id}", source="terminal")
+    assert "approval receipt" in app.stream.system.call_args.args[0]
     Chatboks.handle_integration_command(app, f"/integration dispatch {request_id}", source="terminal")
 
     queued = app.integration_request_queue().get(request_id)

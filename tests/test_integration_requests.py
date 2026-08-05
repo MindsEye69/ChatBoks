@@ -34,6 +34,8 @@ def test_queue_requires_explicit_approval_before_dispatch_and_is_durable(tmp_pat
 
     approved = queue.approve(queued.request_id, "Local operator reviewed scope.")
     assert approved.status == "approved"
+    assert approved.approved_capability_id == "execution.lifecycle"
+    assert approved.approval_receipt_id is not None
     dispatched = queue.mark_dispatched(queued.request_id, "session-queue-001")
     assert dispatched.status == "dispatched"
     assert dispatched.dispatched_at is not None
@@ -67,7 +69,7 @@ def test_queue_rejects_conflicts_and_terminal_transitions(tmp_path):
         queue.approve(queued.request_id)
 
 
-def test_queue_migrates_v1_database_with_execution_session_and_idempotency_fields(tmp_path):
+def test_queue_migrates_v1_database_with_execution_session_idempotency_and_approval_fields(tmp_path):
     database = tmp_path / "integration-requests.sqlite3"
     with sqlite3.connect(database) as connection:
         connection.executescript(
@@ -90,8 +92,26 @@ def test_queue_migrates_v1_database_with_execution_session_and_idempotency_field
     with sqlite3.connect(database) as connection:
         columns = {row[1] for row in connection.execute("PRAGMA table_info(integration_requests)")}
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-    assert version == 3
+    assert version == 4
     assert "execution_session_id" in columns
     assert "idempotency_key" in columns
     assert "idempotency_digest" in columns
+    assert "approved_capability_id" in columns
+    assert "approval_receipt_id" in columns
     assert queued.execution_session_id is None
+
+
+def test_dispatch_requires_the_durable_receipt_created_by_local_approval(tmp_path):
+    database = tmp_path / "integration-requests.sqlite3"
+    queue = IntegrationRequestQueue(database)
+    queued = queue.submit_verified(_decision())
+    queue.approve(queued.request_id)
+
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE integration_requests SET approval_receipt_id = NULL WHERE request_id = ?",
+            (queued.request_id,),
+        )
+
+    with pytest.raises(IntegrationRequestError, match="active local approval receipt"):
+        queue.mark_dispatched(queued.request_id, "session-queue-001")

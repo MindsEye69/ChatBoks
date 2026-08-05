@@ -34,6 +34,7 @@ from integration_requests import (
     IntegrationRequestQueue,
     default_request_queue_path,
 )
+from integration_capabilities import IntegrationCapabilityError, get_integration_capability
 from integration_executions import (
     IntegrationExecutionError,
     IntegrationExecutionRegistry,
@@ -808,6 +809,18 @@ class Chatboks:
                     f"; execution {execution.execution_id}/{execution.status}" if execution else ""
                 )
                 ticket_note = ""
+                capability_note = ""
+                try:
+                    capability = get_integration_capability(request.capability_id)
+                except IntegrationCapabilityError:
+                    capability_note = "; unsupported capability"
+                else:
+                    capability_note = (
+                        f"; risk={capability.risk}; reversibility={capability.reversibility}; "
+                        f"local_approval={'required' if capability.requires_local_approval else 'not_required'}"
+                    )
+                    if request.approval_receipt_id is not None:
+                        capability_note += f"; approval_receipt={request.approval_receipt_id}"
                 try:
                     ticket_execution = parse_ticket_execution(request.request)
                 except TicketExecutionValidationError:
@@ -826,7 +839,7 @@ class Chatboks:
                 lines.append(
                     f"- {request.request_id}: {request.status}; {request.ticket_id}; "
                     f"{request.capability_id}; from {request.client_id}/{request.key_id}"
-                    f"{ticket_note}{execution_note}"
+                    f"{capability_note}{ticket_note}{execution_note}"
                 )
             self.stream.system("\n".join(lines))
             return
@@ -909,7 +922,12 @@ class Chatboks:
         try:
             if action == "approve":
                 request = queue.approve(request_id, note)
-                self.stream.system(f"Integration request {request.request_id} approved locally.")
+                receipt_note = (
+                    f" (approval receipt {request.approval_receipt_id})"
+                    if request.approval_receipt_id is not None
+                    else ""
+                )
+                self.stream.system(f"Integration request {request.request_id} approved locally{receipt_note}.")
                 return
             if action == "reject":
                 request = queue.reject(request_id, note)

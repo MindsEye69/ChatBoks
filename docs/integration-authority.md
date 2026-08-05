@@ -66,10 +66,14 @@ objective, constraint and verification counts, and requested budget to the
 local operator before approval.
 
 The structured fields are still untrusted task material. Context references
-are never opened automatically, and requested capabilities or budgets do not
-grant tools or impose a hard runtime limit yet. Typed capability enforcement is
-CBX-005 work; durable per-step budget receipts and resumable execution are
-CBX-007 work.
+are never opened automatically. ChatBoks currently allowlists only
+`execution.lifecycle`; structured tickets must declare exactly that capability,
+and local approval writes a durable receipt for it before dispatch is possible.
+The local review shows its high risk and unknown reversibility. The receipt is
+not a sandbox for the configured external agent: requested capabilities do not
+grant arbitrary tools, and the requested budget does not impose a hard runtime
+limit yet. Broader typed capability adapters and durable per-step budget
+receipts remain CBX-005 and CBX-007 work respectively.
 
 The local operator workflow is:
 

@@ -13,11 +13,16 @@ import sqlite3
 from typing import Any
 import uuid
 
+from integration_capabilities import (
+    IntegrationCapabilityError,
+    get_integration_capability,
+    validate_capability_scope,
+)
 from integration_proofs import PairedProofDecision
 from ticket_execution import TicketExecutionValidationError, parse_ticket_execution
 
 
-_QUEUE_SCHEMA_VERSION = 3
+_QUEUE_SCHEMA_VERSION = 4
 _MAX_REQUEST_BYTES = 64 * 1024
 _MAX_NOTE_BYTES = 1_000
 _MAX_EVENT_PAGE_SIZE = 128
@@ -46,6 +51,8 @@ class QueuedIntegrationRequest:
     decision_note: str | None
     dispatched_at: str | None
     execution_session_id: str | None
+    approved_capability_id: str | None = None
+    approval_receipt_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -130,7 +137,8 @@ class IntegrationRequestQueue:
                     received_at TEXT NOT NULL,
                     status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'rejected', 'dispatched')),
                     decided_at TEXT, decision_note TEXT, dispatched_at TEXT,
-                    execution_session_id TEXT
+                    execution_session_id TEXT, approved_capability_id TEXT,
+                    approval_receipt_id TEXT UNIQUE
                 );
                 CREATE TABLE IF NOT EXISTS integration_request_events (
                     event_id TEXT PRIMARY KEY, request_id TEXT NOT NULL, occurred_at TEXT NOT NULL,
@@ -155,11 +163,26 @@ class IntegrationRequestQueue:
                 connection.execute(
                     "ALTER TABLE integration_requests ADD COLUMN idempotency_digest TEXT"
                 )
+            if "approved_capability_id" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN approved_capability_id TEXT"
+                )
+            if "approval_receipt_id" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN approval_receipt_id TEXT"
+                )
             connection.execute(
                 """
                 CREATE UNIQUE INDEX IF NOT EXISTS integration_requests_idempotency_key
                 ON integration_requests(client_id, ticket_id, idempotency_key)
                 WHERE idempotency_key IS NOT NULL
+                """
+            )
+            connection.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS integration_requests_approval_receipt
+                ON integration_requests(approval_receipt_id)
+                WHERE approval_receipt_id IS NOT NULL
                 """
             )
             if version < _QUEUE_SCHEMA_VERSION:
@@ -205,6 +228,16 @@ class IntegrationRequestQueue:
                 if row["execution_session_id"] is not None
                 else None
             ),
+            approved_capability_id=(
+                str(row["approved_capability_id"])
+                if row["approved_capability_id"] is not None
+                else None
+            ),
+            approval_receipt_id=(
+                str(row["approval_receipt_id"])
+                if row["approval_receipt_id"] is not None
+                else None
+            ),
         )
 
     def submit_verified(self, decision: PairedProofDecision) -> QueuedIntegrationRequest:
@@ -221,10 +254,10 @@ class IntegrationRequestQueue:
             ticket_execution = parse_ticket_execution(request)
         except TicketExecutionValidationError as exc:
             raise IntegrationRequestError(str(exc)) from exc
-        if ticket_execution is not None and capability_id not in ticket_execution.requested_capabilities:
-            raise IntegrationRequestError(
-                "ticketExecution.requestedCapabilities must include the requested capabilityId."
-            )
+        try:
+            validate_capability_scope(capability_id, ticket_execution)
+        except IntegrationCapabilityError as exc:
+            raise IntegrationRequestError(str(exc)) from exc
         digest = hashlib.sha256(request_json.encode("utf-8")).hexdigest()
         idempotency_key = ticket_execution.idempotency_key if ticket_execution is not None else None
         idempotency_digest = (
@@ -379,12 +412,49 @@ class IntegrationRequestQueue:
             current = self._from_row(row)
             if current.status != "pending":
                 raise IntegrationRequestError(f"Integration request is already {current.status} and cannot be {outcome}.")
+            approved_capability_id = None
+            approval_receipt_id = None
+            if outcome == "approved":
+                try:
+                    capability = get_integration_capability(current.capability_id)
+                except IntegrationCapabilityError as exc:
+                    raise IntegrationRequestError(str(exc)) from exc
+                if capability.requires_local_approval:
+                    approved_capability_id = capability.capability_id
+                    approval_receipt_id = str(uuid.uuid4())
             connection.execute(
-                "UPDATE integration_requests SET status = ?, decided_at = ?, decision_note = ? WHERE request_id = ?",
-                (outcome, decided_at, note or None, request_id),
+                """
+                UPDATE integration_requests
+                SET status = ?, decided_at = ?, decision_note = ?, approved_capability_id = ?,
+                    approval_receipt_id = ?
+                WHERE request_id = ?
+                """,
+                (
+                    outcome,
+                    decided_at,
+                    note or None,
+                    approved_capability_id,
+                    approval_receipt_id,
+                    request_id,
+                ),
             )
-            self._append_event(connection, request_id, f"request_{outcome}", {"note": note})
-        return replace(current, status=outcome, decided_at=decided_at, decision_note=note or None)
+            detail: dict[str, Any] = {"note": note}
+            if approved_capability_id is not None and approval_receipt_id is not None:
+                detail.update(
+                    {
+                        "capability_id": approved_capability_id,
+                        "approval_receipt_id": approval_receipt_id,
+                    }
+                )
+            self._append_event(connection, request_id, f"request_{outcome}", detail)
+        return replace(
+            current,
+            status=outcome,
+            decided_at=decided_at,
+            decision_note=note or None,
+            approved_capability_id=approved_capability_id,
+            approval_receipt_id=approval_receipt_id,
+        )
 
     def mark_dispatched(
         self, request_id: str, execution_session_id: str
@@ -403,6 +473,18 @@ class IntegrationRequestQueue:
             current = self._from_row(row)
             if current.status != "approved":
                 raise IntegrationRequestError("Only an explicitly approved integration request may be dispatched.")
+            try:
+                ticket_execution = parse_ticket_execution(current.request)
+                capability = validate_capability_scope(current.capability_id, ticket_execution)
+            except (TicketExecutionValidationError, IntegrationCapabilityError) as exc:
+                raise IntegrationRequestError(str(exc)) from exc
+            if capability.requires_local_approval and (
+                current.approved_capability_id != capability.capability_id
+                or current.approval_receipt_id is None
+            ):
+                raise IntegrationRequestError(
+                    "Dispatch requires an active local approval receipt for the requested capability."
+                )
             connection.execute(
                 """
                 UPDATE integration_requests

@@ -92,5 +92,24 @@ def test_structured_ticket_requires_the_declared_execution_capability(tmp_path):
     invalid = deepcopy(_request())
     invalid["input"]["ticketExecution"]["requestedCapabilities"] = ["workspace.read"]
 
-    with pytest.raises(IntegrationRequestError, match="must include the requested capabilityId"):
+    with pytest.raises(IntegrationRequestError, match="exactly the requested capabilityId"):
+        queue.submit_verified(_decision(invalid, "proof-ticket-001"))
+
+
+def test_structured_ticket_rejects_unused_declared_capabilities(tmp_path):
+    queue = IntegrationRequestQueue(tmp_path / "integration-requests.sqlite3")
+    invalid = deepcopy(_request())
+    invalid["input"]["ticketExecution"]["requestedCapabilities"].append("workspace.read")
+
+    with pytest.raises(IntegrationRequestError, match="exactly the requested capabilityId"):
+        queue.submit_verified(_decision(invalid, "proof-ticket-001"))
+
+
+def test_queue_rejects_a_capability_chatboks_cannot_authorize(tmp_path):
+    queue = IntegrationRequestQueue(tmp_path / "integration-requests.sqlite3")
+    invalid = deepcopy(_request())
+    invalid["capabilityId"] = "workspace.read"
+    invalid["input"]["ticketExecution"]["requestedCapabilities"] = ["workspace.read"]
+
+    with pytest.raises(IntegrationRequestError, match="does not support integration capability"):
         queue.submit_verified(_decision(invalid, "proof-ticket-001"))
