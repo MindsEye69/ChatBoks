@@ -78,6 +78,13 @@ the queued request's received, approved, rejected, and dispatched lifecycle
 events with a bounded `after` cursor. It deliberately omits each event's stored
 detail, so review notes, proof IDs, and request digests stay local.
 
+The project-local execution registry at
+.chatboks/integration-executions.sqlite3 is the foundation for request-scoped
+lifecycle controls. It reserves one execution ID per request and records
+runner state transitions and metadata-only events. It is intentionally not
+wired to ChatBoks' current project-wide stop command: only a future isolated
+runner may attach a running process or session to an execution ID.
+
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer
 token and a valid paired-client proof. Without the optional Foundation package,
