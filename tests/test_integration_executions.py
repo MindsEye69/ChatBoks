@@ -39,6 +39,13 @@ def test_execution_registry_enforces_isolated_runner_state_transitions(tmp_path)
         registry.pause(reserved.execution_id)
 
     started = registry.start(reserved.execution_id, "session-isolated-002")
+    activity = registry.set_activity(
+        started.execution_id,
+        active_role="codex",
+        current_operation="executing_agent",
+        expected_next_transition="agent_completion",
+    )
+    heartbeat = registry.heartbeat(activity.execution_id)
     paused = registry.pause(started.execution_id)
     resumed = registry.resume(paused.execution_id)
     cancellation_requested = registry.request_cancellation(resumed.execution_id)
@@ -49,6 +56,10 @@ def test_execution_registry_enforces_isolated_runner_state_transitions(tmp_path)
     assert attached.runner_pid == 4242
     assert started.runner_pid == 4242
     assert started.session_id == "session-isolated-002"
+    assert activity.active_role == "codex"
+    assert activity.current_operation == "executing_agent"
+    assert activity.expected_next_transition == "agent_completion"
+    assert heartbeat.last_heartbeat_at is not None
     assert paused.status == "paused"
     assert resumed.status == "running"
     assert cancellation_requested.status == "cancellation_requested"
@@ -59,6 +70,8 @@ def test_execution_registry_enforces_isolated_runner_state_transitions(tmp_path)
         "execution_reserved",
         "runner_attached",
         "execution_started",
+        "execution_activity_updated",
+        "execution_heartbeat",
         "execution_paused",
         "execution_resumed",
         "execution_cancellation_requested",
@@ -81,7 +94,7 @@ def test_execution_registry_records_worker_launch_failure_without_starting(tmp_p
     ]
 
 
-def test_execution_registry_migrates_v1_database_with_runner_pid(tmp_path):
+def test_execution_registry_migrates_v1_database_with_runner_and_observability_fields(tmp_path):
     database = tmp_path / "integration-executions.sqlite3"
     with sqlite3.connect(database) as connection:
         connection.executescript(
@@ -112,8 +125,12 @@ def test_execution_registry_migrates_v1_database_with_runner_pid(tmp_path):
     with sqlite3.connect(database) as connection:
         columns = {row[1] for row in connection.execute("PRAGMA table_info(integration_executions)")}
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-    assert version == 2
+    assert version == 3
     assert "runner_pid" in columns
+    assert "last_heartbeat_at" in columns
+    assert "active_role" in columns
+    assert "current_operation" in columns
+    assert "expected_next_transition" in columns
     assert registry.reserve("request-execution-migration-001").runner_pid is None
 
 

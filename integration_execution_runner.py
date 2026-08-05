@@ -14,6 +14,7 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 from typing import Any, Callable
 
@@ -34,6 +35,7 @@ from ticket_execution import TicketExecutionValidationError, parse_ticket_execut
 _EXECUTION_ID_PATTERN = re.compile(r"execution-[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\Z")
 _MAX_PROMPT_CHARS = 10_000
 _MAX_RESULT_CHARS = 200_000
+_HEARTBEAT_INTERVAL_SECONDS = 5.0
 _TERMINAL_STATUSES = {"cancelled", "succeeded", "failed", "blocked", "interrupted"}
 
 
@@ -43,6 +45,37 @@ class IntegrationExecutionLaunchError(RuntimeError):
 
 class IntegrationExecutionTerminationError(RuntimeError):
     """A local operator cannot prove or stop the recorded worker process."""
+
+
+class _ExecutionHeartbeat:
+    """Best-effort liveness updates that never grant or alter task authority."""
+
+    def __init__(self, registry: IntegrationExecutionRegistry, execution_id: str) -> None:
+        self._registry = registry
+        self._execution_id = execution_id
+        self._stopped = threading.Event()
+        self._thread = threading.Thread(
+            target=self._run,
+            daemon=True,
+            name=f"chatboks-execution-heartbeat-{execution_id[-8:]}",
+        )
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stopped.set()
+        self._thread.join(timeout=_HEARTBEAT_INTERVAL_SECONDS + 1)
+
+    def _run(self) -> None:
+        while not self._stopped.wait(_HEARTBEAT_INTERVAL_SECONDS):
+            try:
+                self._registry.heartbeat(self._execution_id)
+            except IntegrationExecutionError:
+                return
+            except Exception:
+                # Observability must not terminate or change the task itself.
+                continue
 
 
 def execution_artifact_directory(project_path: Path, execution_id: str) -> Path:
@@ -309,14 +342,33 @@ def run_execution(
         raise IntegrationExecutionError("Integration execution is not waiting for a runner.")
 
     execution = registry.start(execution_id, execution_id)
+    heartbeat: _ExecutionHeartbeat | None = None
     try:
-        _agent_name, agent, config = agent_loader(project, project_path, config_path)
+        agent_name, agent, config = agent_loader(project, project_path, config_path)
+        registry.set_activity(
+            execution_id,
+            active_role=agent_name,
+            current_operation="building_execution_context",
+            expected_next_transition="agent_execute",
+        )
+        heartbeat = _ExecutionHeartbeat(registry, execution_id)
+        heartbeat.start()
         context = context_builder(execution, queued.request, project_path, config)
+        registry.set_activity(
+            execution_id,
+            active_role=agent_name,
+            current_operation="executing_agent",
+            expected_next_transition="agent_completion",
+        )
         response = str(agent.execute(context))
+        heartbeat.stop()
+        heartbeat = None
         _write_result(project_path, execution_id, response)
         status, error_code = _result_status(response)
         return registry.finish(execution_id, status, error_code)
     except BaseException as exc:
+        if heartbeat is not None:
+            heartbeat.stop()
         _write_result(project_path, execution_id, f"Integration worker failed: {exc}\n")
         current = registry.get(execution_id)
         if current is None:

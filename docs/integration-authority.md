@@ -118,8 +118,11 @@ detail, so review notes, proof IDs, and request digests stay local.
 After an isolated worker exists, the metadata-only route
 /api/integration/v1/requests/request-id/execution/events exposes that worker's
 state changes with the same bounded cursor. It returns execution identity,
-status, timestamps, and event types only; runner PIDs, task input, result
-artifacts, and agent output remain local.
+status, timestamps, bounded active-role/current-operation/expected-transition
+metadata, and event types only. A running worker emits durable heartbeats, so
+an observer can distinguish recent liveness from a stale record without
+guessing from chat output. Runner PIDs, task input, result artifacts, and agent
+output remain local.
 
 The project-local execution registry at
 .chatboks/integration-executions.sqlite3 assigns one execution ID per request,

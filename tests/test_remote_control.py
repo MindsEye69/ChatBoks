@@ -1651,6 +1651,10 @@ def test_integration_request_summary_prefers_request_owned_execution_status(tmp_
         "status": "running",
         "started_at": execution.started_at,
         "completed_at": None,
+        "last_heartbeat_at": execution.last_heartbeat_at,
+        "active_role": None,
+        "current_operation": "preparing_execution",
+        "expected_next_transition": "agent_load",
     }
 
 
@@ -1689,6 +1693,10 @@ def test_remote_session_exposes_only_metadata_for_execution_events(tmp_path: Pat
         "status": "running",
         "started_at": execution.started_at,
         "completed_at": None,
+        "last_heartbeat_at": execution.last_heartbeat_at,
+        "active_role": None,
+        "current_operation": "preparing_execution",
+        "expected_next_transition": "agent_load",
     }
     assert [event["type"] for event in payload["events"]] == [
         "execution_reserved",

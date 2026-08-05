@@ -1697,6 +1697,10 @@ class RemoteSession:
                 "status": execution_record.status,
                 "started_at": execution_record.started_at,
                 "completed_at": execution_record.completed_at,
+                "last_heartbeat_at": execution_record.last_heartbeat_at,
+                "active_role": execution_record.active_role,
+                "current_operation": execution_record.current_operation,
+                "expected_next_transition": execution_record.expected_next_transition,
             }
         elif request.execution_session_id:
             execution: dict[str, Any] = {"session_id": request.execution_session_id, "status": "unknown"}
@@ -1762,6 +1766,10 @@ class RemoteSession:
                 "status": execution.status,
                 "started_at": execution.started_at,
                 "completed_at": execution.completed_at,
+                "last_heartbeat_at": execution.last_heartbeat_at,
+                "active_role": execution.active_role,
+                "current_operation": execution.current_operation,
+                "expected_next_transition": execution.expected_next_transition,
             },
             "events": [
                 {

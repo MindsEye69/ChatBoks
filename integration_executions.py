@@ -16,8 +16,9 @@ import sqlite3
 import uuid
 
 
-_SCHEMA_VERSION = 2
+_SCHEMA_VERSION = 3
 _MAX_IDENTIFIER_CHARS = 128
+_MAX_METADATA_CHARS = 128
 _MAX_EVENT_PAGE_SIZE = 128
 _INITIAL_STATUS = "waiting_for_runner"
 _TERMINAL_STATUSES = {"cancelled", "succeeded", "failed", "blocked", "interrupted"}
@@ -45,6 +46,10 @@ class IntegrationExecution:
     completed_at: str | None
     error_code: str | None
     runner_pid: int | None
+    last_heartbeat_at: str | None
+    active_role: str | None
+    current_operation: str | None
+    expected_next_transition: str | None
 
 
 @dataclass(frozen=True)
@@ -69,6 +74,17 @@ def _require_identifier(value: object, label: str) -> str:
         raise IntegrationExecutionError(f"{label} must be a bounded string.")
     cleaned = value.strip()
     if not cleaned or len(cleaned) > _MAX_IDENTIFIER_CHARS:
+        raise IntegrationExecutionError(f"{label} must be a bounded string.")
+    return cleaned
+
+
+def _optional_metadata(value: object, label: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise IntegrationExecutionError(f"{label} must be a bounded string.")
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > _MAX_METADATA_CHARS:
         raise IntegrationExecutionError(f"{label} must be a bounded string.")
     return cleaned
 
@@ -133,7 +149,11 @@ class IntegrationExecutionRegistry:
                     started_at TEXT,
                     completed_at TEXT,
                     error_code TEXT,
-                    runner_pid INTEGER
+                    runner_pid INTEGER,
+                    last_heartbeat_at TEXT,
+                    active_role TEXT,
+                    current_operation TEXT,
+                    expected_next_transition TEXT
                 );
                 CREATE TABLE IF NOT EXISTS integration_execution_events (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,6 +171,16 @@ class IntegrationExecutionRegistry:
             }
             if "runner_pid" not in columns:
                 connection.execute("ALTER TABLE integration_executions ADD COLUMN runner_pid INTEGER")
+            if "last_heartbeat_at" not in columns:
+                connection.execute("ALTER TABLE integration_executions ADD COLUMN last_heartbeat_at TEXT")
+            if "active_role" not in columns:
+                connection.execute("ALTER TABLE integration_executions ADD COLUMN active_role TEXT")
+            if "current_operation" not in columns:
+                connection.execute("ALTER TABLE integration_executions ADD COLUMN current_operation TEXT")
+            if "expected_next_transition" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_executions ADD COLUMN expected_next_transition TEXT"
+                )
             if version < _SCHEMA_VERSION:
                 connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
 
@@ -166,6 +196,18 @@ class IntegrationExecutionRegistry:
             completed_at=str(row["completed_at"]) if row["completed_at"] is not None else None,
             error_code=str(row["error_code"]) if row["error_code"] is not None else None,
             runner_pid=int(row["runner_pid"]) if row["runner_pid"] is not None else None,
+            last_heartbeat_at=(
+                str(row["last_heartbeat_at"]) if row["last_heartbeat_at"] is not None else None
+            ),
+            active_role=str(row["active_role"]) if row["active_role"] is not None else None,
+            current_operation=(
+                str(row["current_operation"]) if row["current_operation"] is not None else None
+            ),
+            expected_next_transition=(
+                str(row["expected_next_transition"])
+                if row["expected_next_transition"] is not None
+                else None
+            ),
         )
 
     @staticmethod
@@ -207,7 +249,8 @@ class IntegrationExecutionRegistry:
             )
             self._append_event(connection, execution_id, "execution_reserved")
         return IntegrationExecution(
-            execution_id, request_id, _INITIAL_STATUS, None, created_at, None, None, None, None
+            execution_id, request_id, _INITIAL_STATUS, None, created_at, None, None, None, None,
+            None, None, None, None,
         )
 
     def get(self, execution_id: str) -> IntegrationExecution | None:
@@ -237,10 +280,11 @@ class IntegrationExecutionRegistry:
             connection.execute(
                 """
                 UPDATE integration_executions
-                SET status = 'running', session_id = ?, started_at = ?
+                SET status = 'running', session_id = ?, started_at = ?, last_heartbeat_at = ?,
+                    current_operation = 'preparing_execution', expected_next_transition = 'agent_load'
                 WHERE execution_id = ?
                 """,
-                (session_id, started_at, execution_id),
+                (session_id, started_at, started_at, execution_id),
             )
             self._append_event(connection, execution_id, "execution_started")
         return IntegrationExecution(
@@ -253,6 +297,10 @@ class IntegrationExecutionRegistry:
             None,
             None,
             current.runner_pid,
+            started_at,
+            None,
+            "preparing_execution",
+            "agent_load",
         )
 
     def attach_runner(self, execution_id: str, runner_pid: int) -> IntegrationExecution:
@@ -283,6 +331,69 @@ class IntegrationExecutionRegistry:
             current.completed_at,
             current.error_code,
             runner_pid,
+            current.last_heartbeat_at,
+            current.active_role,
+            current.current_operation,
+            current.expected_next_transition,
+        )
+
+    def set_activity(
+        self,
+        execution_id: str,
+        *,
+        active_role: str,
+        current_operation: str,
+        expected_next_transition: str,
+    ) -> IntegrationExecution:
+        """Publish bounded worker metadata after an actual lifecycle boundary."""
+        execution_id = _require_identifier(execution_id, "execution_id")
+        active_role = _optional_metadata(active_role, "active_role")
+        current_operation = _optional_metadata(current_operation, "current_operation")
+        expected_next_transition = _optional_metadata(
+            expected_next_transition, "expected_next_transition"
+        )
+        assert active_role is not None
+        assert current_operation is not None
+        assert expected_next_transition is not None
+        heartbeat_at = _utc_now()
+        with self._write_transaction() as connection:
+            current = self._current(connection, execution_id)
+            if current.status != "running":
+                raise IntegrationExecutionError("Only a running execution may publish activity.")
+            connection.execute(
+                """
+                UPDATE integration_executions
+                SET active_role = ?, current_operation = ?, expected_next_transition = ?,
+                    last_heartbeat_at = ?
+                WHERE execution_id = ?
+                """,
+                (active_role, current_operation, expected_next_transition, heartbeat_at, execution_id),
+            )
+            self._append_event(connection, execution_id, "execution_activity_updated")
+        return IntegrationExecution(
+            current.execution_id, current.request_id, current.status, current.session_id,
+            current.created_at, current.started_at, current.completed_at, current.error_code,
+            current.runner_pid, heartbeat_at, active_role, current_operation, expected_next_transition,
+        )
+
+    def heartbeat(self, execution_id: str) -> IntegrationExecution:
+        """Record that the owned worker is still alive without exposing task material."""
+        execution_id = _require_identifier(execution_id, "execution_id")
+        heartbeat_at = _utc_now()
+        with self._write_transaction() as connection:
+            current = self._current(connection, execution_id)
+            if current.status != "running":
+                raise IntegrationExecutionError("Only a running execution may emit a heartbeat.")
+            connection.execute(
+                "UPDATE integration_executions SET last_heartbeat_at = ? WHERE execution_id = ?",
+                (heartbeat_at, execution_id),
+            )
+            self._append_event(connection, execution_id, "execution_heartbeat")
+        return IntegrationExecution(
+            current.execution_id, current.request_id, current.status, current.session_id,
+            current.created_at, current.started_at, current.completed_at, current.error_code,
+            current.runner_pid, heartbeat_at, current.active_role, current.current_operation,
+            current.expected_next_transition,
         )
 
     def mark_runner_failed_to_start(self, execution_id: str, error_code: str) -> IntegrationExecution:
@@ -406,13 +517,16 @@ class IntegrationExecutionRegistry:
         connection.execute(
             """
             UPDATE integration_executions
-            SET status = ?, completed_at = ?, error_code = ?
+            SET status = ?, completed_at = ?, error_code = ?, current_operation = ?,
+                expected_next_transition = ?
             WHERE execution_id = ?
             """,
             (
                 status,
                 completed_at if completed_at is not None else current.completed_at,
                 error_code if error_code is not None else current.error_code,
+                status if status in _TERMINAL_STATUSES else current.current_operation,
+                None if status in _TERMINAL_STATUSES else current.expected_next_transition,
                 current.execution_id,
             ),
         )
@@ -427,6 +541,10 @@ class IntegrationExecutionRegistry:
             completed_at if completed_at is not None else current.completed_at,
             error_code if error_code is not None else current.error_code,
             current.runner_pid,
+            current.last_heartbeat_at,
+            current.active_role,
+            status if status in _TERMINAL_STATUSES else current.current_operation,
+            None if status in _TERMINAL_STATUSES else current.expected_next_transition,
         )
 
     def events(
