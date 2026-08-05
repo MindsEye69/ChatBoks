@@ -354,6 +354,7 @@ def run_execution(
     agent_step_started = False
     try:
         agent_name, agent, config = agent_loader(project, project_path, config_path)
+        checkpoints.record_safe_stage(execution_id, "agent_loaded", agent_name)
         registry.set_activity(
             execution_id,
             active_role=agent_name,
@@ -363,6 +364,7 @@ def run_execution(
         heartbeat = _ExecutionHeartbeat(registry, execution_id)
         heartbeat.start()
         context = context_builder(execution, queued.request, project_path, config)
+        checkpoints.record_safe_stage(execution_id, "context_built", context)
         registry.set_activity(
             execution_id,
             active_role=agent_name,
@@ -376,6 +378,7 @@ def run_execution(
         heartbeat = None
         status, error_code = _result_status(response)
         _write_result(project_path, execution_id, response)
+        checkpoints.record_safe_stage(execution_id, "result_written", response)
         checkpoints.finish(execution_id, status, response)
         return registry.finish(execution_id, status, error_code)
     except BaseException as exc:

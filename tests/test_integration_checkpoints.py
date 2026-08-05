@@ -11,7 +11,10 @@ from integration_checkpoints import (
 def test_checkpoint_records_agent_receipt_without_storing_result_text(tmp_path):
     registry = IntegrationCheckpointRegistry(tmp_path / "integration-checkpoints.sqlite3")
     prepared = registry.prepare("execution-checkpoint-001", "request-checkpoint-001")
+    agent_loaded = registry.record_safe_stage(prepared.execution_id, "agent_loaded", "codex")
+    context_built = registry.record_safe_stage(prepared.execution_id, "context_built", "private context")
     active = registry.begin_agent_step(prepared.execution_id)
+    result_written = registry.record_safe_stage(active.execution_id, "result_written", "sensitive agent output")
     completed = registry.finish(active.execution_id, "succeeded", "sensitive agent output")
 
     assert prepared.state == "prepared"
@@ -20,6 +23,11 @@ def test_checkpoint_records_agent_receipt_without_storing_result_text(tmp_path):
     assert completed.result_status == "succeeded"
     assert completed.result_digest is not None
     assert completed.result_digest not in "sensitive agent output"
+    assert [receipt.stage_id for receipt in registry.stage_receipts(completed.execution_id)] == [
+        agent_loaded.stage_id,
+        context_built.stage_id,
+        result_written.stage_id,
+    ]
     assert registry.get(completed.execution_id) == completed
 
 
@@ -33,3 +41,12 @@ def test_uncertain_checkpoint_refuses_automatic_replay(tmp_path):
     assert uncertain.state == "uncertain"
     with pytest.raises(IntegrationCheckpointError, match="automatic replay is refused"):
         registry.prepare(checkpoint.execution_id, checkpoint.request_id)
+
+
+def test_safe_stage_rejects_conflicting_retry_content(tmp_path):
+    registry = IntegrationCheckpointRegistry(tmp_path / "integration-checkpoints.sqlite3")
+    checkpoint = registry.prepare("execution-checkpoint-003", "request-checkpoint-003")
+    registry.record_safe_stage(checkpoint.execution_id, "agent_loaded", "codex")
+
+    with pytest.raises(IntegrationCheckpointError, match="conflicting content"):
+        registry.record_safe_stage(checkpoint.execution_id, "agent_loaded", "claude")

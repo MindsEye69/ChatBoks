@@ -141,12 +141,14 @@ resume remain deferred until they can preserve the same ownership guarantee.
 
 Each isolated execution also writes a local checkpoint ledger before invoking
 the configured agent. The present worker has one opaque, potentially
-irreversible `agent_execute` step. A terminal response creates a result-status
-and hash receipt without copying agent output into the ledger. If recovery
-cannot verify the worker, that step is marked `uncertain` and ChatBoks refuses
-to replay it automatically. A true resume will require future agents to emit
-durable sub-step receipts; it cannot be honestly implemented around one opaque
-LLM call.
+irreversible `agent_execute` step, surrounded by repeatable `agent_loaded`,
+`context_built`, and `result_written` stages. Each safe stage receives a hash
+receipt without copying configuration, context, or agent output into the
+ledger. A terminal response creates its own result-status and hash receipt. If
+recovery cannot verify the worker, the open agent step is marked `uncertain` and
+ChatBoks refuses to replay it automatically. A true resume will require future
+agents to emit durable sub-step receipts; it cannot be honestly implemented
+around one opaque LLM call.
 
 Creating a queued request uses POST /api/integration/v1/requests with exactly
 two fields: clientProof and requestPayload. It requires both the loopback bearer

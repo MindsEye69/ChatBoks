@@ -73,6 +73,9 @@ def test_runner_executes_only_the_dispatched_request_and_persists_local_result(t
     assert checkpoint is not None
     assert checkpoint.state == "completed"
     assert checkpoint.result_status == "succeeded"
+    assert [receipt.stage_id for receipt in IntegrationCheckpointRegistry(
+        default_checkpoint_registry_path(tmp_path)
+    ).stage_receipts(execution.execution_id)] == ["agent_loaded", "context_built", "result_written"]
 
 
 def test_runner_marks_missing_terminal_signal_as_failed_without_leaking_output(tmp_path):

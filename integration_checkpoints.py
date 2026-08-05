@@ -13,9 +13,10 @@ import sqlite3
 import uuid
 
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 _MAX_IDENTIFIER_CHARS = 128
 _STATES = {"prepared", "in_progress", "completed", "uncertain"}
+_SAFE_STAGES = {"agent_loaded", "context_built", "result_written"}
 _PLAN = {
     "schema": "chatboks.execution-checkpoint/v1",
     "steps": [{"id": "agent_execute", "reversibility": "unknown"}],
@@ -39,6 +40,14 @@ class IntegrationCheckpoint:
     result_status: str | None
     result_digest: str | None
     recovery_reason: str | None
+
+
+@dataclass(frozen=True)
+class IntegrationCheckpointStageReceipt:
+    execution_id: str
+    stage_id: str
+    occurred_at: str
+    content_digest: str
 
 
 def default_checkpoint_registry_path(project_path: Path) -> Path:
@@ -105,6 +114,11 @@ class IntegrationCheckpointRegistry:
                 CREATE TABLE IF NOT EXISTS integration_checkpoint_events (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT NOT NULL UNIQUE,
                     execution_id TEXT NOT NULL, occurred_at TEXT NOT NULL, event_type TEXT NOT NULL,
+                    FOREIGN KEY(execution_id) REFERENCES integration_checkpoints(execution_id)
+                );
+                CREATE TABLE IF NOT EXISTS integration_checkpoint_stage_receipts (
+                    execution_id TEXT NOT NULL, stage_id TEXT NOT NULL, occurred_at TEXT NOT NULL,
+                    content_digest TEXT NOT NULL, PRIMARY KEY(execution_id, stage_id),
                     FOREIGN KEY(execution_id) REFERENCES integration_checkpoints(execution_id)
                 );
                 """
@@ -177,6 +191,58 @@ class IntegrationCheckpointRegistry:
             )
             self._event(connection, execution_id, "checkpoint_agent_step_started")
         return IntegrationCheckpoint(current.execution_id, current.request_id, "in_progress", current.plan_digest, current.created_at, now, now, None, None, None, None)
+
+    def record_safe_stage(
+        self, execution_id: str, stage_id: str, content: str
+    ) -> IntegrationCheckpointStageReceipt:
+        """Store one idempotent local-stage receipt without retaining its content."""
+        execution_id = _identifier(execution_id, "execution_id")
+        if stage_id not in _SAFE_STAGES:
+            raise IntegrationCheckpointError("Checkpoint stage is not recognized as safe and repeatable.")
+        if not isinstance(content, str):
+            raise IntegrationCheckpointError("Checkpoint stage content must be a string.")
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        now = _utc_now()
+        with self._transaction() as connection:
+            row = connection.execute("SELECT * FROM integration_checkpoints WHERE execution_id = ?", (execution_id,)).fetchone()
+            if row is None:
+                raise IntegrationCheckpointError("Execution checkpoint was not found.")
+            current = self._from_row(row)
+            if current.state not in {"prepared", "in_progress"}:
+                raise IntegrationCheckpointError("Safe-stage receipts cannot be added to a terminal checkpoint.")
+            existing = connection.execute(
+                "SELECT * FROM integration_checkpoint_stage_receipts WHERE execution_id = ? AND stage_id = ?",
+                (execution_id, stage_id),
+            ).fetchone()
+            if existing is not None:
+                receipt = IntegrationCheckpointStageReceipt(
+                    execution_id=str(existing["execution_id"]), stage_id=str(existing["stage_id"]),
+                    occurred_at=str(existing["occurred_at"]), content_digest=str(existing["content_digest"]),
+                )
+                if receipt.content_digest != digest:
+                    raise IntegrationCheckpointError("Safe checkpoint stage has conflicting content.")
+                return receipt
+            connection.execute(
+                "INSERT INTO integration_checkpoint_stage_receipts (execution_id, stage_id, occurred_at, content_digest) VALUES (?, ?, ?, ?)",
+                (execution_id, stage_id, now, digest),
+            )
+            self._event(connection, execution_id, f"checkpoint_{stage_id}")
+        return IntegrationCheckpointStageReceipt(execution_id, stage_id, now, digest)
+
+    def stage_receipts(self, execution_id: str) -> list[IntegrationCheckpointStageReceipt]:
+        execution_id = _identifier(execution_id, "execution_id")
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM integration_checkpoint_stage_receipts WHERE execution_id = ? ORDER BY occurred_at ASC",
+                (execution_id,),
+            ).fetchall()
+        return [
+            IntegrationCheckpointStageReceipt(
+                execution_id=str(row["execution_id"]), stage_id=str(row["stage_id"]),
+                occurred_at=str(row["occurred_at"]), content_digest=str(row["content_digest"]),
+            )
+            for row in rows
+        ]
 
     def finish(self, execution_id: str, result_status: str, result_text: str) -> IntegrationCheckpoint:
         execution_id = _identifier(execution_id, "execution_id")
