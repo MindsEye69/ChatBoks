@@ -69,21 +69,28 @@ The structured fields are still untrusted task material. Context references
 are never opened automatically. ChatBoks currently allowlists only
 `execution.lifecycle`; structured tickets must declare exactly that capability,
 and local approval writes a durable receipt for it before dispatch is possible.
-The local review shows its high risk and unknown reversibility. The receipt is
-not a sandbox for the configured external agent: requested capabilities do not
-grant arbitrary tools, and the requested budget does not impose a hard runtime
-limit yet. Broader typed capability adapters and durable per-step budget
-receipts remain CBX-005 and CBX-007 work respectively.
+The local review shows its high risk and unknown reversibility. Receipts expire
+after 15 minutes and can be revoked locally while work is still undispatched.
+Both expired and revoked approvals are recorded as rejected requests with a
+durable event explaining why; they can never be dispatched. Revoking an
+already-running worker is deliberately not supported—use the explicit local
+cancellation flow instead. The receipt is not a sandbox for the configured
+external agent: requested capabilities do not grant arbitrary tools, and the
+requested budget does not impose a hard runtime limit yet. Broader typed
+capability adapters and durable per-step budget receipts remain CBX-005 and
+CBX-007 work respectively.
 
 The local operator workflow is:
 
 1. /integration to inspect pending requests.
 2. /integration approve request-id with an optional review note, or reject it.
-3. /integration dispatch request-id to launch one request-owned worker for the
+3. /integration revoke request-id before dispatch if the approved scope must
+   no longer run.
+4. /integration dispatch request-id to launch one request-owned worker for the
    approved legacy `input.prompt` or structured ticket execution input.
-4. /integration cancel request-id to stop that worker only after ChatBoks
+5. /integration cancel request-id to stop that worker only after ChatBoks
    verifies the recorded PID still belongs to the expected worker command.
-5. /integration recover request-id to mark a dispatched execution interrupted
+6. /integration recover request-id to mark a dispatched execution interrupted
    only when its recorded worker can no longer be verified; a verified worker
    is left running.
 

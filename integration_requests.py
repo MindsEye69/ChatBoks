@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import hashlib
 import json
 from pathlib import Path
@@ -22,10 +22,11 @@ from integration_proofs import PairedProofDecision
 from ticket_execution import TicketExecutionValidationError, parse_ticket_execution
 
 
-_QUEUE_SCHEMA_VERSION = 4
+_QUEUE_SCHEMA_VERSION = 5
 _MAX_REQUEST_BYTES = 64 * 1024
 _MAX_NOTE_BYTES = 1_000
 _MAX_EVENT_PAGE_SIZE = 128
+_APPROVAL_TTL = timedelta(minutes=15)
 _STATUSES = {"pending", "approved", "rejected", "dispatched"}
 
 
@@ -53,6 +54,9 @@ class QueuedIntegrationRequest:
     execution_session_id: str | None
     approved_capability_id: str | None = None
     approval_receipt_id: str | None = None
+    approval_expires_at: str | None = None
+    approval_revoked_at: str | None = None
+    revocation_note: str | None = None
 
 
 @dataclass(frozen=True)
@@ -70,6 +74,20 @@ def default_request_queue_path(project_path: Path) -> Path:
 
 def _utc_now() -> str:
     return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _utc_after(duration: timedelta) -> str:
+    return (datetime.now(UTC) + duration).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _approval_is_expired(value: str | None) -> bool:
+    if value is None:
+        return True
+    try:
+        expires_at = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    return expires_at <= datetime.now(UTC)
 
 
 def _canonical_request(request: Mapping[str, Any]) -> str:
@@ -138,7 +156,8 @@ class IntegrationRequestQueue:
                     status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'rejected', 'dispatched')),
                     decided_at TEXT, decision_note TEXT, dispatched_at TEXT,
                     execution_session_id TEXT, approved_capability_id TEXT,
-                    approval_receipt_id TEXT UNIQUE
+                    approval_receipt_id TEXT UNIQUE, approval_expires_at TEXT,
+                    approval_revoked_at TEXT, revocation_note TEXT
                 );
                 CREATE TABLE IF NOT EXISTS integration_request_events (
                     event_id TEXT PRIMARY KEY, request_id TEXT NOT NULL, occurred_at TEXT NOT NULL,
@@ -170,6 +189,18 @@ class IntegrationRequestQueue:
             if "approval_receipt_id" not in columns:
                 connection.execute(
                     "ALTER TABLE integration_requests ADD COLUMN approval_receipt_id TEXT"
+                )
+            if "approval_expires_at" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN approval_expires_at TEXT"
+                )
+            if "approval_revoked_at" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN approval_revoked_at TEXT"
+                )
+            if "revocation_note" not in columns:
+                connection.execute(
+                    "ALTER TABLE integration_requests ADD COLUMN revocation_note TEXT"
                 )
             connection.execute(
                 """
@@ -236,6 +267,21 @@ class IntegrationRequestQueue:
             approval_receipt_id=(
                 str(row["approval_receipt_id"])
                 if row["approval_receipt_id"] is not None
+                else None
+            ),
+            approval_expires_at=(
+                str(row["approval_expires_at"])
+                if row["approval_expires_at"] is not None
+                else None
+            ),
+            approval_revoked_at=(
+                str(row["approval_revoked_at"])
+                if row["approval_revoked_at"] is not None
+                else None
+            ),
+            revocation_note=(
+                str(row["revocation_note"])
+                if row["revocation_note"] is not None
                 else None
             ),
         )
@@ -400,6 +446,40 @@ class IntegrationRequestQueue:
     def reject(self, request_id: str, note: str = "") -> QueuedIntegrationRequest:
         return self._decide(request_id, "rejected", note)
 
+    def revoke_approval(self, request_id: str, note: str = "") -> QueuedIntegrationRequest:
+        """Revoke an undispatched approval; running work must be cancelled separately."""
+        note = note.strip()
+        if len(note.encode("utf-8")) > _MAX_NOTE_BYTES:
+            raise IntegrationRequestError("Revocation note exceeds the 1000-byte limit.")
+        revoked_at = _utc_now()
+        with self._write_transaction() as connection:
+            row = connection.execute("SELECT * FROM integration_requests WHERE request_id = ?", (request_id,)).fetchone()
+            if row is None:
+                raise IntegrationRequestError("Integration request was not found.")
+            current = self._from_row(row)
+            if current.status != "approved":
+                raise IntegrationRequestError("Only an approved, undispatched integration request may be revoked.")
+            connection.execute(
+                """
+                UPDATE integration_requests
+                SET status = 'rejected', approval_revoked_at = ?, revocation_note = ?
+                WHERE request_id = ?
+                """,
+                (revoked_at, note or None, request_id),
+            )
+            self._append_event(
+                connection,
+                request_id,
+                "approval_revoked",
+                {"note": note, "capability_id": current.approved_capability_id},
+            )
+        return replace(
+            current,
+            status="rejected",
+            approval_revoked_at=revoked_at,
+            revocation_note=note or None,
+        )
+
     def _decide(self, request_id: str, outcome: str, note: str) -> QueuedIntegrationRequest:
         note = note.strip()
         if len(note.encode("utf-8")) > _MAX_NOTE_BYTES:
@@ -414,6 +494,7 @@ class IntegrationRequestQueue:
                 raise IntegrationRequestError(f"Integration request is already {current.status} and cannot be {outcome}.")
             approved_capability_id = None
             approval_receipt_id = None
+            approval_expires_at = None
             if outcome == "approved":
                 try:
                     capability = get_integration_capability(current.capability_id)
@@ -422,11 +503,13 @@ class IntegrationRequestQueue:
                 if capability.requires_local_approval:
                     approved_capability_id = capability.capability_id
                     approval_receipt_id = str(uuid.uuid4())
+                    approval_expires_at = _utc_after(_APPROVAL_TTL)
             connection.execute(
                 """
                 UPDATE integration_requests
                 SET status = ?, decided_at = ?, decision_note = ?, approved_capability_id = ?,
-                    approval_receipt_id = ?
+                    approval_receipt_id = ?, approval_expires_at = ?, approval_revoked_at = NULL,
+                    revocation_note = NULL
                 WHERE request_id = ?
                 """,
                 (
@@ -435,6 +518,7 @@ class IntegrationRequestQueue:
                     note or None,
                     approved_capability_id,
                     approval_receipt_id,
+                    approval_expires_at,
                     request_id,
                 ),
             )
@@ -444,6 +528,7 @@ class IntegrationRequestQueue:
                     {
                         "capability_id": approved_capability_id,
                         "approval_receipt_id": approval_receipt_id,
+                        "approval_expires_at": approval_expires_at,
                     }
                 )
             self._append_event(connection, request_id, f"request_{outcome}", detail)
@@ -454,6 +539,9 @@ class IntegrationRequestQueue:
             decision_note=note or None,
             approved_capability_id=approved_capability_id,
             approval_receipt_id=approval_receipt_id,
+            approval_expires_at=approval_expires_at,
+            approval_revoked_at=None,
+            revocation_note=None,
         )
 
     def mark_dispatched(
@@ -466,6 +554,7 @@ class IntegrationRequestQueue:
         if not execution_session_id or len(execution_session_id) > 128:
             raise IntegrationRequestError("Dispatch requires a bounded ChatBoks session identifier.")
         dispatched_at = _utc_now()
+        expired = False
         with self._write_transaction() as connection:
             row = connection.execute("SELECT * FROM integration_requests WHERE request_id = ?", (request_id,)).fetchone()
             if row is None:
@@ -473,29 +562,44 @@ class IntegrationRequestQueue:
             current = self._from_row(row)
             if current.status != "approved":
                 raise IntegrationRequestError("Only an explicitly approved integration request may be dispatched.")
-            try:
-                ticket_execution = parse_ticket_execution(current.request)
-                capability = validate_capability_scope(current.capability_id, ticket_execution)
-            except (TicketExecutionValidationError, IntegrationCapabilityError) as exc:
-                raise IntegrationRequestError(str(exc)) from exc
-            if capability.requires_local_approval and (
-                current.approved_capability_id != capability.capability_id
-                or current.approval_receipt_id is None
-            ):
-                raise IntegrationRequestError(
-                    "Dispatch requires an active local approval receipt for the requested capability."
+            if _approval_is_expired(current.approval_expires_at):
+                connection.execute(
+                    "UPDATE integration_requests SET status = 'rejected' WHERE request_id = ?",
+                    (request_id,),
                 )
-            connection.execute(
-                """
-                UPDATE integration_requests
-                SET status = 'dispatched', dispatched_at = ?, execution_session_id = ?
-                WHERE request_id = ?
-                """,
-                (dispatched_at, execution_session_id, request_id),
-            )
-            self._append_event(
-                connection, request_id, "request_dispatched", {"session_id": execution_session_id}
-            )
+                self._append_event(
+                    connection,
+                    request_id,
+                    "approval_expired",
+                    {"approval_receipt_id": current.approval_receipt_id},
+                )
+                expired = True
+            if not expired:
+                try:
+                    ticket_execution = parse_ticket_execution(current.request)
+                    capability = validate_capability_scope(current.capability_id, ticket_execution)
+                except (TicketExecutionValidationError, IntegrationCapabilityError) as exc:
+                    raise IntegrationRequestError(str(exc)) from exc
+                if capability.requires_local_approval and (
+                    current.approved_capability_id != capability.capability_id
+                    or current.approval_receipt_id is None
+                ):
+                    raise IntegrationRequestError(
+                        "Dispatch requires an active local approval receipt for the requested capability."
+                    )
+                connection.execute(
+                    """
+                    UPDATE integration_requests
+                    SET status = 'dispatched', dispatched_at = ?, execution_session_id = ?
+                    WHERE request_id = ?
+                    """,
+                    (dispatched_at, execution_session_id, request_id),
+                )
+                self._append_event(
+                    connection, request_id, "request_dispatched", {"session_id": execution_session_id}
+                )
+        if expired:
+            raise IntegrationRequestError("The local approval receipt expired before dispatch.")
         return replace(
             current,
             status="dispatched",

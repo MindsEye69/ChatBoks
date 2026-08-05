@@ -821,6 +821,10 @@ class Chatboks:
                     )
                     if request.approval_receipt_id is not None:
                         capability_note += f"; approval_receipt={request.approval_receipt_id}"
+                    if request.approval_expires_at is not None:
+                        capability_note += f"; approval_expires={request.approval_expires_at}"
+                    if request.approval_revoked_at is not None:
+                        capability_note += f"; approval_revoked={request.approval_revoked_at}"
                 try:
                     ticket_execution = parse_ticket_execution(request.request)
                 except TicketExecutionValidationError:
@@ -843,7 +847,7 @@ class Chatboks:
                 )
             self.stream.system("\n".join(lines))
             return
-        if action not in {"approve", "reject", "dispatch", "cancel", "recover"} or len(parts) < 3:
+        if action not in {"approve", "reject", "revoke", "dispatch", "cancel", "recover"} or len(parts) < 3:
             self.stream.system(
                 "Usage: /integration [pending|all], /integration approve <request-id> [note], "
                 "/integration reject <request-id> [note], /integration dispatch <request-id>, "
@@ -932,6 +936,13 @@ class Chatboks:
             if action == "reject":
                 request = queue.reject(request_id, note)
                 self.stream.system(f"Integration request {request.request_id} rejected locally.")
+                return
+            if action == "revoke":
+                request = queue.revoke_approval(request_id, note)
+                self.stream.system(
+                    f"Integration approval for {request.request_id} was revoked locally; "
+                    "an already running execution must be cancelled separately."
+                )
                 return
             request = queue.get(request_id)
             if request is None:

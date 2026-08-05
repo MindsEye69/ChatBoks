@@ -75,6 +75,19 @@ def test_remote_origin_cannot_approve_or_dispatch_integration_request(tmp_path: 
     assert "require a local terminal or desktop operator" in app.stream.system.call_args.args[0]
 
 
+def test_remote_origin_cannot_revoke_integration_approval(tmp_path: Path):
+    app = _app(tmp_path)
+    request_id = _queue_request(tmp_path)
+    app.integration_request_queue().approve(request_id)
+
+    Chatboks.handle_integration_command(app, f"/integration revoke {request_id}", source="remote")
+
+    queued = app.integration_request_queue().get(request_id)
+    assert queued is not None
+    assert queued.status == "approved"
+    assert "require a local terminal or desktop operator" in app.stream.system.call_args.args[0]
+
+
 def test_local_operator_must_approve_before_dispatching_to_an_isolated_runner(tmp_path: Path):
     app = _app(tmp_path)
     request_id = _queue_request(tmp_path)
@@ -110,6 +123,8 @@ def test_structured_ticket_scope_is_visible_locally_and_dispatches_without_a_leg
 
     Chatboks.handle_integration_command(app, f"/integration approve {request_id}", source="terminal")
     assert "approval receipt" in app.stream.system.call_args.args[0]
+    Chatboks.handle_integration_command(app, "/integration all", source="terminal")
+    assert "approval_expires=" in app.stream.system.call_args.args[0]
     Chatboks.handle_integration_command(app, f"/integration dispatch {request_id}", source="terminal")
 
     queued = app.integration_request_queue().get(request_id)

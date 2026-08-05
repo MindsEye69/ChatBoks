@@ -36,6 +36,7 @@ def test_queue_requires_explicit_approval_before_dispatch_and_is_durable(tmp_pat
     assert approved.status == "approved"
     assert approved.approved_capability_id == "execution.lifecycle"
     assert approved.approval_receipt_id is not None
+    assert approved.approval_expires_at is not None
     dispatched = queue.mark_dispatched(queued.request_id, "session-queue-001")
     assert dispatched.status == "dispatched"
     assert dispatched.dispatched_at is not None
@@ -92,12 +93,15 @@ def test_queue_migrates_v1_database_with_execution_session_idempotency_and_appro
     with sqlite3.connect(database) as connection:
         columns = {row[1] for row in connection.execute("PRAGMA table_info(integration_requests)")}
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-    assert version == 4
+    assert version == 5
     assert "execution_session_id" in columns
     assert "idempotency_key" in columns
     assert "idempotency_digest" in columns
     assert "approved_capability_id" in columns
     assert "approval_receipt_id" in columns
+    assert "approval_expires_at" in columns
+    assert "approval_revoked_at" in columns
+    assert "revocation_note" in columns
     assert queued.execution_session_id is None
 
 
@@ -115,3 +119,38 @@ def test_dispatch_requires_the_durable_receipt_created_by_local_approval(tmp_pat
 
     with pytest.raises(IntegrationRequestError, match="active local approval receipt"):
         queue.mark_dispatched(queued.request_id, "session-queue-001")
+
+
+def test_local_operator_can_revoke_an_undispatched_capability_approval(tmp_path):
+    queue = IntegrationRequestQueue(tmp_path / "integration-requests.sqlite3")
+    queued = queue.submit_verified(_decision())
+    approved = queue.approve(queued.request_id)
+    revoked = queue.revoke_approval(queued.request_id, "Scope changed.")
+
+    assert approved.approval_receipt_id is not None
+    assert revoked.status == "rejected"
+    assert revoked.approval_revoked_at is not None
+    assert revoked.revocation_note == "Scope changed."
+    assert [event.event_type for event in queue.events(queued.request_id)][-1] == "approval_revoked"
+    with pytest.raises(IntegrationRequestError, match="Only an explicitly approved"):
+        queue.mark_dispatched(queued.request_id, "session-queue-001")
+
+
+def test_expired_approval_is_rejected_and_never_dispatched(tmp_path):
+    database = tmp_path / "integration-requests.sqlite3"
+    queue = IntegrationRequestQueue(database)
+    queued = queue.submit_verified(_decision())
+    queue.approve(queued.request_id)
+
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE integration_requests SET approval_expires_at = ? WHERE request_id = ?",
+            ("2000-01-01T00:00:00.000Z", queued.request_id),
+        )
+
+    with pytest.raises(IntegrationRequestError, match="receipt expired"):
+        queue.mark_dispatched(queued.request_id, "session-queue-001")
+    expired = queue.get(queued.request_id)
+    assert expired is not None
+    assert expired.status == "rejected"
+    assert [event.event_type for event in queue.events(queued.request_id)][-1] == "approval_expired"
