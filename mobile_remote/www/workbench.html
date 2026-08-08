@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>ChatBoks Workbench</title>
   <link rel="icon" type="image/png" href="./assets/chatboks-mark.png">
-  <link rel="stylesheet" href="./workbench.css?v=20260802-phi-mineral-v1">
+  <link rel="stylesheet" href="./workbench.css?v=20260808-lumen-generated-assets-v11">
 </head>
 <body>
   <div class="workbench-shell">
@@ -14,7 +14,11 @@
       <div class="brand-row">
         <div class="brand-mark"><img src="./assets/chatboks-mark.png" alt="ChatBoks"></div>
         <div class="brand-copy">
-          <div class="brand-name">ChatBoks</div>
+          <div class="brand-companion-label">Lumen Companion</div>
+          <div class="brand-wordmark" role="img" aria-label="ChatBoks">
+            <img class="brand-wordmark-image" src="./assets/lumen-chatboks-lockup.png" alt="ChatBoks">
+          </div>
+          <div class="brand-name sr-only">ChatBoks</div>
           <div id="appVersion" class="brand-version">v0.1.00</div>
         </div>
       </div>
@@ -188,12 +192,15 @@
           <div id="approvalStatus" class="approval-status" aria-live="polite"></div>
           <div id="approvalCommandPreview" class="approval-command-preview"></div>
           <div id="approvalBuildActions" class="approval-build-actions" aria-label="Choose an agent to build"></div>
-          <div class="approval-actions">
-            <button id="approveButton" class="approval-button approve-action" type="button">Build with primary</button>
-            <button id="modifyButton" class="approval-button modify-action" type="button">Modify</button>
-            <button id="rejectButton" class="approval-button reject-action" type="button">Reject</button>
-            <button id="dismissButton" class="approval-button dismiss-action" type="button">Dismiss</button>
-          </div>
+          <details class="approval-more" open>
+            <summary aria-label="More approval actions" title="More approval actions">...</summary>
+            <div class="approval-actions">
+              <button id="approveButton" class="approval-button approve-action" type="button">Build with primary</button>
+              <button id="modifyButton" class="approval-button modify-action" type="button">Modify</button>
+              <button id="rejectButton" class="approval-button reject-action" type="button">Reject</button>
+              <button id="dismissButton" class="approval-button dismiss-action" type="button">Dismiss</button>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -242,10 +249,15 @@
           </div>
         </div>
         <div class="composer-toolbar">
-          <button class="ghost-button" type="button">Upload</button>
+          <button id="uploadButton" class="ghost-button" type="button">Upload</button>
           <button class="ghost-button" type="button">Auto v</button>
           <button id="skillsButton" class="ghost-button" type="button" aria-expanded="false" aria-controls="skillsPanel">Skills</button>
           <span id="sendStatus">Uses best available model</span>
+          <label id="activeModelControl" class="active-model-control" for="activeModelSelect">
+            <span class="sr-only">Model for active agent</span>
+            <select id="activeModelSelect" aria-label="Model for active agent"></select>
+            <span id="activeModelWarning" class="active-model-warning hidden" aria-live="polite"></span>
+          </label>
           <button id="stopButton" class="stop-button hidden" type="button">Stop</button>
           <button class="ghost-button mic-button" type="button" aria-label="Voice input" title="Voice input">mic</button>
           <button id="sendButton" class="send-button" type="button">Send</button>
@@ -260,7 +272,7 @@
 
       <section id="systemDrawer" class="coordinator-card system-drawer hidden" aria-label="System coordinator">
         <header class="coordinator-header">
-          <div class="agent-logo system-logo agent-avatar"><img src="./assets/orchestrator.png" alt=""></div>
+          <div class="agent-logo system-logo agent-avatar"><img src="./assets/lumen-orchestrator-avatar.png" alt=""></div>
           <div class="coordinator-title">
             <h2>System <span>(Coordinator)</span></h2>
             <p><span id="coordDot" class="live-dot offline"></span> <span id="coordState">Offline</span></p>
@@ -384,6 +396,6 @@
 <script src="./mobile-version.js"></script>
   <script src="./lumen-theme.js?v=20260803-lumen-plugin"></script>
   <script src="./workbench-responsive.js?v=20260803-compact-lanes"></script>
-  <script src="./workbench.js?v=20260803-compact-lanes"></script>
+  <script src="./workbench.js?v=20260808-lumen-generated-assets-v8"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 const STORAGE_KEY = "chatboks-workbench";
 const PACKAGED_APP_VERSION = String(window.CHATBOKS_PACKAGED_VERSION || "").trim();
 const LUMEN_MIGRATION_KEY = "chatboks-lumen-redesign-v1";
+const LUMEN_FOCUSED_THREAD_MIGRATION_KEY = "chatboks-lumen-focused-thread-v1";
 const SESSION_POLL_MS = 1500;
 const SESSION_POLL_BUSY_MS = 350;
 const WORKBENCH_POLL_MS = 10000;
@@ -22,6 +23,13 @@ const embeddedSession = embeddedMode
 const embeddedHostRequests = new Map();
 const compactWorkbenchQuery = window.matchMedia("(max-width: 1500px)");
 
+function isTrustedEmbeddedParent(event) {
+  if (!embeddedMode || event.source !== window.parent) return false;
+  return event.origin === "tauri://localhost"
+    || event.origin === "http://tauri.localhost"
+    || event.origin === "http://localhost:5173";
+}
+
 function requestEmbeddedHost(action) {
   if (!embeddedMode || window.parent === window) return Promise.resolve(null);
   const id = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
@@ -39,7 +47,7 @@ function requestEmbeddedHost(action) {
 }
 
 window.addEventListener("message", (event) => {
-  if (!embeddedMode || event.source !== window.parent || event.data?.type !== "chatboks:host-response") return;
+  if (!isTrustedEmbeddedParent(event) || event.data?.type !== "chatboks:host-response") return;
   const resolve = embeddedHostRequests.get(event.data.id);
   if (!resolve) return;
   embeddedHostRequests.delete(event.data.id);
@@ -61,11 +69,17 @@ const LANE_LABELS = {
 const LANE_GLYPHS = {
   coordinator: "GM",
 };
-const AGENT_IMAGES = {
-  claude: "./assets/claude.png",
-  codex: "./assets/codex.png",
-  coordinator: "./assets/orchestrator.png",
-  codex_spark: "./assets/spark.png",
+const AGENT_SYMBOLS = {
+  claude: "./assets/lumen-claude-symbol.png",
+  codex: "./assets/lumen-codex-symbol.png",
+  coordinator: "./assets/lumen-orchestrator-symbol.png",
+  codex_spark: "./assets/lumen-spark-symbol.png",
+};
+const AGENT_AVATARS = {
+  claude: "./assets/lumen-claude-avatar.png",
+  codex: "./assets/lumen-codex-avatar.png",
+  coordinator: "./assets/lumen-orchestrator-avatar.png",
+  codex_spark: "./assets/lumen-spark-avatar.png",
 };
 
 /* Themes live in workbench.css as [data-theme="..."] blocks. The picked one
@@ -87,9 +101,10 @@ const LEGACY_THEMES = {
 const state = {
   token: "",
   bridgeUrl: "",
+  lumenViewMode: "conversation",
   theme: DEFAULT_THEME,
   focusMode: false,
-  laneView: "compare",
+  laneView: "task",
   activeLane: "",
   laneSelectionPinned: false,
   compactMode: false,
@@ -228,7 +243,8 @@ for (const id of [
     "coordTime", "coordFeed", "statRound", "statMode", "statNext", "statStatus", "historySearch",
     "railProjectName", "idlePhase", "livePhase",
     "traceAgentCount", "traceAgentList", "tracePacketCount", "tracePacketList",
-    "composerCard", "composerExpandButton", "workbenchPrompt", "commandCompletionPalette", "sendStatus", "sendButton", "stopButton",
+    "composerCard", "composerExpandButton", "workbenchPrompt", "commandCompletionPalette", "sendStatus", "sendButton", "stopButton", "uploadButton",
+    "activeModelControl", "activeModelSelect", "activeModelWarning",
     "skillsButton", "skillsPanel", "skillsCloseButton", "skillsSearch", "skillsFilters", "skillsList", "selectedSkills",
   "envProject", "envBranch", "envCleanDot", "envClean", "envChanges", "envCommit",
   "bridgeDot", "bridgePid", "bridgePairTtl", "bridgeOperator",
@@ -247,19 +263,23 @@ function loadSettings() {
     state.token = saved.token || "";
     state.bridgeUrl = saved.bridgeUrl || "";
     state.composerHeight = Number(saved.composerHeight) || 0;
-    state.laneView = saved.laneView === "task" ? "task" : "compare";
+    const focusedThreadMigrated = localStorage.getItem(LUMEN_FOCUSED_THREAD_MIGRATION_KEY) === "1";
+    state.laneView = focusedThreadMigrated && saved.laneView === "compare" ? "compare" : "task";
     state.activeLane = canonicalAgent(saved.activeLane || "");
     const lumenMigrated = localStorage.getItem(LUMEN_MIGRATION_KEY) === "1";
     state.theme = lumenMigrated ? normaliseTheme(saved.theme) : DEFAULT_THEME;
     if (!lumenMigrated) {
       localStorage.setItem(LUMEN_MIGRATION_KEY, "1");
     }
+    if (!focusedThreadMigrated) {
+      localStorage.setItem(LUMEN_FOCUSED_THREAD_MIGRATION_KEY, "1");
+    }
   } catch {
     state.token = "";
     state.bridgeUrl = "";
     state.theme = DEFAULT_THEME;
     state.composerHeight = 0;
-    state.laneView = "compare";
+    state.laneView = "task";
     state.activeLane = "";
   }
   els.token.value = state.token;
@@ -338,13 +358,12 @@ function syncLanePresentation() {
   if (!els.agentLanes || !els.compareButton || !els.laneTabs) return;
   const roster = Object.keys(state.lanes);
   if (!roster.includes(state.activeLane)) state.activeLane = roster[0] || "";
-  // Tabs are a compact-screen navigation pattern. Normal PC and Focus views
-  // always retain the simultaneous multi-agent columns, regardless of an old
-  // persisted task-view preference.
-  const effectiveView = state.compactMode ? "task" : "compare";
+  // The focused transcript is the normal work surface. Compare remains an
+  // explicit operator choice, so active work stays readable on every window.
+  const effectiveView = state.laneView === "compare" ? "compare" : "task";
   els.agentLanes.dataset.view = effectiveView;
   els.compareButton.setAttribute("aria-pressed", String(effectiveView === "compare"));
-  els.compareButton.textContent = effectiveView === "compare" ? "Task view" : "Compare";
+  els.compareButton.textContent = effectiveView === "compare" ? "Return to chat" : "Compare agents";
   for (const [agent, lane] of Object.entries(state.lanes)) {
     const active = agent === state.activeLane;
     lane.pane.classList.toggle("is-active-lane", active);
@@ -356,6 +375,7 @@ function syncLanePresentation() {
       tab.tabIndex = active ? 0 : -1;
     }
   }
+  syncActiveModelControl();
 }
 
 function renderLaneTabs() {
@@ -368,7 +388,7 @@ function renderLaneTabs() {
     tab.id = `lane-tab-${agent}`;
     tab.dataset.laneTab = agent;
     tab.setAttribute("aria-controls", `lane-panel-${agent}`);
-    const imageSource = AGENT_IMAGES[canonicalAgent(agent)];
+    const imageSource = AGENT_SYMBOLS[canonicalAgent(agent)];
     if (imageSource) {
       tab.classList.add("has-avatar");
       const image = document.createElement("img");
@@ -891,29 +911,130 @@ function signalCard(signal, timestamp) {
   return card;
 }
 
-function messageCard(text, { streaming = false, timestamp = "", user = false } = {}) {
+function messageCard(text, { streaming = false, timestamp = "", user = false, agent = "" } = {}) {
   const fragment = document.createDocumentFragment();
   const { body, signals } = splitSignals(text);
   if (body || streaming) {
-    const card = document.createElement("section");
+    const agentName = user ? "you" : canonicalAgent(agent);
+    if (!user && isCodegraphMessage(body)) {
+      fragment.appendChild(codegraphStatusCard(body));
+    } else {
+      const row = document.createElement("article");
+      row.className = user ? "message-row message-row-user" : "message-row";
+      row.dataset.sender = agentName;
+      const identity = document.createElement("div");
+      identity.className = "message-identity";
+      const imageSource = AGENT_AVATARS[agentName];
+      if (imageSource) {
+        const image = document.createElement("img");
+        image.src = imageSource;
+        image.alt = "";
+        identity.appendChild(image);
+      } else {
+        identity.textContent = user ? "YOU" : laneGlyph(agentName);
+      }
+      const stack = document.createElement("div");
+      stack.className = "message-stack";
+      const card = document.createElement("section");
       card.className = user ? "message-card user-message-card" : streaming ? "message-card streaming" : "message-card";
-        if (!user && body) {
-          card.classList.add("copyable-message-card");
-          const tools = document.createElement("div");
-          tools.className = "message-card-tools";
-          tools.appendChild(copyButtonFor(body));
-          card.appendChild(tools);
-        }
-    const paragraph = document.createElement("p");
-    paragraph.className = "msg-text";
-    paragraph.textContent = body;
-    card.appendChild(paragraph);
-    fragment.appendChild(card);
+      if (agentName) {
+        card.dataset.sender = agentName;
+        card.classList.add(`message-from-${agentName}`);
+      }
+      if (!user && body) {
+        card.classList.add("copyable-message-card");
+        const tools = document.createElement("div");
+        tools.className = "message-card-tools";
+        tools.appendChild(copyButtonFor(body));
+        card.appendChild(tools);
+      }
+      const messageText = document.createElement("div");
+      messageText.className = "msg-text";
+      renderMessageText(messageText, body);
+      card.appendChild(messageText);
+      stack.appendChild(card);
+      if (timestamp) {
+        const time = document.createElement("time");
+        time.className = "message-time";
+        time.textContent = timestamp;
+        stack.appendChild(time);
+      }
+      row.append(identity, stack);
+      fragment.appendChild(row);
+    }
   }
   for (const signal of signals) {
     fragment.appendChild(signalCard(signal, timestamp));
   }
   return fragment;
+}
+
+function isCodegraphMessage(text) {
+  const normalized = String(text || "").trim().toLowerCase();
+  return normalized.startsWith("codegraph loaded.") || normalized.startsWith("[codegraph]");
+}
+
+function codegraphStatusCard(text) {
+  const status = document.createElement("aside");
+  status.className = "conversation-context";
+  const label = document.createElement("strong");
+  label.textContent = "CodeGraph";
+  const detail = document.createElement("span");
+  detail.textContent = /not available|not found|expected sqlite/i.test(text)
+    ? "Not available for this project"
+    : "Project context ready";
+  status.append(label, detail);
+  return status;
+}
+
+function appendInlineMarkdown(target, text) {
+  const inline = /(`[^`]+`|\*\*[^*]+\*\*)/g;
+  let cursor = 0;
+  for (const match of text.matchAll(inline)) {
+    if (match.index > cursor) target.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+    const token = match[0];
+    const element = document.createElement(token.startsWith("**") ? "strong" : "code");
+    element.textContent = token.slice(token.startsWith("**") ? 2 : 1, token.startsWith("**") ? -2 : -1);
+    target.appendChild(element);
+    cursor = (match.index || 0) + token.length;
+  }
+  if (cursor < text.length) target.appendChild(document.createTextNode(text.slice(cursor)));
+}
+
+function renderMessageText(target, text) {
+  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  let list = null;
+  let listType = "";
+  const closeList = () => { list = null; listType = ""; };
+  for (const line of lines) {
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    const bullet = line.match(/^[-*]\s+(.+)$/);
+    const ordered = line.match(/^\d+[.)]\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const element = document.createElement(`h${heading[1].length}`);
+      appendInlineMarkdown(element, heading[2]);
+      target.appendChild(element);
+      continue;
+    }
+    if (bullet || ordered) {
+      const type = bullet ? "ul" : "ol";
+      if (!list || listType !== type) {
+        list = document.createElement(type);
+        listType = type;
+        target.appendChild(list);
+      }
+      const item = document.createElement("li");
+      appendInlineMarkdown(item, (bullet || ordered)[1]);
+      list.appendChild(item);
+      continue;
+    }
+    closeList();
+    if (!line.trim()) continue;
+    const paragraph = document.createElement("p");
+    appendInlineMarkdown(paragraph, line);
+    target.appendChild(paragraph);
+  }
 }
 
 /* ---------- agent lanes ---------- */
@@ -1075,7 +1196,7 @@ function ensureLanes(agents) {
     header.className = "agent-header";
     const logo = document.createElement("div");
     logo.className = `agent-logo ${laneStyleClass(agent)}-logo`;
-    const imageSource = AGENT_IMAGES[canonicalAgent(agent)];
+    const imageSource = AGENT_AVATARS[canonicalAgent(agent)];
     if (imageSource) {
       const image = document.createElement("img");
       image.src = imageSource;
@@ -1227,6 +1348,9 @@ function syncCompactWorkbench(data = state.latestSession || {}) {
   }) || Object.keys(state.lanes)[0] || "";
   state.compactPreviousNextAgent = canonicalAgent(data.next_agent);
   state.compactLane = nextLane;
+  if (nextLane && nextLane !== state.activeLane && !state.laneSelectionPinned) {
+    setActiveLane(nextLane, false);
+  }
   renderCompactLaneSwitcher();
 }
 
@@ -1254,6 +1378,45 @@ function renderModelSelectors(selection = {}) {
       lane.modelWarning.classList.toggle("hidden", !warning);
     }
   }
+  syncActiveModelControl();
+}
+
+function syncActiveModelControl() {
+  if (!els.activeModelControl || !els.activeModelSelect) return;
+  const agent = canonicalAgent(state.activeLane);
+  const supportsModels = agent === "claude" || agent === "codex";
+  const details = state.modelSelection[agent] || { current: "", options: [""] };
+  els.activeModelSelect.replaceChildren();
+
+  if (!supportsModels) {
+    const automatic = document.createElement("option");
+    automatic.value = "";
+    automatic.textContent = `${laneDisplayName(agent || "coordinator")} · Auto`;
+    els.activeModelSelect.appendChild(automatic);
+    els.activeModelSelect.disabled = true;
+    els.activeModelWarning.textContent = "";
+    els.activeModelWarning.classList.add("hidden");
+    return;
+  }
+
+  const options = Array.isArray(details.options) ? details.options : [""];
+  for (const model of options) {
+    const option = document.createElement("option");
+    option.value = model;
+    option.textContent = model || `${laneDisplayName(agent)} · Default`;
+    els.activeModelSelect.appendChild(option);
+  }
+  const custom = document.createElement("option");
+  custom.value = "__custom__";
+  custom.textContent = "Custom model...";
+  els.activeModelSelect.appendChild(custom);
+  els.activeModelSelect.value = details.current || "";
+  els.activeModelSelect.disabled = false;
+
+  const warning = String((details.warnings || {})[details.current || ""] || "");
+  els.activeModelWarning.textContent = warning;
+  els.activeModelWarning.title = warning;
+  els.activeModelWarning.classList.toggle("hidden", !warning);
 }
 
 function updateLaneScrollState(agent) {
@@ -1405,10 +1568,17 @@ function renderLanes(transcript) {
         const promptId = `${agent}-${message.id ?? message.index}`;
         anchor.dataset.promptAnchor = promptId;
         anchor.dataset.promptText = String(message.text || "");
-        anchor.appendChild(messageCard(message.text, { user: true }));
+        anchor.appendChild(messageCard(message.text, {
+          user: true,
+          agent: "you",
+          timestamp: message.timestamp || message.time || "",
+        }));
         lane.stream.appendChild(anchor);
       } else {
-        lane.stream.appendChild(messageCard(message.text));
+        lane.stream.appendChild(messageCard(message.text, {
+          agent,
+          timestamp: message.timestamp || message.time || "",
+        }));
       }
     }
     const active = state.streams[agent];
@@ -1422,7 +1592,7 @@ function renderLanes(transcript) {
       meta.appendChild(time);
       meta.appendChild(label);
       lane.stream.appendChild(meta);
-      lane.stream.appendChild(messageCard(active.text, { streaming: true, timestamp: active.timestamp }));
+      lane.stream.appendChild(messageCard(active.text, { streaming: true, timestamp: active.timestamp, agent }));
     }
     if (stickToBottom) {
       lane.stream.scrollTop = lane.stream.scrollHeight;
@@ -1490,7 +1660,7 @@ function updateLaneActivity(data) {
 
 function renderHandoffIdentity(element, agent) {
   element.replaceChildren();
-  const imageSource = AGENT_IMAGES[agent];
+  const imageSource = AGENT_AVATARS[agent];
   if (imageSource) {
     const image = document.createElement("img");
     image.className = "handoff-avatar";
@@ -2503,7 +2673,8 @@ function applySession(data) {
       els.workbenchPrompt.value = String(savedUi.composer_draft || "");
       setFocusMode(Boolean(savedUi.focus_mode));
       setComposerExpanded(Boolean(savedUi.composer_expanded), { focus: false });
-      state.laneView = savedUi.lane_view === "compare" ? "compare" : state.laneView;
+      // The local migration deliberately opens the redesigned workbench in
+      // one focused thread. A remote snapshot must not undo that choice.
       state.activeLane = canonicalAgent(savedUi.active_lane || state.activeLane);
   }
   state.latestSession = data;
@@ -2978,6 +3149,10 @@ els.sendButton.addEventListener("click", () => {
   setSkillsPanel(false);
   sendPrompt(els.workbenchPrompt.value);
 });
+els.activeModelSelect.addEventListener("change", () => {
+  const agent = canonicalAgent(state.activeLane);
+  if (agent === "claude" || agent === "codex") chooseAgentModel(agent, els.activeModelSelect);
+});
 els.attentionToggleButton.addEventListener("click", () => setAttentionCollapsed(!state.attentionCollapsed));
 els.composerExpandButton.addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
@@ -3183,16 +3358,30 @@ function applyResponsiveMode() {
 if (compactMedia.addEventListener) compactMedia.addEventListener("change", applyResponsiveMode);
 else compactMedia.addListener(applyResponsiveMode);
 
-function applyEmbeddedLumenTheme(event) {
-  if (!embeddedMode || event.source !== window.parent) return;
-  const trustedParent = event.origin === "tauri://localhost"
-    || event.origin === "http://tauri.localhost"
-    || event.origin === "http://localhost:5173";
-  if (!trustedParent || event.data?.type !== "chatboks:lumen-theme") return;
-  window.ChatBoksLumenTheme?.applyLumenThemeSnapshot?.(document.documentElement, event.data.snapshot);
+function applyEmbeddedViewMode(mode) {
+  if (!embeddedMode) return;
+  state.lumenViewMode = mode === "original" ? "original" : "conversation";
+  document.documentElement.dataset.lumenEmbedded = String(state.lumenViewMode === "conversation");
+  document.documentElement.dataset.lumenView = state.lumenViewMode;
+  if (workbenchStarted) applyResponsiveMode();
 }
 
-if (embeddedMode) window.addEventListener("message", applyEmbeddedLumenTheme);
+function handleEmbeddedHostMessage(event) {
+  if (!isTrustedEmbeddedParent(event)) return;
+  if (event.data?.type === "chatboks:lumen-theme") {
+    window.ChatBoksLumenTheme?.applyLumenThemeSnapshot?.(document.documentElement, event.data.snapshot);
+    applyEmbeddedViewMode(state.lumenViewMode);
+    return;
+  }
+  if (event.data?.type !== "chatboks:host-command") return;
+  if (event.data.action === "open-project-picker") {
+    openProjectPicker();
+  } else if (event.data.action === "set-view-mode") {
+    applyEmbeddedViewMode(event.data.mode);
+  }
+}
+
+if (embeddedMode) window.addEventListener("message", handleEmbeddedHostMessage);
 
 function syncSystemPanels() {
   els.systemDrawer.classList.toggle("hidden", !state.systemDrawerOpen);
@@ -3212,6 +3401,7 @@ async function startWorkbench() {
   document.documentElement.dir = "ltr";
   loadSettings();
   if (embeddedMode) {
+    document.querySelector(".approval-more")?.removeAttribute("open");
     if (!embeddedSession) {
       renderOfflineWorkbench();
       setConnectionState("Lumen did not supply a valid local session.", "error");
@@ -3221,7 +3411,7 @@ async function startWorkbench() {
     state.bridgeUrl = embeddedSession.bridgeUrl;
     state.token = embeddedSession.sessionToken;
     state.theme = "lumen";
-    document.documentElement.dataset.lumenEmbedded = "true";
+    applyEmbeddedViewMode("conversation");
     els.bridgeUrl.value = state.bridgeUrl;
     els.token.value = state.token;
     window.history.replaceState(null, "", `${window.location.pathname}?embedded=1`);

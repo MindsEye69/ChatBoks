@@ -128,6 +128,15 @@ WORKBENCH_STATIC_ROUTES = {
     "/assets/codex.png": ("assets/codex.png", "image/png"),
     "/assets/orchestrator.png": ("assets/orchestrator.png", "image/png"),
     "/assets/spark.png": ("assets/spark.png", "image/png"),
+    "/assets/lumen-chatboks-lockup.png": ("assets/lumen-chatboks-lockup.png", "image/png"),
+    "/assets/lumen-claude-symbol.png": ("assets/lumen-claude-symbol.png", "image/png"),
+    "/assets/lumen-codex-symbol.png": ("assets/lumen-codex-symbol.png", "image/png"),
+    "/assets/lumen-spark-symbol.png": ("assets/lumen-spark-symbol.png", "image/png"),
+    "/assets/lumen-orchestrator-symbol.png": ("assets/lumen-orchestrator-symbol.png", "image/png"),
+    "/assets/lumen-claude-avatar.png": ("assets/lumen-claude-avatar.png", "image/png"),
+    "/assets/lumen-codex-avatar.png": ("assets/lumen-codex-avatar.png", "image/png"),
+    "/assets/lumen-spark-avatar.png": ("assets/lumen-spark-avatar.png", "image/png"),
+    "/assets/lumen-orchestrator-avatar.png": ("assets/lumen-orchestrator-avatar.png", "image/png"),
 }
 ALLOWED_APP_ORIGINS = {
     "capacitor://localhost",

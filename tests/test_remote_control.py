@@ -1977,6 +1977,22 @@ def test_remote_bridge_serves_static_ui_files():
             assert response.headers["Content-Type"].startswith("image/png")
             assert int(response.headers["Content-Length"]) > 0
 
+        for asset in (
+            "lumen-chatboks-lockup.png",
+            "lumen-claude-symbol.png",
+            "lumen-codex-symbol.png",
+            "lumen-spark-symbol.png",
+            "lumen-orchestrator-symbol.png",
+            "lumen-claude-avatar.png",
+            "lumen-codex-avatar.png",
+            "lumen-spark-avatar.png",
+            "lumen-orchestrator-avatar.png",
+        ):
+            with urllib.request.urlopen(f"{base}/assets/{asset}", timeout=5) as response:
+                assert response.status == 200
+                assert response.headers["Content-Type"].startswith("image/png")
+                assert int(response.headers["Content-Length"]) > 0
+
         with urllib.request.urlopen(f"{base}/workbench", timeout=5) as response:
             body = response.read().decode("utf-8")
             assert response.status == 200
@@ -2019,7 +2035,7 @@ def test_remote_bridge_serves_static_ui_files():
             assert "function setAttentionCollapsed" in body
             assert "function setLaneView" in body
             assert "function setActiveLane" in body
-            assert 'const effectiveView = state.compactMode ? "task" : "compare"' in body
+            assert 'const effectiveView = state.laneView === "compare" ? "compare" : "task"' in body
             assert "function applyResponsiveMode" in body
             assert "function renderHandoff" in body
             assert "function renderHandoffIdentity" in body
